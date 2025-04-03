@@ -5,12 +5,12 @@ if (typeof window !== 'undefined' && window._ImageServerURL) {
 
 
 import SabaGamesGroup from '@SabaGamesGroup';
-
+import HotLeagueWall from '@HotLeagueWall';
 
 // Original names
 const SealComponents = {
-
   SabaGamesGroup,
+  HotLeagueWall
 }
 
 // Aliases for components to support renaming
@@ -18,6 +18,6 @@ const SealComponents = {
 
 // Export both original and alias names for flexibility
 export {
-
-  SabaGamesGroup
+  SabaGamesGroup,
+  HotLeagueWall
 };
