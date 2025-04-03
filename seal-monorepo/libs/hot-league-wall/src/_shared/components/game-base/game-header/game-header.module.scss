@@ -1,0 +1,105 @@
+.game-title {
+    background-color: var(--c-av-league-header-bg);
+    border-bottom: 1px solid var(--c-av-theme-border-1);
+    display: grid;
+    grid-template-columns: 1fr 10rem 30rem;
+
+    .text-center {
+        text-align: center;
+    }
+}
+
+.title-with-icon {
+    display: flex;
+    align-items: center;
+}
+
+.collapse-btn {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: inherit;
+    width: 24px;
+    color: var(--c-av-oddstable-btn-collapse);
+    position: relative;
+    cursor: pointer;
+}
+
+.collapse-icon {
+    width: 18px;
+    height: 18px;
+    background-image: url('../../../../assets/caret.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transition: transform 0.3s ease;
+}
+
+[data-theme^='dark'],
+[data-darkmode='true'] {
+    .collapse-icon {
+        background-image: url('../../../../assets/caret-white.svg');
+    }
+}
+
+.title-with-icon {
+    display: flex;
+    align-items: center;
+
+    .divider {
+        border-left: 1px solid var(--c-av-theme-border-1);
+        height: 24px;
+        // margin-left: 8px;
+    }
+
+    .arrow-icon {
+        object-fit: contain;
+        width: 18px !important;
+        height: 18px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        margin-left: 4px;
+        // transform: rotate(90deg);
+
+        &.collapsed {
+            transform: rotate(-90deg);
+        }
+    }
+
+    %game-icon {
+        width: 24px !important;
+        height: 24px !important;
+        display: block;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-image: var(--game-icon-url);
+    }
+
+    .game-icon-10 {
+        @extend %game-icon;
+        background-image: url('../../../../assets/game-icons/game-icon-10.png');
+        margin: 0 4px;
+    }
+}
+
+.lucky-next-header {
+    grid-template-columns: 1fr 10rem 10rem;
+}
+
+.lucky-next-block-wrapper {
+    grid-template-columns: 15rem 1fr 20rem;
+
+    @media screen and (max-width: 992px) {
+        grid-template-columns: 12rem 1fr 20rem;
+    }
+
+    @media screen and (max-width: 768px) {
+        grid-template-columns: 10rem 1fr 20rem;
+    }
+}

@@ -1,0 +1,67 @@
+@import '../styles/overrides';
+
+.baccarat-percentages {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-radius: 4px;
+
+    @media (min-width: 1400px) {
+        gap: 24px;
+    }
+}
+
+.percentage-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: left;
+
+    @media (min-width: 1400px) {
+        font-size: 14px;
+    }
+
+    .baccarat-custom-dot {
+        width: 1.3rem;
+        height: 1.3rem;
+
+        @media (min-width: 1400px) {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+    }
+}
+
+
+
+.split-percentage {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.indicator {
+    width: 1.3rem;
+    height: 1.3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+
+    @media (min-width: 1400px) {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+.count {
+    margin-left: 4px;
+}

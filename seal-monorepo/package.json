@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "run-mono-saba-games": "nx serve saba-games",
+    "run-mono-hot-league-wall": "nx serve hot-league-wall",
     "build-mono-saba-games": "cd libs/saba-games && webpack-cli build --node-env=production --config=webpack.config.js",
     "build-saba-games": "nx build saba-games",
     "build-saba-games:dev": "nx build saba-games --configuration=development",

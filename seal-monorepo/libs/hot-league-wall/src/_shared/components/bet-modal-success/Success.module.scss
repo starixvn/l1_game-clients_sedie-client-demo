@@ -1,0 +1,33 @@
+
+
+.stake-container {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    right: 0;
+    left: 0;
+    z-index: 999;
+}
+.stake {
+    font-size: 18px;
+    color: #727272;
+    font-weight: 700;
+    animation: fadeOutUp 2.5s ease-in forwards;
+    
+}
+
+@keyframes fadeOutUp {
+    0% {
+        opacity: 1;
+        transform: translateY(10px);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(-20px);
+    }
+
+    100% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+}

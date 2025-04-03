@@ -1,0 +1,47 @@
+@import '../../../../_shared/components/game-base/styles/theme';
+
+// Override variables for Baccarat game
+$baccarat-primary-bg: #f5f0ff;
+$baccarat-header-bg: #e6e6e6;
+$baccarat-accent-color: #9c27b0;
+
+// Baccarat game-specific colors
+$banker-color: #fe1326;
+$banker-color-start: #ff2f3c;
+$banker-color-end: #d30514;
+$player-color: #1347fe;
+$player-color-start: #2489ff;
+$player-color-end: #055ec6;
+$tie-color: #06cd0e;
+$tie-color-start: #06cd0e;
+$tie-color-end: #00900e;
+
+@mixin baccarat-header {
+    background-color: $baccarat-header-bg;
+    padding: $spacing-md;
+}
+
+@mixin baccarat-block {
+    background-color: $baccarat-primary-bg;
+    border: 1px solid $border-color;
+}
+
+@mixin tie-gradient {
+    background: linear-gradient(0deg, $tie-color-start 6.041653826832771%, $tie-color-end 100%);
+}
+
+// Export classes for use in Baccarat components
+:export {
+    primaryBg: $baccarat-primary-bg;
+    headerBg: $baccarat-header-bg;
+    accentColor: $baccarat-accent-color;
+    bankerColor: $banker-color;
+    bankerColorStart: $banker-color-start;
+    bankerColorEnd: $banker-color-end;
+    playerColor: $player-color;
+    playerColorStart: $player-color-start;
+    playerColorEnd: $player-color-end;
+    tieColor: $tie-color;
+    tieColorStart: $tie-color-start;
+    tieColorEnd: $tie-color-end;
+}

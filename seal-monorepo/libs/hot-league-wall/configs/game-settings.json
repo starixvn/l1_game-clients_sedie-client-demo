@@ -1,0 +1,97 @@
+{
+    "2": {
+        "id": 2,
+        "gameName": "SeDie",
+        "name": "SeDie",
+        "namespaces": ["SeDie"],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 39,
+            "lockingBet": 5,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 8,
+            "startRound": 0
+        },
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "mainObserverNamespace": "SeDie",
+        "order": 2,
+        "isSocketGateway": true
+    },
+    "10": {
+        "id": 10,
+        "gameName": "Baccarat",
+        "name": "Baccarat",
+        "namespaces": ["Baccarat"],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 46,
+            "lockingBet": 3,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 16,
+            "startRound": 1,
+            "resultAnimation": 4,
+            "beforeStartRound": 0
+        },
+        "numberOfRoundHistory": 102,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "mainObserverNamespace": "Baccarat",
+        "order": 4,
+        "isSocketGateway": true
+    },
+    "22": {
+        "id": 22,
+        "gameName": "VipSeDie",
+        "name": "VipSeDie",
+        "namespaces": ["VipSeDie"],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 39,
+            "lockingBet": 5,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 8,
+            "startRound": 0
+        },
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "mainObserverNamespace": "VipSeDie",
+        "order": 1,
+        "isSocketGateway": true
+    },
+    "55": {
+        "id": 55,
+        "gameName": "UnbalancedBigSmall4",
+        "name": "UnbalancedBigSmall4",
+        "namespaces": ["UnbalancedBigSmall4"],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 40,
+            "lockingBet": 5,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 3,
+            "startRound": 1
+        },
+        "totalTurns": 1,
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "unbalancedbigsmall",
+            "route": "unbalancedbigsmall"
+        },
+        "mainObserverNamespace": "UnbalancedBigSmall4",
+        "order": 3,
+        "isSocketGateway": true
+    }
+}

@@ -1,0 +1,131 @@
+@import '../styles/_overrides';
+
+.resultHistoryContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 10px 0 0;
+
+    .result-title {
+        display: flex;
+        height: 35px;
+        align-items: center;
+        font-weight: bold;
+    }
+
+    .resultHistory {
+        background-color: var(--c-av-lv1-theme-bg-1);
+        border: 1px solid var(--c-av-theme-border-1);
+        border-radius: 5px;
+        width: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+        .header {
+            height: 18px;
+            display: grid;
+            grid-template-columns: 100px 75px 5px 75px 1fr;
+            align-items: center;
+            padding: 2px 5px;
+            background-color: var(--c-av-lv1-theme-bg-1);
+            border-bottom: 1px solid var(--c-av-theme-border-1);
+            border-radius: 5px 5px 0 0;
+            font-size: 12px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            text-align: center;
+
+            span:nth-child(2) {
+                color: #{$player-color};
+            }
+
+            span:nth-child(4) {
+                color: #{$banker-color};
+            }
+        }
+
+        .historyContent {
+            max-height: 216px;
+            overflow: auto;
+            overflow-x: hidden;
+            background-color: var(--c-av-lv1-theme-bg-1);
+            padding-right: 4px;
+            width: 100%;
+            /* Firefox */
+            scrollbar-width: thin;
+            scrollbar-color: var(--scroll-bar-track) var(--c-av-lv1-theme-bg-2);
+
+            /* Chrome, Safari, Edge */
+            &::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background-color: rgba(0, 0, 0, 0.2);
+                border-radius: 2px;
+
+                &:hover {
+                    background-color: rgba(0, 0, 0, 0.3);
+                }
+            }
+
+            &::-webkit-scrollbar-track {
+                background-color: transparent;
+            }
+        }
+
+        .historyRow {
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            border-bottom: 1px solid var(--c-av-theme-border-1);
+            transition: background-color 0.2s ease;
+            height: 48px;
+
+            &:first-child {
+                background-color: var(--c-ng-result-highlight);
+            }
+
+            .contentWrapper {
+                display: grid;
+                grid-template-columns: 100px 75px 5px 75px 1fr;
+                align-items: center;
+                text-align: center;
+                gap: 0;
+                width: 100%;
+
+                > :nth-child(2) {
+                    justify-content: flex-end;
+                    display: flex;
+                }
+
+                > :nth-child(4) {
+                    justify-content: flex-start;
+                    display: flex;
+                }
+            }
+
+            .roundNumber {
+                text-align: left;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+
+            .divider {
+                height: 28px;
+                border-left: 1px solid #c6c6c6;
+            }
+
+            .winner {
+                width: 100%;
+                font-size: 13px;
+                font-weight: bold;
+                text-align: center;
+                letter-spacing: 0.5px;
+                margin: 0 auto;
+            }
+        }
+    }
+}

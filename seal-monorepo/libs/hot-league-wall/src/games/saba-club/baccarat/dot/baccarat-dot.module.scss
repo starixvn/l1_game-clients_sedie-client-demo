@@ -1,0 +1,56 @@
+@import '../../../../_shared/components/dot/dot.module.scss';
+@import '../styles/overrides';
+
+.variables {
+    --baccarat-player-bg: linear-gradient(180deg, #{$player-color-start} 0%, #{$player-color-end} 100%);
+    --baccarat-player-border: #{$player-color-end};
+    --baccarat-banker-bg: linear-gradient(180deg, #{$banker-color-start} 6.041653826832771%, #{$banker-color-end} 100%);
+    --baccarat-banker-border: #{$banker-color-end};
+    --baccarat-tie-bg: linear-gradient(180deg, #{$tie-color-start} 6.041653826832771%, #{$tie-color-end} 100%);
+    --baccarat-tie-border: #{$tie-color-end};
+    --baccarat-next-bg: #f0f0f0;
+    --baccarat-next-border: #ddd;
+    --baccarat-text-light: #fff;
+    --baccarat-text-dark: #212529;
+    --baccarat-dot-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+%baccarat-dot {
+    @extend %dot;
+    font-weight: 700;
+    composes: variables;
+    box-shadow: var(--baccarat-dot-shadow);
+
+    &::before {
+        height: calc(100% - 2px);
+        width: calc(100% - 2px);
+        position: absolute;
+    }
+}
+
+.dot-player {
+    @extend %baccarat-dot;
+    background: var(--dot-player-border);
+
+    &:before {
+        background: var(--baccarat-player-bg);
+    }
+}
+
+.dot-banker {
+    @extend %baccarat-dot;
+    background: var(--dot-banker-border);
+
+    &:before {
+        background: var(--baccarat-banker-bg);
+    }
+}
+
+.dot-tie {
+    @extend %baccarat-dot;
+    background: var(--dot-tie-border);
+
+    &:before {
+        background: var(--baccarat-tie-bg);
+    }
+}

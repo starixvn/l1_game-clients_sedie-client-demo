@@ -1,0 +1,74 @@
+@use 'sass:math' as math;
+@use 'sass:map';
+@import '../settlement-result/styles/_variables';
+@import '../settlement-result/styles/_mixins';
+@import '../styles/_overrides';
+
+.animation-container {
+    // top: 0.3rem;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: grid;
+    --gap-player-banker: map.get($layout, 'gap-player-banker', 'default');
+    // grid-column-gap: calc(var(--gap-player-banker)*2);
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    align-items: center;
+}
+
+%player-banker-base {
+    display: flex;
+    flex: 1 1 8.9rem;
+    position: relative;
+}
+
+.player {
+    @extend %player-banker-base;
+    justify-self: flex-end;
+}
+
+.banker {
+    @extend %player-banker-base;
+    justify-self: flex-start;
+}
+
+// Desktop layout
+@include respond-to('desktop') {
+    .animation-container {
+        --gap-player-banker: map.get($layout, 'gap-player-banker', 'desktop');
+    }
+}
+
+// Card section layout
+.cardSection {
+    height: 100%;
+    scale: 0.9;
+}
+
+// Result card section styles
+.resultCardSection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+
+    .cardContainer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+
+    .cardWrapper {
+        position: relative;
+        margin-left: -21px;
+        transform: scale(0.9);
+        background: #fff;
+        border-radius: 4px;
+
+        &:first-child {
+            margin-left: 0;
+        }
+    }
+}

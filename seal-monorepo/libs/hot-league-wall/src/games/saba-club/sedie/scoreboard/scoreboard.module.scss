@@ -1,0 +1,56 @@
+.scoreboard {
+    padding: 10px 0 0 10px;
+    width: calc(100% - 368px);
+
+    .scoreboard-title {
+        display: flex;
+        height: 35px;
+        align-items: center;
+        font-weight: bold;
+    }
+
+    .scoreboard-percentage {
+        display: flex;
+        align-items: center;
+        /* Align items vertically centered */
+        justify-content: space-between;
+        /* Distributes space between items */
+        width: 100%;
+        /* Make the parent container full width */
+        color: white;
+        background: var(--scoreboard-header-bg);
+
+        .odd-percentage {
+            flex: 1;
+            /* Allows this to take available space on the left */
+            text-align: right;
+            /* Align text to the left */
+        }
+
+        .split-percentage {
+            margin: 0 10px;
+            /* Optional: Add some horizontal margin for spacing */
+            text-align: center;
+            /* Center the split indicator */
+        }
+
+        .even-percentage {
+            flex: 1;
+            /* Allows this to take available space on the right */
+            text-align: left;
+            /* Align text to the right */
+        }
+    }
+
+    .scoreboard-content {
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: grid;
+        //grid-gap: 0.4rem;
+        background: var(--scoreboard-content-bg);
+        scrollbar-width: thin;
+        /* Set scrollbar width to thin */
+        scrollbar-color: var(--scroll-bar-track) var(--c-av-lv1-theme-bg-2);
+        /* Handle color and track color */
+    }
+}
