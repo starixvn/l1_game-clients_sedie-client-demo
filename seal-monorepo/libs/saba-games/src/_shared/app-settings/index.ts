@@ -25,6 +25,7 @@ export enum APP_ENV {
 }
 
 export const getEnvironmentConfig = ({ appEnv, siteId }) => {
+    console.log({ appEnv, siteId })
     const configMaps = {
         [NOVA88_SITE_ID]: {
             LOCAL: VG_LOCAL_CONFIG,
@@ -40,6 +41,7 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
         }
     }
     const environmentsConfig = configMaps[siteId][appEnv];
+    console.log({ environmentsConfig })
 
     const gameSettingsMap = {
         [NOVA88_SITE_ID]: VG_GAME_SETTINGS,
