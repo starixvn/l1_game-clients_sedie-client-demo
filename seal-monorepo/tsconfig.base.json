@@ -25,9 +25,6 @@
       "@seal-components/translation": [
         "libs/translation/src/index.ts"
       ],
-      "@hotLeagueWall": [
-        "libs/hot-league-wall/src/index.ts"
-      ],
       "components-styles": [
         "libs/components-styles/*"
       ]

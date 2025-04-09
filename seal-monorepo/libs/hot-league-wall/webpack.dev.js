@@ -5,21 +5,24 @@ const { join } = require('path');
 module.exports = {
     output: {
         path: join(__dirname, '../../dist/libs/hot-league-wall'),
+        publicPath: '/hot-league-wall/',
     },
     devServer: {
         port: 4201,
-        historyApiFallback: true,
+        historyApiFallback: {
+            index: '/hot-league-wall/index.html',
+        },
         headers: {
             'Access-Control-Allow-Origin': '*',
         },
     },
     plugins: [
         new NxWebpackPlugin({
-            tsConfig: './tsconfig.lib.json',
+            tsConfig: './tsconfig.app.json',
             compiler: 'babel',
             main: './src/main.tsx',
             index: './preview-template/index.html',
-            baseHref: '/',
+            baseHref: '/hot-league-wall/',
             assets: [
                 {
                     glob: '**/*',

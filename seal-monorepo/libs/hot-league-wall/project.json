@@ -17,6 +17,43 @@
       "executor": "nx:run-commands",
       "configurations": {}
     },
+    "build": {
+      "options": {
+        "cwd": "libs/hot-league-wall",
+        "args": [
+          "--node-env=development",
+          "--config=webpack.config.js"
+        ],
+        "command": "webpack-cli build"
+      },
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "externalDependencies": [
+            "webpack-cli"
+          ]
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist\\libs\\hot-league-wall"
+      ],
+      "executor": "nx:run-commands",
+      "configurations": {
+        "development": {
+          "options": {
+            "args": [
+              "--node-env=development",
+              "--config=webpack.dev.js"
+            ]
+          }
+        }
+      }
+    },
     "lint": {
       "cache": true,
       "options": {

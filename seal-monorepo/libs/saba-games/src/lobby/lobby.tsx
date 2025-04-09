@@ -19,24 +19,24 @@ import { reaction, autorun } from 'mobx';
     try {
         const originalStore = gc.Player.MainPlayerStore;
         if (originalStore) {
-            console.log('[HotLeagueWall-Patch] Attempting to patch MainPlayerStore');
+            console.log('[SabaGames-Patch] Attempting to patch MainPlayerStore');
             const originalSetOfferGames = originalStore.prototype.setOfferGames;
             if (originalSetOfferGames) {
                 originalStore.prototype.setOfferGames = function (...args) {
-                    console.log('[HotLeagueWall-Patch] setOfferGames intercepted:', args[0]);
+                    console.log('[SabaGames-Patch] setOfferGames intercepted:', args[0]);
                     const result = originalSetOfferGames.apply(this, args);
-                    console.log('[HotLeagueWall-Patch] setOfferGames completed');
+                    console.log('[SabaGames-Patch] setOfferGames completed');
                     return result;
                 };
-                console.log('[HotLeagueWall-Patch] Successfully patched setOfferGames method');
+                console.log('[SabaGames-Patch] Successfully patched setOfferGames method');
             } else {
-                console.log('[HotLeagueWall-Patch] Could not find setOfferGames method to patch');
+                console.log('[SabaGames-Patch] Could not find setOfferGames method to patch');
             }
         } else {
-            console.log('[HotLeagueWall-Patch] MainPlayerStore not found for patching');
+            console.log('[SabaGames-Patch] MainPlayerStore not found for patching');
         }
     } catch (error) {
-        console.error('[HotLeagueWall-Patch] Error patching MainPlayerStore:', error);
+        console.error('[SabaGames-Patch] Error patching MainPlayerStore:', error);
     }
 })();
 
@@ -137,7 +137,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
         // Debug MainPlayerStore
         try {
             const mainPlayerStore = gc.Player.MainPlayerStore;
-            console.log('[LobbyComponent-HotLeagueWall] MainPlayerStore:', {
+            console.log('[LobbyComponent-SabaGames] MainPlayerStore:', {
                 storeExists: !!mainPlayerStore,
                 offerGamesExists: mainPlayerStore && 'offerGames' in mainPlayerStore,
                 // Access using safer method to avoid TypeScript errors
@@ -147,7 +147,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
             // Set up polling interval to check for offer games changes
             this.offerGamesCheckInterval = setInterval(this.checkMainPlayerStore, 1000);
-            console.log('[LobbyComponent-HotLeagueWall] Set up offer games polling interval');
+            console.log('[LobbyComponent-SabaGames] Set up offer games polling interval');
 
             // Add autorun as an alternative to reaction
             autorun(() => {
@@ -155,17 +155,17 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                     if (sharedContainer) {
                         const storeInstance = sharedContainer.get(gc.Player.MainPlayerStore);
                         if (storeInstance && storeInstance.offerGames) {
-                            console.log('[LobbyComponent-HotLeagueWall] Autorun detected offerGames:', storeInstance.offerGames);
+                            console.log('[LobbyComponent-SabaGames] Autorun detected offerGames:', storeInstance.offerGames);
                             this.handleOfferGames(storeInstance.offerGames as IOfferGame[]);
                         }
                     }
                 } catch (error) {
-                    console.error('[LobbyComponent-HotLeagueWall] Error in autorun:', error);
+                    console.error('[LobbyComponent-SabaGames] Error in autorun:', error);
                 }
             });
 
         } catch (error) {
-            console.error('[LobbyComponent-HotLeagueWall] Error accessing MainPlayerStore:', error);
+            console.error('[LobbyComponent-SabaGames] Error accessing MainPlayerStore:', error);
         }
 
         this.sso({ token });
@@ -299,7 +299,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
-        console.log('[LobbyComponent-HotLeagueWall] Offer games updated - debug:', {
+        console.log('[LobbyComponent-SabaGames] Offer games updated - debug:', {
             receivedOfferGames: offerGames,
             hasOfferGames: !!offerGames,
             offerGamesLength: offerGames?.length || 0
@@ -516,7 +516,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                 try {
                     foundStore = maybeContainer.get(gc.Player.MainPlayerStore);
                 } catch (e) {
-                    console.error('[LobbyComponent-HotLeagueWall] Error getting store from container:', e);
+                    console.error('[LobbyComponent-SabaGames] Error getting store from container:', e);
                 }
             }
 
@@ -524,7 +524,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
             if (!foundStore && gc.Player.MainPlayerStore) {
                 if (typeof gc.Player.MainPlayerStore === 'function') {
                     // Skip trying to instantiate - not needed and causes errors
-                    console.log('[LobbyComponent-HotLeagueWall] MainPlayerStore is a constructor');
+                    console.log('[LobbyComponent-SabaGames] MainPlayerStore is a constructor');
                 } else {
                     // It might be a singleton instance
                     foundStore = gc.Player.MainPlayerStore as any;
@@ -544,7 +544,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                     JSON.stringify(offerGames) !== JSON.stringify(this.lastOfferGames) &&
                     offerGames.length > 0) {
 
-                    console.log('[LobbyComponent-HotLeagueWall] Detected offer games update in interval check:', offerGames);
+                    console.log('[LobbyComponent-SabaGames] Detected offer games update in interval check:', offerGames);
                     this.lastOfferGames = offerGames;
                     this.handleOfferGames(offerGames as IOfferGame[]);
                 }
@@ -556,7 +556,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                 this.forceUpdate();
             }
         } catch (error) {
-            console.error('[LobbyComponent-HotLeagueWall] Error in checkMainPlayerStore:', error);
+            console.error('[LobbyComponent-SabaGames] Error in checkMainPlayerStore:', error);
         }
     };
 }
