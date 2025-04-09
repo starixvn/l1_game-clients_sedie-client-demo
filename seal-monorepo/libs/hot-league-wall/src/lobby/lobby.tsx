@@ -1,7 +1,7 @@
 import * as gc from '@sg/sg-game-client';
 import { handle, observer, render } from '@sg/sg-observer';
 import React from 'react';
-import { configSharedContainer } from '../_shared/components/game-base/startup';
+import { configSharedContainer, sharedContainer } from '../_shared/components/game-base/startup';
 import { LobbyStore } from '../_shared/states/lobby';
 import * as lobbyUtils from './utils';
 import styles from './lobby.module.scss';
@@ -12,10 +12,39 @@ import { GameMatchTab } from '../_shared/components/all-tab-components/game-matc
 import { IOfferGame, ILobbyState } from './type';
 import { GameListTab } from '../_shared/components/all-tab-components/game-list-tab';
 import SessionTimeout from '../_shared/components/timeout';
+import { reaction, autorun } from 'mobx';
+
+// Direct access to monitor MainPlayerStore changes
+(function patchMainPlayerStore() {
+    try {
+        const originalStore = gc.Player.MainPlayerStore;
+        if (originalStore) {
+            console.log('[HotLeagueWall-Patch] Attempting to patch MainPlayerStore');
+            const originalSetOfferGames = originalStore.prototype.setOfferGames;
+            if (originalSetOfferGames) {
+                originalStore.prototype.setOfferGames = function (...args) {
+                    console.log('[HotLeagueWall-Patch] setOfferGames intercepted:', args[0]);
+                    const result = originalSetOfferGames.apply(this, args);
+                    console.log('[HotLeagueWall-Patch] setOfferGames completed');
+                    return result;
+                };
+                console.log('[HotLeagueWall-Patch] Successfully patched setOfferGames method');
+            } else {
+                console.log('[HotLeagueWall-Patch] Could not find setOfferGames method to patch');
+            }
+        } else {
+            console.log('[HotLeagueWall-Patch] MainPlayerStore not found for patching');
+        }
+    } catch (error) {
+        console.error('[HotLeagueWall-Patch] Error patching MainPlayerStore:', error);
+    }
+})();
 
 @observer
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private reRenderGameTimeout?: NodeJS.Timeout;
+    private offerGamesCheckInterval?: NodeJS.Timeout;
+    private lastOfferGames: any = null;
 
     constructor(props: { token: string }) {
         super(props);
@@ -44,6 +73,11 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     componentWillUnmount() {
         console.log('[LobbyComponent] Component will unmount');
         this.clearReRenderGameTimeout();
+
+        if (this.offerGamesCheckInterval) {
+            clearInterval(this.offerGamesCheckInterval);
+            this.offerGamesCheckInterval = undefined;
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<ILobbyState>, snapshot?: any): void {
@@ -60,10 +94,87 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
         }
     }
 
+    checkMainPlayerStore = () => {
+        try {
+            // Try to get the store instance directly
+            const maybeContainer = window['seal_shared_container'] || sharedContainer;
+            let foundStore: any = null;
+
+            // Try different ways to get the store
+            if (maybeContainer && maybeContainer.get) {
+                try {
+                    foundStore = maybeContainer.get(gc.Player.MainPlayerStore);
+                } catch (e) {
+                    console.error('[LobbyComponent-HotLeagueWall] Error getting store from container:', e);
+                }
+            }
+
+            // Global fallback
+            if (!foundStore && gc.Player.MainPlayerStore) {
+                if (typeof gc.Player.MainPlayerStore === 'function') {
+                    // Skip trying to instantiate - not needed and causes errors
+                    console.log('[LobbyComponent-HotLeagueWall] MainPlayerStore is a constructor');
+                } else {
+                    // It might be a singleton instance
+                    foundStore = gc.Player.MainPlayerStore as any;
+                }
+            }
+
+            if (foundStore) {
+                const offerGames = foundStore.offerGames;
+                if (offerGames &&
+                    JSON.stringify(offerGames) !== JSON.stringify(this.lastOfferGames) &&
+                    offerGames.length > 0) {
+
+                    console.log('[LobbyComponent-HotLeagueWall] Detected offer games update in interval check:', offerGames);
+                    this.lastOfferGames = offerGames;
+                    this.handleOfferGames(offerGames as IOfferGame[]);
+                }
+            }
+        } catch (error) {
+            console.error('[LobbyComponent-HotLeagueWall] Error in checkMainPlayerStore:', error);
+        }
+    };
+
     componentDidMount() {
         console.log('[LobbyComponent] Component did mount');
         const { token } = this.props;
         console.log('[LobbyComponent] Calling sso with token:', token);
+
+        // Debug MainPlayerStore
+        try {
+            const mainPlayerStore = gc.Player.MainPlayerStore;
+            console.log('[LobbyComponent-HotLeagueWall] MainPlayerStore:', {
+                storeExists: !!mainPlayerStore,
+                offerGamesExists: mainPlayerStore && 'offerGames' in mainPlayerStore,
+                // Access using safer method to avoid TypeScript errors
+                storeType: typeof mainPlayerStore,
+                storeToString: mainPlayerStore ? mainPlayerStore.toString() : 'null'
+            });
+
+            // Set up polling interval to check for offer games changes
+            this.offerGamesCheckInterval = setInterval(this.checkMainPlayerStore, 1000);
+            console.log('[LobbyComponent-HotLeagueWall] Set up offer games polling interval');
+
+            // Add autorun as an alternative to reaction
+            autorun(() => {
+                try {
+                    if (sharedContainer) {
+                        const storeInstance = sharedContainer.get(gc.Player.MainPlayerStore);
+                        if (storeInstance && storeInstance.offerGames) {
+                            console.log('[LobbyComponent-HotLeagueWall] Autorun detected offerGames:', storeInstance.offerGames);
+                            this.handleOfferGames(storeInstance.offerGames as IOfferGame[]);
+                        }
+                    }
+                } catch (error) {
+                    console.error('[LobbyComponent-HotLeagueWall] Error in autorun:', error);
+                }
+            });
+
+        } catch (error) {
+            console.error('[LobbyComponent-HotLeagueWall] Error accessing MainPlayerStore:', error);
+        }
+
         this.sso({ token });
     }
 
@@ -96,6 +207,11 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
+        console.log('[LobbyComponent-HotLeagueWall] Offer games updated - debug:', {
+            receivedOfferGames: offerGames,
+            hasOfferGames: !!offerGames,
+            offerGamesLength: offerGames?.length || 0
+        });
         console.log('[LobbyComponent] Offer games updated:', offerGames);
 
         if (offerGames?.length > 0) {
