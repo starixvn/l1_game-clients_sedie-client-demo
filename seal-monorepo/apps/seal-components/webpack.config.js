@@ -39,7 +39,7 @@ module.exports = {
                         plugins: ['@babel/plugin-transform-runtime'],
                     },
                 },
-                exclude: [/node_modules/, /libs\/saba-games\/preview-template/],
+                exclude: [/node_modules/, /libs\/saba-games\/preview-template/, /libs\/hot-league-wall\/preview-template/],
             },
             {
                 test: /\.module\.(css|scss|sass)$/,
@@ -66,7 +66,7 @@ module.exports = {
             },
             {
                 test: /(?<!\.module)\.(css|scss|sass)$/,
-                exclude: [/node_modules/, /libs\/saba-games\/preview-template/],
+                exclude: [/node_modules/, /libs\/saba-games\/preview-template/, /libs\/hot-league-wall\/preview-template/],
                 rules: [
                     {
                         use: 'style-loader',
@@ -123,7 +123,11 @@ module.exports = {
             },
             {
                 test: /\.(ts|tsx)$/,
-                exclude: [/(node_modules|bower_components|typings)/, /libs\/saba-games\/preview-template/],
+                exclude: [
+                    /(node_modules|bower_components|typings)/,
+                    /libs\/saba-games\/preview-template/,
+                    /libs\/hot-league-wall\/preview-template/,
+                ],
                 loader: 'ts-loader',
                 options: {
                     transpileOnly: true,
