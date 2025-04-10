@@ -46,6 +46,14 @@ module.exports = {
         },
     },
     devtool: 'source-map',
+    resolve: {
+        alias: {
+            // Map any inversify source requests to our empty module
+            'inversify/src': join(__dirname, 'empty-module.js'),
+            'inversify/lib/esm': join(__dirname, 'empty-module.js'),
+            inversify$: join(__dirname, 'empty-module.js'),
+        },
+    },
     stats: {
         modules: true,
         errorDetails: true,
@@ -53,6 +61,24 @@ module.exports = {
     },
     module: {
         rules: [
+            // Specifically disable source maps for inversify
+            {
+                test: /[\\/]node_modules[\\/]inversify[\\/]/,
+                enforce: 'pre',
+                loader: 'source-map-loader',
+                options: {
+                    filterSourceMappingUrl: () => false, // Always skip source maps for inversify
+                },
+            },
+            // Specifically target inversify ESM files
+            {
+                test: /[\\/]node_modules[\\/]inversify[\\/]lib[\\/]esm[\\/]/,
+                enforce: 'pre',
+                loader: 'source-map-loader',
+                options: {
+                    filterSourceMappingUrl: () => false, // Always skip source maps for inversify ESM
+                },
+            },
             {
                 test: /\.(js|ts|tsx)$/,
                 enforce: 'pre',
@@ -64,8 +90,12 @@ module.exports = {
                     join(__dirname, '../../node_modules/@sg/sg-observer'),
                 ],
                 exclude: [
-                    // Exclude all node_modules except @sg libraries
+                    // Exclude all node_modules except @sg libraries,
+                    // but always exclude inversify
                     (path) => {
+                        if (path.includes('inversify')) {
+                            return true; // Always exclude inversify
+                        }
                         if (path.includes('node_modules')) {
                             return !path.includes('@sg/sg-game-client') && !path.includes('@sg/sg-observer');
                         }
@@ -78,6 +108,11 @@ module.exports = {
                         options: {
                             filterSourceMappingUrl: (url, resourcePath) => {
                                 console.log('Processing source map:', url, resourcePath);
+
+                                // Always skip inversify source maps
+                                if (resourcePath.includes('inversify') || url.includes('inversify')) {
+                                    return false;
+                                }
 
                                 // For @sg libraries, ensure we process the source maps
                                 if (resourcePath.includes('@sg/sg-game-client') || resourcePath.includes('@sg/sg-observer')) {
@@ -108,6 +143,13 @@ module.exports = {
         /Failed to parse source map from '.*inversify.*\.ts' file: Error: ENOENT: no such file or directory/,
         /Failed to parse source map from '.*inversify.*\.ts'/,
         /Failed to parse source map from '.*node_modules.*'/,
+        /Failed to parse source map from '.*inversify\/src\/utils\/serialization\.ts'/,
+        /Failed to parse source map from '.*inversify[\\/]src[\\/]utils[\\/]serialization\.ts'/,
+        /Failed to parse source map from '.*inversify[\\/]lib[\\/]esm[\\/].*'/,
+        {
+            module: /node_modules[\\/]inversify[\\/]lib[\\/]esm[\\/]/,
+            message: /.*/,
+        },
         {
             module: /node_modules\/@inversifyjs/,
             message: /.*/,
@@ -147,6 +189,8 @@ module.exports = {
                 scripts: true,
                 styles: true,
                 vendor: false,
+                hidden: true,
+                exclude: [/[\\/]node_modules[\\/]/],
             },
         }),
         new NxReactWebpackPlugin({
