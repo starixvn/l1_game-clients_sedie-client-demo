@@ -4,7 +4,6 @@ import { gamePageMap } from "../../../utils/component-util"
 import styles from "./game-list-tab.module.scss";
 import { SE_DIE_GAME_ID, VIP_SE_DIE_GAME_ID } from "../../../../../constant/app";
 
-
 export const GameListTab = ({ offerGames, selectedGameId, onTabClick }) => {
     console.log('GameListTab rendered with props:', { offerGames, selectedGameId });
 
@@ -12,8 +11,6 @@ export const GameListTab = ({ offerGames, selectedGameId, onTabClick }) => {
 
     const getGameTabName = (namespace?: string) => {
         if (!namespace) return '';
-
-
         const name = t(`${namespace}.game_name`);
         console.log(`Game tab name for namespace ${namespace}:`, name);
         return name;
@@ -24,29 +21,59 @@ export const GameListTab = ({ offerGames, selectedGameId, onTabClick }) => {
         onTabClick(gameId);
     };
 
+    const handleNavigation = (direction: 'next' | 'prev') => {
+        const currentIndex = offerGames.findIndex(game => game.gameId === selectedGameId);
+        let newIndex;
+
+        if (direction === 'next') {
+            newIndex = currentIndex + 1 >= offerGames.length ? 0 : currentIndex + 1;
+        } else {
+            newIndex = currentIndex - 1 < 0 ? offerGames.length - 1 : currentIndex - 1;
+        }
+
+        handleTabClick(offerGames[newIndex].gameId);
+    };
+
     return (
-        <div className={styles['tab-button-wrapper']}>
-            {offerGames.map(game => (
-                <div
-                    key={game.gameId}
-                    onClick={() => handleTabClick(game.gameId)}
-                    className={classNames({
-                        [styles['tab-button']]: true,
-                        [styles['tab-button-active']]: game.gameId === selectedGameId,
-                        [styles['tab-button-sedie']]: game.gameId === SE_DIE_GAME_ID,
-                        [styles['tab-button-vip-sedie']]: game.gameId === VIP_SE_DIE_GAME_ID,
-                    })}
+        <div className={styles['tab-container']}>
+            <div className={styles['nav-buttons']}>
+                <button
+                    className={styles['nav-button']}
+                    onClick={() => handleNavigation('prev')}
+                    aria-label="Previous game"
                 >
+                    ←
+                </button>
+                <button
+                    className={styles['nav-button']}
+                    onClick={() => handleNavigation('next')}
+                    aria-label="Next game"
+                >
+                    →
+                </button>
+            </div>
+            <div className={styles['tab-button-wrapper']}>
+                {offerGames.map(game => (
                     <div
+                        key={game.gameId}
+                        onClick={() => handleTabClick(game.gameId)}
                         className={classNames({
-                            [styles['sedie-icon']]: game.gameId === SE_DIE_GAME_ID,
-                            [styles['vip-sedie-icon']]: game.gameId === VIP_SE_DIE_GAME_ID,
+                            [styles['tab-button']]: true,
+                            [styles['tab-button-active']]: game.gameId === selectedGameId,
+                            [styles['tab-button-sedie']]: game.gameId === SE_DIE_GAME_ID,
+                            [styles['tab-button-vip-sedie']]: game.gameId === VIP_SE_DIE_GAME_ID,
                         })}
-                    ></div>
-                    <span>{getGameTabName(gamePageMap[game.gameId].namespace)}</span>
-                </div>
-            ))}
+                    >
+                        <div
+                            className={classNames({
+                                [styles['sedie-icon']]: game.gameId === SE_DIE_GAME_ID,
+                                [styles['vip-sedie-icon']]: game.gameId === VIP_SE_DIE_GAME_ID,
+                            })}
+                        ></div>
+                        <span>{getGameTabName(gamePageMap[game.gameId].namespace)}</span>
+                    </div>
+                ))}
+            </div>
         </div>
     )
-
 }
