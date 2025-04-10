@@ -3,7 +3,9 @@
         "id": 2,
         "gameName": "SeDie",
         "name": "SeDie",
-        "namespaces": ["SeDie"],
+        "namespaces": [
+            "SeDie"
+        ],
         "isVisible": true,
         "durations": {
             "wholeRound": 39,
@@ -26,7 +28,9 @@
         "id": 10,
         "gameName": "Baccarat",
         "name": "Baccarat",
-        "namespaces": ["Baccarat"],
+        "namespaces": [
+            "Baccarat"
+        ],
         "isVisible": true,
         "durations": {
             "wholeRound": 46,
@@ -51,7 +55,9 @@
         "id": 22,
         "gameName": "VipSeDie",
         "name": "VipSeDie",
-        "namespaces": ["VipSeDie"],
+        "namespaces": [
+            "VipSeDie"
+        ],
         "isVisible": true,
         "durations": {
             "wholeRound": 39,
@@ -74,7 +80,9 @@
         "id": 55,
         "gameName": "UnbalancedBigSmall4",
         "name": "UnbalancedBigSmall4",
-        "namespaces": ["UnbalancedBigSmall4"],
+        "namespaces": [
+            "UnbalancedBigSmall4"
+        ],
         "isVisible": true,
         "durations": {
             "wholeRound": 40,
