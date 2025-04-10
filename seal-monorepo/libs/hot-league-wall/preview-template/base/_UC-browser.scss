@@ -1,0 +1,16 @@
+[data-UC-browser="true"] {
+    .c-container--single-match {
+        &[data-livestreaming-fixed="true"] {
+            .c-streaming {
+                position: relative;
+                top: 0;
+                z-index: 0;
+            }
+            .c-odds-page__header {
+                position: relative;
+                top: 0;
+                z-index: 2;
+            }
+        }
+    }
+}

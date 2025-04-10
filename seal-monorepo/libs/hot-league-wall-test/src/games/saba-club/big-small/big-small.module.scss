@@ -1,0 +1,33 @@
+.block-wrapper {
+    display: grid;
+    grid-template-columns: 130px 250px auto !important;
+
+    @media (min-width: 1400px) {
+        grid-template-columns: 130px 400px auto !important;
+    }
+
+    .result {
+        border-right: none;
+        width: auto;
+    }
+
+    .info {
+        width: 30%;
+
+        @media screen and (min-width: 1102px) {
+            width: 20%;
+        }
+
+    }
+
+    .bet-options {
+        // width: 40%;
+        min-width: auto;
+        width: auto;
+        border-left: 1px solid var(--c-av-theme-border-1);
+    }
+
+    .animation-balance {
+        width: 40%;
+    }
+}

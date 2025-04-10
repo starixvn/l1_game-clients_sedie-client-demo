@@ -1,0 +1,11 @@
+@import '../sedie/header.module.scss';
+
+.game-icon {
+    width: 24px;
+    height: 24px;
+    background-image: url('../../../assets/game-icons/vip-sedie.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin: 0 6px;
+}

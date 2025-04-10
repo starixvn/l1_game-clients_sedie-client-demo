@@ -1,0 +1,48 @@
+@use 'sass:math' as math;
+@use 'sass:map';
+@import './_variables';
+
+// Media query mixin
+@mixin respond-to($breakpoint) {
+    @if map.has-key($breakpoints, $breakpoint) {
+        @media (min-width: map.get($breakpoints, $breakpoint)) {
+            @content;
+        }
+    }
+}
+
+// Flexbox center mixin
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// Score gradient mixin
+@mixin score-gradient($start-color, $end-color) {
+    background: linear-gradient(180deg, $start-color 0%, $end-color 100%);
+}
+
+// Button style mixin
+@mixin button-style($bg-color, $hover-color) {
+    background-color: $bg-color;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: $hover-color;
+    }
+}
+
+// Loading spinner mixin
+@mixin loading-spinner($size, $border-width, $color, $active-color) {
+    width: $size;
+    height: $size;
+    border: $border-width solid $color;
+    border-top: $border-width solid $active-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}

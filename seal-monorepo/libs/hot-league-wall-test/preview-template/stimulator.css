@@ -1,0 +1,25 @@
+.main-area {
+    flex: 1;
+    min-width: 858px;
+    min-height: 0;
+    margin-left: var(--left-width, 3.75rem);
+    height: 100%;
+}
+.main-container {
+    display: flex;
+    margin: 0 auto;
+    height: 100%;
+}
+
+.left-bar {
+    padding: 0.625rem;
+    width: var(--left-width, 3.75rem);
+    min-width: var(--left-width, 3.75rem);
+    position: fixed;
+}
+
+.right-bar {
+    flex: 0 0 auto;
+    position: relative;
+    width: var(--right-width, 3.75rem);
+}

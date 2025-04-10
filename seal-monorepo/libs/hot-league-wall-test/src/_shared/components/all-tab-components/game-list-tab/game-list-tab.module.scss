@@ -1,0 +1,60 @@
+.tab-button-wrapper {
+  display: flex;
+  padding: 6px 0;
+  gap: 4px;
+}
+
+.tab-button {
+  display: flex;
+  height: 32px;
+  min-width: 114px;
+  padding: 0px 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+
+  color: #252b34;
+  text-align: center;
+  font-family: 'Segoe UI';
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: url('../../../../assets/lobby/inactive-bg.png') no-repeat center
+    center / cover;
+  border: none;
+  border-radius: var(--c-av-border-radius);
+  cursor: pointer;
+}
+
+.tab-button-active {
+  background: url('../../../../assets/lobby/active-bg.png') no-repeat center
+    center / cover;
+  color: #fff;
+}
+
+%icon {
+  width: 22px;
+  height: 22px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+.sedie-icon {
+  @extend %icon;
+  background-image: url('../../../../assets/game-icons/sedie.png');
+}
+
+.vip-sedie-icon {
+  @extend %icon;
+  background-image: url('../../../../assets/game-icons/vip-sedie.png');
+}
+.big-small-icon {
+  @extend %icon;
+  background-image: url('../../../../assets/game-icons/big-small.png');
+}
+
+.baccarat-icon {
+  @extend %icon;
+  background-image: url('../../../../assets/game-icons/game-icon-10.png');
+}
