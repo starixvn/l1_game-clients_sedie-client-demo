@@ -4,7 +4,11 @@
     "allowJs": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+    "declarationMap": true
   },
   "files": [],
   "include": [],

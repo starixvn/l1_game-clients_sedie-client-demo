@@ -1,12 +1,35 @@
 const { NxWebpackPlugin } = require('@nx/webpack');
 const { NxReactWebpackPlugin } = require('@nx/react');
 const { join } = require('path');
+const path = require('path');
 
 module.exports = {
     output: {
         path: join(__dirname, '../../dist/libs/hot-league-wall'),
         publicPath: '/hot-league-wall/',
-        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]',
+        devtoolModuleFilenameTemplate: (info) => {
+            const relativePath = info.resourcePath;
+
+            // For node_modules except @sg libraries, ignore source maps
+            if (relativePath.includes('node_modules')) {
+                if (relativePath.includes('@sg')) {
+                    // For @sg libraries, use a loadable URL format with relative paths
+                    const sgPath = relativePath.replace(/.*node_modules\/@sg\//, '');
+                    return `sources://@sg/${sgPath}`;
+                }
+                return 'ignored://ignored.js';
+            }
+
+            // For hot-league-wall files, use a proper URL format
+            if (relativePath.includes('hot-league-wall')) {
+                const cleanPath = relativePath.split('hot-league-wall/').pop();
+                // Use a proper URL scheme that browsers can load
+                return `sources://hot-league-wall/${cleanPath}`;
+            }
+
+            // For other files, use a loadable relative URL
+            return `sources:///${relativePath.replace(/\\/g, '/')}`;
+        },
     },
     devServer: {
         port: 4201,
@@ -22,22 +45,52 @@ module.exports = {
             watch: true,
         },
     },
-    devtool: process.env.NODE_ENV === 'production' ? 'source-map' : 'eval-source-map',
+    devtool: 'source-map',
+    stats: {
+        modules: true,
+        errorDetails: true,
+        logging: 'verbose',
+    },
     module: {
         rules: [
             {
                 test: /\.(js|ts|tsx)$/,
                 enforce: 'pre',
-                exclude: /node_modules/,
+                include: [
+                    join(__dirname, 'src'),
+                    join(__dirname, 'constant'),
+                    join(__dirname, 'preview-template'),
+                    join(__dirname, '../../node_modules/@sg/sg-game-client'),
+                    join(__dirname, '../../node_modules/@sg/sg-observer'),
+                ],
+                exclude: [
+                    // Exclude all node_modules except @sg libraries
+                    (path) => {
+                        if (path.includes('node_modules')) {
+                            return !path.includes('@sg/sg-game-client') && !path.includes('@sg/sg-observer');
+                        }
+                        return false;
+                    },
+                ],
                 use: [
                     {
                         loader: 'source-map-loader',
                         options: {
                             filterSourceMappingUrl: (url, resourcePath) => {
+                                console.log('Processing source map:', url, resourcePath);
+
+                                // For @sg libraries, ensure we process the source maps
                                 if (resourcePath.includes('@sg/sg-game-client') || resourcePath.includes('@sg/sg-observer')) {
-                                    return false;
+                                    return true;
                                 }
-                                return true;
+
+                                // For hot-league-wall files, process them
+                                if (resourcePath.includes('hot-league-wall')) {
+                                    return true;
+                                }
+
+                                // For all other files, skip source map processing
+                                return false;
                             },
                         },
                     },
@@ -54,12 +107,17 @@ module.exports = {
         /Failed to parse source map from '.*@inversifyjs.*/,
         /Failed to parse source map from '.*inversify.*\.ts' file: Error: ENOENT: no such file or directory/,
         /Failed to parse source map from '.*inversify.*\.ts'/,
+        /Failed to parse source map from '.*node_modules.*'/,
         {
             module: /node_modules\/@inversifyjs/,
             message: /.*/,
         },
         {
             module: /node_modules\/inversify/,
+            message: /.*/,
+        },
+        {
+            module: /node_modules/,
             message: /.*/,
         },
     ],
@@ -88,12 +146,10 @@ module.exports = {
             sourceMap: {
                 scripts: true,
                 styles: true,
-                vendor: true,
+                vendor: false,
             },
         }),
         new NxReactWebpackPlugin({
-            // Uncomment this line if you don't want to use SVGR
-            // See: https://react-svgr.com/
             svgr: true,
         }),
     ],

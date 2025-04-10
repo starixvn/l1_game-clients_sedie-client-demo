@@ -7,11 +7,17 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strict": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+    "declarationMap": true
   },
   "files": [],
   "include": [],
-  "types": ["reflect-metadata"],
+  "types": [
+    "reflect-metadata"
+  ],
   "references": [
     {
       "path": "./tsconfig.app.json"

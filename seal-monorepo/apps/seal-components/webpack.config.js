@@ -10,17 +10,51 @@ const SEAL_COMPONENT_PROJECT = resolve(__dirname, 'dist'); // 打包給 seal-com
 const SEAL_COMPONENT_OUTPUT = resolve(SEAL_COMPONENT_PROJECT, 'dist'); // seal-components 產出檔案
 
 module.exports = {
-    mode: 'production',
+    mode: 'development',
     entry: resolve(__dirname, 'src/index.ts'),
-    // 只顯示錯誤訊息
-    stats: 'errors-only',
+    // Configure detailed stats output
+    stats: {
+        modules: true,
+        errorDetails: true,
+        logging: 'verbose',
+    },
     output: {
         path: SEAL_COMPONENT_OUTPUT,
         filename: 'seal-components.js',
         library: 'SealComponents',
         libraryTarget: 'umd',
+        // Custom source map URL template
+        devtoolModuleFilenameTemplate: (info) => {
+            const relativePath = info.resourcePath;
+
+            // For node_modules except @sg libraries, ignore source maps
+            if (relativePath.includes('node_modules')) {
+                if (relativePath.includes('@sg')) {
+                    // For @sg libraries, use a loadable URL format with relative paths
+                    const sgPath = relativePath.replace(/.*node_modules\/@sg\//, '');
+                    return `sources://@sg/${sgPath}`;
+                }
+                return 'ignored://ignored.js';
+            }
+
+            // For hot-league-wall files, use a proper URL format
+            if (relativePath.includes('hot-league-wall')) {
+                const cleanPath = relativePath.split('hot-league-wall/').pop();
+                return `sources://hot-league-wall/${cleanPath}`;
+            }
+
+            // For seal-components files, use app prefix
+            if (relativePath.includes('seal-components')) {
+                const cleanPath = relativePath.split('seal-components/').pop();
+                return `sources://seal-components/${cleanPath}`;
+            }
+
+            // For other files, use a loadable relative URL
+            return `sources:///${relativePath.replace(/\\/g, '/')}`;
+        },
     },
-    devtool: false,
+    // Enable source maps for development
+    devtool: 'source-map',
     resolve: {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
         alias: {
@@ -28,8 +62,80 @@ module.exports = {
             '@HotLeagueWall': resolve(__dirname, '../../libs/hot-league-wall/src/index.tsx'),
         },
     },
+    // Ignore all source map warnings from node_modules
+    ignoreWarnings: [
+        /Failed to parse source map/,
+        /Failed to load source map/,
+        /ENOENT: no such file or directory/,
+        /Error: ENOENT: no such file or directory, open '.*inversify.*'/,
+        /Module Warning.*@inversifyjs/,
+        /Failed to parse source map from '.*@inversifyjs.*/,
+        /Failed to parse source map from '.*inversify.*\.ts' file: Error: ENOENT: no such file or directory/,
+        /Failed to parse source map from '.*inversify.*\.ts'/,
+        /Failed to parse source map from '.*node_modules.*'/,
+        {
+            module: /node_modules\/@inversifyjs/,
+            message: /.*/,
+        },
+        {
+            module: /node_modules\/inversify/,
+            message: /.*/,
+        },
+        {
+            module: /node_modules/,
+            message: /Failed to parse source map/,
+        },
+    ],
     module: {
         rules: [
+            {
+                test: /\.(js|ts|tsx|jsx)$/,
+                enforce: 'pre',
+                include: [
+                    // resolve(__dirname, 'src'),
+                    // resolve(__dirname, '../../libs/saba-games/src'),
+                    resolve(__dirname, '../../libs/hot-league-wall/src'),
+                    resolve(__dirname, '../../node_modules/@sg/sg-game-client'),
+                    resolve(__dirname, '../../node_modules/@sg/sg-observer'),
+                ],
+                exclude: [
+                    // Exclude all node_modules except @sg libraries
+                    (path) => {
+                        if (path.includes('node_modules')) {
+                            return !path.includes('@sg/sg-game-client') && !path.includes('@sg/sg-observer');
+                        }
+                        return false;
+                    },
+                ],
+                use: [
+                    {
+                        loader: 'source-map-loader',
+                        options: {
+                            filterSourceMappingUrl: (url, resourcePath) => {
+                                console.log('Processing source map:', url, resourcePath);
+
+                                // For @sg libraries, ensure we process the source maps
+                                if (resourcePath.includes('@sg/sg-game-client') || resourcePath.includes('@sg/sg-observer')) {
+                                    return true;
+                                }
+
+                                // For hot-league-wall files, process them
+                                if (resourcePath.includes('hot-league-wall')) {
+                                    return true;
+                                }
+
+                                // For seal-components files, process them
+                                if (resourcePath.includes('seal-components')) {
+                                    return true;
+                                }
+
+                                // For all other files, skip source map processing
+                                return false;
+                            },
+                        },
+                    },
+                ],
+            },
             {
                 test: /\.(js|jsx)$/,
                 use: {

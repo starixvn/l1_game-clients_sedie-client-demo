@@ -10,11 +10,14 @@
         "outputPath": "dist/apps/seal-components",
         "webpackConfig": "apps/seal-components/webpack.config.js",
         "tsConfig": "apps/seal-components/tsconfig.app.json",
+        "sourceMap": true,
         "assets": [
           {
             "input": "dist/libs",
             "glob": "**/*",
-            "ignore": ["**/*.js"],
+            "ignore": [
+              "**/*.js"
+            ],
             "output": "dist/app/seal-components"
           }
         ]
@@ -23,7 +26,7 @@
         "production": {
           "optimization": true,
           "outputHashing": "all",
-          "sourceMap": false,
+          "sourceMap": true,
           "namedChunks": false,
           "vendorChunk": false,
           "buildOptimizer": true,
@@ -34,6 +37,11 @@
               "maximumError": "5mb"
             }
           ]
+        },
+        "development": {
+          "optimization": false,
+          "sourceMap": true,
+          "extractCss": false
         }
       }
     }

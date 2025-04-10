@@ -8,9 +8,12 @@
     "noLib": false,
     "preserveConstEnums": true,
     "ignoreDeprecations": "5.0",
-    "suppressImplicitAnyIndexErrors": true,
     "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+    "declarationMap": true
   },
   "extends": "./tsconfig.base.json",
   "ts-node": {
