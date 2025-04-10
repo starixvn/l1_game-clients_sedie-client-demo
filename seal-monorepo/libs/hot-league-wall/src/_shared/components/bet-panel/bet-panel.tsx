@@ -7,6 +7,7 @@ import {
     SABA_GAMES,
     SE_DIE_GAME_NAMESPACE,
     VGAMING,
+    VIP_SE_DIE_GAME_NAMESPACE,
     VIVA88_SITE_ID,
 } from '../../../../constant/app';
 import { useAppContext } from '../../../appProvider';
@@ -30,6 +31,7 @@ const WARNING_CLOSE_DELAY = 60000;
 // Game icon mapping constant
 const GAME_ICON_MAPPING = {
     [SE_DIE_GAME_NAMESPACE]: 'sedie-icon',
+    [VIP_SE_DIE_GAME_NAMESPACE]: 'vip-sedie-icon',
 } as const;
 
 export interface IBetPanel extends IStateObserver {

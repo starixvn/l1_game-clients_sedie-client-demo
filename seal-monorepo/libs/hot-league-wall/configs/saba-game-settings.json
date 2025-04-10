@@ -23,5 +23,30 @@
         "mainObserverNamespace": "SeDie",
         "order": 2,
         "isSocketGateway": true
+    },
+    "22": {
+        "id": 22,
+        "gameName": "VipSeDie",
+        "name": "VipSeDie",
+        "namespaces": [
+            "VipSeDie"
+        ],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 39,
+            "lockingBet": 5,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 8,
+            "startRound": 0
+        },
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "mainObserverNamespace": "VipSeDie",
+        "order": 1,
+        "isSocketGateway": true
     }
 }
