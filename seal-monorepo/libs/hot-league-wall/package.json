@@ -1,0 +1,7 @@
+{
+    "name": "hot-league-wall",
+    "scripts": {
+        "test": "jest",
+        "test:webpack": "jest webpack.config.test.js"
+    }
+}
