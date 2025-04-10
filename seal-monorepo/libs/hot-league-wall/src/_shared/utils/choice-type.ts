@@ -1,8 +1,8 @@
-import { BACCARAT_GAME_NAMESPACE, SE_DIE_GAME_NAMESPACE, UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE, VIP_SE_DIE_GAME_NAMESPACE } from '../../../constant/app';
-import { SE_DIE_CHOICES, BACCARAT_CHOICES } from '../../games/constants/saba-club';
+import { SE_DIE_GAME_NAMESPACE } from '../../../constant/app';
+import { SE_DIE_CHOICES } from '../../games/constants/saba-club';
 
 export const getChoicesType = (gameName: string, betChoice: string) => {
-    if (gameName === SE_DIE_GAME_NAMESPACE || gameName === VIP_SE_DIE_GAME_NAMESPACE) {
+    if (gameName === SE_DIE_GAME_NAMESPACE) {
         switch (betChoice) {
             case SE_DIE_CHOICES.ODD:
             case SE_DIE_CHOICES.EVEN:
@@ -13,25 +13,6 @@ export const getChoicesType = (gameName: string, betChoice: string) => {
             case SE_DIE_CHOICES.WHITE4:
             case SE_DIE_CHOICES.WHITE3:
                 return `${gameName}.choices_type2`;
-            default:
-                return '';
-        }
-    }
-
-    if (gameName === UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE) {
-        return `${gameName}.choices_type`;
-    }
-
-    if (gameName === BACCARAT_GAME_NAMESPACE) {
-        switch (betChoice) {
-            case BACCARAT_CHOICES.PLAYER:
-            case BACCARAT_CHOICES.BANKER:
-                return `${gameName}.banker_player`;
-            case BACCARAT_CHOICES.PLAYER_PAIR:
-            case BACCARAT_CHOICES.BANKER_PAIR:
-                return `${gameName}.banker_player_pair`;
-            case BACCARAT_CHOICES.TIE:
-                return `${gameName}.glossary_tie`;
             default:
                 return '';
         }

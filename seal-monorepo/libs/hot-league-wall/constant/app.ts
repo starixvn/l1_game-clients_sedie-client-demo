@@ -3,14 +3,11 @@ export const VGAMING = 'Vgaming';
 
 
 export const SE_DIE_GAME_ID = 2;
-export const VIP_SE_DIE_GAME_ID = 22;
-export const UNBALANCED_BIG_SMALL_4_GAME_ID = 55;
-export const BACCARAT_GAME_ID = 10;
+
 
 export const SE_DIE_GAME_NAMESPACE = 'SeDie';
-export const VIP_SE_DIE_GAME_NAMESPACE = 'VipSeDie';
-export const UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE = 'UnbalancedBigSmall4';
-export const BACCARAT_GAME_NAMESPACE = 'Baccarat';
+
+
 
 // SiteId
 // nova Vgaming , viva (SabaGames/SabaClub)

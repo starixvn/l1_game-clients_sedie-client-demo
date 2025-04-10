@@ -4,16 +4,13 @@ import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    BACCARAT_GAME_NAMESPACE,
     SABA_GAMES,
     SE_DIE_GAME_NAMESPACE,
-    UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE,
     VGAMING,
-    VIP_SE_DIE_GAME_NAMESPACE,
     VIVA88_SITE_ID,
 } from '../../../../constant/app';
 import { useAppContext } from '../../../appProvider';
-import { BACCARAT_CHOICES, SE_DIE_CHOICES } from '../../../games/constants/saba-club';
+import { SE_DIE_CHOICES } from '../../../games/constants/saba-club';
 import { ChoiceSeDieIconMapper, SeDieChoices } from '../../../games/saba-club/sedie/type';
 import {
     useGameBettingOptionsContext,
@@ -33,9 +30,6 @@ const WARNING_CLOSE_DELAY = 60000;
 // Game icon mapping constant
 const GAME_ICON_MAPPING = {
     [SE_DIE_GAME_NAMESPACE]: 'sedie-icon',
-    [VIP_SE_DIE_GAME_NAMESPACE]: 'vip-sedie-icon',
-    [UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE]: 'bigsmall-icon',
-    [BACCARAT_GAME_NAMESPACE]: 'baccarat-icon',
 } as const;
 
 export interface IBetPanel extends IStateObserver {
@@ -155,7 +149,7 @@ const BetPanel: React.FC<{
     const panelRef = useRef<HTMLDivElement>(null);
 
 
-    
+
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -177,11 +171,7 @@ const BetPanel: React.FC<{
         const newMin = Math.max(minBet, stakeLevelMinBet);
 
         let newMax = 0;
-        if (Object.keys(maxBetPerChoices).length <= 0 && namespace === UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE) {
-            newMax = Math.min(maxBet, stakeLevel.maxBet);
-        } else {
-            newMax = Math.min(betChoiceMax, maxBet, stakeLevel.maxBet);
-        }
+        newMax = Math.min(betChoiceMax, maxBet, stakeLevel.maxBet);
 
         setMin(newMin);
         setMax(newMax);
@@ -237,16 +227,16 @@ const BetPanel: React.FC<{
     const updateLatestBetToStorage = (namespace: string, clientRoundId: number) => {
         const existingHistory = StorageManager.get(localStorageKeys.betHistory) as ILatestBetRecord[];
         let betHistory = Array.isArray(existingHistory) ? existingHistory : [];
-    
+
         const newBet = { namespace, roundId: clientRoundId };
         const existingNamespaceIndex = betHistory.findIndex(bet => bet.namespace === namespace);
-    
+
         if (existingNamespaceIndex !== -1) {
             betHistory[existingNamespaceIndex].roundId = clientRoundId;
         } else {
             betHistory.push(newBet);
         }
-    
+
         StorageManager.set(localStorageKeys.betHistory, betHistory);
     };
 
@@ -372,10 +362,7 @@ const BetPanel: React.FC<{
     const renderGameElements = (gameName: string) => {
         switch (gameName) {
             case SE_DIE_GAME_NAMESPACE:
-            case VIP_SE_DIE_GAME_NAMESPACE:
                 return renderDots();
-            case UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE:
-                return renderDices();
             default:
                 return null;
         }
@@ -402,9 +389,7 @@ const BetPanel: React.FC<{
                 ref={panelRef}
                 className={classNames('c-quick-bet__panel', {
                     ['sg-bet-panel__left-dec-100']:
-                        SE_DIE_CHOICES.RED2 === betChoice ||
-                        BACCARAT_CHOICES.PLAYER_PAIR === betChoice ||
-                        BACCARAT_CHOICES.BANKER_PAIR === betChoice,
+                        SE_DIE_CHOICES.RED2 === betChoice
                 })}
             >
                 <div className="c-betslip">
