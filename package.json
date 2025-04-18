@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "stryker": "stryker run",
+    "stryker:saba-games": "cd seal-monorepo/libs/saba-games && stryker run"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "^8.7.1",
+    "@stryker-mutator/jest-runner": "^8.7.1",
+    "typescript": "^5.8.3"
+  }
+}

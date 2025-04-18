@@ -120,4 +120,4 @@ const FishPrawnCrabBetPercentages: React.FC<Props> = ({
     );
 };
 
-export { FishPrawnCrabBetPercentages, calculateBetStatistics, type BetCounts, type BetResult }; 
+export { FishPrawnCrabBetPercentages, calculateBetStatistics, countResult, BetPercentageItem, type BetCounts, type BetResult }; 

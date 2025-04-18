@@ -13,7 +13,9 @@
     "test-coverage": "nx test saba-games --coverage",
     "test-saba-games": "nx test saba-games",
     "test-saba-games:watch": "nx test saba-games --watch",
-    "test-saba-games:debug": "nx test saba-games --runInBand"
+    "test-saba-games:debug": "nx test saba-games --runInBand",
+    "stryker": "stryker run",
+    "stryker:saba-games": "cd libs/saba-games && stryker run"
   },
   "private": true,
   "devDependencies": {
@@ -42,6 +44,8 @@
     "@storybook/test": "^8.0.8",
     "@storybook/test-runner": "^0.13.0",
     "@storybook/testing-library": "^0.2.2",
+    "@stryker-mutator/core": "^8.7.1",
+    "@stryker-mutator/jest-runner": "^8.7.1",
     "@svgr/webpack": "^8.0.1",
     "@swc-node/register": "1.8.0",
     "@swc/cli": "~0.1.62",
