@@ -4,7 +4,6 @@ import styles from './fish-prawn-crab-scoreboard.module.scss';
 import { createRef } from 'react';
 import React from 'react';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds';
-import { BetPercentages } from '../../../../_shared/components/bet-percentages';
 import { ScoreboardItemContent } from '../../../../_shared/components/scoreboard/types';
 import { IPropsObserver, IStateObserver, ObserverComponent } from '../../../../_shared/components/observer-component/observer-component';
 import { FishPrawnCrabChoices, FishPrawnCrabResult, FishPrawnCrabSettlementResult } from '../type';
@@ -12,6 +11,7 @@ import ScrollElement from '../../../../_shared/components/scroll-element';
 import FishPrawnCrabScoreBoardBody from './components/fish-prawn-crab-scoreboard-body';
 import { BigRoadScoreboard } from 'sc-scoreboards';
 import { FishPrawnCrabBigRoadConverter, FishPrawnCrabRoundHistory } from '../../../../_shared/components/scoreboard/converters/fish-prawn-crab';
+import { FishPrawnCrabBetPercentages } from '../bet-percentages';
 
 export interface IFishPrawnCrabResultHistoryState extends IStateObserver {
     rounds: gc.RoundHistories.RoundHistory[];
@@ -98,10 +98,10 @@ export default class FishPrawnCrabScoreBoard extends ObserverComponent<Props, IF
             <div className={styles['scoreboard']}>
                 <div className={styles['scoreboard-title']}>{scoreboardText}</div>
                 {
-                    <BetPercentages
-                        gameName={this.props.gameName}
-                        scoreboardCharacter={scoreboardCharacter}
-                        settlements={settlements}
+                    <FishPrawnCrabBetPercentages
+                        gameName={this.props.gameName || ''}
+                        rounds={rounds}
+                        language={this.props.language}
                     />
                 }
                 <ScrollElement className={styles['scoreboard-content']} refData={this.scrollDivRef}>
