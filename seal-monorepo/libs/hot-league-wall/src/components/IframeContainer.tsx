@@ -36,23 +36,47 @@ const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, ch
 const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => {
     const [iframeHeight, setIframeHeight] = useState<number>(264);
     const [betPanelState, setBetPanelState] = useState<BetPanelState | null>(null);
+    const [isPanelVisible, setIsPanelVisible] = useState<boolean>(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
+    const lastRequestTimeRef = useRef<number>(0);
+    const lastHeightRef = useRef<number>(264);
+    const updateCountRef = useRef<number>(0);
+    const panelRef = useRef<HTMLDivElement>(null);
 
     // Function to request height from iframe
     const requestIframeHeight = useCallback(() => {
         const iframe = iframeRef.current;
-        if (iframe?.contentWindow) {
-            console.log('Parent: Requesting height from iframe');
-            iframe.contentWindow.postMessage({ type: 'GET_HEIGHT' }, '*');
+        if (!iframe?.contentWindow) return;
+
+        // Prevent requesting height too frequently
+        const now = Date.now();
+        if (now - lastRequestTimeRef.current < 500) return;
+        lastRequestTimeRef.current = now;
+
+        // Prevent too many requests
+        updateCountRef.current++;
+        if (updateCountRef.current > 10) {
+            console.warn('Too many height requests, stopping');
+            return;
         }
+
+        iframe.contentWindow.postMessage({ type: 'GET_HEIGHT' }, '*');
+    }, []);
+
+    // Reset update count periodically
+    useEffect(() => {
+        const resetInterval = setInterval(() => {
+            updateCountRef.current = 0;
+        }, 5000);
+
+        return () => clearInterval(resetInterval);
     }, []);
 
     // Function to toggle statistic in iframe
     const toggleStatistic = useCallback((isOpen: boolean) => {
         const iframe = iframeRef.current;
         if (iframe?.contentWindow) {
-            console.log('Parent: Sending toggle statistic message:', isOpen);
             iframe.contentWindow.postMessage({
                 type: 'TOGGLE_STATISTIC',
                 isOpen: isOpen
@@ -64,21 +88,34 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
 
     // Handle incoming messages from the iframe
     const handleMessage = useCallback((event: MessageEvent) => {
-        console.log('Parent: Received message:', event.data, 'from origin:', event.origin);
+        // Only process messages from expected origins
+        if (!event.origin.includes('localhost:4200') && !event.origin.includes('localhost:4201')) {
+            return;
+        }
 
         try {
             const data = event.data;
 
             // Handle height update message
             if (data.type === 'SET_HEIGHT' && typeof data.height === 'number') {
-                console.log('Parent: Setting new height from message:', data.height);
-                // Add small buffer for safety
-                setIframeHeight(data.height + 5);
+                // Only update if height changed significantly
+                if (Math.abs(data.height - lastHeightRef.current) >= 5) {
+                    lastHeightRef.current = data.height;
+                    setIframeHeight(data.height + 5);
+                }
             }
 
             // Handle bet panel state updates
             if (data.type === 'BET_PANEL_STATE') {
                 setBetPanelState(data.state);
+                setIsPanelVisible(true);
+            }
+
+            // Handle bet panel hide
+            if (data.type === 'HIDE_BET_PANEL') {
+                console.log('Parent: Received HIDE_BET_PANEL message');
+                setIsPanelVisible(false);
+                setBetPanelState(null);
             }
 
             onMessage?.(data);
@@ -89,7 +126,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
-        console.log('Parent: Iframe loaded, requesting initial height');
         // Wait longer for content to fully render
         setTimeout(requestIframeHeight, 500);
     }, [requestIframeHeight]);
@@ -159,6 +195,30 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
         }
     }, []);
 
+    // Handle click outside to close panel
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+                console.log('Parent: Click outside detected');
+                setIsPanelVisible(false);
+                setBetPanelState(null);
+                if (iframeRef.current?.contentWindow) {
+                    iframeRef.current.contentWindow.postMessage({
+                        type: 'HIDE_BET_PANEL'
+                    }, '*');
+                }
+            }
+        };
+
+        if (isPanelVisible) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isPanelVisible]);
+
     return (
         <CustomContainer className="mt-3" fluid="xl">
             <div style={{
@@ -181,23 +241,26 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                     title="External Content"
                     onLoad={handleIframeLoad}
                 />
-                {portalContainerRef.current && betPanelState && createPortal(
-                    <div style={{
+                {portalContainerRef.current && betPanelState && isPanelVisible && createPortal(
+                    <div className="seal-vg-sg-index" style={{
                         position: 'fixed',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 9999,
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                        maxHeight: '90vh',
-                        overflowY: 'auto',
-                        width: '90%',
-                        maxWidth: '600px'
+                        top: '0',
+                        left: '0',
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none',
+                        zIndex: 9999
                     }}>
-                        <div className="c-quick-bet c-quick-bet--bottom-left">
+                        <div
+                            ref={panelRef}
+                            className="c-quick-bet c-quick-bet--bottom-left"
+                            style={{
+                                pointerEvents: 'auto',
+                                position: 'absolute',
+                                top: `${betPanelState.top}px`,
+                                left: `${betPanelState.left}px`
+                            }}
+                        >
                             <div className="c-quick-bet__btn"></div>
                             <div className={classNames('c-quick-bet__panel', {
                                 ['sg-bet-panel__left-dec-100']: betPanelState.isSpecialChoice,

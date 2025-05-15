@@ -6,7 +6,7 @@
         "namespaces": [
             "SeDie"
         ],
-        "isVisible": true,
+        "isVisible": false,
         "durations": {
             "wholeRound": 39,
             "lockingBet": 5,
@@ -31,7 +31,7 @@
         "namespaces": [
             "FishPrawnCrab"
         ],
-        "isVisible": true,
+        "isVisible": false,
         "durations": {
             "wholeRound": 41,
             "lockingBet": 5,
@@ -57,7 +57,7 @@
         "namespaces": [
             "Baccarat"
         ],
-        "isVisible": true,
+        "isVisible": false,
         "durations": {
             "wholeRound": 46,
             "lockingBet": 3,

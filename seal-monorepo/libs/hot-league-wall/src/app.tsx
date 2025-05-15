@@ -43,13 +43,16 @@ const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProp
 
     loadI18n(language);
     return (
-        <div data-react="true" style={{ width: '100%' }}>
+        <>
             <IframeContainer
                 src="http://localhost:4200/"
                 onMessage={handleIframeMessage}
             />
-            {token && <Lobby token={token} language={language} renewToken={renewToken} />}
-        </div>
+            <div data-react="true" style={{ width: '100%' }}>
+
+                {token && <Lobby token={token} language={language} renewToken={renewToken} />}
+            </div>
+        </>
     );
 };
 

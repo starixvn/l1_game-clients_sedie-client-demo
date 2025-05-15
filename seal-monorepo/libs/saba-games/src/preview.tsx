@@ -3,7 +3,7 @@ import { useSentryInit } from './saba-games-index';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER, VIVA88_SITE_ID } from '../constant/app';
 import App from './app';
 import { PreviewProvider, usePreviewContext } from './previewProvider';
-import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
+//import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import DiceDemo from './_shared/components/color-game-dice/dice-demo';
@@ -126,7 +126,7 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
             }}
         >
             <div ref={contentRef}>
-                <ProviderSetDropDown />
+                {/* <ProviderSetDropDown /> */}
                 <Routes>
                     <Route path="/color-games-demo" element={<DiceDemo />} />
                     <Route path="*" element={

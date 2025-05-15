@@ -8,6 +8,14 @@ import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import DiceDemo from './_shared/components/color-game-dice/dice-demo';
 
+declare global {
+    interface Window {
+        _heightUpdateTimeout?: NodeJS.Timeout;
+        _isUpdatingHeight?: boolean;
+        _lastHeightUpdate?: number;
+    }
+}
+
 const Preview = () => {
     const [token, setToken] = useState('');
 
@@ -43,8 +51,12 @@ const Preview = () => {
 const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const lastHeightRef = useRef<number>(0);
+    const updateCountRef = useRef<number>(0);
+    const animationTimeoutRef = useRef<NodeJS.Timeout>();
 
     const appEnv = '';
     const siteId = VIVA88_SITE_ID;
@@ -59,48 +71,90 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
 
     // Send height update to parent
     const sendHeightUpdate = useCallback(() => {
-        if (!contentRef.current) return;
+        if (!contentRef.current || window._isUpdatingHeight || isAnimating) return;
+
+        // Prevent too many updates in a short time
+        const now = Date.now();
+        if (window._lastHeightUpdate && now - window._lastHeightUpdate < 500) {
+            return;
+        }
 
         const contentHeight = contentRef.current.scrollHeight;
         const newHeight = isExpanded ? Math.max(contentHeight, 400) : Math.max(contentHeight, 264);
-        console.log('Iframe: Content height:', contentHeight, 'New height:', newHeight);
 
-        window.parent.postMessage({
-            type: 'SET_HEIGHT',
-            height: newHeight
-        }, '*');
-    }, [isExpanded]);
+        // Only send update if height actually changed significantly (more than 5px)
+        if (Math.abs(newHeight - lastHeightRef.current) < 5) return;
+        lastHeightRef.current = newHeight;
+
+        // Prevent infinite updates
+        updateCountRef.current++;
+        if (updateCountRef.current > 10) {
+            console.warn('Too many height updates, stopping');
+            return;
+        }
+
+        // Debounce height updates
+        if (window._heightUpdateTimeout) {
+            clearTimeout(window._heightUpdateTimeout);
+        }
+
+        window._isUpdatingHeight = true;
+        window._lastHeightUpdate = now;
+
+        window._heightUpdateTimeout = setTimeout(() => {
+            window.parent.postMessage({
+                type: 'SET_HEIGHT',
+                height: newHeight
+            }, '*');
+            window._isUpdatingHeight = false;
+        }, 200);
+    }, [isExpanded, isAnimating]);
 
     // Handle messages from parent window
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
-            console.log('Iframe: Received message:', event.data, 'from origin:', event.origin);
-
             if (event.data.type === 'GET_HEIGHT') {
                 sendHeightUpdate();
             } else if (event.data.type === 'TOGGLE_STATISTIC') {
-                console.log('Iframe: Toggling statistic:', event.data.isOpen);
+                setIsAnimating(true);
                 setIsExpanded(event.data.isOpen);
-                // Send height update after state change and animation
-                setTimeout(sendHeightUpdate, 300);
+
+                // Clear any existing animation timeout
+                if (animationTimeoutRef.current) {
+                    clearTimeout(animationTimeoutRef.current);
+                }
+
+                // Wait for animation to complete before sending height update
+                animationTimeoutRef.current = setTimeout(() => {
+                    setIsAnimating(false);
+                    sendHeightUpdate();
+                }, 300); // Match the CSS transition duration
             }
         };
 
         window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+        return () => {
+            window.removeEventListener('message', handleMessage);
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
+        };
     }, [sendHeightUpdate]);
 
     // Send height updates when content changes
     useEffect(() => {
-        console.log('Iframe: Setting up height update observer');
+        if (isAnimating) return; // Don't observe during animation
 
         // Send initial height after a delay to ensure content is rendered
-        setTimeout(sendHeightUpdate, 500);
+        const initialTimeout = setTimeout(sendHeightUpdate, 500);
 
         // Set up ResizeObserver to detect content changes
+        let resizeTimeout: NodeJS.Timeout;
         const observer = new ResizeObserver(() => {
-            console.log('Iframe: Content size changed, sending update');
-            sendHeightUpdate();
+            if (isAnimating) return; // Don't update during animation
+            // Debounce resize observer updates
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(sendHeightUpdate, 200);
         });
 
         if (contentRef.current) {
@@ -108,10 +162,11 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
         }
 
         return () => {
-            console.log('Iframe: Cleaning up height update observer');
+            clearTimeout(initialTimeout);
+            clearTimeout(resizeTimeout);
             observer.disconnect();
         };
-    }, [isExpanded, sendHeightUpdate]);
+    }, [isExpanded, sendHeightUpdate, isAnimating]);
 
     return (
         <div

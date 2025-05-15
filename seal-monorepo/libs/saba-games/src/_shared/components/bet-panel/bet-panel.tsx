@@ -214,6 +214,10 @@ const BetPanel: React.FC<{
     const onHide = () => {
         setPanelId(null);
         setWarnMsg('');
+        // Send message to parent window
+        window.parent.postMessage({
+            type: 'HIDE_BET_PANEL'
+        }, '*');
     };
 
     const setWarningWithTimeout = (message: string) => {
