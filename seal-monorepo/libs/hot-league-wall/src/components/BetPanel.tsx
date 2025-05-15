@@ -1,5 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
+import BettingChips from './BettingChips';
+import './BetPanel.scss';
 
 export interface BetPanelState {
     top: number;
@@ -41,6 +43,13 @@ export const BetPanel: React.FC<BetPanelProps> = ({
 }) => {
     if (!isPanelVisible) return null;
 
+    const handleChipAmountChange = (amount: number) => {
+        onInputChange({ target: { value: amount.toString() } } as React.ChangeEvent<HTMLInputElement>);
+    };
+
+    const t = (key: string) => key; // Placeholder translation function
+    const addCommas = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
     return (
         <div className="seal-vg-sg-index" style={{
             position: 'fixed',
@@ -63,6 +72,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                     left: `${betPanelState.left}px`
                 }}
             >
+                <div className="c-quick-bet__arrow"></div>
                 <div className="c-quick-bet__btn"></div>
                 <div className="c-quick-bet__panel">
                     <div className="c-betslip">
@@ -149,6 +159,14 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                 </span>
                                             </div>
                                         </div>
+                                        <BettingChips
+                                            min={betPanelState.min}
+                                            max={betPanelState.max}
+                                            currentAmount={betPanelState.amount}
+                                            onAmountChange={handleChipAmountChange}
+                                            t={t}
+                                            addCommas={addCommas}
+                                        />
                                     </div>
                                     <div className="c-betting-submit">
                                         <button

@@ -1,0 +1,52 @@
+.seal-vg-sg-index {
+    .c-betting-quick-stake {
+        padding: 0;
+        margin-top: 0;
+
+        .c-btn {
+            position: relative;
+            width: 55px;
+            height: 55px;
+            background-image: url(../assets/chip/Chip-1.svg);
+            background-size: 106% 106%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: transparent;
+            .c-text {
+                color: var(--c-av-black-opacity-1);
+            }
+
+            &:hover {
+                filter: none;
+            }
+
+            &:nth-child(2) {
+                background-image: url(../assets/chip/Chip-2.svg);
+            }
+
+            &:nth-child(3) {
+                background-image: url(../assets/chip/Chip-3.svg);
+            }
+
+            &:last-child {
+                background-image: url(../assets/chip/ChipMax.svg);
+
+                .c-text {
+                    top: 46%;
+                    color: var(--c-av-white);
+                }
+            }
+        }
+
+        .c-text {
+            position: absolute;
+            top: 46%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 500;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    }
+} 

@@ -2,7 +2,7 @@ import * as gc from '@sg/sg-game-client';
 import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, forwardRef } from 'react';
 import {
     BACCARAT_GAME_NAMESPACE,
     COLOR_GAME_NAMESPACE,
@@ -67,6 +67,7 @@ export interface ILatestBetRecord {
 }
 
 class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends ObserverComponent<IPropsObserver, IStateObserver> {
+    private betPanelRef = React.createRef<any>();
 
     constructor(props: P) {
         super(props);
@@ -127,11 +128,20 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
         this.setState({ clientSeed } as IBetPanel);
     }
 
+    // Add method to send bet panel state without showing panel
+    sendBetPanelState = () => {
+        const { clientRoundId, stakeLevel, currency, minBet, maxBet, maxBetPerChoices, clientSeed } = this.state as S;
+        if (this.betPanelRef.current) {
+            this.betPanelRef.current.sendBetPanelState();
+        }
+    }
+
     render() {
         const { clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, clientSeed } = this.state as S;
 
         return (
             <BetPanel
+                ref={this.betPanelRef}
                 namespace={this.props.namespace}
                 clientRoundId={clientRoundId}
                 currency={currency}
@@ -146,7 +156,7 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
     }
 }
 
-const BetPanel: React.FC<{
+const BetPanel = forwardRef<any, {
     namespace: string;
     clientRoundId: number;
     currency: string;
@@ -156,7 +166,7 @@ const BetPanel: React.FC<{
     stakeLevel: gc.Player.IStakeLevel;
     clientSeed: string;
     handleBet: (amount: number, betChoice: string, clientSeed: string) => void;
-}> = ({ namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet, clientSeed }) => {
+}>(({ namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet, clientSeed }, ref) => {
     const { panelId, setPanelId, setShow } = useGameBettingOptionsContext();
     const { gameName, betChoice, odd = 0 } = useGameBettingZoneContext();
     const { siteId } = useAppContext();
@@ -303,6 +313,44 @@ const BetPanel: React.FC<{
             return prev;
         });
     }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace]);
+
+    // Function to send BET_PANEL_STATE without showing panel
+    const sendBetPanelState = useCallback(() => {
+        const state = {
+            top: 0,
+            left: 0,
+            betChoice,
+            odd,
+            amount,
+            currency,
+            min,
+            max,
+            payout: amount > 0 ? addCommas(amount * odd, 2, false) : '0.00',
+            gameName,
+            namespace,
+            clientRoundId,
+            isSpecialChoice: [
+                SE_DIE_CHOICES.RED2,
+                BACCARAT_CHOICES.PLAYER_PAIR,
+                BACCARAT_CHOICES.BANKER_PAIR,
+                FISH_PRAWN_CRAB_CHOICES.PRAWN,
+                FISH_PRAWN_CRAB_CHOICES.ROOSTER,
+                COLOR_GAME_CHOICES.PINK,
+                COLOR_GAME_CHOICES.GREEN
+            ].includes(betChoice),
+            warnMsg
+        };
+
+        window.parent.postMessage({
+            type: 'BET_PANEL_STATE',
+            state
+        }, '*');
+    }, [betChoice, odd, amount, currency, min, max, gameName, namespace, clientRoundId, warnMsg]);
+
+    // Expose sendBetPanelState to parent component
+    React.useImperativeHandle(ref, () => ({
+        sendBetPanelState
+    }));
 
     useEffect(() => {
         if (panelId === betChoice && panelRef.current) {
@@ -571,7 +619,7 @@ const BetPanel: React.FC<{
             </div>
         </div>
     );
-};
+});
 
 const WarnMessage = ({ warnMsg }) => {
     if (!warnMsg) return null;
