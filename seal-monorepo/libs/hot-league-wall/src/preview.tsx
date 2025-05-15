@@ -69,6 +69,43 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
 
+    // Send theme and language updates to iframe content
+    useEffect(() => {
+        const iframe = document.querySelector('iframe');
+        console.log('Iframe element:', iframe);
+        console.log('Iframe contentWindow:', iframe?.contentWindow);
+
+        const sendSettings = () => {
+            if (iframe?.contentWindow) {
+                console.log('Sending UPDATE_SETTINGS to iframe:', {
+                    theme,
+                    isDarkMode,
+                    language
+                });
+                iframe.contentWindow.postMessage({
+                    type: 'UPDATE_SETTINGS',
+                    settings: {
+                        theme,
+                        isDarkMode,
+                        language
+                    }
+                }, '*');
+            } else {
+                console.warn('Iframe or contentWindow not found');
+            }
+        };
+
+        // Send settings when iframe loads
+        iframe?.addEventListener('load', sendSettings);
+
+        // Also try to send immediately in case iframe is already loaded
+        sendSettings();
+
+        return () => {
+            iframe?.removeEventListener('load', sendSettings);
+        };
+    }, [theme, isDarkMode, language]);
+
     // Send height update to parent
     const sendHeightUpdate = useCallback(() => {
         if (!contentRef.current || window._isUpdatingHeight || isAnimating) return;

@@ -29,13 +29,25 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
 };
 
 const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProps) => {
-    const { language } = useAppContext();
+    const { language, theme, isDarkMode } = useAppContext();
 
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
         }
     }, [updateBalanceCallback]);
+
+    // Update theme and dark mode when they change
+    useEffect(() => {
+        console.log('AppContent theme', theme);
+        console.log('AppContent isDarkMode', isDarkMode);
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
+    }, [theme, isDarkMode]);
+
+    useEffect(() => {
+        console.log('AppContent language', language);
+    }, [language]);
 
     loadI18n(language);
     return (
