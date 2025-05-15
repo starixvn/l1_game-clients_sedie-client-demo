@@ -1,4 +1,4 @@
-import { BACCARAT_GAME_NAMESPACE, SE_DIE_GAME_NAMESPACE, UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE, VIP_SE_DIE_GAME_NAMESPACE } from '../../../constant/app';
+import { BACCARAT_GAME_NAMESPACE, COLOR_GAME_NAMESPACE, COIN_TOSS_GAME_NAMESPACE, FISH_PRAWN_CRAB_GAME_NAMESPACE, SE_DIE_GAME_NAMESPACE, UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE, VIP_SE_DIE_GAME_NAMESPACE } from '../../../constant/app';
 import { SE_DIE_CHOICES, BACCARAT_CHOICES } from '../../games/constants/saba-club';
 
 export const getChoicesType = (gameName: string, betChoice: string) => {
@@ -37,5 +37,16 @@ export const getChoicesType = (gameName: string, betChoice: string) => {
         }
     }
 
+    if (gameName === FISH_PRAWN_CRAB_GAME_NAMESPACE) {
+        return `${gameName}.bet_choices_type`;
+    }
+
+    if (gameName === COLOR_GAME_NAMESPACE) {
+        return `${gameName}.bet_choices_type`;
+    }
+
+    if (gameName === COIN_TOSS_GAME_NAMESPACE) {
+        return `${gameName}.choices_type`;
+    }
     return 'choices_type';
 }

@@ -40,7 +40,6 @@ export class LocalStorage implements IActionStorage {
             localStorage.removeItem(test);
             return true;
         } catch (e) {
-            console.log('Browser not support Local Storage');
             return false;
         }
     }

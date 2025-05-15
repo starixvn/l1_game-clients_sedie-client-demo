@@ -1,0 +1,23 @@
+@import '../../../../_shared/components/game-base/styles/theme';
+
+// Override variables for color game
+$fpc-primary-bg: #f5e8e4;
+$fpc-header-bg: #d9bdb3;
+$fpc-accent-color: #ff7f50;
+
+@mixin fpc-header {
+    background-color: $fpc-header-bg;
+    padding: $spacing-md;
+}
+
+@mixin fpc-block {
+    background-color: $fpc-primary-bg;
+    border: 1px solid $border-color;
+}
+
+// Export classes for use in color components
+:export {
+    primaryBg: $fpc-primary-bg;
+    headerBg: $fpc-header-bg;
+    accentColor: $fpc-accent-color;
+} 

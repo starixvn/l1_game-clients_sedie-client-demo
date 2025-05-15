@@ -112,7 +112,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
                 this.autoCreateNickname();
             }
 
-            if (panelId !== betChoice) {
+            if (panelId !== betChoice && this.state.isShowBetSlip) {
                 setPanelId(betChoice);
             } else {
                 setPanelId(null);

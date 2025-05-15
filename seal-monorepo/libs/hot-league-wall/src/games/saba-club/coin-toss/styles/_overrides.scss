@@ -1,0 +1,49 @@
+@import '../../../../_shared/components/game-base/styles/theme';
+
+// Override variables for Fish Prawn Crab game
+$fpc-primary-bg: #f5e8e4;
+$fpc-header-bg: #d9bdb3;
+$fpc-accent-color: #ff7f50;
+
+// Fish Prawn Crab game-specific colors
+$fish-color: #3e9bff;
+$fish-color-start: #3e9bff;
+$fish-color-end: #0056a3;
+$prawn-color: #ff7f50;
+$prawn-color-start: #ff7f50; 
+$prawn-color-end: #b83c00;
+$crab-color: #ff5661;
+$crab-color-start: #ff5661;
+$crab-color-end: #be1c28;
+$rooster-color: #f5f5dc;
+$gourd-color: #00cc66;
+$stag-color: #ffd700;
+
+@mixin fpc-header {
+    background-color: $fpc-header-bg;
+    padding: $spacing-md;
+}
+
+@mixin fpc-block {
+    background-color: $fpc-primary-bg;
+    border: 1px solid $border-color;
+}
+
+// Export classes for use in Fish Prawn Crab components
+:export {
+    primaryBg: $fpc-primary-bg;
+    headerBg: $fpc-header-bg;
+    accentColor: $fpc-accent-color;
+    fishColor: $fish-color;
+    fishColorStart: $fish-color-start;
+    fishColorEnd: $fish-color-end;
+    prawnColor: $prawn-color;
+    prawnColorStart: $prawn-color-start;
+    prawnColorEnd: $prawn-color-end;
+    crabColor: $crab-color;
+    crabColorStart: $crab-color-start;
+    crabColorEnd: $crab-color-end;
+    roosterColor: $rooster-color;
+    gourdColor: $gourd-color;
+    stagColor: $stag-color;
+} 

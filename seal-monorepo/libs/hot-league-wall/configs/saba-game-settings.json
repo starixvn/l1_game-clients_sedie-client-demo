@@ -21,6 +21,32 @@
             "route": "livepagegateway"
         },
         "mainObserverNamespace": "SeDie",
+        "order": 4,
+        "isSocketGateway": true
+    },
+    "3": {
+        "id": 3,
+        "gameName": "FishPrawnCrab",
+        "name": "FishPrawnCrab",
+        "namespaces": [
+            "FishPrawnCrab"
+        ],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 41,
+            "lockingBet": 5,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 8,
+            "startRound": 2
+        },
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "serviceName": "fish-prawn-crab",
+        "mainObserverNamespace": "FishPrawnCrab",
         "order": 2,
         "isSocketGateway": true
     },
@@ -48,7 +74,7 @@
             "route": "livepagegateway"
         },
         "mainObserverNamespace": "Baccarat",
-        "order": 4,
+        "order": 5,
         "isSocketGateway": true
     },
     "22": {
@@ -73,7 +99,7 @@
             "route": "livepagegateway"
         },
         "mainObserverNamespace": "VipSeDie",
-        "order": 1,
+        "order": 3,
         "isSocketGateway": true
     },
     "55": {
@@ -99,7 +125,59 @@
             "route": "unbalancedbigsmall"
         },
         "mainObserverNamespace": "UnbalancedBigSmall4",
-        "order": 3,
+        "order": 6,
+        "isSocketGateway": true
+    },
+    "71": {
+        "id": 71,
+        "gameName": "ColorGame",
+        "name": "ColorGame",
+        "serviceName": "color-game",
+        "namespaces": [
+            "ColorGame"
+        ],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 40,
+            "lockingBet": 3,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 2,
+            "startRound": 2
+        },
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "mainObserverNamespace": "ColorGame",
+        "order": 7,
+        "isSocketGateway": true
+    },
+    "80": {
+        "id": 80,
+        "gameName": "CoinToss",
+        "name": "CoinToss",
+        "serviceName": "coin-toss",
+        "namespaces": [
+            "CoinToss"
+        ],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 29,
+            "lockingBet": 3,
+            "placingBet": 20,
+            "generatingResult": 1,
+            "showingResult": 3,
+            "startRound": 3
+        },
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "mainObserverNamespace": "CoinToss",
+        "order": 1,
         "isSocketGateway": true
     }
 }

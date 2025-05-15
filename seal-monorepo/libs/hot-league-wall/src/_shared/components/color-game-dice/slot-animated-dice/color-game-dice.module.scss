@@ -1,0 +1,115 @@
+$icon_width: 48px;
+$icon_height: 48px;
+
+.dice-x-large {
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.dice-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.dice-medium {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.dice-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.dice-container {
+  perspective: 300px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  height: $icon_height;
+
+  &-large {
+    height: $icon_height;
+  }
+
+  &-medium {
+    height: 36px;
+  }
+
+  &-small {
+    height: 28px;
+  }
+}
+
+.dice-set-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  perspective: 600px;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-wrapper {
+  position: relative;
+  width: $icon_width;
+  height: $icon_height;
+  perspective: 1100px;
+  overflow: hidden;
+}
+
+.carousel {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.3s ease-out;
+
+  figure {
+    display: block;
+    position: absolute;
+    width: $icon_width;
+    height: $icon_height;
+    margin: 0;
+    opacity: 0.9;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+    overflow: hidden;
+
+    &:nth-of-type(1) { transform: rotateX(0deg) translateZ(48px); }
+    &:nth-of-type(2) { transform: rotateX(60deg) translateZ(48px); }
+    &:nth-of-type(3) { transform: rotateX(120deg) translateZ(48px); }
+    &:nth-of-type(4) { transform: rotateX(180deg) translateZ(48px); }
+    &:nth-of-type(5) { transform: rotateX(240deg) translateZ(48px); }
+    &:nth-of-type(6) { transform: rotateX(300deg) translateZ(48px); }
+  }
+
+  &[data-currentData="1"] figure:nth-of-type(1),
+  &[data-currentData="2"] figure:nth-of-type(2),
+  &[data-currentData="3"] figure:nth-of-type(3),
+  &[data-currentData="4"] figure:nth-of-type(4),
+  &[data-currentData="5"] figure:nth-of-type(5),
+  &[data-currentData="6"] figure:nth-of-type(6) {
+    opacity: 1;
+  }
+}
+
+.dice-set-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}

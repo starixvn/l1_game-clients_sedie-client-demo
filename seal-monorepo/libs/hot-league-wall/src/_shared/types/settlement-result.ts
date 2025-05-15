@@ -13,4 +13,13 @@ export type BigSmallSettlementResult = {
     small: boolean | undefined;
 };
 
-export const choices = { over: "over", under: "under", odd: "odd", even: "even", big: "big", small: "small" };
+export const choices = { 
+    over: "over", 
+    under: "under", 
+    odd: "odd", 
+    even: "even", 
+    big: "big", 
+    small: "small",
+    head: "head",
+    tail: "tail"
+};

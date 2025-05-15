@@ -36,7 +36,7 @@ export default class SieDiePage extends GatewayGameBase<{ namespace: string; lan
     }
 
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
-    closeConnect() {}
+    closeConnect() { }
 
     renderRoundHistory() {
         return (

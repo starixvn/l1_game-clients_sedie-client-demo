@@ -1,0 +1,113 @@
+:root {
+  --coin-head-bg: linear-gradient(180deg,
+  hsla(47, 100%, 50%, 1),
+  hsla(35, 100%, 33%, 1));
+  --coin-head-border: none;
+  --coin-tail-bg: linear-gradient(180deg,
+  hsla(193, 46%, 92%, 1)
+  hsla(193, 12%, 48%, 1));
+  --coin-tail-border: none;
+  --coin-next-bg: #ccc;
+  --coin-next-border: #ddd;
+  --coin-text-light: #fff;
+  --coin-text-dark: #000000;
+  --coin-box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  --head-bg: linear-gradient(180deg, hsla(47, 100%, 50%, 1), hsla(35, 100%, 33%, 1));
+  --tail-bg: linear-gradient(180deg, hsla(193, 46%, 92%, 1), hsla(193, 12%, 48%, 1));
+}
+
+%dot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0 0.2rem;
+  border-radius: 50%;
+  font: 1.1rem var(--font-number);
+  pointer-events: none;
+  color: var(--coin-text-light);
+  z-index: 1;
+  font-weight: 600;
+
+  &:before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    bottom: 1px;
+    right: 1px;
+    border-radius: 100%;
+    z-index: -1;
+  }
+
+  &.dot-small {
+    width: 23px;
+    height: 23px;
+    margin: 0;
+  }
+}
+
+
+.dot-next {
+  @extend %dot;
+  background: var(--dot-even-border);
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+  color: var(--dot-even-text-color);
+
+  &:before {
+    background: var(--dot-current-highlight) !important;
+    height: calc(100% - 2px);
+    width: calc(100% - 2px);
+    position: absolute;
+  }
+}
+
+.blink {
+  animation: blinker 2s linear infinite;
+}
+
+.dot-head {
+  @extend %dot;
+  background: var(--head-bg);
+  box-shadow: var(--coin-box-shadow);
+
+  &:before {
+    background: var(--coin-head-bg);
+  }
+}
+
+.dot-tail {
+  @extend %dot;
+  background: var(--tail-bg);
+  box-shadow: var(--coin-box-shadow);
+  color: var(--coin-text-dark);
+
+  &:before {
+    background: var(--coin-tail-bg);
+  }
+}
+
+// Animation
+@keyframes blinker {
+  0% {
+    transform: scale(0.85);
+  }
+
+  25% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.85);
+  }
+
+  75% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(0.85);
+  }
+}

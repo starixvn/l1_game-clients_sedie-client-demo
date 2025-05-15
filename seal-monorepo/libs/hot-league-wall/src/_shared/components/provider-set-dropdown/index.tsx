@@ -47,9 +47,9 @@ const ProviderSetDropDown = () => {
                 ))}
             </select>
 
-            <label htmlFor="theme-select">Select Langue: </label>
+            <label htmlFor="language-select">Select Language: </label>
             <select 
-                id="theme-select"
+                id="language-select"
                 value={language}
                 onChange={handleLanguageChange}
             >

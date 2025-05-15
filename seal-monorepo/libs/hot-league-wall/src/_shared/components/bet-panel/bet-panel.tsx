@@ -5,6 +5,9 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     BACCARAT_GAME_NAMESPACE,
+    COLOR_GAME_NAMESPACE,
+    FISH_PRAWN_CRAB_GAME_NAMESPACE,
+    COIN_TOSS_GAME_NAMESPACE,
     SABA_GAMES,
     SE_DIE_GAME_NAMESPACE,
     UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE,
@@ -13,13 +16,13 @@ import {
     VIVA88_SITE_ID,
 } from '../../../../constant/app';
 import { useAppContext } from '../../../appProvider';
-import { BACCARAT_CHOICES, SE_DIE_CHOICES } from '../../../games/constants/saba-club';
+import { BACCARAT_CHOICES, FISH_PRAWN_CRAB_CHOICES, SE_DIE_CHOICES, COLOR_GAME_CHOICES } from '../../../games/constants/saba-club';
 import { ChoiceSeDieIconMapper, SeDieChoices } from '../../../games/saba-club/sedie/type';
 import {
     useGameBettingOptionsContext,
     useGameBettingZoneContext,
 } from '../../react-contexts/game-betting-zone-context/game-betting-zone-context';
-import { checkValidAmount, parseInputValue, WarnMsgType } from '../../utils/betting-util';
+import { checkValidAmount, parseInputValue, WarnMsgType, calculateMinMaxAmount } from '../../utils/betting-util';
 import { getChoicesType } from '../../utils/choice-type';
 import BettingChips from '../betting-chips';
 import Dice from '../dice';
@@ -27,6 +30,13 @@ import { RoundDot } from '../dot';
 import { IPropsObserver, IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import './bet-panel.scss';
 import { localStorageKeys, StorageManager } from '../../utils/storage-manager';
+import { choiceToSymbolMap } from '../../../games/saba-club/fish-prawn-crab/fish-prawn-crab-utils';
+import { choiceToSymbolMap as colorGameChoiceToSymbolMap } from '../../../games/saba-club/color-game/color-game-utils';
+import { Size } from '../../constants';
+import FishPrawnCrabDice from '../fish-prawn-crab-dice';
+import ColorGameDice from '../color-game-dice';
+import Coin from '../coin'
+import { choiceToSymbolMap as coinTossChoiceToSymbolMap } from '../../../games/saba-club/coin-toss/coin-toss-utils';
 
 const WARNING_CLOSE_DELAY = 60000;
 
@@ -36,6 +46,9 @@ const GAME_ICON_MAPPING = {
     [VIP_SE_DIE_GAME_NAMESPACE]: 'vip-sedie-icon',
     [UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE]: 'bigsmall-icon',
     [BACCARAT_GAME_NAMESPACE]: 'baccarat-icon',
+    [FISH_PRAWN_CRAB_GAME_NAMESPACE]: 'fish-prawn-crab-icon',
+    [COLOR_GAME_NAMESPACE]: 'color-game-icon',
+    [COIN_TOSS_GAME_NAMESPACE]: 'coin-toss-icon',
 } as const;
 
 export interface IBetPanel extends IStateObserver {
@@ -45,6 +58,7 @@ export interface IBetPanel extends IStateObserver {
     minBet: number;
     maxBet: number;
     maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
+    clientSeed: string;
 }
 
 export interface ILatestBetRecord {
@@ -64,6 +78,7 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
             minBet: 0,
             maxBet: 0,
             maxBetPerChoices: {},
+            clientSeed: '',
         } as S;
     }
 
@@ -102,12 +117,18 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
     }
 
     @handle(gc.Bet.BetHandler)
-    handleBet(amount: number, betChoice: string) {
-        return { amount, betChoice };
+    handleBet(amount: number, betChoice: string, clientSeed: string) {
+        return { amount, betChoice, clientSeed };
+    }
+
+    @render(gc.RoundBasePF.ProvablyFairStore, (store) => store.clientSeed)
+    handleClientSeed(clientSeed: string) {
+        console.log('clientSeed', clientSeed);
+        this.setState({ clientSeed } as IBetPanel);
     }
 
     render() {
-        const { clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel } = this.state as S;
+        const { clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, clientSeed } = this.state as S;
 
         return (
             <BetPanel
@@ -119,6 +140,7 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
                 maxBetPerChoices={maxBetPerChoices}
                 stakeLevel={stakeLevel}
                 handleBet={this.handleBet.bind(this)}
+                clientSeed={clientSeed}
             ></BetPanel>
         );
     }
@@ -132,13 +154,15 @@ const BetPanel: React.FC<{
     maxBet: number;
     maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
     stakeLevel: gc.Player.IStakeLevel;
-    handleBet: (amount: number, betChoice: string) => void;
-}> = ({ namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet }) => {
+    clientSeed: string;
+    handleBet: (amount: number, betChoice: string, clientSeed: string) => void;
+}> = ({ namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet, clientSeed }) => {
     const { panelId, setPanelId, setShow } = useGameBettingOptionsContext();
     const { gameName, betChoice, odd = 0 } = useGameBettingZoneContext();
     const { siteId } = useAppContext();
     const { minBet: stakeLevelMinBet = 0, maxBet: stakeLevelMaxBet = 0 } = stakeLevel || {};
     const betChoiceMax = maxBetPerChoices?.[betChoice] || 0;
+    const panelRef = useRef<HTMLDivElement>(null);
 
     const [amount, setAmount] = useState(stakeLevelMinBet);
     const [warnMsg, setWarnMsg] = useState('');
@@ -152,63 +176,16 @@ const BetPanel: React.FC<{
     const displayAmount = amount > 0 ? gc.FormatUtils.numberWithCommas(amount) : '';
     const payout = amount > 0 ? addCommas(amount * odd, 2, false) : '0.00';
     const vendorName = siteId === VIVA88_SITE_ID ? SABA_GAMES : VGAMING;
-    const panelRef = useRef<HTMLDivElement>(null);
 
-
-    
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-                setPanelId(null);
-                setShow(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [setPanelId]);
-
-    useEffect(() => {
-        if (!betChoice) return;
-        const newMin = Math.max(minBet, stakeLevelMinBet);
-
-        let newMax = 0;
-        if (Object.keys(maxBetPerChoices).length <= 0 && namespace === UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE) {
-            newMax = Math.min(maxBet, stakeLevel.maxBet);
-        } else {
-            newMax = Math.min(betChoiceMax, maxBet, stakeLevel.maxBet);
-        }
-
-        setMin(newMin);
-        setMax(newMax);
-
-        setAmount((prev) => {
-            if (prev < newMin) return newMin;
-            if (prev > newMax) return newMax;
-            return prev;
-        });
-    }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet]);
-
-    const setWarningWithTimeout = (message: string) => {
-        if (warningTimeoutRef.current) {
-            clearTimeout(warningTimeoutRef.current);
-        }
-
-        setWarnMsg(message);
-
-        warningTimeoutRef.current = setTimeout(() => {
-            setWarnMsg('');
-        }, WARNING_CLOSE_DELAY);
-    };
-
-    const onHide = () => {
-        setPanelId(null);
-        setWarnMsg('');
-    };
+    const isSpecialChoice = [
+        SE_DIE_CHOICES.RED2,
+        BACCARAT_CHOICES.PLAYER_PAIR,
+        BACCARAT_CHOICES.BANKER_PAIR,
+        FISH_PRAWN_CRAB_CHOICES.PRAWN,
+        FISH_PRAWN_CRAB_CHOICES.ROOSTER,
+        COLOR_GAME_CHOICES.PINK,
+        COLOR_GAME_CHOICES.GREEN
+    ].includes(betChoice);
 
     const handleInputChange = (event: any) => {
         const numericValue = parseInputValue(event.target.value);
@@ -234,19 +211,36 @@ const BetPanel: React.FC<{
         setAmount(0);
     };
 
+    const onHide = () => {
+        setPanelId(null);
+        setWarnMsg('');
+    };
+
+    const setWarningWithTimeout = (message: string) => {
+        if (warningTimeoutRef.current) {
+            clearTimeout(warningTimeoutRef.current);
+        }
+
+        setWarnMsg(message);
+
+        warningTimeoutRef.current = setTimeout(() => {
+            setWarnMsg('');
+        }, WARNING_CLOSE_DELAY);
+    };
+
     const updateLatestBetToStorage = (namespace: string, clientRoundId: number) => {
         const existingHistory = StorageManager.get(localStorageKeys.betHistory) as ILatestBetRecord[];
         let betHistory = Array.isArray(existingHistory) ? existingHistory : [];
-    
+
         const newBet = { namespace, roundId: clientRoundId };
         const existingNamespaceIndex = betHistory.findIndex(bet => bet.namespace === namespace);
-    
+
         if (existingNamespaceIndex !== -1) {
             betHistory[existingNamespaceIndex].roundId = clientRoundId;
         } else {
             betHistory.push(newBet);
         }
-    
+
         StorageManager.set(localStorageKeys.betHistory, betHistory);
     };
 
@@ -265,7 +259,7 @@ const BetPanel: React.FC<{
         }
 
         if (betChoice) {
-            handleBet?.(validatedAmount, betChoice);
+            handleBet?.(validatedAmount, betChoice, clientSeed);
             onHide?.();
             updateLatestBetToStorage(namespace, clientRoundId);
         }
@@ -282,6 +276,74 @@ const BetPanel: React.FC<{
         },
         [min, max],
     );
+
+    useEffect(() => {
+        if (!betChoice) return;
+        // calculate min and max using helper
+        const { min: newMin, max: newMax } = calculateMinMaxAmount(
+            minBet,
+            stakeLevelMinBet,
+            maxBet,
+            stakeLevel.maxBet,
+            betChoiceMax,
+            maxBetPerChoices,
+            namespace
+        );
+
+        setMin(newMin);
+        setMax(newMax);
+
+        setAmount((prev) => {
+            if (prev < newMin) return newMin;
+            if (prev > newMax) return newMax;
+            return prev;
+        });
+    }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace]);
+
+    useEffect(() => {
+        if (panelId === betChoice && panelRef.current) {
+            const rect = panelRef.current.getBoundingClientRect();
+            const state = {
+                top: rect.top,
+                left: rect.left,
+                betChoice,
+                odd,
+                amount,
+                currency,
+                min,
+                max,
+                payout,
+                gameName,
+                namespace,
+                clientRoundId,
+                isSpecialChoice,
+                warnMsg
+            };
+
+            // Send state to parent window
+            window.parent.postMessage({
+                type: 'BET_PANEL_STATE',
+                state
+            }, '*');
+        }
+    }, [panelId, betChoice, odd, amount, currency, min, max, payout, gameName, namespace, clientRoundId, isSpecialChoice, warnMsg]);
+
+    // Handle messages from parent window
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'HANDLE_BET') {
+                handleBet?.(event.data.amount, event.data.betChoice, clientSeed);
+                onHide?.();
+            } else if (event.data.type === 'HANDLE_INPUT_CHANGE') {
+                handleInputChange({ target: { value: event.data.value } } as any);
+            } else if (event.data.type === 'HANDLE_CLEAR') {
+                handleClear();
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [handleBet, handleInputChange, handleClear, onHide, clientSeed]);
 
     const renderTicketHeader = () => {
         const gameIconClass = GAME_ICON_MAPPING[namespace] || '';
@@ -369,6 +431,27 @@ const BetPanel: React.FC<{
         );
     };
 
+    const renderFishPrawnCrabDice = () => {
+        const symbol = choiceToSymbolMap[betChoice];
+        return (
+            <FishPrawnCrabDice symbol={symbol} size={Size.small} />
+        );
+    };
+
+    const renderColorGameDice = () => {
+        const symbol = colorGameChoiceToSymbolMap[betChoice];
+        return (
+            <ColorGameDice symbol={symbol} size={Size.small} />
+        );
+    };
+
+    const renderCoin = () => {
+        const coinType = coinTossChoiceToSymbolMap[betChoice];
+        return (
+            <Coin coinType={coinType} size={Size.small} />
+        )
+    }
+
     const renderGameElements = (gameName: string) => {
         switch (gameName) {
             case SE_DIE_GAME_NAMESPACE:
@@ -376,6 +459,12 @@ const BetPanel: React.FC<{
                 return renderDots();
             case UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE:
                 return renderDices();
+            case FISH_PRAWN_CRAB_GAME_NAMESPACE:
+                return renderFishPrawnCrabDice();
+            case COLOR_GAME_NAMESPACE:
+                return renderColorGameDice();
+            case COIN_TOSS_GAME_NAMESPACE:
+                return renderCoin();
             default:
                 return null;
         }
@@ -394,17 +483,14 @@ const BetPanel: React.FC<{
         return <></>;
     }
 
-    // TODO: 街上memberSite時，className不用style，直接接上memberSite class
+    // TODO: 接上memberSite時，className不用style，直接接上memberSite class
     return (
         <div className="c-quick-bet c-quick-bet--bottom-left">
             <div className="c-quick-bet__btn"></div>
             <div
                 ref={panelRef}
                 className={classNames('c-quick-bet__panel', {
-                    ['sg-bet-panel__left-dec-100']:
-                        SE_DIE_CHOICES.RED2 === betChoice ||
-                        BACCARAT_CHOICES.PLAYER_PAIR === betChoice ||
-                        BACCARAT_CHOICES.BANKER_PAIR === betChoice,
+                    ['sg-bet-panel__left-dec-100']: isSpecialChoice,
                 })}
             >
                 <div className="c-betslip">

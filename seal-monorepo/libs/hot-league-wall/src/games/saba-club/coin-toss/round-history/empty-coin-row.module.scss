@@ -1,0 +1,40 @@
+.diceContainer {
+  display: inline-block;
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.animated {
+  animation: popIn 0.5s ease-out forwards;
+}
+
+.blinking {
+  animation: blink 1s ease-in-out infinite alternate;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.6;
+    filter: brightness(0.8);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+}

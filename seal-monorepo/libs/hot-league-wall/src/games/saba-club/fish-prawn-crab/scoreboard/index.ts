@@ -1,0 +1,1 @@
+export { default as FishPrawnCrabScoreBoard } from './fish-prawn-crab-scoreboard'; 

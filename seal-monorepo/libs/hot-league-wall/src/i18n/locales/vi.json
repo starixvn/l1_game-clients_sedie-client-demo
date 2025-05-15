@@ -226,33 +226,6 @@
     "BigSmall": {
         "game_name": "Tài Xỉu"
     },
-    "SicBall": {
-        "game_name": "Sic Ball",
-        "beadboard_big": "T",
-        "beadboard_small": "X",
-        "betoption_1": "1",
-        "betoption_2": "2",
-        "betoption_3": "3",
-        "betoption_4": "4",
-        "betoption_5": "5",
-        "betoption_6": "6",
-        "glossary_big": "Tài",
-        "glossary_small": "Xỉu",
-        "odds_double": "Đôi",
-        "odds_single": "Đơn",
-        "odds_triple": "Bộ Ba"
-    },
-    "LuckyNext1": {
-        "game_name": "Lucky Next",
-        "beadboard_even": "C",
-        "beadboard_odd": "L",
-        "beadboard_over": "T",
-        "beadboard_under": "X",
-        "glossary_even": "Chẵn",
-        "glossary_odd": "Lẻ",
-        "glossary_over": "Tài",
-        "glossary_under": "Xỉu"
-    },
     "SabaNumber": {
         "message_draw_maxbet": "Tổng tiền cược tối đa ở phiên này là %{maxBet}",
         "message_max_payout": "Tiền cược vượt quá giới hạn thanh toán.",
@@ -293,5 +266,51 @@
         "glossary_small": "Xỉu",
         "beadboard_big": "T",
         "beadboard_small": "X"
+    },
+    "FishPrawnCrab": {
+        "game_vendor": "SABA.games",
+        "game_name": "Bầu Cua",
+        "game_tab_name": "Bầu Cua",
+        "bet_choices_type": "Biểu Tượng",
+        "choices_type_double": "Đôi: {odds_double}",
+        "choices_type_triple": "Bộ Ba: {odds_triple}",
+        "glossary_fish": "Cá",
+        "glossary_prawn": "Tôm",
+        "glossary_crab": "Cua",
+        "glossary_stag": "Nai",
+        "glossary_gourd": "Bầu",
+        "glossary_rooster": "Gà",
+        "single": "Đơn",
+        "double": "Đôi",
+        "triple": "Bộ Ba",
+        "symbol": "Biểu Tượng"
+    },
+    "ColorGame": {
+        "game_vendor": "SABA.games",
+        "game_name": "Xí Ngầu Lục Sắc",
+        "game_tab_name": "Xí Ngầu Lục Sắc",
+        "bet_choices_type": "Màu cụ thể",
+        "choices_type_double": "Đôi: {odds_double}",
+        "choices_type_triple": "Bộ Ba: {odds_triple}",
+        "glossary_yellow": "Vàng",
+        "glossary_red": "Đỏ",
+        "glossary_pink": "Hồng",
+        "glossary_white": "Trắng",
+        "glossary_blue": "Xanh Dương",
+        "glossary_green": "Xanh Lá",
+        "single": "Màu cụ thể",
+        "double": "Đôi",
+        "triple": "Bộ Ba",
+        "symbol": "Màu cụ thể"
+    },
+    "CoinToss": {
+        "game_name": "Tung Đồng Xu",
+        "game_tab_name": "Tung Đồng Xu",
+        "choices_type": "Ngửa/Sấp",
+        "glossary_head": "Ngửa",
+        "glossary_tail": "Sấp",
+        "head": "Ngửa",
+        "tail": "Sấp"
     }
+    
 }

@@ -4,7 +4,6 @@ import { render } from "@sg/sg-observer";
 import BetModalSuccess from "../bet-modal-success";
 import { IPropsObserver, IStateObserver, ObserverComponent } from "../observer-component/observer-component";
 import styles from "./confirm-bet.module.scss";
-import { RoundHistoryStore } from "@sg/sg-game-client/dist/game/round-histories";
 
 export interface IConfirmBet extends IStateObserver {
   totalStake: number;

@@ -1,2 +1,3 @@
-// import * from './statistic-button';
-import * from './statistic-button';
+import * as StatisticButton from './statistic-button';
+
+export default StatisticButton;

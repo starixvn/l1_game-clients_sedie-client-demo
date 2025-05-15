@@ -226,33 +226,6 @@
     "BigSmall": {
         "game_name": "Big Small"
     },
-    "SicBall": {
-        "game_name": "Sic Ball",
-        "beadboard_big": "B",
-        "beadboard_small": "K",
-        "betoption_1": "1",
-        "betoption_2": "2",
-        "betoption_3": "3",
-        "betoption_4": "4",
-        "betoption_5": "5",
-        "betoption_6": "6",
-        "glossary_big": "Besar",
-        "glossary_small": "Kecil",
-        "odds_double": "Ganda",
-        "odds_single": "Tunggal",
-        "odds_triple": "Tiga kali lipat"
-    },
-    "LuckyNext1": {
-        "game_name": "Lucky Next",
-        "beadboard_even": "GE",
-        "beadboard_odd": "GA",
-        "beadboard_over": "B",
-        "beadboard_under": "K",
-        "glossary_even": "Genap",
-        "glossary_odd": "Ganjil",
-        "glossary_over": "Besar",
-        "glossary_under": "Kecil"
-    },
     "SabaNumber": {
         "message_draw_maxbet": "Total taruhan maksimal pada undian ini adalah %{maxBet}",
         "message_max_payout": "Taruhan anda telah melebihi Pembayaran Maks",
@@ -292,5 +265,50 @@
         "glossary_small": "Kecil",
         "beadboard_big": "B",
         "beadboard_small": "K"
+    },
+    "FishPrawnCrab": {
+        "game_vendor": "SABA.games",
+        "game_name": "Ikan Udang Kepiting",
+        "game_tab_name": "Ikan Udang Kepiting",
+        "bet_choices_type": "Simbol",
+        "choices_type_double": "Dobel: {odds_double}",
+        "choices_type_triple": "Tripel: {odds_triple}",
+        "glossary_fish": "Ikan",
+        "glossary_prawn": "Udang",
+        "glossary_crab": "Kepiting",
+        "glossary_stag": "Rusa Jantan",
+        "glossary_gourd": "Kundur",
+        "glossary_rooster": "Ayam Jantan",
+        "single": "Single",
+        "double": "Dobel",
+        "triple": "Tripel",
+        "symbol": "Simbol"
+    },
+    "ColorGame": {
+        "game_vendor": "SABA.games",
+        "game_name": "Permainan Warna",
+        "game_tab_name": "Permainan Warna",
+        "bet_choices_type": "Warna Tertentu",
+        "choices_type_double": "Dobel: {odds_double}",
+        "choices_type_triple": "Tripel: {odds_triple}",
+        "glossary_yellow": "Kuning",
+        "glossary_red": "Merah",
+        "glossary_pink": "Merah Muda",
+        "glossary_white": "Putih",
+        "glossary_blue": "Biru",
+        "glossary_green": "Hijau",
+        "single": "Warna Tertentu",
+        "double": "Dobel",
+        "triple": "Tripel",
+        "symbol": "Warna Tertentu"
+    },
+    "CoinToss": {
+        "game_name": "Lempar Koin",
+        "game_tab_name": "Lempar Koin",
+        "choices_type": "Kepala/Ekor",
+        "glossary_head": "Kepala",
+        "glossary_tail": "Ekor",
+        "head": "Kepala",
+        "tail": "Ekor"
     }
 }

@@ -17,7 +17,7 @@
 
 %baccarat-dot {
     @extend %dot;
-    font-weight: 700;
+    font-weight: 600;
     composes: variables;
     box-shadow: var(--baccarat-dot-shadow);
 
