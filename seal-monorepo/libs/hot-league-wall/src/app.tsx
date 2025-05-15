@@ -5,6 +5,7 @@ import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
+import IframeContainer from './components/IframeContainer';
 
 interface AppProps extends AppContentProps {
     appEnv: string;
@@ -30,7 +31,10 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
 
 const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProps) => {
     const { language } = useAppContext();
-
+    const handleIframeMessage = (data: any) => {
+        console.log('Received message from iframe:', data);
+        // Handle the message from the iframe here
+    };
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
@@ -40,6 +44,10 @@ const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProp
     loadI18n(language);
     return (
         <div data-react="true" style={{ width: '100%' }}>
+            <IframeContainer
+                src="http://localhost:4200/"
+                onMessage={handleIframeMessage}
+            />
             {token && <Lobby token={token} language={language} renewToken={renewToken} />}
         </div>
     );

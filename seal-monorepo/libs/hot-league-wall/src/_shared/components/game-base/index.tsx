@@ -247,16 +247,7 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     toggleStatistic() {
-        const newState = !this.state.isOpenStatistic;
-        this.setState({ isOpenStatistic: newState });
-
-        // Notify parent window about statistic toggle
-        if (window.parent && window.parent !== window) {
-            window.parent.postMessage({
-                type: 'TOGGLE_STATISTIC',
-                isOpen: newState
-            }, '*');
-        }
+        this.setState({ isOpenStatistic: !this.state.isOpenStatistic });
     }
 
     renderWaitingForNextRound() {

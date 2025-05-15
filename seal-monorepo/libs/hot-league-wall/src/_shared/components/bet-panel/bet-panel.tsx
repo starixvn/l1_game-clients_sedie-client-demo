@@ -162,7 +162,6 @@ const BetPanel: React.FC<{
     const { siteId } = useAppContext();
     const { minBet: stakeLevelMinBet = 0, maxBet: stakeLevelMaxBet = 0 } = stakeLevel || {};
     const betChoiceMax = maxBetPerChoices?.[betChoice] || 0;
-    const panelRef = useRef<HTMLDivElement>(null);
 
     const [amount, setAmount] = useState(stakeLevelMinBet);
     const [warnMsg, setWarnMsg] = useState('');
@@ -176,6 +175,7 @@ const BetPanel: React.FC<{
     const displayAmount = amount > 0 ? gc.FormatUtils.numberWithCommas(amount) : '';
     const payout = amount > 0 ? addCommas(amount * odd, 2, false) : '0.00';
     const vendorName = siteId === VIVA88_SITE_ID ? SABA_GAMES : VGAMING;
+    const panelRef = useRef<HTMLDivElement>(null);
 
     const isSpecialChoice = [
         SE_DIE_CHOICES.RED2,
@@ -186,6 +186,61 @@ const BetPanel: React.FC<{
         COLOR_GAME_CHOICES.PINK,
         COLOR_GAME_CHOICES.GREEN
     ].includes(betChoice);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+                setPanelId(null);
+                setShow(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [setPanelId]);
+
+    useEffect(() => {
+        if (!betChoice) return;
+        // calculate min and max using helper
+        const { min: newMin, max: newMax } = calculateMinMaxAmount(
+            minBet,
+            stakeLevelMinBet,
+            maxBet,
+            stakeLevel.maxBet,
+            betChoiceMax,
+            maxBetPerChoices,
+            namespace
+        );
+
+        setMin(newMin);
+        setMax(newMax);
+
+        setAmount((prev) => {
+            if (prev < newMin) return newMin;
+            if (prev > newMax) return newMax;
+            return prev;
+        });
+    }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace]);
+
+    const setWarningWithTimeout = (message: string) => {
+        if (warningTimeoutRef.current) {
+            clearTimeout(warningTimeoutRef.current);
+        }
+
+        setWarnMsg(message);
+
+        warningTimeoutRef.current = setTimeout(() => {
+            setWarnMsg('');
+        }, WARNING_CLOSE_DELAY);
+    };
+
+    const onHide = () => {
+        setPanelId(null);
+        setWarnMsg('');
+    };
 
     const handleInputChange = (event: any) => {
         const numericValue = parseInputValue(event.target.value);
@@ -209,23 +264,6 @@ const BetPanel: React.FC<{
 
     const handleClear = () => {
         setAmount(0);
-    };
-
-    const onHide = () => {
-        setPanelId(null);
-        setWarnMsg('');
-    };
-
-    const setWarningWithTimeout = (message: string) => {
-        if (warningTimeoutRef.current) {
-            clearTimeout(warningTimeoutRef.current);
-        }
-
-        setWarnMsg(message);
-
-        warningTimeoutRef.current = setTimeout(() => {
-            setWarnMsg('');
-        }, WARNING_CLOSE_DELAY);
     };
 
     const updateLatestBetToStorage = (namespace: string, clientRoundId: number) => {
@@ -276,74 +314,6 @@ const BetPanel: React.FC<{
         },
         [min, max],
     );
-
-    useEffect(() => {
-        if (!betChoice) return;
-        // calculate min and max using helper
-        const { min: newMin, max: newMax } = calculateMinMaxAmount(
-            minBet,
-            stakeLevelMinBet,
-            maxBet,
-            stakeLevel.maxBet,
-            betChoiceMax,
-            maxBetPerChoices,
-            namespace
-        );
-
-        setMin(newMin);
-        setMax(newMax);
-
-        setAmount((prev) => {
-            if (prev < newMin) return newMin;
-            if (prev > newMax) return newMax;
-            return prev;
-        });
-    }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace]);
-
-    useEffect(() => {
-        if (panelId === betChoice && panelRef.current) {
-            const rect = panelRef.current.getBoundingClientRect();
-            const state = {
-                top: rect.top,
-                left: rect.left,
-                betChoice,
-                odd,
-                amount,
-                currency,
-                min,
-                max,
-                payout,
-                gameName,
-                namespace,
-                clientRoundId,
-                isSpecialChoice,
-                warnMsg
-            };
-
-            // Send state to parent window
-            window.parent.postMessage({
-                type: 'BET_PANEL_STATE',
-                state
-            }, '*');
-        }
-    }, [panelId, betChoice, odd, amount, currency, min, max, payout, gameName, namespace, clientRoundId, isSpecialChoice, warnMsg]);
-
-    // Handle messages from parent window
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data.type === 'HANDLE_BET') {
-                handleBet?.(event.data.amount, event.data.betChoice, clientSeed);
-                onHide?.();
-            } else if (event.data.type === 'HANDLE_INPUT_CHANGE') {
-                handleInputChange({ target: { value: event.data.value } } as any);
-            } else if (event.data.type === 'HANDLE_CLEAR') {
-                handleClear();
-            }
-        };
-
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-    }, [handleBet, handleInputChange, handleClear, onHide, clientSeed]);
 
     const renderTicketHeader = () => {
         const gameIconClass = GAME_ICON_MAPPING[namespace] || '';
