@@ -1,0 +1,1 @@
+export type ColorGameSymbol = "red" | "green" | "blue" | "yellow" | "purple" | "orange"; 

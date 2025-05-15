@@ -19,6 +19,7 @@ import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-stor
 import WarningDialog from '../notices/warning-dialog';
 import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import classNames from 'classnames';
+import { SyncMemberSiteBalance } from '../../utils/sync-member-site-balance';
 
 export interface IGameBaseState {
     isConnected: boolean;
@@ -56,22 +57,18 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
             isAllowedBet: false,
         } as S;
         this.toggleStatistic = this.toggleStatistic.bind(this);
-        console.log(`[GameBase] Initialized with namespace: ${props.namespace}`);
     }
 
     componentDidMount() {
-        console.log(`[GameBase] Component mounted`);
         document.addEventListener('visibilitychange', this.onVisibilityChange);
     }
 
     componentWillUnmount() {
-        console.log(`[GameBase] Component will unmount`);
         this.onDestroy();
         document.removeEventListener('visibilitychange', this.onVisibilityChange);
     }
 
     onDestroy() {
-        console.log(`[GameBase] Destroying component, closing connection`);
         this.closeConnect();
     }
 
@@ -83,33 +80,31 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
 
     abstract processAuthorizationIfRoundMatches(roundId: number): void;
 
-    onVisibilityChange = () => {
-        console.log(`[GameBase] Visibility changed: ${document.visibilityState}`);
-    };
+    onVisibilityChange = () => { };
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler, (handler) => handler.handle())
-    connectToServiceGateway() {
-        console.log(`[GameBase] Connecting to service gateway`);
-    }
+    connectToServiceGateway() { }
 
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handle())
-    terminateConnection() {
-        console.log(`[GameBase] Terminating connection`);
-    }
+    terminateConnection() { }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isSignedIn)
     handleConnected(isSignedIn: boolean) {
-        console.log(`[GameBase] Sign-in status changed: ${isSignedIn}`);
         isSignedIn && this.inGame();
     }
 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler)
     inGame() {
-        console.log(`[GameBase] Joining game with namespace: ${this.props.namespace}`);
         return this.props.namespace;
     }
 
+    @render(gc.Bet.BetStore, (store) => store.validBet)
+    setIsValidBet(validBet: gc.Bet.IValidBet) {
+        if (validBet?.value) {
+            SyncMemberSiteBalance.getInstance().executeSyncBalance();
+        }
+    }
+
     renderNotice(): JSX.Element {
-        console.log(`[GameBase] Rendering notice, disabled: ${this.state.showDisabledPopup}`);
         return (
             <Notice namespace={this.props.namespace} isDisableGame={this.state.showDisabledPopup} language={this.props.language}></Notice>
         );
@@ -128,7 +123,6 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
             <CountDownTimer
                 namespace={this.props.namespace}
                 onComplete={() => {
-                    console.log(`[GameBase] CountDownTimer completed, allowing bets`);
                     this.setState({ isAllowedBet: true });
                 }}
             />
@@ -156,12 +150,10 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     setPanelId = (id: string) => {
-        console.log(`[GameBase] Setting panel ID: ${id}`);
         this.setState({ activePanelId: id });
     };
 
     setShowBetPanel = (show: boolean) => {
-        console.log(`[GameBase] Setting bet panel visibility: ${show}`);
         this.setState({ showBetPanel: show });
     };
 
@@ -169,7 +161,6 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         fireImmediately: false,
     })
     assignStatus(settlementStatus: any) {
-        console.log(`[GameBase] New settlement status received`, settlementStatus);
         this.setState({ statusSettlement: settlementStatus });
     }
 
@@ -177,18 +168,15 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         fireImmediately: false,
     })
     renderCurrentFinish(currentFinish: gc.GameServiceMessage.Finish) {
-        console.log(`[GameBase] Render current finish:`, currentFinish);
         if (!currentFinish) {
             return;
         }
         const { result, settlementResult } = currentFinish;
 
         if (!this.isValidResult(result, settlementResult)) {
-            console.log(`[GameBase] Invalid result or settlement result`);
             return;
         }
         this.setState({ isFinishShowResult: false });
-        console.log(`[GameBase] Showing result with animation`);
         this.showResult(true, result, settlementResult).then(() => {
             this.finishShowResult();
         });
@@ -206,21 +194,17 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
 
     @handle(Settlements.SettlementUIHandlers.FinishedShowResult)
     finishShowResult() {
-        console.log(`[GameBase] Finished showing result`);
         this.setState({ isFinishShowResult: true });
     }
 
     @handle(Lobby.LobbyHandlers.TryToConnectHandler)
-    tryToConnectHandler() {
-        console.log(`[GameBase] Trying to connect`);
-    }
+    tryToConnectHandler() { }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnectFailed)
     handleConnectFail(isConnectFailed: boolean) {
         if (isConnectFailed === null) {
             return;
         }
-        console.log(`[GameBase] Connection failure status: ${isConnectFailed}`);
         this.setState({ isConnectFailed: isConnectFailed });
     }
 
@@ -229,21 +213,17 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         if (isConnected === null) {
             return;
         }
-        console.log(`[GameBase] Connection status changed: ${isConnected}`);
         this.setState({ isConnected });
     }
 
     @render(gc.GameConfigs.GameConfigStore, (store) => store.initialized)
     handleGameConfigInitialized(initialized: boolean) {
-        console.log(`[GameBase] Game config initialized: ${initialized}`);
         this.setState({ initialized } as IGameBaseState);
     }
 
     @render(gc.DisabledGame.DisabledGameStore, (store) => store.showPopup)
     handleDisabledGame(showPopup: boolean) {
-        console.log(`[GameBase] Disabled game popup status: ${showPopup}`);
         if (!showPopup && this.state.showDisabledPopup) {
-            console.log(`[GameBase] Game enabled, joining game`);
             this.joinGame();
         }
         this.setState({ showDisabledPopup: showPopup } as IGameBaseState);
@@ -251,35 +231,38 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
 
     @render(gc.Rounds.RoundTimeStore, (store) => store.roundState)
     renderCountDownTimerState(roundState: string) {
-        console.log(`[GameBase] Round state changed: ${roundState}`);
         if (roundState === ROUND_STATE.PLACING_BET) {
             this.setState({ isShowNextRoundMessage: false });
         }
 
         if (roundState === ROUND_STATE.LOCKING_BET || roundState === ROUND_STATE.SHOW_RESULT) {
-            console.log(`[GameBase] Locking bets or showing result, resetting betting panel`);
             this.resetBettingPanel();
         }
     }
 
     @render(RoundStore, (store) => store.clientRoundId)
     handleRoundIdChange(roundId: number) {
-        console.log(`[GameBase] Round ID changed: ${roundId}`);
         this.setState({ roundId });
         this.processAuthorizationIfRoundMatches(roundId);
     }
 
     toggleStatistic() {
         const newState = !this.state.isOpenStatistic;
-        console.log(`[GameBase] Toggling statistics: ${newState}`);
         this.setState({ isOpenStatistic: newState });
+
+        // Notify parent window about statistic toggle
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'TOGGLE_STATISTIC',
+                isOpen: newState
+            }, '*');
+        }
     }
 
     renderWaitingForNextRound() {
         if (!this.state.isShowNextRoundMessage) {
             return <></>;
         }
-        console.log(`[GameBase] Showing wait for next round message`);
         return (
             <WarningDialog key={`warning-bet`}>
                 <div className={Styles['title-white']}>{gc.Translator.t('Common.message_placebet_next_round')}</div>
@@ -288,7 +271,6 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     resetBettingPanel = () => {
-        console.log(`[GameBase] Resetting betting panel`);
         this.setState({
             activePanelId: null,
             showBetPanel: false,
@@ -296,24 +278,15 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     };
 
     handleBetOption = () => {
-        console.log(`[GameBase] Handling bet option`);
         this.resetBettingPanel();
         this.setState({ isShowNextRoundMessage: true });
         setTimeout(() => {
-            console.log(`[GameBase] Hiding next round message`);
             this.setState({ isShowNextRoundMessage: false });
         }, 3000);
     };
 
     getRenderTemplate() {
         const { isConnected, isConnectFailed, initialized: isGameConfigInitialized, showDisabledPopup, isAllowedBet } = this.state;
-        console.log(`[GameBase] Rendering template with state:`, {
-            isConnected,
-            isConnectFailed,
-            isGameConfigInitialized,
-            showDisabledPopup,
-            isAllowedBet
-        });
 
         if (isConnectFailed) {
             return this.renderDisconnect();
@@ -366,19 +339,22 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         );
     }
 
-    private renderAnimationBalance() {
+    protected renderAnimationBalance() {
         const { statusSettlement, isFinishShowResult } = this.state;
+
+
         if (!statusSettlement || !statusSettlement.win) {
             return <></>;
         }
-        console.log(`[GameBase] Rendering animation balance, finished: ${isFinishShowResult}, win: ${statusSettlement.win}`);
+
         if (isFinishShowResult) {
             return <AnimationBalance winBet={statusSettlement?.bet} />;
         }
+
+        return null;
     }
 
     private renderLoading() {
-        console.log(`[GameBase] Rendering loading state`);
         return (
             <div className="col-md-1 mx-auto mt-5">
                 <Loading />
@@ -387,7 +363,6 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     resetStateWhenReconnect() {
-        console.log(`[GameBase] Resetting state during reconnect`);
         this.setState({
             isOpenStatistic: false,
         });
@@ -395,20 +370,17 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     createConnection() {
-        console.log(`[GameBase] Creating new connection`);
         document.addEventListener('visibilitychange', this.onVisibilityChange);
         this.connectToServiceGateway();
     }
 
     handleReconnect = () => {
-        console.log(`[GameBase] Handling reconnect request`);
         this.terminateConnection();
         this.createConnection();
         this.resetStateWhenReconnect();
     };
 
     private renderDisconnect() {
-        console.log(`[GameBase] Rendering disconnect state`);
         const reconnectText = gc.Translator.translate('Common.reconnect');
         return (
             <div className={`${Styles['block-wrapper']} ${this.props.overrideClasses}`}>
@@ -427,7 +399,6 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     render() {
-        console.log(`[GameBase] Rendering component for namespace: ${this.props.namespace}`);
         return (
             <GameContainer>
                 <GameContextProvider value={{ ...this.props }}>{this.getRenderTemplate()}</GameContextProvider>

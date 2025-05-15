@@ -11,9 +11,7 @@
   },
   "files": [],
   "include": [],
-  "types": [
-    "reflect-metadata"
-  ],
+  "types": ["reflect-metadata"],
   "references": [
     {
       "path": "./tsconfig.app.json"

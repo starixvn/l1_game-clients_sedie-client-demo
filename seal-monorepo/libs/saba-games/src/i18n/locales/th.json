@@ -226,33 +226,6 @@
     "BigSmall": {
         "game_name": "Big Small"
     },
-    "SicBall": {
-        "game_name": "Sic Ball",
-        "beadboard_big": "ใหญ่",
-        "beadboard_small": "เล็ก",
-        "betoption_1": "1",
-        "betoption_2": "2",
-        "betoption_3": "3",
-        "betoption_4": "4",
-        "betoption_5": "5",
-        "betoption_6": "6",
-        "glossary_big": "ใหญ่",
-        "glossary_small": "เล็ก",
-        "odds_double": "ดับเบิล",
-        "odds_single": "ซิงเกิล",
-        "odds_triple": "ทริปเปิล"
-    },
-    "LuckyNext1": {
-        "game_name": "Lucky Next",
-        "beadboard_even": "คู่",
-        "beadboard_odd": "คี่",
-        "beadboard_over": "สูง",
-        "beadboard_under": "ต่ำ",
-        "glossary_even": "คู่",
-        "glossary_odd": "คี่",
-        "glossary_over": "สูง",
-        "glossary_under": "ต่ำ"
-    },
     "SabaNumber": {
         "message_draw_maxbet": "เงินเดิมพันรวมสูงสุดในการจับรางวัลนี้คือ %{maxBet}",
         "message_max_payout": "เดิมพันของคุณเกินการจ่ายเงินสูงสุด",
@@ -293,5 +266,50 @@
         "glossary_small": "เล็ก",
         "beadboard_big": "B",
         "beadboard_small": "S"
+    },
+    "FishPrawnCrab": {
+        "game_vendor": "SABA.games",
+        "game_name": "น้ำเต้าปูปลา",
+        "game_tab_name": "น้ำเต้าปูปลา",
+        "bet_choices_type": "เครื่องหมาย",
+        "choices_type_double": "สองเท่า: {odds_double}",
+        "choices_type_triple": "สามเท่า: {odds_triple}",
+        "glossary_fish": "ปลา",
+        "glossary_prawn": "กุ้ง",
+        "glossary_crab": "ปู",
+        "glossary_stag": "กวาง",
+        "glossary_gourd": "น้ำเต้า",
+        "glossary_rooster": "ไก่ชน",
+        "single": "เดี่ยว",
+        "double": "สองเท่า",
+        "triple": "สามเท่า",
+        "symbol": "เครื่องหมาย"
+    },
+    "ColorGame": {
+        "game_vendor": "SABA.games",
+        "game_name": "เกมสี",
+        "game_tab_name": "เกมสี",
+        "bet_choices_type": "เฉพาะสี",
+        "choices_type_double": "สองเท่า: {odds_double}",
+        "choices_type_triple": "สามเท่า: {odds_triple}",
+        "glossary_yellow": "สีเหลือง",
+        "glossary_red": "สีแดง",
+        "glossary_pink": "สีชมพู",
+        "glossary_white": "สีขาว",
+        "glossary_blue": "น้ำเงิน",
+        "glossary_green": "สีเขียว",
+        "single": "เฉพาะสี",
+        "double": "สองเท่า",
+        "triple": "สามเท่า",
+        "symbol": "เฉพาะสี"
+    },
+    "CoinToss": {
+        "game_name": "โยนเหรียญ",
+        "game_tab_name": "โยนเหรียญ",
+        "choices_type": "หัว/ก้อย",
+        "glossary_head": "หัว",
+        "glossary_tail": "ก้อย",
+        "head": "หัว",
+        "tail": "ก้อย"
     }
 }

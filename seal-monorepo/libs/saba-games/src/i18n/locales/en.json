@@ -227,35 +227,6 @@
         "game_vendor": "SABA.games",
         "game_name": "Big Small"
     },
-    "SicBall": {
-        "game_vendor": "SABA xD",
-        "game_name": "Sic Ball",
-        "beadboard_big": "B",
-        "beadboard_small": "S",
-        "betoption_1": "1",
-        "betoption_2": "2",
-        "betoption_3": "3",
-        "betoption_4": "4",
-        "betoption_5": "5",
-        "betoption_6": "6",
-        "glossary_big": "Big",
-        "glossary_small": "Small",
-        "odds_double": "Double",
-        "odds_single": "Single",
-        "odds_triple": "Triple"
-    },
-    "LuckyNext1": {
-        "game_vendor": "SABA xD",
-        "game_name": "Lucky Next",
-        "beadboard_even": "E",
-        "beadboard_odd": "O",
-        "beadboard_over": "O",
-        "beadboard_under": "U",
-        "glossary_even": "Even",
-        "glossary_odd": "Odd",
-        "glossary_over": "Over",
-        "glossary_under": "Under"
-    },
     "SabaNumber": {
         "message_draw_maxbet": "Max total stake on this draw is %{maxBet} ",
         "message_max_payout": "Your bet(s) have exceeded the Max Payout.",
@@ -295,5 +266,50 @@
         "glossary_small": "Small",
         "beadboard_big": "B",
         "beadboard_small": "S"
+    },
+    "FishPrawnCrab": {
+        "game_vendor": "SABA.games",
+        "game_name": "Fish Prawn Crab",
+        "game_tab_name": "Fish Prawn Crab",
+        "bet_choices_type": "Symbol",
+        "choices_type_double": "Double: {odds_double}",
+        "choices_type_triple": "Triple: {odds_triple}",
+        "glossary_fish": "Fish",
+        "glossary_prawn": "Prawn",
+        "glossary_crab": "Crab",
+        "glossary_stag": "Stag",
+        "glossary_gourd": "Gourd",
+        "glossary_rooster": "Rooster",
+        "single": "Single",
+        "double": "Double",
+        "triple": "Triple",
+        "symbol": "Symbol"
+    },
+    "ColorGame": {
+        "game_vendor": "SABA.games",
+        "game_name": "Color Game",
+        "game_tab_name": "Color Game",
+        "bet_choices_type": "Specific Color",
+        "choices_type_double": "Double: {odds_double}",
+        "choices_type_triple": "Triple: {odds_triple}",
+        "glossary_yellow": "Yellow",
+        "glossary_red": "Red",
+        "glossary_pink": "Pink",
+        "glossary_white": "White",
+        "glossary_blue": "Blue",
+        "glossary_green": "Green",
+        "single": "Specific Color",
+        "double": "Double",
+        "triple": "Triple",
+        "symbol": "Specific Color"
+    },
+    "CoinToss": {
+        "game_name": "Coin Toss",
+        "game_tab_name": "Coin Toss",
+        "choices_type": "Heads/Tails",
+        "glossary_head": "Heads",
+        "glossary_tail": "Tails",
+        "head": "Heads",
+        "tail": "Tails"
     }
 }

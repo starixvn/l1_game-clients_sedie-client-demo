@@ -108,13 +108,13 @@ vip-sedie/
 1. **Required Imports**:
 
 ```typescript
-import * as gc from "@sg/sg-game-client";
-import { GameBase } from "@shared/components/game-base";
-import { ObserverComponent } from "@shared/components/observer-component";
-import { BetOption } from "@shared/components/bet-option";
-import { withRouter } from "next/router";
-import { Tabs } from "react-bootstrap";
-import Image from "next/image";
+import * as gc from '@sg/sg-game-client';
+import { GameBase } from '@shared/components/game-base';
+import { ObserverComponent } from '@shared/components/observer-component';
+import { BetOption } from '@shared/components/bet-option';
+import { withRouter } from 'next/router';
+import { Tabs } from 'react-bootstrap';
+import Image from 'next/image';
 ```
 
 2. **Game Settings** (`game-settings.ts`):
@@ -122,8 +122,8 @@ import Image from "next/image";
 ```typescript
 export const gameSettings = {
     gameId: 22,
-    namespace: "VipSeDie",
-    mainObserverNamespace: "VipSeDie",
+    namespace: 'VipSeDie',
+    mainObserverNamespace: 'VipSeDie',
     // Add other specific settings
 };
 ```
@@ -155,14 +155,14 @@ export const gameSettings = {
 
 ```typescript
 // src/_shared/app-settings/index.ts
-import { settingsVipSeDie } from "../../games/saba-club/vip-sedie/game-settings";
+import { settingsVipSeDie } from '../../games/saba-club/vip-sedie/game-settings';
 export const gameSettings = {
     [settingsVipSeDie.id]: settingsVipSeDie,
 };
 
 // src/_shared/app-settings/type.d.ts
 export interface IGameSettings {
-    22: typeof import("../../games/saba-club/vip-sedie/game-settings").settingsVipSeDie;
+    22: typeof import('../../games/saba-club/vip-sedie/game-settings').settingsVipSeDie;
 }
 
 // src/_shared/constants/index.ts
@@ -227,7 +227,7 @@ protected handleConnect() {
 
 ```typescript
 export default class VIPSeDieBetOptions extends SeDieBetOptions {
-    public renderSubOptions(betChoice: string, odd: number, fractional: boolean, name: string = "", isBoostedChoice: boolean = false) {
+    public renderSubOptions(betChoice: string, odd: number, fractional: boolean, name: string = '', isBoostedChoice: boolean = false) {
         return super.renderSubOptions(betChoice, odd, fractional, name, isBoostedChoice);
     }
 

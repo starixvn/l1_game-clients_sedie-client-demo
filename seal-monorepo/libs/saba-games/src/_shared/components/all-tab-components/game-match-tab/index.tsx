@@ -8,9 +8,10 @@ interface GameMatchTabProps {
     gameId?: any;
     className?: any;
     leagueToogle: boolean;
+    language: string;
 }
 
-export const GameMatchTab: React.FC<GameMatchTabProps> = ({ gameId, className, leagueToogle }) => {
+export const GameMatchTab: React.FC<GameMatchTabProps> = ({ gameId, className, leagueToogle, language }) => {
     const [isExpanded, setIsExpanded] = useState(true);
     const firstRender = useRef(true);
 
@@ -34,7 +35,7 @@ export const GameMatchTab: React.FC<GameMatchTabProps> = ({ gameId, className, l
     return (
         <div className={className}>
             <div className="c-league">
-                <GameHeaderComponent isExpanded={isExpanded} handleToggle={handleToggle} namespace={namespace} gameId={gameId} />
+                <GameHeaderComponent isExpanded={isExpanded} handleToggle={handleToggle} namespace={namespace} gameId={gameId} language={language} />
                 <div
                     className={classNames(styles['game-lobby'], {
                         [styles['collapsed']]: !isExpanded,

@@ -69,6 +69,7 @@
     background-image: url("../../../assets/game-icons/big-small.png");
     background-position: center;
     background-repeat: no-repeat;
+    background-size: contain;
     margin: 0 4px;
 }
 
@@ -127,7 +128,7 @@
 
 .game-option:last-child {
     min-width: 25.5rem;
-    width: 40%;
+    width: 100%;
     border-left: 1px solid var(--c-av-theme-border-1);
     min-width: 511px;
 }

@@ -1,0 +1,1 @@
+export { FishPrawnCrabResultHistory } from './fish-prawn-crab-result-history'; 

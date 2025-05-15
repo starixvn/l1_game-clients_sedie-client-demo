@@ -191,7 +191,9 @@
     flex: 1;
     width: 100%;
     max-width: 15rem;
-    justify-items: self-end;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .reconnect-btn-container {

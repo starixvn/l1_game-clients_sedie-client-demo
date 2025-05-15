@@ -25,13 +25,14 @@ const SabaGamesGroup = ({
     appEnv = '',
     siteId = '',
     language = 'en',
+    updateBalanceCallback = null
 }) => {
     const platform = PLATFORM_TYPE_MAPPING[platformType] || '';
     useSentryInit({ siteId, appEnv });
 
     return (
         <div data-platform={platform} data-version={process.env.TAG_VERSION} className={'seal-vg-sg-index'}>
-            <App appEnv={appEnv} token={token} language={language} siteId={siteId} renewToken={renewToken} />
+            <App appEnv={appEnv} token={token} language={language} siteId={siteId} renewToken={renewToken} updateBalanceCallback={updateBalanceCallback} />
         </div>
     );
 };

@@ -16,6 +16,7 @@ interface IGameSettings {
     gameName: string;
     name: string;
     namespaces: string[];
+    serviceName: string;
     isVisible: boolean;
     durations: {
         wholeRound: number;

@@ -226,33 +226,6 @@
     "BigSmall": {
         "game_name": "Big Small"
     },
-    "SicBall": {
-        "game_name": "Sic Ball",
-        "beadboard_big": "大",
-        "beadboard_small": "小",
-        "betoption_1": "1",
-        "betoption_2": "2",
-        "betoption_3": "3",
-        "betoption_4": "4",
-        "betoption_5": "5",
-        "betoption_6": "6",
-        "glossary_big": "大",
-        "glossary_small": "小",
-        "odds_double": "雙",
-        "odds_single": "單",
-        "odds_triple": "三倍"
-    },
-    "LuckyNext1": {
-        "game_name": "Lucky Next",
-        "beadboard_even": "雙",
-        "beadboard_odd": "單",
-        "beadboard_over": "大",
-        "beadboard_under": "小",
-        "glossary_even": "雙",
-        "glossary_odd": "單",
-        "glossary_over": "大",
-        "glossary_under": "小"
-    },
     "SabaNumber": {
         "message_draw_maxbet": "本次抽到的最大總投注額為 %{maxBet}",
         "message_max_payout": "您的賭注已超過最大賠償額。",
@@ -293,5 +266,50 @@
         "glossary_small": "小",
         "beadboard_big": "大",
         "beadboard_small": "小"
+    },
+    "FishPrawnCrab": {
+        "game_vendor": "SABA.games",
+        "game_name": "魚蝦蟹",
+        "game_tab_name": "魚蝦蟹",
+        "bet_choices_type": "象徵",
+        "choices_type_double": "雙倍: {odds_double}",
+        "choices_type_triple": "三倍: {odds_triple}",
+        "glossary_fish": "魚",
+        "glossary_prawn": "蝦",
+        "glossary_crab": "螃蟹",
+        "glossary_stag": "麈",
+        "glossary_gourd": "葫蘆",
+        "glossary_rooster": "公雞",
+        "single": "單",
+        "double": "雙倍",
+        "triple": "三倍",
+        "symbol": "象徵"
+    },
+    "ColorGame": {
+        "game_vendor": "SABA.games",
+        "game_name": "色彩遊戲",
+        "game_tab_name": "色彩遊戲",
+        "bet_choices_type": "特定顏色",
+        "choices_type_double": "雙倍: {odds_double}",
+        "choices_type_triple": "三倍: {odds_triple}",
+        "glossary_yellow": "黃色",
+        "glossary_red": "紅色",
+        "glossary_pink": "粉色",
+        "glossary_white": "白色",
+        "glossary_blue": "藍色",
+        "glossary_green": "綠色",
+        "single": "特定顏色",
+        "double": "雙倍",
+        "triple": "三倍",
+        "symbol": "特定顏色"
+    },
+    "CoinToss": {
+        "game_name": "抛硬幣",
+        "game_tab_name": "抛硬幣",
+        "choices_type": "正面/反面",
+        "glossary_head": "正面",
+        "glossary_tail": "反面",
+        "head": "正面",
+        "tail": "反面"
     }
 }

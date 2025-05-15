@@ -5,19 +5,24 @@ export const GameIds = {
     SeDie: 2,
     Baccarat: 10,
     VipSeDie: 22,
-    LuckyNext: 1003,
-    SicBall: 1007,
+    FishPrawnCrab: 3,
+    ColorGame: 71,
+    CoinToss: 80
 };
 
 export const GameNames = {
     UnbalancedBigSmall4: "UnbalancedBigSmall4",
     SeDie: "SeDie",
     Baccarat: "Baccarat",
-    VipSeDie: "VipSeDie"
+    VipSeDie: "VipSeDie",
+    FishPrawnCrab: "FishPrawnCrab",
+    ColorGame: "ColorGame",
+    CoinToss: "CoinToss"
 };
 
 export const Size = {
     large: "large",
     medium: "medium",
     small: "small",
+    xLarge: "x-large",
 };

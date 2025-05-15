@@ -1,0 +1,176 @@
+@use "sass:math";
+
+// Variables
+$coin-color: #a88326;
+$coin-front: "../../../assets/coin/head.png";
+$coin-back: "../../../assets/coin/tail.png";
+
+// Sizes
+$sizes: (
+  large: (
+    size: 64px,
+    depth: 10px
+  ),
+  medium: (
+    size: 36px,
+    depth: 8px
+  ),
+  small: (
+    size: 24px,
+    depth: 4px
+  )
+);
+
+$spin-speed: 2.5s;
+$facets: 32;
+$spokes: math.div($facets, 2);
+$deg: math.sin(math.div(3.14159, $facets));
+
+@mixin size-variant($variant) {
+  $size: map-get(map-get($sizes, $variant), size);
+  $depth: map-get(map-get($sizes, $variant), depth);
+  $facet_length: ($size - 6) * $deg;
+
+  height: $size;
+  width: $size;
+
+  .front,
+  .back {
+    height: $size;
+    width: $size;
+  }
+
+  .side {
+    transform: translateX($size * 0.45);
+  }
+
+  .spoke {
+    height: $size;
+    width: $depth;
+
+    &:before,
+    &:after {
+      width: $depth;
+      height: $facet_length * 1.2;
+      background-size: 100% math.div($facets * $facet_length, 144);
+    }
+  }
+
+  .front {
+    transform: translateZ(math.div($depth, 2));
+  }
+
+  .back {
+    transform: translateZ(math.div(-$depth, 2)) rotateY(180deg);
+  }
+}
+
+// Base coin styles
+.coin {
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: 50%;
+
+  &.flipping-head {
+    animation: flip-to-head $spin-speed forwards;
+  }
+
+  &.flipping-tail {
+    animation: flip-to-tail $spin-speed forwards;
+  }
+
+  // Default size (medium)
+  @include size-variant(medium);
+
+  // Size variants
+  &.large { @include size-variant(large); }
+  &.medium { @include size-variant(medium); }
+  &.small { @include size-variant(small); }
+
+  .front,
+  .back {
+    position: absolute;
+    border-radius: 50%;
+    background-size: cover;
+  }
+
+  .front {
+    background-image: url($coin-front);
+  }
+
+  .back {
+    background-image: url($coin-back);
+  }
+
+  .side {
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+
+    .spoke {
+      position: absolute;
+      left: -2px;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+
+      &:before,
+      &:after {
+        content: '';
+        display: block;
+        position: absolute;
+        transform: rotateX(math.div((180deg - math.div(360deg, $facets)), 2));
+        background: $coin-color;
+      }
+
+      &:before {
+        transform-origin: top center;
+      }
+
+      &:after {
+        bottom: 0;
+        transform-origin: center bottom;
+      }
+    }
+
+    @for $i from 1 through $spokes {
+      .spoke:nth-child(#{$i}) {
+        transform: rotateY(90deg) rotateX(math.div(180deg * $i, $spokes));
+      }
+    }
+  }
+
+  &.skeleton {
+    .front,
+    .back {
+      display: none;
+    }
+
+    .side,
+    .spoke,
+    .spoke:before,
+    .spoke:after {
+      backface-visibility: visible;
+    }
+  }
+}
+
+@keyframes flip-to-head {
+  0% { 
+    transform: rotateY(0deg);
+    animation-timing-function: cubic-bezier(0.1, 0.5, 0.1, 1);
+  }
+  100% { 
+    transform: rotateY(1080deg);
+    animation-timing-function: cubic-bezier(0.1, 0.5, 0.1, 1);
+  }
+}
+
+@keyframes flip-to-tail {
+  0% { 
+    transform: rotateY(0deg);
+    animation-timing-function: cubic-bezier(0.1, 0.5, 0.1, 1);
+  }
+  100% { 
+    transform: rotateY(1260deg);
+    animation-timing-function: cubic-bezier(0.1, 0.5, 0.1, 1);
+  }
+}
