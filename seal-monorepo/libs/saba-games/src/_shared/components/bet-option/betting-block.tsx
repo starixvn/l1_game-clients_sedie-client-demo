@@ -80,29 +80,53 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     renderCountDownTimerState(roundState: string) {
         if (roundState === Rounds.ROUND_STATE.SHOW_RESULT && this.state.isShowStaticHighlight === undefined) {
             this.setState({ isShowStaticHighlight: true, isShowBetSlip: false });
+            this.notifyParentState();
             return;
         }
 
         switch (roundState) {
             case Rounds.ROUND_STATE.STARTING_ROUND:
                 this.setState({ isShowStaticHighlight: true, isShowBetSlip: false });
+                this.notifyParentState();
                 break;
             case Rounds.ROUND_STATE.PLACING_BET:
                 this.setState({ isShowStaticHighlight: true, isShowBetSlip: true });
+                this.notifyParentState();
                 break;
             case Rounds.ROUND_STATE.LOCKING_BET:
                 this.setState({ isShowStaticHighlight: false, isShowBetSlip: false });
+                this.notifyParentState();
                 break;
             default:
                 this.setState({ isShowBetSlip: false });
+                this.notifyParentState();
                 break;
         }
+    }
+
+    protected notifyParentState() {
+        const { betChoice, odd } = this.props;
+        const { isShowBetSlip } = this.state;
+
+        window.parent.postMessage({
+            type: 'BETTING_BLOCK_STATE',
+            state: {
+                isShowBetSlip,
+                betChoice,
+                odd
+            }
+        }, '*');
     }
 
     protected handleOnClick({ panelId, setPanelId, show, setShow }) {
         return () => {
             const { betChoice, odd } = this.props;
             const { isAuthorized } = this.state;
+
+            // Notify parent to hide all bet panels first
+            window.parent.postMessage({
+                type: 'HIDE_ALL_BET_PANELS'
+            }, '*');
 
             if (!this.state.isShowBetSlip) {
                 this.props.onBet();
@@ -119,6 +143,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             }
 
             this.waitForAuthorization(betChoice, odd);
+            this.notifyParentState();
         };
     }
 

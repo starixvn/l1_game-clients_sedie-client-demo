@@ -1,27 +1,11 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import classNames from 'classnames';
+import BetPanel, { BetPanelState } from './BetPanel';
 
 interface IframeContainerProps {
     src: string;
     onMessage?: (data: any) => void;
-}
-
-interface BetPanelState {
-    top: number;
-    left: number;
-    betChoice: string;
-    odd: number;
-    amount: number;
-    currency: string;
-    min: number;
-    max: number;
-    payout: string;
-    gameName: string;
-    namespace: string;
-    clientRoundId: number;
-    isSpecialChoice: boolean;
-    warnMsg: string;
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -101,7 +85,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                 // Only update if height changed significantly
                 if (Math.abs(data.height - lastHeightRef.current) >= 5) {
                     lastHeightRef.current = data.height;
-                    setIframeHeight(data.height + 5);
+                    setIframeHeight(data.height);
                 }
             }
 
@@ -116,6 +100,15 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                 console.log('Parent: Received HIDE_BET_PANEL message');
                 setIsPanelVisible(false);
                 setBetPanelState(null);
+            }
+
+            // Handle betting block state updates
+            if (data.type === 'BETTING_BLOCK_STATE') {
+                const { isShowBetSlip, betChoice, odd } = data.state;
+                if (!isShowBetSlip) {
+                    setIsPanelVisible(false);
+                    setBetPanelState(null);
+                }
             }
 
             onMessage?.(data);
@@ -231,7 +224,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                     src={src}
                     style={{
                         width: '100%',
-                        height: `${iframeHeight + 20}px`,
+                        height: `${iframeHeight}px`,
                         border: 'none',
                         overflow: 'hidden',
                         position: 'relative',
@@ -242,108 +235,23 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                     onLoad={handleIframeLoad}
                 />
                 {portalContainerRef.current && betPanelState && isPanelVisible && createPortal(
-                    <div className="seal-vg-sg-index" style={{
-                        position: 'fixed',
-                        top: '0',
-                        left: '0',
-                        width: '100%',
-                        height: '100%',
-                        pointerEvents: 'none',
-                        zIndex: 9999
-                    }}>
-                        <div
-                            ref={panelRef}
-                            className="c-quick-bet c-quick-bet--bottom-left"
-                            style={{
-                                pointerEvents: 'auto',
-                                position: 'absolute',
-                                top: `${betPanelState.top}px`,
-                                left: `${betPanelState.left}px`
-                            }}
-                        >
-                            <div className="c-quick-bet__btn"></div>
-                            <div className={classNames('c-quick-bet__panel', {
-                                ['sg-bet-panel__left-dec-100']: betPanelState.isSpecialChoice,
-                            })}>
-                                <div className="c-betslip">
-                                    <div className="c-betslip__content">
-                                        <div className="c-betting-scroller">
-                                            <div className="c-betting-group" data-status="default">
-                                                <div className="c-betting" data-open="true">
-                                                    <div className="c-ticket" data-status="default" data-open="true">
-                                                        <div className="c-ticket__header">
-                                                            <span className="c-text-bettype sg-bet-panel__header-flex">
-                                                                <div className={`sg-bet-panel__game-icon ${betPanelState.namespace}-icon`}></div>
-                                                                <div>
-                                                                    <div className="game-name">{betPanelState.gameName}</div>
-                                                                    <div className="bet-option">{betPanelState.betChoice}</div>
-                                                                </div>
-                                                            </span>
-                                                        </div>
-                                                        <div className="c-ticket__main">
-                                                            <div className="c-ticket__choice">
-                                                                <span className="c-text-betchoice">{betPanelState.betChoice}</span>
-                                                            </div>
-                                                            <div className="c-ticket__odds">
-                                                                <span className="c-text-odds">
-                                                                    @
-                                                                    <span className="c-odds sg-bet-panel__text-bold" data-odds-status="default">
-                                                                        {betPanelState.odd}
-                                                                    </span>
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        {betPanelState.warnMsg && (
-                                                            <div className="c-ticket__status">
-                                                                <div className="c-betting-msg sg-bet-panel__betting-msg">
-                                                                    <i className="c-icon c-icon--warning" data-icon="warning" />
-                                                                    <span className="c-text">{betPanelState.warnMsg}</span>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="c-betting-stake-group">
-                                                        <div className="c-betting-stake">
-                                                            <div className="c-textfield c-textfield--stake" data-focus="true">
-                                                                <input
-                                                                    type="text"
-                                                                    className="c-textfield__input"
-                                                                    placeholder={`${betPanelState.min} - ${betPanelState.max}`}
-                                                                    value={betPanelState.amount}
-                                                                    onChange={handleInputChange}
-                                                                />
-                                                                <span className="c-textfield__currency">{betPanelState.currency}</span>
-                                                                <span className="c-textfield__bg"></span>
-                                                                <a className="c-btn c-btn--clear" aria-hidden="true" onClick={handleClear}>
-                                                                    <i className="c-icon c-icon--clear-solid"></i>
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                        <div className="c-betting-stake-info">
-                                                            <span className="c-text-group">
-                                                                <span className="c-text-label">Payout: </span>
-                                                                <span className="c-text-value">{betPanelState.payout}</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="c-betting-submit">
-                                                    <button
-                                                        className="c-btn c-btn--bet"
-                                                        data-disabled={false}
-                                                        aria-hidden="true"
-                                                        onClick={() => handleBet(betPanelState.amount, betPanelState.betChoice)}
-                                                    >
-                                                        <span className="c-text">Bet</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>,
+                    <BetPanel
+                        betPanelState={betPanelState}
+                        isPanelVisible={isPanelVisible}
+                        panelRef={panelRef}
+                        onClose={() => setIsPanelVisible(false)}
+                        onBet={handleBet}
+                        onInputChange={handleInputChange}
+                        onClear={handleClear}
+                        onHidePanel={() => {
+                            setIsPanelVisible(false);
+                            if (iframeRef.current?.contentWindow) {
+                                iframeRef.current.contentWindow.postMessage({
+                                    type: 'HIDE_BET_PANEL'
+                                }, '*');
+                            }
+                        }}
+                    />,
                     portalContainerRef.current
                 )}
             </div>

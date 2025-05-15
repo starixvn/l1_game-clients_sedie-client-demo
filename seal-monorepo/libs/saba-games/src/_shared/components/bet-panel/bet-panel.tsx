@@ -215,9 +215,9 @@ const BetPanel: React.FC<{
         setPanelId(null);
         setWarnMsg('');
         // Send message to parent window
-        window.parent.postMessage({
-            type: 'HIDE_BET_PANEL'
-        }, '*');
+        // window.parent.postMessage({
+        //     type: 'HIDE_BET_PANEL'
+        // }, '*');
     };
 
     const setWarningWithTimeout = (message: string) => {
@@ -329,6 +329,14 @@ const BetPanel: React.FC<{
                 type: 'BET_PANEL_STATE',
                 state
             }, '*');
+
+            // Hide panel after 0.5 seconds
+            const hideTimeout = setTimeout(() => {
+                onHide();
+            }, 500);
+
+            // Cleanup timeout on unmount or when dependencies change
+            return () => clearTimeout(hideTimeout);
         }
     }, [panelId, betChoice, odd, amount, currency, min, max, payout, gameName, namespace, clientRoundId, isSpecialChoice, warnMsg]);
 
