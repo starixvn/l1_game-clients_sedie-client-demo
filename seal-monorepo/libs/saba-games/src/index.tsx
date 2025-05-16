@@ -39,7 +39,7 @@ const SabaGamesGroup = ({
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             // Only process messages from expected origins
-            if (!event.origin.includes('localhost:4201')) {
+            if (!event.origin.includes('localhost:4551')) {
                 return;
             }
 

@@ -73,7 +73,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
     // Handle incoming messages from the iframe
     const handleMessage = useCallback((event: MessageEvent) => {
         // Only process messages from expected origins
-        if (!event.origin.includes('localhost:4200') && !event.origin.includes('localhost:4201')) {
+        if (!event.origin.includes('localhost:4200') && !event.origin.includes('localhost:4551')) {
             return;
         }
 

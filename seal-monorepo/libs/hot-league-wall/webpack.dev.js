@@ -8,7 +8,7 @@ module.exports = {
         publicPath: '/hot-league-wall/',
     },
     devServer: {
-        port: 4201,
+        port: 4551,
         historyApiFallback: {
             index: '/hot-league-wall/index.html',
         },
