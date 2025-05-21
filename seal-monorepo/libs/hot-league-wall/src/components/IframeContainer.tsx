@@ -102,6 +102,13 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                 setBetPanelState(null);
             }
 
+            // Handle hide all bet panels
+            if (data.type === 'HIDE_ALL_BET_PANELS') {
+                console.log('Parent: Received HIDE_ALL_BET_PANELS message');
+                setIsPanelVisible(false);
+                setBetPanelState(null);
+            }
+
             // Handle betting block state updates
             if (data.type === 'BETTING_BLOCK_STATE') {
                 const { isShowBetSlip, betChoice, odd } = data.state;

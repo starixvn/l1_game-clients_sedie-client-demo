@@ -37,6 +37,14 @@ import FishPrawnCrabDice from '../fish-prawn-crab-dice';
 import ColorGameDice from '../color-game-dice';
 import Coin from '../coin'
 import { choiceToSymbolMap as coinTossChoiceToSymbolMap } from '../../../games/saba-club/coin-toss/coin-toss-utils';
+import {
+    createMessageHandler,
+    MessageType,
+    sendBetPanelState,
+    sendHandleBet,
+    sendHandleInputChange,
+    sendHandleClear
+} from '../../../_shared/utils/window-message-util';
 
 const WARNING_CLOSE_DELAY = 60000;
 
@@ -315,7 +323,7 @@ const BetPanel = forwardRef<any, {
     }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace]);
 
     // Function to send BET_PANEL_STATE without showing panel
-    const sendBetPanelState = useCallback(() => {
+    const sendBetPanelStateToParent = useCallback(() => {
         const state = {
             top: 0,
             left: 0,
@@ -341,15 +349,12 @@ const BetPanel = forwardRef<any, {
             warnMsg
         };
 
-        window.parent.postMessage({
-            type: 'BET_PANEL_STATE',
-            state
-        }, '*');
+        sendBetPanelState(state);
     }, [betChoice, odd, amount, currency, min, max, gameName, namespace, clientRoundId, warnMsg]);
 
     // Expose sendBetPanelState to parent component
     React.useImperativeHandle(ref, () => ({
-        sendBetPanelState
+        sendBetPanelState: sendBetPanelStateToParent
     }));
 
     useEffect(() => {
@@ -373,10 +378,7 @@ const BetPanel = forwardRef<any, {
             };
 
             // Send state to parent window
-            window.parent.postMessage({
-                type: 'BET_PANEL_STATE',
-                state
-            }, '*');
+            sendBetPanelState(state);
 
             // Hide panel after 0.5 seconds
             const hideTimeout = setTimeout(() => {
@@ -390,16 +392,18 @@ const BetPanel = forwardRef<any, {
 
     // Handle messages from parent window
     useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data.type === 'HANDLE_BET') {
-                handleBet?.(event.data.amount, event.data.betChoice, clientSeed);
+        const handleMessage = createMessageHandler({
+            [MessageType.HANDLE_BET]: (data) => {
+                handleBet?.(data.amount, data.betChoice, clientSeed);
                 onHide?.();
-            } else if (event.data.type === 'HANDLE_INPUT_CHANGE') {
-                handleInputChange({ target: { value: event.data.value } } as any);
-            } else if (event.data.type === 'HANDLE_CLEAR') {
+            },
+            [MessageType.HANDLE_INPUT_CHANGE]: (data) => {
+                handleInputChange({ target: { value: data.value } } as any);
+            },
+            [MessageType.HANDLE_CLEAR]: () => {
                 handleClear();
             }
-        };
+        });
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);

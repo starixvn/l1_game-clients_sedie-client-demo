@@ -6,6 +6,7 @@ import './style.module.scss';
 import App from './app';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER } from '../constant/app';
 import { dataTheme } from './_shared/components/provider-set-dropdown';
+import { createMessageHandler, MessageType } from './_shared/utils/window-message-util';
 
 export const useSentryInit = ({ siteId, appEnv }) => {
     useEffect(() => {
@@ -37,17 +38,10 @@ const SabaGamesGroup = ({
 
     // Handle messages from parent window
     useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            // Only process messages from expected origins
-            if (!event.origin.includes('localhost:4551')) {
-                return;
-            }
-
-            console.log('Message received in SabaGamesGroup:', event.data);
-
-            if (event.data.type === 'UPDATE_SETTINGS') {
-                console.log('UPDATE_SETTINGS received:', event.data);
-                const { theme, isDarkMode, language } = event.data.settings;
+        const handleMessage = createMessageHandler({
+            [MessageType.UPDATE_SETTINGS]: (data) => {
+                console.log('UPDATE_SETTINGS received:', data);
+                const { theme, isDarkMode, language } = data.settings;
 
                 console.log('Current state before update:', {
                     theme: currentTheme,
@@ -69,7 +63,7 @@ const SabaGamesGroup = ({
                     language
                 });
             }
-        };
+        });
 
         console.log('Setting up message listener in SabaGamesGroup');
         window.addEventListener('message', handleMessage);

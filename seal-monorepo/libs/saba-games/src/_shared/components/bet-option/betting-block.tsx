@@ -2,6 +2,7 @@ import * as gc from '@sg/sg-game-client';
 import { Auth, Connection, Rounds } from '@sg/sg-game-client';
 import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
+import React from 'react';
 import {
     GameBettingOptionsContext,
     GameBettingZoneContext,
@@ -9,6 +10,8 @@ import {
 import BetPanelComponent from '../bet-panel/bet-panel';
 import { IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import Styles from './bet-option.module.scss';
+import { sendBettingBlockState, sendHideAllBetPanels } from '../../../_shared/utils/window-message-util';
+import { useEffect, useRef } from 'react';
 
 interface BettingBlockProps {
     odd: number;
@@ -33,6 +36,8 @@ interface IBettingBlockState extends IStateObserver {
 class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockState> {
     private timeoutId: NodeJS.Timeout | null = null;
     private readonly maxTimeoutDuration = 10000;
+    private bettingBlockRef: React.RefObject<HTMLDivElement>;
+    static contextType = GameBettingOptionsContext;
 
     constructor(props: BettingBlockProps) {
         super(props);
@@ -48,15 +53,34 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             isShowBetSlip: false,
         };
 
+        this.bettingBlockRef = React.createRef();
         this.handleOnClick = this.handleOnClick.bind(this);
+        this.handleClickOutside = this.handleClickOutside.bind(this);
+    }
+
+    componentDidMount() {
+        super.componentDidMount();
+        document.addEventListener('mousedown', this.handleClickOutside);
     }
 
     componentWillUnmount() {
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
         }
-
+        document.removeEventListener('mousedown', this.handleClickOutside);
         super.componentWillUnmount();
+    }
+
+    private handleClickOutside(event: MouseEvent) {
+        const context = this.context as { panelId: string | null; setPanelId: (id: string | null) => void };
+        if (
+            this.bettingBlockRef.current &&
+            !this.bettingBlockRef.current.contains(event.target as Node) &&
+            context.panelId === this.props.betChoice
+        ) {
+            context.setPanelId(null);
+            this.notifyParentState();
+        }
     }
 
     @render(Auth.AuthStore, (store) => store.isAuthorized)
@@ -108,14 +132,11 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
         const { betChoice, odd } = this.props;
         const { isShowBetSlip } = this.state;
 
-        window.parent.postMessage({
-            type: 'BETTING_BLOCK_STATE',
-            state: {
-                isShowBetSlip,
-                betChoice,
-                odd
-            }
-        }, '*');
+        sendBettingBlockState({
+            isShowBetSlip,
+            betChoice,
+            odd
+        });
     }
 
     protected handleOnClick({ panelId, setPanelId, show, setShow }) {
@@ -124,9 +145,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             const { isAuthorized } = this.state;
 
             // Notify parent to hide all bet panels first
-            window.parent.postMessage({
-                type: 'HIDE_ALL_BET_PANELS'
-            }, '*');
+            sendHideAllBetPanels();
 
             if (!this.state.isShowBetSlip) {
                 this.props.onBet();
@@ -136,10 +155,11 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
                 this.autoCreateNickname();
             }
 
-            if (panelId !== betChoice && this.state.isShowBetSlip) {
-                setPanelId(betChoice);
-            } else {
+            // Toggle panel state
+            if (panelId === betChoice) {
                 setPanelId(null);
+            } else {
+                setPanelId(betChoice);
             }
 
             this.waitForAuthorization(betChoice, odd);
@@ -210,6 +230,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
                     return (
                         <GameBettingZoneContext.Provider value={bettingZoneState}>
                             <div
+                                ref={this.bettingBlockRef}
                                 className={classNames(`${Styles['betting-block']} ${Styles[flashAnimationClass]}`, {
                                     [Styles['open-panel-background-color']]: panelId === betChoice,
                                 })}
