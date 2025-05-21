@@ -2,7 +2,7 @@ import * as gc from '@sg/sg-game-client';
 import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
-import React, { useCallback, useEffect, useRef, useState, forwardRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 import {
     BACCARAT_GAME_NAMESPACE,
     COLOR_GAME_NAMESPACE,
@@ -22,33 +22,24 @@ import {
     useGameBettingOptionsContext,
     useGameBettingZoneContext,
 } from '../../react-contexts/game-betting-zone-context/game-betting-zone-context';
-import { checkValidAmount, parseInputValue, WarnMsgType, calculateMinMaxAmount } from '../../utils/betting-util';
 import { getChoicesType } from '../../utils/choice-type';
-import BettingChips from '../betting-chips';
+import { BettingChips } from './betting-chips';
 import Dice from '../dice';
 import { RoundDot } from '../dot';
 import { IPropsObserver, IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import './bet-panel.scss';
-import { localStorageKeys, StorageManager } from '../../utils/storage-manager';
+import { WarnMessage } from './warn-message';
+import { useBetPanel } from './use-bet-panel';
+import { BetPanelProps, IBetPanel } from './types';
+import { createMessageHandler, MessageType, sendBetPanelState } from '../../../_shared/utils/window-message-util';
 import { choiceToSymbolMap } from '../../../games/saba-club/fish-prawn-crab/fish-prawn-crab-utils';
 import { choiceToSymbolMap as colorGameChoiceToSymbolMap } from '../../../games/saba-club/color-game/color-game-utils';
+import { choiceToSymbolMap as coinTossChoiceToSymbolMap } from '../../../games/saba-club/coin-toss/coin-toss-utils';
 import { Size } from '../../constants';
 import FishPrawnCrabDice from '../fish-prawn-crab-dice';
 import ColorGameDice from '../color-game-dice';
-import Coin from '../coin'
-import { choiceToSymbolMap as coinTossChoiceToSymbolMap } from '../../../games/saba-club/coin-toss/coin-toss-utils';
-import {
-    createMessageHandler,
-    MessageType,
-    sendBetPanelState,
-    sendHandleBet,
-    sendHandleInputChange,
-    sendHandleClear
-} from '../../../_shared/utils/window-message-util';
+import Coin from '../coin';
 
-const WARNING_CLOSE_DELAY = 60000;
-
-// Game icon mapping constant
 const GAME_ICON_MAPPING = {
     [SE_DIE_GAME_NAMESPACE]: 'sedie-icon',
     [VIP_SE_DIE_GAME_NAMESPACE]: 'vip-sedie-icon',
@@ -59,21 +50,6 @@ const GAME_ICON_MAPPING = {
     [COIN_TOSS_GAME_NAMESPACE]: 'coin-toss-icon',
 } as const;
 
-export interface IBetPanel extends IStateObserver {
-    clientRoundId: number;
-    stakeLevel: gc.Player.IStakeLevel;
-    currency: string;
-    minBet: number;
-    maxBet: number;
-    maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
-    clientSeed: string;
-}
-
-export interface ILatestBetRecord {
-    namespace: string;
-    roundId: number;
-}
-
 class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends ObserverComponent<IPropsObserver, IStateObserver> {
     private betPanelRef = React.createRef<any>();
 
@@ -82,7 +58,7 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
         this.state = {
             dispose: null,
             clientRoundId: 0,
-            stakeLevel: {},
+            stakeLevel: { minBet: 0, maxBet: 0 },
             currency: '',
             minBet: 0,
             maxBet: 0,
@@ -132,13 +108,10 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
 
     @render(gc.RoundBasePF.ProvablyFairStore, (store) => store.clientSeed)
     handleClientSeed(clientSeed: string) {
-        console.log('clientSeed', clientSeed);
         this.setState({ clientSeed } as IBetPanel);
     }
 
-    // Add method to send bet panel state without showing panel
     sendBetPanelState = () => {
-        const { clientRoundId, stakeLevel, currency, minBet, maxBet, maxBetPerChoices, clientSeed } = this.state as S;
         if (this.betPanelRef.current) {
             this.betPanelRef.current.sendBetPanelState();
         }
@@ -159,39 +132,47 @@ class BetPanelComponent<P extends IPropsObserver, S extends IBetPanel> extends O
                 stakeLevel={stakeLevel}
                 handleBet={this.handleBet.bind(this)}
                 clientSeed={clientSeed}
-            ></BetPanel>
+            />
         );
     }
 }
 
-const BetPanel = forwardRef<any, {
-    namespace: string;
-    clientRoundId: number;
-    currency: string;
-    minBet: number;
-    maxBet: number;
-    maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
-    stakeLevel: gc.Player.IStakeLevel;
-    clientSeed: string;
-    handleBet: (amount: number, betChoice: string, clientSeed: string) => void;
-}>(({ namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet, clientSeed }, ref) => {
-    const { panelId, setPanelId, setShow } = useGameBettingOptionsContext();
+const BetPanel = forwardRef<any, BetPanelProps>((props, ref) => {
+    const { namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet, clientSeed } = props;
+    const { panelId, setPanelId } = useGameBettingOptionsContext();
     const { gameName, betChoice, odd = 0 } = useGameBettingZoneContext();
     const { siteId } = useAppContext();
     const { minBet: stakeLevelMinBet = 0, maxBet: stakeLevelMaxBet = 0 } = stakeLevel || {};
     const betChoiceMax = maxBetPerChoices?.[betChoice] || 0;
     const panelRef = useRef<HTMLDivElement>(null);
 
-    const [amount, setAmount] = useState(stakeLevelMinBet);
-    const [warnMsg, setWarnMsg] = useState('');
-    const [min, setMin] = useState(0);
-    const [max, setMax] = useState(0);
-    const warningTimeoutRef = useRef<NodeJS.Timeout>();
-
-    // TODO: 紅白翻譯要再跟ＰＭ要其他語系
     const t = (key) => gc.Translator.translate(key, { languageId: gc.Translator.getCurrentLanguageId() });
     const addCommas = gc.FormatUtils.numberWithCommas;
-    const displayAmount = amount > 0 ? gc.FormatUtils.numberWithCommas(amount) : '';
+
+    const {
+        amount,
+        warnMsg,
+        min,
+        max,
+        handleInputChange,
+        handleClear,
+        handleClickBet,
+        setAmount
+    } = useBetPanel(
+        betChoice,
+        minBet,
+        maxBet,
+        stakeLevel,
+        betChoiceMax,
+        maxBetPerChoices,
+        namespace,
+        clientRoundId,
+        handleBet,
+        clientSeed,
+        t
+    );
+
+    const displayAmount = amount > 0 ? addCommas(amount) : '';
     const payout = amount > 0 ? addCommas(amount * odd, 2, false) : '0.00';
     const vendorName = siteId === VIVA88_SITE_ID ? SABA_GAMES : VGAMING;
 
@@ -205,124 +186,10 @@ const BetPanel = forwardRef<any, {
         COLOR_GAME_CHOICES.GREEN
     ].includes(betChoice);
 
-    const handleInputChange = (event: any) => {
-        const numericValue = parseInputValue(event.target.value);
-
-        const { msg } = checkValidAmount(numericValue, min, max);
-
-        if (msg) {
-            if (msg === WarnMsgType.LESS_THAN_MIN) {
-                setWarnMsg(t('Common.lessthanmin'));
-            }
-
-            if (msg === WarnMsgType.MORE_THAN_MAX) {
-                setWarnMsg(t('Common.morethanmax'));
-            }
-        } else {
-            setWarnMsg('');
-        }
-
-        setAmount(numericValue);
-    };
-
-    const handleClear = () => {
-        setAmount(0);
-    };
-
-    const onHide = () => {
+    const onHide = useCallback(() => {
         setPanelId(null);
-        setWarnMsg('');
-        // Send message to parent window
-        // window.parent.postMessage({
-        //     type: 'HIDE_BET_PANEL'
-        // }, '*');
-    };
+    }, [setPanelId]);
 
-    const setWarningWithTimeout = (message: string) => {
-        if (warningTimeoutRef.current) {
-            clearTimeout(warningTimeoutRef.current);
-        }
-
-        setWarnMsg(message);
-
-        warningTimeoutRef.current = setTimeout(() => {
-            setWarnMsg('');
-        }, WARNING_CLOSE_DELAY);
-    };
-
-    const updateLatestBetToStorage = (namespace: string, clientRoundId: number) => {
-        const existingHistory = StorageManager.get(localStorageKeys.betHistory) as ILatestBetRecord[];
-        let betHistory = Array.isArray(existingHistory) ? existingHistory : [];
-
-        const newBet = { namespace, roundId: clientRoundId };
-        const existingNamespaceIndex = betHistory.findIndex(bet => bet.namespace === namespace);
-
-        if (existingNamespaceIndex !== -1) {
-            betHistory[existingNamespaceIndex].roundId = clientRoundId;
-        } else {
-            betHistory.push(newBet);
-        }
-
-        StorageManager.set(localStorageKeys.betHistory, betHistory);
-    };
-
-    const handleClickBet = () => {
-        const { newAmount: validatedAmount, msg } = checkValidAmount(amount, min, max);
-
-        if (msg) {
-            setAmount(validatedAmount);
-            if (msg === WarnMsgType.LESS_THAN_MIN) {
-                setWarningWithTimeout(t('Common.lessthanmin'));
-            }
-            if (msg === WarnMsgType.MORE_THAN_MAX) {
-                setWarningWithTimeout(t('Common.morethanmax'));
-            }
-            return;
-        }
-
-        if (betChoice) {
-            handleBet?.(validatedAmount, betChoice, clientSeed);
-            onHide?.();
-            updateLatestBetToStorage(namespace, clientRoundId);
-        }
-    };
-
-    const handleChipAmountChange = useCallback(
-        (addAmount: number) => {
-            const { newAmount, msg } = checkValidAmount(addAmount, min, max);
-
-            if (!msg) {
-                setWarnMsg('');
-            }
-            setAmount(newAmount);
-        },
-        [min, max],
-    );
-
-    useEffect(() => {
-        if (!betChoice) return;
-        // calculate min and max using helper
-        const { min: newMin, max: newMax } = calculateMinMaxAmount(
-            minBet,
-            stakeLevelMinBet,
-            maxBet,
-            stakeLevel.maxBet,
-            betChoiceMax,
-            maxBetPerChoices,
-            namespace
-        );
-
-        setMin(newMin);
-        setMax(newMax);
-
-        setAmount((prev) => {
-            if (prev < newMin) return newMin;
-            if (prev > newMax) return newMax;
-            return prev;
-        });
-    }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace]);
-
-    // Function to send BET_PANEL_STATE without showing panel
     const sendBetPanelStateToParent = useCallback(() => {
         const state = {
             top: 0,
@@ -333,26 +200,17 @@ const BetPanel = forwardRef<any, {
             currency,
             min,
             max,
-            payout: amount > 0 ? addCommas(amount * odd, 2, false) : '0.00',
+            payout,
             gameName,
             namespace,
             clientRoundId,
-            isSpecialChoice: [
-                SE_DIE_CHOICES.RED2,
-                BACCARAT_CHOICES.PLAYER_PAIR,
-                BACCARAT_CHOICES.BANKER_PAIR,
-                FISH_PRAWN_CRAB_CHOICES.PRAWN,
-                FISH_PRAWN_CRAB_CHOICES.ROOSTER,
-                COLOR_GAME_CHOICES.PINK,
-                COLOR_GAME_CHOICES.GREEN
-            ].includes(betChoice),
+            isSpecialChoice,
             warnMsg
         };
 
         sendBetPanelState(state);
-    }, [betChoice, odd, amount, currency, min, max, gameName, namespace, clientRoundId, warnMsg]);
+    }, [betChoice, odd, amount, currency, min, max, payout, gameName, namespace, clientRoundId, isSpecialChoice, warnMsg]);
 
-    // Expose sendBetPanelState to parent component
     React.useImperativeHandle(ref, () => ({
         sendBetPanelState: sendBetPanelStateToParent
     }));
@@ -377,20 +235,16 @@ const BetPanel = forwardRef<any, {
                 warnMsg
             };
 
-            // Send state to parent window
             sendBetPanelState(state);
 
-            // Hide panel after 0.5 seconds
             const hideTimeout = setTimeout(() => {
                 onHide();
             }, 500);
 
-            // Cleanup timeout on unmount or when dependencies change
             return () => clearTimeout(hideTimeout);
         }
-    }, [panelId, betChoice, odd, amount, currency, min, max, payout, gameName, namespace, clientRoundId, isSpecialChoice, warnMsg]);
+    }, [panelId, betChoice, odd, amount, currency, min, max, payout, gameName, namespace, clientRoundId, isSpecialChoice, warnMsg, onHide]);
 
-    // Handle messages from parent window
     useEffect(() => {
         const handleMessage = createMessageHandler({
             [MessageType.HANDLE_BET]: (data) => {
@@ -409,145 +263,10 @@ const BetPanel = forwardRef<any, {
         return () => window.removeEventListener('message', handleMessage);
     }, [handleBet, handleInputChange, handleClear, onHide, clientSeed]);
 
-    const renderTicketHeader = () => {
-        const gameIconClass = GAME_ICON_MAPPING[namespace] || '';
-
-        return (
-            <div className="c-ticket__header">
-                <span className="c-text-bettype sg-bet-panel__header-flex">
-                    <div className={classNames('sg-bet-panel__game-icon', gameIconClass)}></div>
-                    <div>
-                        <div className="game-name">{t(`${namespace}.game_name`)}</div>
-                        <div className="bet-option">{t(getChoicesType(namespace, betChoice))}</div>
-                    </div>
-                </span>
-
-                <a className="c-btn c-btn--caret" aria-hidden="true">
-                    <i className="c-icon c-icon--caret"></i>
-                </a>
-                <a className="c-btn c-btn--clear" aria-hidden="true" onClick={() => onHide()}>
-                    <i className="c-icon c-icon--clear"></i>
-                </a>
-            </div>
-        );
-    };
-
-    const renderTicketMain = () => {
-        const t = (key) => gc.Translator.translate(key, { languageId: gc.Translator.getCurrentLanguageId() });
-        return (
-            <div className="c-ticket__main">
-                <div className="c-ticket__choice">
-                    <span className="c-text-betchoice">{t(`${gameName}.glossary_${betChoice}`)}</span>
-                </div>
-                <div className="c-ticket__odds">
-                    <span className="c-text-balls">{renderGameElements(gameName)}</span>
-                    <span className="c-text-odds">
-                        @
-                        <span className={`${'c-odds'} ${'sg-bet-panel__text-bold'}`} data-odds-status="default">
-                            {odd || ''}
-                        </span>
-                    </span>
-                    <span className="c-text-oddstype">({t('Common.decimal')})</span>
-                </div>
-            </div>
-        );
-    };
-
-    const renderTicektInfo = () => {
-        const t = (key) => gc.Translator.translate(key, { languageId: gc.Translator.getCurrentLanguageId() });
-        const vendorName = siteId === VIVA88_SITE_ID ? SABA_GAMES : VGAMING;
-        const game = t(`${namespace}.game_name`);
-
-        return (
-            <div className="c-ticket__info">
-                <div className="c-ticket-match-info">
-                    <div className="c-ticket-match-info__row">{vendorName}</div>
-                    <div className="c-ticket-match-info__row">{game}</div>
-                    <div className="c-ticket-match-info__row">
-                        {t(`Common.result_no`)} {clientRoundId}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderDots = () => {
-        const hasDots: boolean = betChoice ? Object.keys(ChoiceSeDieIconMapper).includes(betChoice) : false;
-        const dots = hasDots ? ChoiceSeDieIconMapper[betChoice as string] : [false, false, false, false];
-        return dots.map((isRed, index) => (
-            <RoundDot
-                key={index}
-                highlight={!hasDots}
-                choice={isRed ? SeDieChoices.odd : SeDieChoices.even}
-                size="small"
-                value={hasDots ? '' : '?'}
-            />
-        ));
-    };
-
-    const renderDices = () => {
-        return (
-            <>
-                <Dice diceNumber={0} size="small" />
-                <Dice diceNumber={0} size="small" />
-                <Dice diceNumber={0} size="small" />
-            </>
-        );
-    };
-
-    const renderFishPrawnCrabDice = () => {
-        const symbol = choiceToSymbolMap[betChoice];
-        return (
-            <FishPrawnCrabDice symbol={symbol} size={Size.small} />
-        );
-    };
-
-    const renderColorGameDice = () => {
-        const symbol = colorGameChoiceToSymbolMap[betChoice];
-        return (
-            <ColorGameDice symbol={symbol} size={Size.small} />
-        );
-    };
-
-    const renderCoin = () => {
-        const coinType = coinTossChoiceToSymbolMap[betChoice];
-        return (
-            <Coin coinType={coinType} size={Size.small} />
-        )
-    }
-
-    const renderGameElements = (gameName: string) => {
-        switch (gameName) {
-            case SE_DIE_GAME_NAMESPACE:
-            case VIP_SE_DIE_GAME_NAMESPACE:
-                return renderDots();
-            case UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE:
-                return renderDices();
-            case FISH_PRAWN_CRAB_GAME_NAMESPACE:
-                return renderFishPrawnCrabDice();
-            case COLOR_GAME_NAMESPACE:
-                return renderColorGameDice();
-            case COIN_TOSS_GAME_NAMESPACE:
-                return renderCoin();
-            default:
-                return null;
-        }
-    };
-
-    const renderWarnMessage = ({ warnMsg }) => {
-        if (!warnMsg) return;
-        return (
-            <div className="c-ticket__status">
-                <WarnMessage warnMsg={warnMsg} />
-            </div>
-        );
-    };
-
     if (panelId !== betChoice) {
-        return <></>;
+        return null;
     }
 
-    // TODO: 接上memberSite時，className不用style，直接接上memberSite class
     return (
         <div className="c-quick-bet c-quick-bet--bottom-left">
             <div className="c-quick-bet__btn"></div>
@@ -563,13 +282,57 @@ const BetPanel = forwardRef<any, {
                             <div className="c-betting-group" data-status="default">
                                 <div className="c-betting" data-open="true">
                                     <div className="c-ticket" data-status="default" data-open="true">
-                                        {renderTicketHeader()}
+                                        {/* Ticket Header */}
+                                        <div className="c-ticket__header">
+                                            <span className="c-text-bettype sg-bet-panel__header-flex">
+                                                <div className={classNames('sg-bet-panel__game-icon', GAME_ICON_MAPPING[namespace])}></div>
+                                                <div>
+                                                    <div className="game-name">{t(`${namespace}.game_name`)}</div>
+                                                    <div className="bet-option">{t(getChoicesType(namespace, betChoice))}</div>
+                                                </div>
+                                            </span>
+                                            <a className="c-btn c-btn--clear" aria-hidden="true" onClick={onHide}>
+                                                <i className="c-icon c-icon--clear"></i>
+                                            </a>
+                                        </div>
 
-                                        {renderTicketMain()}
+                                        {/* Ticket Main */}
+                                        <div className="c-ticket__main">
+                                            <div className="c-ticket__choice">
+                                                <span className="c-text-betchoice">{t(`${gameName}.glossary_${betChoice}`)}</span>
+                                            </div>
+                                            <div className="c-ticket__odds">
+                                                <span className="c-text-balls">{renderGameElements(gameName, betChoice)}</span>
+                                                <span className="c-text-odds">
+                                                    @
+                                                    <span className={`${'c-odds'} ${'sg-bet-panel__text-bold'}`} data-odds-status="default">
+                                                        {odd || ''}
+                                                    </span>
+                                                </span>
+                                                <span className="c-text-oddstype">({t('Common.decimal')})</span>
+                                            </div>
+                                        </div>
 
-                                        {renderTicektInfo()}
-                                        {renderWarnMessage({ warnMsg })}
+                                        {/* Ticket Info */}
+                                        <div className="c-ticket__info">
+                                            <div className="c-ticket-match-info">
+                                                <div className="c-ticket-match-info__row">{vendorName}</div>
+                                                <div className="c-ticket-match-info__row">{t(`${namespace}.game_name`)}</div>
+                                                <div className="c-ticket-match-info__row">
+                                                    {t(`Common.result_no`)} {clientRoundId}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Warning Message */}
+                                        {warnMsg && (
+                                            <div className="c-ticket__status">
+                                                <WarnMessage warnMsg={warnMsg} />
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {/* Betting Stake */}
                                     <div className="c-betting-stake-group">
                                         <div className="c-betting-stake">
                                             <div className={`${'c-textfield'} ${'c-textfield--stake'}`} data-focus="true">
@@ -594,15 +357,19 @@ const BetPanel = forwardRef<any, {
                                             </span>
                                         </div>
                                     </div>
+
+                                    {/* Betting Chips */}
                                     <BettingChips
                                         min={min}
                                         max={max}
                                         currentAmount={amount}
-                                        onAmountChange={handleChipAmountChange}
+                                        onAmountChange={setAmount}
                                         t={t}
                                         addCommas={addCommas}
                                     />
                                 </div>
+
+                                {/* Betting Submit */}
                                 <div className="c-betting-submit">
                                     <button
                                         className={`${'c-btn'} ${'c-btn--bet'}`}
@@ -612,7 +379,7 @@ const BetPanel = forwardRef<any, {
                                     >
                                         <span className="c-text">{t('Common.btn_bet')}</span>
                                     </button>
-                                    <button className={`${'c-btn'} ${'c-btn--default'}`} aria-hidden="true" onClick={() => onHide()}>
+                                    <button className={`${'c-btn'} ${'c-btn--default'}`} aria-hidden="true" onClick={onHide}>
                                         <span className="c-text">{t('Common.btn_cancel')}</span>
                                     </button>
                                 </div>
@@ -625,14 +392,66 @@ const BetPanel = forwardRef<any, {
     );
 });
 
-const WarnMessage = ({ warnMsg }) => {
-    if (!warnMsg) return null;
+const renderGameElements = (gameName: string, betChoice: string) => {
+    switch (gameName) {
+        case SE_DIE_GAME_NAMESPACE:
+        case VIP_SE_DIE_GAME_NAMESPACE:
+            return renderDots(betChoice);
+        case UNBALANCED_BIG_SMALL_4_GAME_NAMESPACE:
+            return renderDices();
+        case FISH_PRAWN_CRAB_GAME_NAMESPACE:
+            return renderFishPrawnCrabDice(betChoice);
+        case COLOR_GAME_NAMESPACE:
+            return renderColorGameDice(betChoice);
+        case COIN_TOSS_GAME_NAMESPACE:
+            return renderCoin(betChoice);
+        default:
+            return null;
+    }
+};
 
+const renderDots = (betChoice: string) => {
+    const hasDots: boolean = betChoice ? Object.keys(ChoiceSeDieIconMapper).includes(betChoice) : false;
+    const dots = hasDots ? ChoiceSeDieIconMapper[betChoice as string] : [false, false, false, false];
+    return dots.map((isRed, index) => (
+        <RoundDot
+            key={index}
+            highlight={!hasDots}
+            choice={isRed ? SeDieChoices.odd : SeDieChoices.even}
+            size="small"
+            value={hasDots ? '' : '?'}
+        />
+    ));
+};
+
+const renderDices = () => {
     return (
-        <div className="c-betting-msg sg-bet-panel__betting-msg">
-            <i className="c-icon c-icon--warning" data-icon="warning" />
-            <span className="c-text">{warnMsg}</span>
-        </div>
+        <>
+            <Dice diceNumber={0} size="small" />
+            <Dice diceNumber={0} size="small" />
+            <Dice diceNumber={0} size="small" />
+        </>
+    );
+};
+
+const renderFishPrawnCrabDice = (betChoice: string) => {
+    const symbol = choiceToSymbolMap[betChoice];
+    return (
+        <FishPrawnCrabDice symbol={symbol} size={Size.small} />
+    );
+};
+
+const renderColorGameDice = (betChoice: string) => {
+    const symbol = colorGameChoiceToSymbolMap[betChoice];
+    return (
+        <ColorGameDice symbol={symbol} size={Size.small} />
+    );
+};
+
+const renderCoin = (betChoice: string) => {
+    const coinType = coinTossChoiceToSymbolMap[betChoice];
+    return (
+        <Coin coinType={coinType} size={Size.small} />
     );
 };
 

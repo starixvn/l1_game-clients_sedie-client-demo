@@ -21,6 +21,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
     const [iframeHeight, setIframeHeight] = useState<number>(264);
     const [betPanelState, setBetPanelState] = useState<BetPanelState | null>(null);
     const [isPanelVisible, setIsPanelVisible] = useState<boolean>(false);
+    const [ignoreNextBettingBlockState, setIgnoreNextBettingBlockState] = useState(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
     const lastRequestTimeRef = useRef<number>(0);
@@ -79,6 +80,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
 
         try {
             const data = event.data;
+            console.log('Parent: Received message from iframe:', data);
 
             // Handle height update message
             if (data.type === 'SET_HEIGHT' && typeof data.height === 'number') {
@@ -91,6 +93,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
 
             // Handle bet panel state updates
             if (data.type === 'BET_PANEL_STATE') {
+                console.log('Parent: Setting bet panel state:', data.state);
                 setBetPanelState(data.state);
                 setIsPanelVisible(true);
             }
@@ -107,11 +110,17 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                 console.log('Parent: Received HIDE_ALL_BET_PANELS message');
                 setIsPanelVisible(false);
                 setBetPanelState(null);
+                setIgnoreNextBettingBlockState(true);
             }
 
             // Handle betting block state updates
             if (data.type === 'BETTING_BLOCK_STATE') {
-                const { isShowBetSlip, betChoice, odd } = data.state;
+                if (ignoreNextBettingBlockState) {
+                    setIgnoreNextBettingBlockState(false);
+                    return; // Ignore this update
+                }
+                const { isShowBetSlip } = data.state;
+                console.log('Parent: Received BETTING_BLOCK_STATE:', data.state);
                 if (!isShowBetSlip) {
                     setIsPanelVisible(false);
                     setBetPanelState(null);
@@ -122,7 +131,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
-    }, [onMessage]);
+    }, [onMessage, ignoreNextBettingBlockState]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {

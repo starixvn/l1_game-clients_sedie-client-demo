@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import classNames from 'classnames';
 import BettingChips from './BettingChips';
 import './BetPanel.scss';
@@ -41,7 +41,13 @@ export const BetPanel: React.FC<BetPanelProps> = ({
     onClear,
     onHidePanel
 }) => {
-    if (!isPanelVisible) return null;
+    useEffect(() => {
+        if (!isPanelVisible) {
+            onClose();
+        }
+    }, [isPanelVisible, onClose]);
+
+    if (!isPanelVisible || !betPanelState) return null;
 
     const handleChipAmountChange = (amount: number) => {
         onInputChange({ target: { value: amount.toString() } } as React.ChangeEvent<HTMLInputElement>);
@@ -58,7 +64,8 @@ export const BetPanel: React.FC<BetPanelProps> = ({
             width: '100%',
             height: '100%',
             pointerEvents: 'none',
-            zIndex: 9999
+            zIndex: 9999,
+            display: isPanelVisible ? 'block' : 'none'
         }}>
             <div
                 ref={panelRef}
@@ -69,7 +76,8 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                     pointerEvents: 'auto',
                     position: 'absolute',
                     top: `${betPanelState.top}px`,
-                    left: `${betPanelState.left}px`
+                    left: `${betPanelState.left}px`,
+                    display: isPanelVisible ? 'block' : 'none'
                 }}
             >
                 <div className="c-quick-bet__arrow"></div>
