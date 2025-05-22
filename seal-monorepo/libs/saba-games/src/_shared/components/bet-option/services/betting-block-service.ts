@@ -25,18 +25,46 @@ class BettingBlockService {
         this.state = state;
         // Store state in window object
         (window as any).__BETTING_BLOCK_STATE__ = state;
-        this.notifyParent(state);
+
+        // Map panel visibility states
+        const visibilityStates = {
+            show: () => {
+                this.showPanel(state);
+            },
+            hide: () => {
+                this.hidePanel();
+            }
+        };
+
+        // Execute the appropriate action based on current visibility
+        const action = state.isShowBetSlip ? visibilityStates.show : visibilityStates.hide;
+        action();
     }
 
     getState(): BettingBlockState | null {
         return this.state;
     }
 
-    private notifyParent(state: BettingBlockState): void {
+    private showPanel(state: BettingBlockState): void {
         window.parent.postMessage({
             type: 'BETTING_BLOCK_STATE',
-            state
+            state: {
+                ...state,
+                isShowBetSlip: true
+            }
         }, '*');
+    }
+
+    private hidePanel(): void {
+        if (this.state) {
+            window.parent.postMessage({
+                type: 'BETTING_BLOCK_STATE',
+                state: {
+                    ...this.state,
+                    isShowBetSlip: false
+                }
+            }, '*');
+        }
     }
 
     hideAllPanels(): void {

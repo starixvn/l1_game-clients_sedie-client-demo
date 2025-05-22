@@ -133,47 +133,64 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
         const { betChoice, odd } = this.props;
         const { isShowBetSlip } = this.state;
 
-        if (this.bettingBlockRef.current) {
-            const rect = this.bettingBlockRef.current.getBoundingClientRect();
-            const state = {
-                isShowBetSlip,
-                betChoice,
-                odd,
-                position: {
-                    top: rect.bottom + window.scrollY,
-                    left: rect.left + window.scrollX
-                }
-            };
+        if (!this.bettingBlockRef.current) return;
 
-            this.bettingBlockService.updateState(state);
-        }
+        const rect = this.bettingBlockRef.current.getBoundingClientRect();
+        const position = {
+            top: rect.bottom + window.scrollY,
+            left: rect.left + window.scrollX
+        };
+
+        // Update state with current visibility
+        this.bettingBlockService.updateState({
+            isShowBetSlip,
+            betChoice,
+            odd,
+            position
+        });
     }
 
     protected handleOnClick({ panelId, setPanelId, show, setShow }) {
         return () => {
             const { betChoice, odd } = this.props;
-            const { isAuthorized } = this.state;
+            const { isAuthorized, isShowBetSlip } = this.state;
 
-            // Notify parent to hide all bet panels first
-            this.bettingBlockService.hideAllPanels();
+            // Map panel states and actions
+            const panelStates = {
+                // Panel is open and clicked again - close it
+                [betChoice]: () => {
+                    setPanelId(null);
+                    this.setState({ isShowBetSlip: false }, () => {
+                        this.notifyParentState();
+                    });
+                },
+                // Panel is closed or different panel is open - open this panel
+                default: () => {
+                    // Hide all other panels first
+                    this.bettingBlockService.hideAllPanels();
 
-            if (!this.state.isShowBetSlip) {
-                this.props.onBet();
-            }
+                    // Open this panel
+                    setPanelId(betChoice);
+                    this.setState({ isShowBetSlip: true }, () => {
+                        this.notifyParentState();
+                    });
 
-            if (!isAuthorized) {
-                this.autoCreateNickname();
-            }
+                    // Handle bet and authorization
+                    if (!isShowBetSlip) {
+                        this.props.onBet();
+                    }
 
-            // Toggle panel state
-            if (panelId === betChoice) {
-                setPanelId(null);
-            } else {
-                setPanelId(betChoice);
-            }
+                    if (!isAuthorized) {
+                        this.autoCreateNickname();
+                    }
 
-            this.waitForAuthorization(betChoice, odd);
-            this.notifyParentState();
+                    this.waitForAuthorization(betChoice, odd);
+                }
+            };
+
+            // Execute the appropriate action based on current panel state
+            const action = panelStates[panelId] || panelStates.default;
+            action();
         };
     }
 

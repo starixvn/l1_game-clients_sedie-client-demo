@@ -4,6 +4,7 @@ import BettingChips from './BettingChips';
 import './BetPanel.scss';
 
 export interface BetPanelState {
+    isShowBetSlip: boolean;
     top: number;
     left: number;
     betChoice: string;

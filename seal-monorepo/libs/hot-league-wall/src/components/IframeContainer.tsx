@@ -5,10 +5,9 @@ import BetPanel, { BetPanelState } from './BetPanel';
 
 interface IframeContainerProps {
     src: string;
-    onMessage?: (data: any) => void;
-    betPanelState: BetPanelState | null;
-    isPanelVisible: boolean;
-    onPanelClose: () => void;
+    token: string;
+    language: string;
+    renewToken?: Function;
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -22,12 +21,13 @@ const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, ch
 
 const IframeContainer: React.FC<IframeContainerProps> = ({
     src,
-    onMessage,
-    betPanelState,
-    isPanelVisible,
-    onPanelClose
+    token,
+    language,
+    renewToken
 }) => {
     const [iframeHeight, setIframeHeight] = useState<number>(264);
+    const [betPanelState, setBetPanelState] = useState<BetPanelState | null>(null);
+    const [isPanelVisible, setIsPanelVisible] = useState<boolean>(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
     const lastRequestTimeRef = useRef<number>(0);
@@ -73,6 +73,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
         try {
             const data = event.data;
+            console.log('Parent: Received message from iframe:', data);
 
             // Handle height update message
             if (data.type === 'SET_HEIGHT' && typeof data.height === 'number') {
@@ -83,11 +84,53 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                 }
             }
 
-            onMessage?.(data);
+            // Handle betting related messages
+            switch (data.type) {
+                case 'BETTING_BLOCK_STATE':
+                    const { isShowBetSlip, betChoice, odd, position } = data.state;
+                    if (isShowBetSlip) {
+                        setBetPanelState({
+                            isShowBetSlip,
+                            betChoice,
+                            odd,
+                            top: position?.top || 0,
+                            left: position?.left || 0,
+                            amount: 0,
+                            currency: '',
+                            min: 0,
+                            max: 0,
+                            payout: '0.00',
+                            gameName: '',
+                            namespace: '',
+                            clientRoundId: 0,
+                            isSpecialChoice: false,
+                            warnMsg: ''
+                        });
+                        setIsPanelVisible(true);
+                    } else {
+                        setIsPanelVisible(false);
+                        setBetPanelState(null);
+                    }
+                    break;
+
+                case 'BET_PANEL_STATE':
+                    setBetPanelState({
+                        ...data.state,
+                        isShowBetSlip: true
+                    });
+                    setIsPanelVisible(true);
+                    break;
+
+                case 'HIDE_BET_PANEL':
+                case 'HIDE_ALL_BET_PANELS':
+                    setIsPanelVisible(false);
+                    setBetPanelState(null);
+                    break;
+            }
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
-    }, [onMessage]);
+    }, []);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
@@ -152,6 +195,11 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         }
     }, []);
 
+    const handlePanelClose = useCallback(() => {
+        setIsPanelVisible(false);
+        setBetPanelState(null);
+    }, []);
+
     return (
         <CustomContainer className="mt-3" fluid="xl">
             <div style={{
@@ -179,11 +227,11 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                         betPanelState={betPanelState}
                         isPanelVisible={isPanelVisible}
                         panelRef={panelRef}
-                        onClose={onPanelClose}
+                        onClose={handlePanelClose}
                         onBet={handleBet}
                         onInputChange={handleInputChange}
                         onClear={handleClear}
-                        onHidePanel={onPanelClose}
+                        onHidePanel={handlePanelClose}
                     />,
                     portalContainerRef.current
                 )}
