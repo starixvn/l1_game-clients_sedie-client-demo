@@ -109,11 +109,21 @@ export const sendUpdateSettings = (settings: UpdateSettingsMessage['settings']) 
     });
 };
 
-export const sendBettingBlockState = (state: BettingBlockStateMessage['state']) => {
-    sendMessage({
-        type: MessageType.BETTING_BLOCK_STATE,
+export interface BettingBlockState {
+    isShowBetSlip: boolean;
+    betChoice: string;
+    odd: number;
+    position?: {
+        top: number;
+        left: number;
+    };
+}
+
+export const sendBettingBlockState = (state: BettingBlockState) => {
+    window.parent.postMessage({
+        type: 'BETTING_BLOCK_STATE',
         state
-    });
+    }, '*');
 };
 
 export const sendBetPanelState = (state: BetPanelStateMessage['state']) => {

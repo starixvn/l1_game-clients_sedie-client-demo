@@ -6,6 +6,9 @@ import BetPanel, { BetPanelState } from './BetPanel';
 interface IframeContainerProps {
     src: string;
     onMessage?: (data: any) => void;
+    betPanelState: BetPanelState | null;
+    isPanelVisible: boolean;
+    onPanelClose: () => void;
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -17,10 +20,14 @@ const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, ch
     return <div className={containerClass}>{children}</div>;
 };
 
-const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => {
+const IframeContainer: React.FC<IframeContainerProps> = ({
+    src,
+    onMessage,
+    betPanelState,
+    isPanelVisible,
+    onPanelClose
+}) => {
     const [iframeHeight, setIframeHeight] = useState<number>(264);
-    const [betPanelState, setBetPanelState] = useState<BetPanelState | null>(null);
-    const [isPanelVisible, setIsPanelVisible] = useState<boolean>(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
     const lastRequestTimeRef = useRef<number>(0);
@@ -57,19 +64,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
         return () => clearInterval(resetInterval);
     }, []);
 
-    // Function to toggle statistic in iframe
-    const toggleStatistic = useCallback((isOpen: boolean) => {
-        const iframe = iframeRef.current;
-        if (iframe?.contentWindow) {
-            iframe.contentWindow.postMessage({
-                type: 'TOGGLE_STATISTIC',
-                isOpen: isOpen
-            }, '*');
-            // Request height update after animation completes
-            setTimeout(requestIframeHeight, 300);
-        }
-    }, [requestIframeHeight]);
-
     // Handle incoming messages from the iframe
     const handleMessage = useCallback((event: MessageEvent) => {
         // Only process messages from expected origins
@@ -86,35 +80,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                 if (Math.abs(data.height - lastHeightRef.current) >= 5) {
                     lastHeightRef.current = data.height;
                     setIframeHeight(data.height);
-                }
-            }
-
-            // Handle bet panel state updates
-            if (data.type === 'BET_PANEL_STATE') {
-                setBetPanelState(data.state);
-                setIsPanelVisible(true);
-            }
-
-            // Handle bet panel hide
-            if (data.type === 'HIDE_BET_PANEL') {
-                console.log('Parent: Received HIDE_BET_PANEL message');
-                setIsPanelVisible(false);
-                setBetPanelState(null);
-            }
-
-            // Handle hide all bet panels
-            if (data.type === 'HIDE_ALL_BET_PANELS') {
-                console.log('Parent: Received HIDE_ALL_BET_PANELS message');
-                setIsPanelVisible(false);
-                setBetPanelState(null);
-            }
-
-            // Handle betting block state updates
-            if (data.type === 'BETTING_BLOCK_STATE') {
-                const { isShowBetSlip, betChoice, odd } = data.state;
-                if (!isShowBetSlip) {
-                    setIsPanelVisible(false);
-                    setBetPanelState(null);
                 }
             }
 
@@ -160,14 +125,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
         };
     }, []);
 
-    // Expose toggleStatistic to window for external access
-    useEffect(() => {
-        (window as any).toggleIframeStatistic = toggleStatistic;
-        return () => {
-            delete (window as any).toggleIframeStatistic;
-        };
-    }, [toggleStatistic]);
-
     const handleBet = useCallback((amount: number, betChoice: string) => {
         if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
@@ -194,30 +151,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
             }, '*');
         }
     }, []);
-
-    // Handle click outside to close panel
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-                console.log('Parent: Click outside detected');
-                setIsPanelVisible(false);
-                setBetPanelState(null);
-                if (iframeRef.current?.contentWindow) {
-                    iframeRef.current.contentWindow.postMessage({
-                        type: 'HIDE_BET_PANEL'
-                    }, '*');
-                }
-            }
-        };
-
-        if (isPanelVisible) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isPanelVisible]);
 
     return (
         <CustomContainer className="mt-3" fluid="xl">
@@ -246,18 +179,11 @@ const IframeContainer: React.FC<IframeContainerProps> = ({ src, onMessage }) => 
                         betPanelState={betPanelState}
                         isPanelVisible={isPanelVisible}
                         panelRef={panelRef}
-                        onClose={() => setIsPanelVisible(false)}
+                        onClose={onPanelClose}
                         onBet={handleBet}
                         onInputChange={handleInputChange}
                         onClear={handleClear}
-                        onHidePanel={() => {
-                            setIsPanelVisible(false);
-                            if (iframeRef.current?.contentWindow) {
-                                iframeRef.current.contentWindow.postMessage({
-                                    type: 'HIDE_BET_PANEL'
-                                }, '*');
-                            }
-                        }}
+                        onHidePanel={onPanelClose}
                     />,
                     portalContainerRef.current
                 )}

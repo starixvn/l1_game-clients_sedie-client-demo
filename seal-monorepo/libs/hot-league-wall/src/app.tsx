@@ -4,8 +4,9 @@ import { loadI18n } from './i18n';
 import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import IframeContainer from './components/IframeContainer';
+import { BetPanelState } from './components/BetPanel';
 
 interface AppProps extends AppContentProps {
     appEnv: string;
@@ -31,10 +32,57 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
 
 const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProps) => {
     const { language } = useAppContext();
-    const handleIframeMessage = (data: any) => {
-        console.log('Received message from iframe:', data);
-        // Handle the message from the iframe here
-    };
+    const [betPanelState, setBetPanelState] = useState<BetPanelState | null>(null);
+    const [isPanelVisible, setIsPanelVisible] = useState<boolean>(false);
+
+    const handleMessage = useCallback((data: any) => {
+        console.log('Parent: Received message from iframe:', data);
+
+        switch (data.type) {
+            case 'BETTING_BLOCK_STATE':
+                const { isShowBetSlip, betChoice, odd, position } = data.state;
+                if (isShowBetSlip) {
+                    setBetPanelState({
+                        betChoice,
+                        odd,
+                        top: position?.top || 0,
+                        left: position?.left || 0,
+                        amount: 0,
+                        currency: '',
+                        min: 0,
+                        max: 0,
+                        payout: '0.00',
+                        gameName: '',
+                        namespace: '',
+                        clientRoundId: 0,
+                        isSpecialChoice: false,
+                        warnMsg: ''
+                    });
+                    setIsPanelVisible(true);
+                } else {
+                    setIsPanelVisible(false);
+                    setBetPanelState(null);
+                }
+                break;
+
+            case 'BET_PANEL_STATE':
+                setBetPanelState(data.state);
+                setIsPanelVisible(true);
+                break;
+
+            case 'HIDE_BET_PANEL':
+            case 'HIDE_ALL_BET_PANELS':
+                setIsPanelVisible(false);
+                setBetPanelState(null);
+                break;
+        }
+    }, []);
+
+    const handlePanelClose = useCallback(() => {
+        setIsPanelVisible(false);
+        setBetPanelState(null);
+    }, []);
+
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
@@ -45,11 +93,13 @@ const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProp
     return (
         <>
             <IframeContainer
-                src="http://localhost:4200/"
-                onMessage={handleIframeMessage}
+                src="http://localhost:4200"
+                onMessage={handleMessage}
+                betPanelState={betPanelState}
+                isPanelVisible={isPanelVisible}
+                onPanelClose={handlePanelClose}
             />
             <div data-react="true" style={{ width: '100%' }}>
-
                 {token && <Lobby token={token} language={language} renewToken={renewToken} />}
             </div>
         </>

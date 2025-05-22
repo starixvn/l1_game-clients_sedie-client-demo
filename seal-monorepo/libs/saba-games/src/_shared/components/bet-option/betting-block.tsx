@@ -132,11 +132,23 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
         const { betChoice, odd } = this.props;
         const { isShowBetSlip } = this.state;
 
-        sendBettingBlockState({
-            isShowBetSlip,
-            betChoice,
-            odd
-        });
+        if (this.bettingBlockRef.current) {
+            const rect = this.bettingBlockRef.current.getBoundingClientRect();
+            const state = {
+                isShowBetSlip,
+                betChoice,
+                odd,
+                position: {
+                    top: rect.bottom + window.scrollY,
+                    left: rect.left + window.scrollX
+                }
+            };
+
+            // Store state in window object
+            (window as any).__BETTING_BLOCK_STATE__ = state;
+
+            sendBettingBlockState(state);
+        }
     }
 
     protected handleOnClick({ panelId, setPanelId, show, setShow }) {

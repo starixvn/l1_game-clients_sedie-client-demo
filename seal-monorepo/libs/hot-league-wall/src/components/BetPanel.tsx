@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import BettingChips from './BettingChips';
 import './BetPanel.scss';
@@ -18,6 +18,10 @@ export interface BetPanelState {
     clientRoundId: number;
     isSpecialChoice: boolean;
     warnMsg: string;
+    position?: {
+        top: number;
+        left: number;
+    };
 }
 
 interface BetPanelProps {
@@ -41,6 +45,14 @@ export const BetPanel: React.FC<BetPanelProps> = ({
     onClear,
     onHidePanel
 }) => {
+    const [amount, setAmount] = useState(betPanelState.amount);
+    const [warnMsg, setWarnMsg] = useState(betPanelState.warnMsg);
+
+    useEffect(() => {
+        setAmount(betPanelState.amount);
+        setWarnMsg(betPanelState.warnMsg);
+    }, [betPanelState]);
+
     if (!isPanelVisible) return null;
 
     const handleChipAmountChange = (amount: number) => {
@@ -49,6 +61,8 @@ export const BetPanel: React.FC<BetPanelProps> = ({
 
     const t = (key: string) => key; // Placeholder translation function
     const addCommas = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const displayAmount = amount > 0 ? addCommas(amount) : '';
+    const payout = amount > 0 ? addCommas(amount * betPanelState.odd) : '0.00';
 
     return (
         <div className="seal-vg-sg-index" style={{
@@ -69,7 +83,8 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                     pointerEvents: 'auto',
                     position: 'absolute',
                     top: `${betPanelState.top}px`,
-                    left: `${betPanelState.left}px`
+                    left: `${betPanelState.left}px`,
+                    transform: 'translateY(10px)'
                 }}
             >
                 <div className="c-quick-bet__arrow"></div>
@@ -125,11 +140,11 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                 </div>
                                             </div>
 
-                                            {betPanelState.warnMsg && (
+                                            {warnMsg && (
                                                 <div className="c-ticket__status">
                                                     <div className="c-betting-msg sg-bet-panel__betting-msg">
                                                         <i className="c-icon c-icon--warning" data-icon="warning" />
-                                                        <span className="c-text">{betPanelState.warnMsg}</span>
+                                                        <span className="c-text">{warnMsg}</span>
                                                     </div>
                                                 </div>
                                             )}
@@ -141,8 +156,8 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                     <input
                                                         type="text"
                                                         className="c-textfield__input"
-                                                        placeholder={`${betPanelState.min} - ${betPanelState.max}`}
-                                                        value={betPanelState.amount}
+                                                        placeholder={`${addCommas(betPanelState.min)} - ${addCommas(betPanelState.max)}`}
+                                                        value={displayAmount}
                                                         onChange={onInputChange}
                                                     />
                                                     <span className="c-textfield__currency">{betPanelState.currency}</span>
@@ -155,14 +170,14 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             <div className="c-betting-stake-info">
                                                 <span className="c-text-group">
                                                     <span className="c-text-label">Payout: </span>
-                                                    <span className="c-text-value">{betPanelState.payout}</span>
+                                                    <span className="c-text-value">{payout}</span>
                                                 </span>
                                             </div>
                                         </div>
                                         <BettingChips
                                             min={betPanelState.min}
                                             max={betPanelState.max}
-                                            currentAmount={betPanelState.amount}
+                                            currentAmount={amount}
                                             onAmountChange={handleChipAmountChange}
                                             t={t}
                                             addCommas={addCommas}
@@ -174,7 +189,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             data-disabled={false}
                                             aria-hidden="true"
                                             onClick={() => {
-                                                onBet(betPanelState.amount, betPanelState.betChoice);
+                                                onBet(amount, betPanelState.betChoice);
                                                 onClose();
                                             }}
                                         >
