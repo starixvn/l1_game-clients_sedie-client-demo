@@ -23,17 +23,6 @@ interface BettingBlockProps {
     onBet: () => void;
 }
 
-interface IBetPanel extends IStateObserver {
-    clientRoundId: number;
-    stakeLevel: gc.Player.IStakeLevel;
-    currency: string;
-    minBet: number;
-    maxBet: number;
-    maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
-    clientSeed: string;
-    isShowBetSlip: boolean;
-}
-
 interface IBettingBlockState extends IStateObserver {
     isAuthorized: boolean;
     isSignedIn: boolean;
@@ -97,16 +86,6 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     }
 
     private handleClickOutside(event: MouseEvent) {
-        // const context = this.context as { panelId: string | null; setPanelId: (id: string | null) => void };
-        // if (
-        //     this.bettingBlockRef.current &&
-        //     !this.bettingBlockRef.current.contains(event.target as Node) &&
-        //     context.panelId === this.props.betChoice
-        // ) {
-        //     context.setPanelId(null);
-        //     this.setState({ isShowBetSlip: false });
-        // }
-
         this.setState({ isShowBetSlip: false });
     }
 
@@ -132,13 +111,51 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
         const stateUpdates = {
             [Rounds.ROUND_STATE.SHOW_RESULT]: { isShowStaticHighlight: true, isShowBetSlip: false },
             [Rounds.ROUND_STATE.STARTING_ROUND]: { isShowStaticHighlight: true, isShowBetSlip: false },
-            // [Rounds.ROUND_STATE.PLACING_BET]: { isShowStaticHighlight: true, isShowBetSlip: true },
             [Rounds.ROUND_STATE.LOCKING_BET]: { isShowStaticHighlight: false, isShowBetSlip: false },
         };
 
         const update = stateUpdates[roundState] || { isShowBetSlip: false };
         this.setState(update);
         this.setState({ roundState });
+    }
+
+    @render(gc.Rounds.RoundStore, (store) => store.clientRoundId)
+    renderRoundId(clientRoundId: number) {
+        this.setState({ clientRoundId });
+    }
+
+    @render(gc.Player.MainPlayerStore, (store) => store.stakeLevel)
+    setUserStakeLevel(stakeLevel: gc.Player.IStakeLevel) {
+        if (stakeLevel) {
+            this.setState({ stakeLevel });
+        }
+    }
+
+    @render(gc.Player.MainPlayerStore, (store) => store.currency)
+    setCurrency(currency: string) {
+        this.setState({ currency });
+    }
+
+    @render(gc.GameConfigs.GameConfigStore, (store) => ({
+        minBet: store.minBet,
+        maxBet: store.maxBet,
+        maxBetPerChoices: store.maxBetPerChoices,
+    }))
+    setMaxBetPerChoices({
+        minBet,
+        maxBet,
+        maxBetPerChoices,
+    }: {
+        minBet: number;
+        maxBet: number;
+        maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
+    }) {
+        this.setState({ maxBetPerChoices, minBet, maxBet });
+    }
+
+    @render(gc.RoundBasePF.ProvablyFairStore, (store) => store.clientSeed)
+    handleClientSeed(clientSeed: string) {
+        this.setState({ clientSeed });
     }
 
     protected handleOnClick({ panelId, setPanelId, show, setShow }) {
@@ -148,6 +165,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             if (this.state.roundState !== Rounds.ROUND_STATE.PLACING_BET) {
                 return;
             }
+
             // Get the position of the betting block
             if (this.bettingBlockRef.current) {
                 const rect = this.bettingBlockRef.current.getBoundingClientRect();
@@ -226,7 +244,8 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             clientRoundId,
             isSpecialChoice,
             warnMsg: '',
-            isShowBetSlip: this.state.isShowBetSlip
+            isShowBetSlip: this.state.isShowBetSlip,
+            clientSeed
         };
 
         window.parent.postMessage({
