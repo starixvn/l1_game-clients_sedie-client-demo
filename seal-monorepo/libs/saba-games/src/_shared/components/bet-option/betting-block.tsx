@@ -7,10 +7,11 @@ import {
     GameBettingOptionsContext,
     GameBettingZoneContext,
 } from '../../../_shared/react-contexts/game-betting-zone-context/game-betting-zone-context';
-import BetPanelComponent from '../bet-panel/bet-panel';
 import { IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import Styles from './bet-option.module.scss';
-import BettingBlockService from './services/betting-block-service';
+import { BACCARAT_CHOICES, FISH_PRAWN_CRAB_CHOICES, SE_DIE_CHOICES, COLOR_GAME_CHOICES } from '../../../games/constants/saba-club';
+import { checkValidAmount, parseInputValue, WarnMsgType, calculateMinMaxAmount } from '../../utils/betting-util';
+import { useAppContext } from '../../../appProvider';
 
 interface BettingBlockProps {
     odd: number;
@@ -22,39 +23,62 @@ interface BettingBlockProps {
     onBet: () => void;
 }
 
+interface IBetPanel extends IStateObserver {
+    clientRoundId: number;
+    stakeLevel: gc.Player.IStakeLevel;
+    currency: string;
+    minBet: number;
+    maxBet: number;
+    maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
+    clientSeed: string;
+    isShowBetSlip: boolean;
+}
+
 interface IBettingBlockState extends IStateObserver {
-    betChoice: string;
-    odd: number;
     isAuthorized: boolean;
     isSignedIn: boolean;
     isFinishShowResult: boolean;
     isShowBetSlip: boolean;
     isShowStaticHighlight?: boolean;
+    roundState: string;
+    // Add bet panel state
+    clientRoundId: number;
+    stakeLevel: gc.Player.IStakeLevel;
+    currency: string;
+    minBet: number;
+    maxBet: number;
+    maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
+    clientSeed: string;
 }
 
 class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockState> {
     private timeoutId: NodeJS.Timeout | null = null;
     private readonly maxTimeoutDuration = 10000;
     private bettingBlockRef: React.RefObject<HTMLDivElement>;
-    private bettingBlockService: BettingBlockService;
     static contextType = GameBettingOptionsContext;
 
     constructor(props: BettingBlockProps) {
         super(props);
 
         this.state = {
-            betChoice: '',
-            odd: 0,
             isAuthorized: false,
             isSignedIn: false,
             dispose: null,
             isFinishShowResult: false,
             isShowStaticHighlight: undefined,
             isShowBetSlip: false,
+            roundState: '',
+            // Initialize bet panel state
+            clientRoundId: 0,
+            stakeLevel: { minBet: 0, maxBet: 0 },
+            currency: '',
+            minBet: 0,
+            maxBet: 0,
+            maxBetPerChoices: {},
+            clientSeed: '',
         };
 
         this.bettingBlockRef = React.createRef();
-        this.bettingBlockService = BettingBlockService.getInstance();
         this.handleOnClick = this.handleOnClick.bind(this);
         this.handleClickOutside = this.handleClickOutside.bind(this);
     }
@@ -73,15 +97,17 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     }
 
     private handleClickOutside(event: MouseEvent) {
-        const context = this.context as { panelId: string | null; setPanelId: (id: string | null) => void };
-        if (
-            this.bettingBlockRef.current &&
-            !this.bettingBlockRef.current.contains(event.target as Node) &&
-            context.panelId === this.props.betChoice
-        ) {
-            context.setPanelId(null);
-            this.notifyParentState();
-        }
+        // const context = this.context as { panelId: string | null; setPanelId: (id: string | null) => void };
+        // if (
+        //     this.bettingBlockRef.current &&
+        //     !this.bettingBlockRef.current.contains(event.target as Node) &&
+        //     context.panelId === this.props.betChoice
+        // ) {
+        //     context.setPanelId(null);
+        //     this.setState({ isShowBetSlip: false });
+        // }
+
+        this.setState({ isShowBetSlip: false });
     }
 
     @render(Auth.AuthStore, (store) => store.isAuthorized)
@@ -103,130 +129,52 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
 
     @render(gc.Rounds.RoundTimeStore, (store) => store.roundState, { fireImmediately: false })
     renderCountDownTimerState(roundState: string) {
-        if (roundState === Rounds.ROUND_STATE.SHOW_RESULT && this.state.isShowStaticHighlight === undefined) {
-            this.setState({ isShowStaticHighlight: true, isShowBetSlip: false });
-            this.notifyParentState();
-            return;
-        }
-
-        switch (roundState) {
-            case Rounds.ROUND_STATE.STARTING_ROUND:
-                this.setState({ isShowStaticHighlight: true, isShowBetSlip: false });
-                this.notifyParentState();
-                break;
-            case Rounds.ROUND_STATE.PLACING_BET:
-                this.setState({ isShowStaticHighlight: true, isShowBetSlip: true });
-                this.notifyParentState();
-                break;
-            case Rounds.ROUND_STATE.LOCKING_BET:
-                this.setState({ isShowStaticHighlight: false, isShowBetSlip: false });
-                this.notifyParentState();
-                break;
-            default:
-                this.setState({ isShowBetSlip: false });
-                this.notifyParentState();
-                break;
-        }
-    }
-
-    protected notifyParentState() {
-        const { betChoice, odd } = this.props;
-        const { isShowBetSlip } = this.state;
-
-        if (!this.bettingBlockRef.current) return;
-
-        const rect = this.bettingBlockRef.current.getBoundingClientRect();
-        const position = {
-            top: rect.bottom + window.scrollY,
-            left: rect.left + window.scrollX
+        const stateUpdates = {
+            [Rounds.ROUND_STATE.SHOW_RESULT]: { isShowStaticHighlight: true, isShowBetSlip: false },
+            [Rounds.ROUND_STATE.STARTING_ROUND]: { isShowStaticHighlight: true, isShowBetSlip: false },
+            // [Rounds.ROUND_STATE.PLACING_BET]: { isShowStaticHighlight: true, isShowBetSlip: true },
+            [Rounds.ROUND_STATE.LOCKING_BET]: { isShowStaticHighlight: false, isShowBetSlip: false },
         };
 
-        // Update state with current visibility
-        this.bettingBlockService.updateState({
-            isShowBetSlip,
-            betChoice,
-            odd,
-            position
-        });
+        const update = stateUpdates[roundState] || { isShowBetSlip: false };
+        this.setState(update);
+        this.setState({ roundState });
     }
 
     protected handleOnClick({ panelId, setPanelId, show, setShow }) {
         return () => {
-            const { betChoice, odd } = this.props;
             const { isAuthorized, isShowBetSlip } = this.state;
 
-            // Map panel states and actions
-            const panelStates = {
-                // Panel is open and clicked again - close it
-                [betChoice]: () => {
-                    setPanelId(null);
-                    this.setState({ isShowBetSlip: false }, () => {
-                        this.notifyParentState();
-                    });
-                },
-                // Panel is closed or different panel is open - open this panel
-                default: () => {
-                    // Hide all other panels first
-                    this.bettingBlockService.hideAllPanels();
+            if (this.state.roundState !== Rounds.ROUND_STATE.PLACING_BET) {
+                return;
+            }
+            // Get the position of the betting block
+            if (this.bettingBlockRef.current) {
+                const rect = this.bettingBlockRef.current.getBoundingClientRect();
+                const position = {
+                    top: rect.bottom + window.scrollY,
+                    left: rect.left + window.scrollX
+                };
 
-                    // Open this panel
-                    setPanelId(betChoice);
-                    this.setState({ isShowBetSlip: true }, () => {
-                        this.notifyParentState();
-                    });
+                // Store position in window object for parent frame access
+                (window as any).__BETTING_BLOCK_STATE__ = {
+                    ...(window as any).__BETTING_BLOCK_STATE__,
+                    position
+                };
+            }
 
-                    // Handle bet and authorization
-                    if (!isShowBetSlip) {
-                        this.props.onBet();
-                    }
+            // Toggle bet slip state
+            this.setState((prevState) => ({ ...prevState, isShowBetSlip: !prevState.isShowBetSlip }));
 
-                    if (!isAuthorized) {
-                        this.autoCreateNickname();
-                    }
+            // Handle bet and authorization
+            if (!isShowBetSlip) {
+                this.props.onBet();
+            }
 
-                    this.waitForAuthorization(betChoice, odd);
-                }
-            };
-
-            // Execute the appropriate action based on current panel state
-            const action = panelStates[panelId] || panelStates.default;
-            action();
-        };
-    }
-
-    protected updateBettingState(betChoice: string, odd: number) {
-        this.setState({ betChoice, odd });
-    }
-
-    protected waitForAuthorization(betChoice: string, odd: number) {
-        const interval = 100;
-        const startTime = Date.now();
-        this.clearTimeout();
-
-        const checkAuthorization = () => {
-            if (this.state.isAuthorized) {
-                this.handleUserSignIn();
-                this.updateBettingState(betChoice, odd);
-                this.clearTimeout();
-            } else if (Date.now() - startTime < this.maxTimeoutDuration) {
-                this.timeoutId = setTimeout(checkAuthorization, interval);
+            if (!isAuthorized) {
+                this.autoCreateNickname();
             }
         };
-
-        this.timeoutId = setTimeout(checkAuthorization, interval);
-    }
-
-    protected handleUserSignIn() {
-        if (!this.state.isSignedIn) {
-            this.signIn();
-        }
-    }
-
-    protected clearTimeout() {
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
-        }
     }
 
     @handle(Auth.AuthHandlers.Authorize, (handler) => handler.handleAutoGenerateName())
@@ -235,14 +183,72 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     @handle(Connection.ConnectionHandlers.SignInHandler)
     protected signIn() { }
 
+    private sendBetPanelStateToParent() {
+        const { clientRoundId, stakeLevel, currency, minBet, maxBet, maxBetPerChoices, clientSeed } = this.state;
+        const { minBet: stakeLevelMinBet = 0, maxBet: stakeLevelMaxBet = 0 } = stakeLevel || {};
+        const betChoiceMax = maxBetPerChoices?.[this.props.betChoice] || 0;
+
+        const { min: newMin, max: newMax } = calculateMinMaxAmount(
+            minBet,
+            stakeLevelMinBet,
+            maxBet,
+            stakeLevel.maxBet,
+            betChoiceMax,
+            maxBetPerChoices,
+            this.props.namespace
+        );
+
+        const isSpecialChoice = [
+            SE_DIE_CHOICES.RED2,
+            BACCARAT_CHOICES.PLAYER_PAIR,
+            BACCARAT_CHOICES.BANKER_PAIR,
+            FISH_PRAWN_CRAB_CHOICES.PRAWN,
+            FISH_PRAWN_CRAB_CHOICES.ROOSTER,
+            COLOR_GAME_CHOICES.PINK,
+            COLOR_GAME_CHOICES.GREEN
+        ].includes(this.props.betChoice);
+
+        const bettingBlockState = (window as any).__BETTING_BLOCK_STATE__ || {};
+        const position = bettingBlockState.position || { top: 0, left: 0 };
+
+        const panelState = {
+            top: position.top,
+            left: position.left,
+            betChoice: this.props.betChoice,
+            odd: this.props.odd,
+            amount: 0,
+            currency,
+            min: newMin,
+            max: newMax,
+            payout: '0.00',
+            gameName: this.props.gameName,
+            namespace: this.props.namespace,
+            clientRoundId,
+            isSpecialChoice,
+            warnMsg: '',
+            isShowBetSlip: this.state.isShowBetSlip
+        };
+
+        window.parent.postMessage({
+            type: 'BET_PANEL_STATE',
+            state: panelState
+        }, '*');
+    }
+
+    componentDidUpdate(prevProps: BettingBlockProps, prevState: IBettingBlockState) {
+        if (prevState.isShowBetSlip !== this.state.isShowBetSlip) {
+            this.sendBetPanelStateToParent();
+        }
+    }
+
     render() {
-        const { children, namespace, gameName, settlementResult, betChoice } = this.props;
-        const { odd, isFinishShowResult, isShowStaticHighlight, isShowBetSlip } = this.state;
+        const { children, gameName, settlementResult, betChoice } = this.props;
+        const { isFinishShowResult, isShowStaticHighlight } = this.state;
         let flashAnimationClass = '';
         const bettingZoneState = {
             gameName,
             betChoice,
-            odd,
+            odd: this.props.odd,
         };
 
         if (isFinishShowResult && settlementResult?.[betChoice]) {
@@ -265,7 +271,6 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
                             >
                                 {children}
                             </div>
-                            {isShowBetSlip && <BetPanelComponent namespace={namespace} />}
                         </GameBettingZoneContext.Provider>
                     );
                 }}

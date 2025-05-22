@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import BetPanel, { BetPanelState } from './BetPanel';
 
@@ -17,10 +17,12 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
     onInputChange,
     onClear
 }) => {
+    const [isContainerReady, setIsContainerReady] = useState(false);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
     const panelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        // Create container immediately
         const container = document.createElement('div');
         container.style.position = 'fixed';
         container.style.zIndex = '9999';
@@ -31,29 +33,48 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
         container.style.pointerEvents = 'none';
         document.body.appendChild(container);
         portalContainerRef.current = container;
+        setIsContainerReady(true);
 
         return () => {
             if (portalContainerRef.current) {
                 document.body.removeChild(portalContainerRef.current);
+                setIsContainerReady(false);
             }
         };
     }, []);
 
-    if (!portalContainerRef.current || !betPanelState.isShowBetSlip) {
+    // Debug log to check state
+    useEffect(() => {
+        console.log('BettingPanelPortal state:', {
+            isContainerReady,
+            isShowBetSlip: betPanelState.isShowBetSlip,
+            betPanelState
+        });
+    }, [isContainerReady, betPanelState]);
+
+    if (!isContainerReady || !betPanelState.isShowBetSlip || !portalContainerRef.current) {
         return null;
     }
 
     return createPortal(
-        <BetPanel
-            betPanelState={betPanelState}
-            isPanelVisible={betPanelState.isShowBetSlip}
-            panelRef={panelRef}
-            onClose={onClose}
-            onBet={onBet}
-            onInputChange={onInputChange}
-            onClear={onClear}
-            onHidePanel={onClose}
-        />,
+        <div style={{
+            position: 'absolute',
+            top: `${betPanelState.top}px`,
+            left: `${betPanelState.left}px`,
+            pointerEvents: 'auto',
+            zIndex: 9999
+        }}>
+            <BetPanel
+                betPanelState={betPanelState}
+                isPanelVisible={betPanelState.isShowBetSlip}
+                panelRef={panelRef}
+                onClose={onClose}
+                onBet={onBet}
+                onInputChange={onInputChange}
+                onClear={onClear}
+                onHidePanel={onClose}
+            />
+        </div>,
         portalContainerRef.current
     );
 }; 

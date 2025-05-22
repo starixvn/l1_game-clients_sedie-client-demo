@@ -6,24 +6,25 @@ export const useBettingPanel = () => {
 
     const handleBettingMessage = useCallback((data: any) => {
         switch (data.type) {
-            case 'BETTING_BLOCK_STATE':
-                const { isShowBetSlip, betChoice, odd, position } = data.state;
+            case 'BET_PANEL_STATE':
+                console.log('Received BET_PANEL_STATE message:', data.state);
+                const { isShowBetSlip, betChoice, odd, top, left, currency, min, max, gameName, namespace, clientRoundId, isSpecialChoice } = data.state;
                 if (isShowBetSlip) {
                     setBetPanelState({
                         isShowBetSlip,
                         betChoice,
                         odd,
-                        top: position?.top || 0,
-                        left: position?.left || 0,
+                        top,
+                        left,
                         amount: 0,
-                        currency: '',
-                        min: 0,
-                        max: 0,
+                        currency: currency || '',
+                        min: min || 0,
+                        max: max || 0,
                         payout: '0.00',
-                        gameName: '',
-                        namespace: '',
-                        clientRoundId: 0,
-                        isSpecialChoice: false,
+                        gameName: gameName || '',
+                        namespace: namespace || '',
+                        clientRoundId: clientRoundId || 0,
+                        isSpecialChoice: isSpecialChoice || false,
                         warnMsg: ''
                     });
                 } else {
@@ -31,17 +32,18 @@ export const useBettingPanel = () => {
                 }
                 break;
 
-            case 'BET_PANEL_STATE':
-                setBetPanelState({
-                    ...data.state,
-                    isShowBetSlip: true
-                });
-                break;
+            // case 'BET_PANEL_STATE':
+            //     setBetPanelState({
+            //         ...data.state,
+            //         isShowBetSlip: true
+            //     });
+            //     break;
 
-            case 'HIDE_BET_PANEL':
-            case 'HIDE_ALL_BET_PANELS':
-                setBetPanelState(null);
-                break;
+            // case 'HIDE_BET_PANEL':
+            // case 'HIDE_ALL_BET_PANELS':
+            //     setBetPanelState(null);
+            //     break;
+            default: return;
         }
     }, []);
 

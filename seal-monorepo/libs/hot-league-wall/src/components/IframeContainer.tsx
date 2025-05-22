@@ -67,28 +67,28 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
     const handleBet = useCallback((amount: number, betChoice: string) => {
         if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({
-                type: 'HANDLE_BET',
-                amount,
-                betChoice
-            }, '*');
+            // iframeRef.current.contentWindow.postMessage({
+            //     type: 'HANDLE_BET',
+            //     amount,
+            //     betChoice
+            // }, '*');
         }
     }, []);
 
     const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({
-                type: 'HANDLE_INPUT_CHANGE',
-                value: event.target.value
-            }, '*');
+            // iframeRef.current.contentWindow.postMessage({
+            //     type: 'HANDLE_INPUT_CHANGE',
+            //     value: event.target.value
+            // }, '*');
         }
     }, []);
 
     const handleClear = useCallback(() => {
         if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({
-                type: 'HANDLE_CLEAR'
-            }, '*');
+            // iframeRef.current.contentWindow.postMessage({
+            //     type: 'HANDLE_CLEAR'
+            // }, '*');
         }
     }, []);
 
