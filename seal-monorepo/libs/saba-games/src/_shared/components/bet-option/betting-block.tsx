@@ -10,8 +10,7 @@ import {
 import BetPanelComponent from '../bet-panel/bet-panel';
 import { IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import Styles from './bet-option.module.scss';
-import { sendBettingBlockState, sendHideAllBetPanels } from '../../../_shared/utils/window-message-util';
-import { useEffect, useRef } from 'react';
+import BettingBlockService from './services/betting-block-service';
 
 interface BettingBlockProps {
     odd: number;
@@ -37,6 +36,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     private timeoutId: NodeJS.Timeout | null = null;
     private readonly maxTimeoutDuration = 10000;
     private bettingBlockRef: React.RefObject<HTMLDivElement>;
+    private bettingBlockService: BettingBlockService;
     static contextType = GameBettingOptionsContext;
 
     constructor(props: BettingBlockProps) {
@@ -54,6 +54,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
         };
 
         this.bettingBlockRef = React.createRef();
+        this.bettingBlockService = BettingBlockService.getInstance();
         this.handleOnClick = this.handleOnClick.bind(this);
         this.handleClickOutside = this.handleClickOutside.bind(this);
     }
@@ -144,10 +145,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
                 }
             };
 
-            // Store state in window object
-            (window as any).__BETTING_BLOCK_STATE__ = state;
-
-            sendBettingBlockState(state);
+            this.bettingBlockService.updateState(state);
         }
     }
 
@@ -157,7 +155,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             const { isAuthorized } = this.state;
 
             // Notify parent to hide all bet panels first
-            sendHideAllBetPanels();
+            this.bettingBlockService.hideAllPanels();
 
             if (!this.state.isShowBetSlip) {
                 this.props.onBet();
