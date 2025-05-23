@@ -23,6 +23,7 @@ export interface BetPanelState {
         top: number;
         left: number;
     };
+    clientSeed: string;
 }
 
 interface BetPanelProps {
@@ -30,7 +31,7 @@ interface BetPanelProps {
     isPanelVisible: boolean;
     panelRef: React.RefObject<HTMLDivElement>;
     onClose: () => void;
-    onBet: (amount: number, betChoice: string) => void;
+    onBet: (amount: number, betChoice: string, clientSeed: string) => void;
     onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onClear: () => void;
     onHidePanel: () => void;
@@ -198,7 +199,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             data-disabled={false}
                                             aria-hidden="true"
                                             onClick={() => {
-                                                onBet(amount, betPanelState.betChoice);
+                                                onBet(amount, betPanelState.betChoice, betPanelState.clientSeed);
                                                 onClose();
                                             }}
                                         >

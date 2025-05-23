@@ -5,7 +5,7 @@ import BetPanel, { BetPanelState } from './BetPanel';
 interface BettingPanelPortalProps {
     betPanelState: BetPanelState;
     onClose: () => void;
-    onBet: (amount: number, betChoice: string) => void;
+    onBet: (amount: number, betChoice: string, clientSeed: string) => void;
     onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onClear: () => void;
 }

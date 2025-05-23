@@ -72,16 +72,16 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
     // Send theme and language updates to iframe content
     useEffect(() => {
         const iframe = document.querySelector('iframe');
-        console.log('Iframe element:', iframe);
-        console.log('Iframe contentWindow:', iframe?.contentWindow);
+        // console.log('Iframe element:', iframe);
+        // console.log('Iframe contentWindow:', iframe?.contentWindow);
 
         const sendSettings = () => {
             if (iframe?.contentWindow) {
-                console.log('Sending UPDATE_SETTINGS to iframe:', {
-                    theme,
-                    isDarkMode,
-                    language
-                });
+                // console.log('Sending UPDATE_SETTINGS to iframe:', {
+                //     theme,
+                //     isDarkMode,
+                //     language
+                // });
                 iframe.contentWindow.postMessage({
                     type: 'UPDATE_SETTINGS',
                     settings: {

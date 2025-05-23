@@ -42,6 +42,12 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
             // Handle betting related messages
             handleBettingMessage(data);
+
+            // Handle bet response
+            if (data.type === 'BET_RESPONSE') {
+                console.log('Parent: Received bet response:', data);
+                // Handle bet response if needed
+            }
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
@@ -61,13 +67,19 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         };
     }, [handleMessage]);
 
-    const handleBet = useCallback((amount: number, betChoice: string) => {
+    const handleBet = useCallback((amount: number, betChoice: string, clientSeed: string) => {
         if (iframeRef.current?.contentWindow) {
-            // iframeRef.current.contentWindow.postMessage({
-            //     type: 'HANDLE_BET',
-            //     amount,
-            //     betChoice
-            // }, '*');
+            console.log('Parent: Sending HANDLE_BET message to iframe:', {
+                amount,
+                betChoice,
+                clientSeed
+            });
+            iframeRef.current.contentWindow.postMessage({
+                type: 'HANDLE_BET',
+                amount,
+                betChoice,
+                clientSeed
+            }, '*');
         }
     }, []);
 

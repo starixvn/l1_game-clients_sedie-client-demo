@@ -139,6 +139,9 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             betChoice: '',
             odd: 0
         };
+
+        // Add message event listener
+        window.addEventListener('message', this.handleWindowMessage);
     }
 
     componentDidMount() {
@@ -149,8 +152,43 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
         }
+        // Remove message event listener
+        window.removeEventListener('message', this.handleWindowMessage);
         super.componentWillUnmount();
     }
+
+    private handleWindowMessage = (event: MessageEvent) => {
+        // Only process messages from expected origins
+        if (!event.origin.includes('localhost:4200') && !event.origin.includes('localhost:4551')) {
+            return;
+        }
+
+        try {
+            const data = event.data;
+            if (data.type === 'HANDLE_BET') {
+                console.log('Child: Received HANDLE_BET message:', data);
+                this.handleBetFromParent(data.amount, data.betChoice, data.clientSeed);
+            }
+        } catch (error) {
+            console.error('Child: Error processing message:', error);
+        }
+    };
+
+    private handleBetFromParent = (amount: number, betChoice: string, clientSeed: string) => {
+        if (this.state.roundState !== Rounds.ROUND_STATE.PLACING_BET) {
+            console.log('Child: Cannot place bet - not in PLACING_BET state');
+            return;
+        }
+
+        console.log('Child: Processing bet from parent:', { amount, betChoice, clientSeed });
+
+        // Handle the bet
+        this.props.onBet();
+
+        this.handleBet(amount, betChoice, clientSeed);
+        // Return the bet data
+        // return { amount, betChoice, clientSeed };
+    };
 
     @render(Auth.AuthStore, (store) => store.isAuthorized)
     protected handleAuthorized(isAuthorized: boolean) {
@@ -260,6 +298,20 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             clearTimeout(this.timeoutId);
             this.timeoutId = null;
         }
+    }
+
+    @handle(gc.Bet.BetHandler)
+    handleBet(amount: number, betChoice: string, clientSeed: string) {
+        if (this.state.roundState !== Rounds.ROUND_STATE.PLACING_BET) {
+            return;
+        }
+
+        // Handle the bet
+        this.props.onBet();
+
+        console.log('handleBet inside frame', amount, betChoice, clientSeed);
+        // Send the bet to the game client
+        return { amount, betChoice, clientSeed };
     }
 
     render() {

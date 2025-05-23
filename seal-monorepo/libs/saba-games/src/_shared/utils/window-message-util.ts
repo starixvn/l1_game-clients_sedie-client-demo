@@ -58,6 +58,7 @@ export interface HandleBetMessage {
     type: MessageType.HANDLE_BET;
     amount: number;
     betChoice: string;
+    clientSeed: string;
 }
 
 export interface HandleInputChangeMessage {
@@ -139,11 +140,12 @@ export const sendHideAllBetPanels = () => {
     });
 };
 
-export const sendHandleBet = (amount: number, betChoice: string) => {
+export const sendHandleBet = (amount: number, betChoice: string, clientSeed: string) => {
     sendMessage({
         type: MessageType.HANDLE_BET,
         amount,
-        betChoice
+        betChoice,
+        clientSeed
     });
 };
 

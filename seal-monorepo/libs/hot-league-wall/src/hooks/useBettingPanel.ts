@@ -7,8 +7,8 @@ export const useBettingPanel = () => {
     const handleBettingMessage = useCallback((data: any) => {
         switch (data.type) {
             case 'BET_PANEL_STATE':
-                console.log('Received BET_PANEL_STATE message:', data.state);
-                const { isShowBetSlip, betChoice, odd, top, left, currency, min, max, gameName, namespace, clientRoundId, isSpecialChoice } = data.state;
+                // console.log('Received BET_PANEL_STATE message:', data.state);
+                const { isShowBetSlip, betChoice, odd, top, left, currency, min, max, gameName, namespace, clientRoundId, isSpecialChoice, clientSeed } = data.state;
                 if (isShowBetSlip) {
                     setBetPanelState({
                         isShowBetSlip,
@@ -25,7 +25,8 @@ export const useBettingPanel = () => {
                         namespace: namespace || '',
                         clientRoundId: clientRoundId || 0,
                         isSpecialChoice: isSpecialChoice || false,
-                        warnMsg: ''
+                        warnMsg: '',
+                        clientSeed: clientSeed || ''
                     });
                 } else {
                     setBetPanelState(null);
