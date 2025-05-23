@@ -4,18 +4,15 @@ import BetPanel, { BetPanelState } from './BetPanel';
 
 interface BettingPanelPortalProps {
     betPanelState: BetPanelState;
-    onClose: () => void;
-    onClear: () => void;
     iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
 export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
     betPanelState,
-    onClose,
-    onClear,
     iframeRef
 }) => {
     const [isContainerReady, setIsContainerReady] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
     const panelRef = useRef<HTMLDivElement>(null);
 
@@ -33,15 +30,24 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
         portalContainerRef.current = container;
         setIsContainerReady(true);
 
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'HIDE_PANEL') {
+                setIsVisible(false);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+
         return () => {
             if (portalContainerRef.current) {
                 document.body.removeChild(portalContainerRef.current);
                 setIsContainerReady(false);
             }
+            window.removeEventListener('message', handleMessage);
         };
     }, []);
 
-    if (!isContainerReady || !betPanelState.isShowBetSlip || !portalContainerRef.current) {
+    if (!isContainerReady || !betPanelState.isShowBetSlip || !portalContainerRef.current || !isVisible) {
         return null;
     }
 
@@ -57,8 +63,6 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
                 betPanelState={betPanelState}
                 isPanelVisible={betPanelState.isShowBetSlip}
                 panelRef={panelRef}
-                onClear={onClear}
-                onHidePanel={onClose}
                 iframeRef={iframeRef}
             />
         </div>,

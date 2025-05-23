@@ -48,13 +48,8 @@ export const useBettingPanel = () => {
         }
     }, []);
 
-    const handlePanelClose = useCallback(() => {
-        setBetPanelState(null);
-    }, []);
-
     return {
         betPanelState,
         handleBettingMessage,
-        handlePanelClose
     };
 }; 

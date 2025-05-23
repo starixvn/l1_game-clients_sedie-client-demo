@@ -279,10 +279,10 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
 
     handleBetOption = () => {
         // this.resetBettingPanel();
-        // this.setState({ isShowNextRoundMessage: true });
-        // setTimeout(() => {
-        //     this.setState({ isShowNextRoundMessage: false });
-        // }, 3000);
+        this.setState({ isShowNextRoundMessage: true });
+        setTimeout(() => {
+            this.setState({ isShowNextRoundMessage: false });
+        }, 3000);
     };
 
     getRenderTemplate() {

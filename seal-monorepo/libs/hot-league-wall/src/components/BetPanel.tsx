@@ -30,8 +30,6 @@ interface BetPanelProps {
     betPanelState: BetPanelState;
     isPanelVisible: boolean;
     panelRef: React.RefObject<HTMLDivElement>;
-    onClear: () => void;
-    onHidePanel: () => void;
     iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
@@ -39,8 +37,6 @@ export const BetPanel: React.FC<BetPanelProps> = ({
     betPanelState,
     isPanelVisible,
     panelRef,
-    onClear,
-    onHidePanel,
     iframeRef
 }) => {
     const [amount, setAmount] = useState(betPanelState.amount);
@@ -76,8 +72,14 @@ export const BetPanel: React.FC<BetPanelProps> = ({
     const handleClose = useCallback(() => {
         setAmount(0);
         setWarnMsg('');
-        onHidePanel();
-    }, [onHidePanel]);
+        // Post message to parent to hide panel
+        window.parent.postMessage({ type: 'HIDE_PANEL' }, '*');
+    }, []);
+
+    const handleClear = useCallback(() => {
+        setAmount(0);
+        setWarnMsg('');
+    }, []);
 
     const handleBet = useCallback(() => {
         if (amount < betPanelState.min || amount > betPanelState.max) {
@@ -205,7 +207,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                     />
                                                     <span className="c-textfield__currency">{betPanelState.currency}</span>
                                                     <span className="c-textfield__bg"></span>
-                                                    <a className="c-btn c-btn--clear" aria-hidden="true" onClick={onClear}>
+                                                    <a className="c-btn c-btn--clear" aria-hidden="true" onClick={handleClear}>
                                                         <i className="c-icon c-icon--clear-solid"></i>
                                                     </a>
                                                 </div>
@@ -238,7 +240,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                         <button
                                             className="c-btn c-btn--default"
                                             aria-hidden="true"
-                                            onClick={onHidePanel}
+                                            onClick={handleClose}
                                         >
                                             <span className="c-text">Cancel</span>
                                         </button>

@@ -87,11 +87,12 @@ const BettingPanelContent: React.FC<BettingPanelContentProps> = ({
 
     const handleOnClick = () => {
         if (roundState !== Rounds.ROUND_STATE.PLACING_BET) {
+            console.log(`onBet ${roundState}`);
+            onBet();
             return;
         }
 
         setIsShowBetSlip(!isShowBetSlip);
-        onBet();
 
         if (!isAuthorized) {
             autoCreateNickname();
@@ -173,17 +174,13 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     private handleBetFromParent = (amount: number, betChoice: string, clientSeed: string) => {
         if (this.state.roundState !== Rounds.ROUND_STATE.PLACING_BET) {
             console.log('Child: Cannot place bet - not in PLACING_BET state');
+            console.log(`onBet ${this.state.roundState}`);
+            this.props.onBet();
             return;
         }
 
         console.log('Child: Processing bet from parent:', { amount, betChoice, clientSeed });
-
-        // Handle the bet
-        this.props.onBet();
-
         this.handleBet(amount, betChoice, clientSeed);
-        // Return the bet data
-        // return { amount, betChoice, clientSeed };
     };
 
     @render(Auth.AuthStore, (store) => store.isAuthorized)
@@ -298,15 +295,6 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
 
     @handle(gc.Bet.BetHandler)
     handleBet(amount: number, betChoice: string, clientSeed: string) {
-        if (this.state.roundState !== Rounds.ROUND_STATE.PLACING_BET) {
-            return;
-        }
-
-        // Handle the bet
-        this.props.onBet();
-
-        console.log('handleBet inside frame', amount, betChoice, clientSeed);
-        // Send the bet to the game client
         return { amount, betChoice, clientSeed };
     }
 

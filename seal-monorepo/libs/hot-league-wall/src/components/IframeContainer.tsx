@@ -27,7 +27,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { iframeHeight, requestIframeHeight, handleHeightMessage } = useIframeHeight();
-    const { betPanelState, handleBettingMessage, handlePanelClose } = useBettingPanel();
+    const { betPanelState, handleBettingMessage } = useBettingPanel();
 
     const handleMessage = useCallback((event: MessageEvent) => {
         // Only process messages from expected origins
@@ -67,38 +67,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         };
     }, [handleMessage]);
 
-    const handleBet = useCallback((amount: number, betChoice: string, clientSeed: string) => {
-        if (iframeRef.current?.contentWindow) {
-            console.log('Parent: Sending HANDLE_BET message to iframe:', {
-                amount,
-                betChoice,
-                clientSeed
-            });
-            iframeRef.current.contentWindow.postMessage({
-                type: 'HANDLE_BET',
-                amount,
-                betChoice,
-                clientSeed
-            }, '*');
-        }
-    }, []);
-
-    const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        if (iframeRef.current?.contentWindow) {
-            // iframeRef.current.contentWindow.postMessage({
-            //     type: 'HANDLE_INPUT_CHANGE',
-            //     value: event.target.value
-            // }, '*');
-        }
-    }, []);
-
-    const handleClear = useCallback(() => {
-        if (iframeRef.current?.contentWindow) {
-            // iframeRef.current.contentWindow.postMessage({
-            //     type: 'HANDLE_CLEAR'
-            // }, '*');
-        }
-    }, []);
 
     return (
         <CustomContainer className="mt-3" fluid="xl">
@@ -125,8 +93,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                 {betPanelState && (
                     <BettingPanelPortal
                         betPanelState={betPanelState}
-                        onClose={handlePanelClose}
-                        onClear={handleClear}
                         iframeRef={iframeRef}
                     />
                 )}
