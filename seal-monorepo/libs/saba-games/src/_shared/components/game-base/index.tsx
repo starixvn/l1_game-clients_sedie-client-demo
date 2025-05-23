@@ -150,11 +150,11 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     setPanelId = (id: string) => {
-        this.setState({ activePanelId: id });
+        // this.setState({ activePanelId: id });
     };
 
     setShowBetPanel = (show: boolean) => {
-        this.setState({ showBetPanel: show });
+        // this.setState({ showBetPanel: show });
     };
 
     @render(Settlements.SettlementStatusStore, (store) => store.settlementStatus, {
@@ -271,18 +271,18 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     resetBettingPanel = () => {
-        this.setState({
-            activePanelId: null,
-            showBetPanel: false,
-        });
+        // this.setState({
+        //     activePanelId: null,
+        //     showBetPanel: false,
+        // });
     };
 
     handleBetOption = () => {
-        this.resetBettingPanel();
-        this.setState({ isShowNextRoundMessage: true });
-        setTimeout(() => {
-            this.setState({ isShowNextRoundMessage: false });
-        }, 3000);
+        // this.resetBettingPanel();
+        // this.setState({ isShowNextRoundMessage: true });
+        // setTimeout(() => {
+        //     this.setState({ isShowNextRoundMessage: false });
+        // }, 3000);
     };
 
     getRenderTemplate() {
