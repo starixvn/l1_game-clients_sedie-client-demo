@@ -37,8 +37,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
         try {
             const data = event.data;
-            console.log('Parent: Received message from iframe:', data);
-
             // Handle height update message
             handleHeightMessage(data);
 
@@ -56,11 +54,9 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     }, [requestIframeHeight]);
 
     React.useEffect(() => {
-        console.log('Parent: Setting up message listener');
         window.addEventListener('message', handleMessage);
 
         return () => {
-            console.log('Parent: Cleaning up message listener');
             window.removeEventListener('message', handleMessage);
         };
     }, [handleMessage]);

@@ -43,15 +43,6 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
         };
     }, []);
 
-    // Debug log to check state
-    useEffect(() => {
-        console.log('BettingPanelPortal state:', {
-            isContainerReady,
-            isShowBetSlip: betPanelState.isShowBetSlip,
-            betPanelState
-        });
-    }, [isContainerReady, betPanelState]);
-
     if (!isContainerReady || !betPanelState.isShowBetSlip || !portalContainerRef.current) {
         return null;
     }

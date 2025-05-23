@@ -62,24 +62,10 @@ export const BetPanel: React.FC<BetPanelProps> = ({
     };
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log('Input Event:', {
-            rawValue: event.target.value,
-            eventType: event.type,
-            target: event.target
-        });
-
         const value = event.target.value.replace(/[^0-9]/g, '');
-        console.log('After cleaning non-numeric:', value);
-
         const numValue = value ? parseInt(value, 10) : 0;
-        console.log('Parsed number value:', numValue);
-
         setAmount(numValue);
-        console.log('Current amount state:', amount);
-        console.log('New amount to be set:', numValue);
-
         onInputChange(event);
-        console.log('Parent onInputChange called with event');
     };
 
     const t = (key: string) => key; // Placeholder translation function
