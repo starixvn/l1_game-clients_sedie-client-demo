@@ -32,7 +32,7 @@ export const useBetPanel = (
             gameName,
             namespace,
             position,
-            isShowBetSlip
+            !isShowBetSlip
         );
 
         window.parent.postMessage({
@@ -41,12 +41,10 @@ export const useBetPanel = (
         }, '*');
     }, [config, betChoice, odd, gameName, namespace, isShowBetSlip, getBetPanelPosition]);
 
-    useEffect(() => {
-        sendBetPanelState();
-    }, [isShowBetSlip, sendBetPanelState]);
-
-    const handleClickOutside = useCallback(() => {
-        setIsShowBetSlip(false);
+    const handleClickOutside = useCallback((event: MouseEvent) => {
+        if (bettingBlockRef.current && !bettingBlockRef.current.contains(event.target as Node)) {
+            setIsShowBetSlip(false);
+        }
     }, []);
 
     useEffect(() => {

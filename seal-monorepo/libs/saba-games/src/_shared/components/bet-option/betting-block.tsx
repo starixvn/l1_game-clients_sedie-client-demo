@@ -14,6 +14,7 @@ import { IBetPanelConfig } from './types/bet-panel.types';
 import { BACCARAT_CHOICES, FISH_PRAWN_CRAB_CHOICES, SE_DIE_CHOICES, COLOR_GAME_CHOICES } from '../../../games/constants/saba-club';
 import { checkValidAmount, parseInputValue, WarnMsgType, calculateMinMaxAmount } from '../../utils/betting-util';
 import { useAppContext } from '../../../appProvider';
+import { calculateBetPanelState } from './utils/bet-panel.utils';
 
 interface BettingBlockProps {
     odd: number;
@@ -82,17 +83,23 @@ const BettingPanelContent: React.FC<BettingPanelContentProps> = ({
     const {
         isShowBetSlip,
         setIsShowBetSlip,
-        bettingBlockRef
+        bettingBlockRef,
+        sendBetPanelState
     } = useBetPanel(betPanelConfig, betChoice, odd, gameName, namespace);
 
-    const handleOnClick = () => {
+    const handleOnClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+
         if (roundState !== Rounds.ROUND_STATE.PLACING_BET) {
             console.log(`onBet ${roundState}`);
             onBet();
             return;
         }
 
-        setIsShowBetSlip(!isShowBetSlip);
+        const newIsShowBetSlip = !isShowBetSlip;
+        console.log(`handleOnClick ${newIsShowBetSlip}`);
+        setIsShowBetSlip(newIsShowBetSlip);
+        sendBetPanelState();
 
         if (!isAuthorized) {
             autoCreateNickname();
