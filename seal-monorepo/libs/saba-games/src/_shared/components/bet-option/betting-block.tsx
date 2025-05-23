@@ -2,7 +2,7 @@ import * as gc from '@sg/sg-game-client';
 import { Auth, Connection, Rounds } from '@sg/sg-game-client';
 import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     GameBettingOptionsContext,
     GameBettingZoneContext,
@@ -38,7 +38,81 @@ interface IBettingBlockState extends IStateObserver {
     maxBet: number;
     maxBetPerChoices: gc.GameServiceMessage.MaxBetPerChoices;
     clientSeed: string;
+    betChoice: string;
+    odd: number;
 }
+
+interface BettingPanelContentProps {
+    betPanelConfig: IBetPanelConfig;
+    betChoice: string;
+    odd: number;
+    gameName: string;
+    namespace: string;
+    panelId: string;
+    onBet: () => void;
+    isAuthorized: boolean;
+    roundState: string;
+    autoCreateNickname: () => void;
+    children: React.ReactNode;
+    flashAnimationClass: string;
+    bettingZoneState: {
+        gameName: string;
+        betChoice: string;
+        odd: number;
+    };
+    waitForAuthorization: (betChoice: string, odd: number) => void;
+}
+
+const BettingPanelContent: React.FC<BettingPanelContentProps> = ({
+    betPanelConfig,
+    betChoice,
+    odd,
+    gameName,
+    namespace,
+    panelId,
+    onBet,
+    isAuthorized,
+    roundState,
+    autoCreateNickname,
+    children,
+    flashAnimationClass,
+    bettingZoneState,
+    waitForAuthorization
+}) => {
+    const {
+        isShowBetSlip,
+        setIsShowBetSlip,
+        bettingBlockRef
+    } = useBetPanel(betPanelConfig, betChoice, odd, gameName, namespace);
+
+    const handleOnClick = () => {
+        if (roundState !== Rounds.ROUND_STATE.PLACING_BET) {
+            return;
+        }
+
+        setIsShowBetSlip(!isShowBetSlip);
+        onBet();
+
+        if (!isAuthorized) {
+            autoCreateNickname();
+            waitForAuthorization(betChoice, odd);
+        }
+    };
+
+    return (
+        <GameBettingZoneContext.Provider value={bettingZoneState}>
+            <div
+                ref={bettingBlockRef}
+                className={classNames(`${Styles['betting-block']} ${Styles[flashAnimationClass]}`, {
+                    [Styles['open-panel-background-color']]: panelId === betChoice,
+                })}
+                onClick={handleOnClick}
+            >
+                {children}
+            </div>
+        </GameBettingZoneContext.Provider>
+    );
+};
 
 class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockState> {
     private timeoutId: NodeJS.Timeout | null = null;
@@ -62,6 +136,8 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
             maxBet: 0,
             maxBetPerChoices: {},
             clientSeed: '',
+            betChoice: '',
+            odd: 0
         };
     }
 
@@ -151,6 +227,41 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     @handle(Connection.ConnectionHandlers.SignInHandler)
     protected signIn() { }
 
+    protected updateBettingState(betChoice: string, odd: number) {
+        this.setState({ betChoice, odd });
+    }
+
+    protected waitForAuthorization(betChoice: string, odd: number) {
+        const interval = 100;
+        const startTime = Date.now();
+        this.clearTimeout();
+
+        const checkAuthorization = () => {
+            if (this.state.isAuthorized) {
+                this.handleUserSignIn();
+                this.updateBettingState(betChoice, odd);
+                this.clearTimeout();
+            } else if (Date.now() - startTime < this.maxTimeoutDuration) {
+                this.timeoutId = setTimeout(checkAuthorization, interval);
+            }
+        };
+
+        this.timeoutId = setTimeout(checkAuthorization, interval);
+    }
+
+    protected handleUserSignIn() {
+        if (!this.state.isSignedIn) {
+            this.signIn();
+        }
+    }
+
+    protected clearTimeout() {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
+    }
+
     render() {
         const { children, gameName, settlementResult, betChoice, odd, namespace } = this.props;
         const { isFinishShowResult, isShowStaticHighlight } = this.state;
@@ -179,40 +290,24 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
 
         return (
             <GameBettingOptionsContext.Consumer>
-                {({ panelId, setPanelId, show, setShow }) => {
-                    const {
-                        isShowBetSlip,
-                        setIsShowBetSlip,
-                        bettingBlockRef
-                    } = useBetPanel(betPanelConfig, betChoice, odd, gameName, namespace);
-
-                    const handleOnClick = () => {
-                        if (this.state.roundState !== Rounds.ROUND_STATE.PLACING_BET) {
-                            return;
-                        }
-
-                        setIsShowBetSlip(!isShowBetSlip);
-                        this.props.onBet();
-
-                        if (!this.state.isAuthorized) {
-                            this.autoCreateNickname();
-                        }
-                    };
-
-                    return (
-                        <GameBettingZoneContext.Provider value={bettingZoneState}>
-                            <div
-                                ref={bettingBlockRef}
-                                className={classNames(`${Styles['betting-block']} ${Styles[flashAnimationClass]}`, {
-                                    [Styles['open-panel-background-color']]: panelId === betChoice,
-                                })}
-                                onClick={handleOnClick}
-                            >
-                                {children}
-                            </div>
-                        </GameBettingZoneContext.Provider>
-                    );
-                }}
+                {({ panelId }) => (
+                    <BettingPanelContent
+                        betPanelConfig={betPanelConfig}
+                        betChoice={betChoice}
+                        odd={odd}
+                        gameName={gameName}
+                        namespace={namespace}
+                        panelId={panelId}
+                        onBet={this.props.onBet}
+                        isAuthorized={this.state.isAuthorized}
+                        roundState={this.state.roundState}
+                        autoCreateNickname={this.autoCreateNickname.bind(this)}
+                        children={children}
+                        flashAnimationClass={flashAnimationClass}
+                        bettingZoneState={bettingZoneState}
+                        waitForAuthorization={this.waitForAuthorization.bind(this)}
+                    />
+                )}
             </GameBettingOptionsContext.Consumer>
         );
     }
