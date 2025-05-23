@@ -1,29 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import classNames from 'classnames';
+import { BetPanelState } from '../types/betting';
+import { BettingTicket } from './BettingTicket';
+import { BettingStake } from './BettingStake';
 import BettingChips from './BettingChips';
 import './BetPanel.scss';
-
-export interface BetPanelState {
-    isShowBetSlip: boolean;
-    top: number;
-    left: number;
-    betChoice: string;
-    odd: number;
-    amount: number;
-    currency: string;
-    min: number;
-    max: number;
-    payout: string;
-    gameName: string;
-    namespace: string;
-    clientRoundId: number;
-    isSpecialChoice: boolean;
-    warnMsg: string;
-    position?: {
-        top: number;
-        left: number;
-    };
-}
 
 interface BetPanelProps {
     betPanelState: BetPanelState;
@@ -60,11 +41,6 @@ export const BetPanel: React.FC<BetPanelProps> = ({
         onInputChange({ target: { value: amount.toString() } } as React.ChangeEvent<HTMLInputElement>);
     };
 
-    const t = (key: string) => key; // Placeholder translation function
-    const addCommas = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    const displayAmount = amount > 0 ? addCommas(amount) : '';
-    const payout = amount > 0 ? addCommas(amount * betPanelState.odd) : '0.00';
-
     return (
         <div className="seal-vg-sg-index" style={{
             position: 'fixed',
@@ -96,92 +72,21 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                             <div className="c-betting-scroller">
                                 <div className="c-betting-group" data-status="default">
                                     <div className="c-betting" data-open="true">
-                                        <div className="c-ticket" data-status="default" data-open="true">
-                                            <div className="c-ticket__header">
-                                                <span className="c-text-bettype sg-bet-panel__header-flex">
-                                                    <div className={`sg-bet-panel__game-icon ${betPanelState.namespace}-icon`}></div>
-                                                    <div>
-                                                        <div className="game-name">{betPanelState.gameName}</div>
-                                                        <div className="bet-option">{betPanelState.betChoice}</div>
-                                                    </div>
-                                                </span>
-                                                <a className="c-btn c-btn--caret" aria-hidden="true">
-                                                    <i className="c-icon c-icon--caret"></i>
-                                                </a>
-                                                <a className="c-btn c-btn--clear" aria-hidden="true" onClick={onClose}>
-                                                    <i className="c-icon c-icon--clear"></i>
-                                                </a>
-                                            </div>
-
-                                            <div className="c-ticket__main">
-                                                <div className="c-ticket__choice">
-                                                    <span className="c-text-betchoice">{betPanelState.betChoice}</span>
-                                                </div>
-                                                <div className="c-ticket__odds">
-                                                    <span className="c-text-balls">
-                                                        {/* Game elements will be rendered here */}
-                                                    </span>
-                                                    <span className="c-text-odds">
-                                                        @
-                                                        <span className="c-odds sg-bet-panel__text-bold" data-odds-status="default">
-                                                            {betPanelState.odd || ''}
-                                                        </span>
-                                                    </span>
-                                                    <span className="c-text-oddstype">(Decimal)</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="c-ticket__info">
-                                                <div className="c-ticket-match-info">
-                                                    <div className="c-ticket-match-info__row">{betPanelState.namespace}</div>
-                                                    <div className="c-ticket-match-info__row">{betPanelState.gameName}</div>
-                                                    <div className="c-ticket-match-info__row">
-                                                        Result No. {betPanelState.clientRoundId}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {warnMsg && (
-                                                <div className="c-ticket__status">
-                                                    <div className="c-betting-msg sg-bet-panel__betting-msg">
-                                                        <i className="c-icon c-icon--warning" data-icon="warning" />
-                                                        <span className="c-text">{warnMsg}</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="c-betting-stake-group">
-                                            <div className="c-betting-stake">
-                                                <div className="c-textfield c-textfield--stake" data-focus="true">
-                                                    <input
-                                                        type="text"
-                                                        className="c-textfield__input"
-                                                        placeholder={`${addCommas(betPanelState.min)} - ${addCommas(betPanelState.max)}`}
-                                                        value={displayAmount}
-                                                        onChange={onInputChange}
-                                                    />
-                                                    <span className="c-textfield__currency">{betPanelState.currency}</span>
-                                                    <span className="c-textfield__bg"></span>
-                                                    <a className="c-btn c-btn--clear" aria-hidden="true" onClick={onClear}>
-                                                        <i className="c-icon c-icon--clear-solid"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <div className="c-betting-stake-info">
-                                                <span className="c-text-group">
-                                                    <span className="c-text-label">Payout: </span>
-                                                    <span className="c-text-value">{payout}</span>
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <BettingTicket
+                                            betPanelState={betPanelState}
+                                            onClose={onClose}
+                                        />
+                                        <BettingStake
+                                            betPanelState={betPanelState}
+                                            amount={amount}
+                                            onInputChange={onInputChange}
+                                            onClear={onClear}
+                                        />
                                         <BettingChips
                                             min={betPanelState.min}
                                             max={betPanelState.max}
                                             currentAmount={amount}
                                             onAmountChange={handleChipAmountChange}
-                                            t={t}
-                                            addCommas={addCommas}
                                         />
                                     </div>
                                     <div className="c-betting-submit">

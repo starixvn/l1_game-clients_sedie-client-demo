@@ -1,5 +1,7 @@
 import React from 'react';
 import Chip from './Chip';
+import { BettingChip } from '../types/betting';
+import { formatNumber } from '../utils/formatting';
 import './BettingChips.scss';
 
 interface BettingChipsProps {
@@ -7,29 +9,18 @@ interface BettingChipsProps {
     max: number;
     currentAmount: number;
     onAmountChange: (amount: number) => void;
-    t: (key: string) => string;
-    addCommas: (num: number) => string;
 }
 
 const BettingChips: React.FC<BettingChipsProps> = ({
     min,
     max,
     currentAmount,
-    onAmountChange,
-    t,
-    addCommas
+    onAmountChange
 }) => {
-    const formatNumber = (num: number): string => {
-        if (num >= 1000) {
-            return (num / 1000).toString() + 'K';
-        }
-        return num.toString();
-    };
-
-    const chips = [
+    const chips: BettingChip[] = [
         {
             value: min,
-            label: "min",//t('Common.min_bet'),
+            label: "min",
             onClick: () => onAmountChange(min)
         },
         {
@@ -46,7 +37,7 @@ const BettingChips: React.FC<BettingChipsProps> = ({
         },
         {
             value: max,
-            label: "max",//t('Common.max_bet'),
+            label: "max",
             onClick: () => onAmountChange(max)
         }
     ];
