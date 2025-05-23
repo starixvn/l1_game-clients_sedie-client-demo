@@ -1,7 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { useIframeHeight } from '../hooks/useIframeHeight';
 import { useBettingPanel } from '../hooks/useBettingPanel';
-import { useIframeMessageHandler } from '../hooks/useIframeMessageHandler';
 import { BettingPanelPortal } from './BettingPanelPortal';
 
 interface IframeContainerProps {
@@ -30,16 +29,41 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     const { iframeHeight, requestIframeHeight, handleHeightMessage } = useIframeHeight();
     const { betPanelState, handleBettingMessage, handlePanelClose } = useBettingPanel();
 
-    const { handleMessage } = useIframeMessageHandler({
-        onHeightMessage: handleHeightMessage,
-        onBettingMessage: handleBettingMessage
-    });
+    const handleMessage = useCallback((event: MessageEvent) => {
+        // Only process messages from expected origins
+        if (!event.origin.includes('localhost:4200') && !event.origin.includes('localhost:4551')) {
+            return;
+        }
+
+        try {
+            const data = event.data;
+            console.log('Parent: Received message from iframe:', data);
+
+            // Handle height update message
+            handleHeightMessage(data);
+
+            // Handle betting related messages
+            handleBettingMessage(data);
+        } catch (error) {
+            console.error('Parent: Error processing message:', error);
+        }
+    }, [handleHeightMessage, handleBettingMessage]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
         // Wait longer for content to fully render
         setTimeout(() => requestIframeHeight(iframeRef.current), 500);
     }, [requestIframeHeight]);
+
+    React.useEffect(() => {
+        console.log('Parent: Setting up message listener');
+        window.addEventListener('message', handleMessage);
+
+        return () => {
+            console.log('Parent: Cleaning up message listener');
+            window.removeEventListener('message', handleMessage);
+        };
+    }, [handleMessage]);
 
     const handleBet = useCallback((amount: number, betChoice: string) => {
         if (iframeRef.current?.contentWindow) {

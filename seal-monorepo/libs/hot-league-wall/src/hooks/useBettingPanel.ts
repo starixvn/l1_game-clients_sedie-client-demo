@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { BetPanelState } from '../types/betting';
+import { BetPanelState } from '../components/BetPanel';
 
 export const useBettingPanel = () => {
     const [betPanelState, setBetPanelState] = useState<BetPanelState | null>(null);
