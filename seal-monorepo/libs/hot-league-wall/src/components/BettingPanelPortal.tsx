@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import BetPanel, { BetPanelState } from './BetPanel';
+import { BetPanel } from './BetPanel';
+import { BetPanelState } from './BetPanel';
 
 interface BettingPanelPortalProps {
     betPanelState: BetPanelState;
@@ -31,8 +32,15 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
         setIsContainerReady(true);
 
         const handleMessage = (event: MessageEvent) => {
-            if (event.data.type === 'HIDE_PANEL') {
-                setIsVisible(false);
+            switch (event.data.type) {
+                case 'HIDE_PANEL':
+                case 'HIDE_BET_PANEL':
+                case 'HIDE_ALL_BET_PANELS':
+                    setIsVisible(false);
+                    break;
+                case 'SHOW_BET_PANEL':
+                    setIsVisible(true);
+                    break;
             }
         };
 
@@ -47,7 +55,14 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
         };
     }, []);
 
-    if (!isContainerReady || !betPanelState.isShowBetSlip || !portalContainerRef.current || !isVisible) {
+    // Reset visibility when betPanelState changes
+    useEffect(() => {
+        if (betPanelState?.isShowBetSlip) {
+            setIsVisible(true);
+        }
+    }, [betPanelState]);
+
+    if (!isContainerReady || !betPanelState?.isShowBetSlip || !portalContainerRef.current || !isVisible) {
         return null;
     }
 

@@ -9,8 +9,16 @@ export const useBettingPanel = () => {
             case 'BET_PANEL_STATE':
                 console.log('Received BET_PANEL_STATE message:', data.state);
                 const { isShowBetSlip, betChoice, odd, top, left, currency, min, max, gameName, namespace, clientRoundId, isSpecialChoice, clientSeed } = data.state;
+
+                // If we're hiding the panel, clear the state
+                if (!isShowBetSlip) {
+                    setBetPanelState(null);
+                    return;
+                }
+
+                // Otherwise, update the state with the new panel data
                 setBetPanelState({
-                    isShowBetSlip,
+                    isShowBetSlip: true, // Force to true when receiving state
                     betChoice,
                     odd,
                     top,
@@ -29,18 +37,16 @@ export const useBettingPanel = () => {
                 });
                 break;
 
-            // case 'BET_PANEL_STATE':
-            //     setBetPanelState({
-            //         ...data.state,
-            //         isShowBetSlip: true
-            //     });
-            //     break;
+            case 'HIDE_BET_PANEL':
+                setBetPanelState(null);
+                break;
 
-            // case 'HIDE_BET_PANEL':
-            // case 'HIDE_ALL_BET_PANELS':
-            //     setBetPanelState(null);
-            //     break;
-            default: return;
+            case 'HIDE_ALL_BET_PANELS':
+                setBetPanelState(null);
+                break;
+
+            default:
+                return;
         }
     }, []);
 
