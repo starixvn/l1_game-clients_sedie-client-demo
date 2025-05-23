@@ -158,11 +158,7 @@ class BettingBlock extends ObserverComponent<BettingBlockProps, IBettingBlockSta
     }
 
     private handleWindowMessage = (event: MessageEvent) => {
-        // Only process messages from expected origins
-        if (!event.origin.includes('localhost:4200') && !event.origin.includes('localhost:4551')) {
-            return;
-        }
-
+        // Accept messages from any origin in development
         try {
             const data = event.data;
             if (data.type === 'HANDLE_BET') {

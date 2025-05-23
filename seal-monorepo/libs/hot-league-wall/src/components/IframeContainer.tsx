@@ -126,9 +126,8 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                     <BettingPanelPortal
                         betPanelState={betPanelState}
                         onClose={handlePanelClose}
-                        onBet={handleBet}
-                        onInputChange={handleInputChange}
                         onClear={handleClear}
+                        iframeRef={iframeRef}
                     />
                 )}
             </div>

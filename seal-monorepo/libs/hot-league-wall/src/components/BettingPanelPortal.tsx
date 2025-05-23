@@ -5,17 +5,15 @@ import BetPanel, { BetPanelState } from './BetPanel';
 interface BettingPanelPortalProps {
     betPanelState: BetPanelState;
     onClose: () => void;
-    onBet: (amount: number, betChoice: string, clientSeed: string) => void;
-    onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onClear: () => void;
+    iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
 export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
     betPanelState,
     onClose,
-    onBet,
-    onInputChange,
-    onClear
+    onClear,
+    iframeRef
 }) => {
     const [isContainerReady, setIsContainerReady] = useState(false);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
@@ -59,11 +57,9 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
                 betPanelState={betPanelState}
                 isPanelVisible={betPanelState.isShowBetSlip}
                 panelRef={panelRef}
-                onClose={onClose}
-                onBet={onBet}
-                onInputChange={onInputChange}
                 onClear={onClear}
                 onHidePanel={onClose}
+                iframeRef={iframeRef}
             />
         </div>,
         portalContainerRef.current

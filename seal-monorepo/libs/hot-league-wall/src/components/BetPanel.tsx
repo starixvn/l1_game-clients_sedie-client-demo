@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import classNames from 'classnames';
 import BettingChips from './BettingChips';
 import './BetPanel.scss';
@@ -30,22 +30,18 @@ interface BetPanelProps {
     betPanelState: BetPanelState;
     isPanelVisible: boolean;
     panelRef: React.RefObject<HTMLDivElement>;
-    onClose: () => void;
-    onBet: (amount: number, betChoice: string, clientSeed: string) => void;
-    onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onClear: () => void;
     onHidePanel: () => void;
+    iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
 export const BetPanel: React.FC<BetPanelProps> = ({
     betPanelState,
     isPanelVisible,
     panelRef,
-    onClose,
-    onBet,
-    onInputChange,
     onClear,
-    onHidePanel
+    onHidePanel,
+    iframeRef
 }) => {
     const [amount, setAmount] = useState(betPanelState.amount);
     const [warnMsg, setWarnMsg] = useState(betPanelState.warnMsg);
@@ -59,15 +55,52 @@ export const BetPanel: React.FC<BetPanelProps> = ({
 
     const handleChipAmountChange = (amount: number) => {
         setAmount(amount);
-        onInputChange({ target: { value: amount.toString() } } as React.ChangeEvent<HTMLInputElement>);
+        handleInputChange({ target: { value: amount.toString() } } as React.ChangeEvent<HTMLInputElement>);
     };
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value.replace(/[^0-9]/g, '');
         const numValue = value ? parseInt(value, 10) : 0;
         setAmount(numValue);
-        onInputChange(event);
+
+        // Validate amount against min/max
+        if (numValue < betPanelState.min) {
+            setWarnMsg(`Minimum bet amount is ${betPanelState.min}`);
+        } else if (numValue > betPanelState.max) {
+            setWarnMsg(`Maximum bet amount is ${betPanelState.max}`);
+        } else {
+            setWarnMsg('');
+        }
     };
+
+    const handleClose = useCallback(() => {
+        setAmount(0);
+        setWarnMsg('');
+        onHidePanel();
+    }, [onHidePanel]);
+
+    const handleBet = useCallback(() => {
+        if (amount < betPanelState.min || amount > betPanelState.max) {
+            setWarnMsg(`Bet amount must be between ${betPanelState.min} and ${betPanelState.max}`);
+            return;
+        }
+
+        if (iframeRef.current?.contentWindow) {
+            console.log('Sending HANDLE_BET to iframe:', {
+                amount,
+                betChoice: betPanelState.betChoice,
+                clientSeed: betPanelState.clientSeed
+            });
+            iframeRef.current.contentWindow.postMessage({
+                type: 'HANDLE_BET',
+                amount,
+                betChoice: betPanelState.betChoice,
+                clientSeed: betPanelState.clientSeed
+            }, '*');
+        }
+
+        handleClose();
+    }, [amount, betPanelState.min, betPanelState.max, betPanelState.betChoice, betPanelState.clientSeed, handleClose, iframeRef]);
 
     const t = (key: string) => key; // Placeholder translation function
     const addCommas = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -117,7 +150,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                 <a className="c-btn c-btn--caret" aria-hidden="true">
                                                     <i className="c-icon c-icon--caret"></i>
                                                 </a>
-                                                <a className="c-btn c-btn--clear" aria-hidden="true" onClick={onClose}>
+                                                <a className="c-btn c-btn--clear" aria-hidden="true" onClick={handleClose}>
                                                     <i className="c-icon c-icon--clear"></i>
                                                 </a>
                                             </div>
@@ -198,10 +231,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             className="c-btn c-btn--bet"
                                             data-disabled={false}
                                             aria-hidden="true"
-                                            onClick={() => {
-                                                onBet(amount, betPanelState.betChoice, betPanelState.clientSeed);
-                                                onClose();
-                                            }}
+                                            onClick={handleBet}
                                         >
                                             <span className="c-text">Bet</span>
                                         </button>
