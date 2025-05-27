@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { useIframeHeight } from '../hooks/useIframeHeight';
 import { useBettingPanel } from '../hooks/useBettingPanel';
 import { BettingPanelPortal } from './BettingPanelPortal';
@@ -8,6 +8,7 @@ interface IframeContainerProps {
     token: string;
     language: string;
     renewToken?: Function;
+    allowedOrigins?: string[];
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -19,22 +20,44 @@ const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, ch
     return <div className={containerClass}>{children}</div>;
 };
 
+// Helper function to check if iframe is from same origin
+const isSameOriginFrame = (iframe: HTMLIFrameElement | null): boolean => {
+    if (!iframe) return false;
+    try {
+        return typeof iframe.contentWindow?.location.href === 'string';
+    } catch (err) {
+        return false;
+    }
+};
+
 const IframeContainer: React.FC<IframeContainerProps> = ({
     src,
     token,
     language,
-    renewToken
+    renewToken,
+    allowedOrigins = [
+        'http://localhost:4200',
+        'http://localhost:4551',
+        'https://l1-sedie-client-demo1.lumigame.com',
+        'https://l1-seal-live-page-client-demo1.lumigame.com'
+    ]
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { iframeHeight, requestIframeHeight, handleHeightMessage } = useIframeHeight();
     const { betPanelState, handleBettingMessage } = useBettingPanel();
 
     const handleMessage = useCallback((event: MessageEvent) => {
-        // Only process messages from expected origins
-        if (!event.origin.includes('localhost:4200') &&
-            !event.origin.includes('localhost:4551') &&
-            !event.origin.includes('l1-sedie-client-demo1.lumigame.com') &&
-            !event.origin.includes('l1-seal-live-page-client-demo1.lumigame.com')) {
+        // Log the actual origin for debugging
+        console.log('Received message from origin:', event.origin);
+        console.log('Allowed origins:', allowedOrigins);
+
+        // Remove trailing slashes and normalize the origin
+        const normalizedOrigin = event.origin.replace(/\/$/, '');
+
+        // Strict origin validation
+        if (!allowedOrigins.includes(normalizedOrigin)) {
+            console.warn(`Blocked message from unauthorized origin: ${event.origin}`);
+            console.warn(`Normalized origin: ${normalizedOrigin}`);
             return;
         }
 
@@ -54,22 +77,48 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
-    }, [handleHeightMessage, handleBettingMessage]);
+    }, [handleHeightMessage, handleBettingMessage, allowedOrigins]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
-        // Wait longer for content to fully render
-        setTimeout(() => requestIframeHeight(iframeRef.current), 500);
-    }, [requestIframeHeight]);
+        console.log('Iframe loaded from src:', src);
 
-    React.useEffect(() => {
+        // Check if iframe is from same origin
+        const isSameOrigin = isSameOriginFrame(iframeRef.current);
+        console.log('Is same origin iframe:', isSameOrigin);
+
+        if (isSameOrigin) {
+            // Only request height if same origin
+            setTimeout(() => requestIframeHeight(iframeRef.current), 500);
+        } else {
+            console.warn('Cross-origin iframe detected. Height adjustment may be limited.');
+        }
+    }, [requestIframeHeight, src]);
+
+    // Add effect to check iframe origin on mount and src change
+    useEffect(() => {
+        const checkIframeOrigin = () => {
+            const isSameOrigin = isSameOriginFrame(iframeRef.current);
+            console.log('Iframe origin check:', {
+                src,
+                isSameOrigin,
+                currentOrigin: window.location.origin
+            });
+        };
+
+        // Check immediately and after a short delay to ensure iframe is loaded
+        checkIframeOrigin();
+        const timeoutId = setTimeout(checkIframeOrigin, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [src]);
+
+    useEffect(() => {
         window.addEventListener('message', handleMessage);
-
         return () => {
             window.removeEventListener('message', handleMessage);
         };
     }, [handleMessage]);
-
 
     return (
         <CustomContainer className="mt-3" fluid="xl">
@@ -92,6 +141,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                     scrolling="no"
                     title="External Content"
                     onLoad={handleIframeLoad}
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
                 {betPanelState && (
                     <BettingPanelPortal

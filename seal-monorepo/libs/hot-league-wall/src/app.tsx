@@ -13,23 +13,30 @@ interface AppProps extends AppContentProps {
     language: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
+    iframeSrc?: string;
 }
 
 interface AppContentProps {
     token: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
+    iframeSrc?: string;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback }: AppProps) => {
+const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, iframeSrc }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
-            <AppContent token={token} renewToken={renewToken} updateBalanceCallback={updateBalanceCallback} />
+            <AppContent
+                token={token}
+                renewToken={renewToken}
+                updateBalanceCallback={updateBalanceCallback}
+                iframeSrc={iframeSrc}
+            />
         </AppProvider>
     );
 };
 
-const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProps) => {
+const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc }: AppContentProps) => {
     const { language } = useAppContext();
 
     useEffect(() => {
@@ -42,7 +49,7 @@ const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProp
     return (
         <>
             <IframeContainer
-                src="https://l1-sedie-client-demo1.lumigame.com/"
+                src={iframeSrc || 'http://localhost:4200'}
                 token={token}
                 language={language}
                 renewToken={renewToken}
