@@ -31,7 +31,10 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
     const handleMessage = useCallback((event: MessageEvent) => {
         // Only process messages from expected origins
-        if (!event.origin.includes('localhost:4200') && !event.origin.includes('localhost:4551')) {
+        if (!event.origin.includes('localhost:4200') &&
+            !event.origin.includes('localhost:4551') &&
+            !event.origin.includes('l1-sedie-client-demo1.lumigame.com') &&
+            !event.origin.includes('l1-seal-live-page-client-demo1.lumigame.com')) {
             return;
         }
 
