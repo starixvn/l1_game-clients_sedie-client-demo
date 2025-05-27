@@ -1,42 +1,25 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "sourceMap": true,
-    "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "resolveJsonModule": true,
-    "target": "es6",
-    "module": "ESNext",
-    "lib": [
-      "ESNext",
-      "dom"
-    ],
-    "baseUrl": "./",
-    "jsx": "react-jsx",
-    "paths": {
-      "@/*": [
-        "apps/seal-components/src/*"
-      ],
-      "@oneseal/utils": [
-        "libs/utils/src/index.js"
-      ],
-      "@seal-components/translation": [
-        "libs/translation/src/index.ts"
-      ],
-      "components-styles": [
-        "libs/components-styles/*"
-      ]
+    "compileOnSave": false,
+    "compilerOptions": {
+        "sourceMap": true,
+        "declaration": false,
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "resolveJsonModule": true,
+        "target": "es6",
+        "module": "ESNext",
+        "lib": ["ESNext", "dom"],
+        "baseUrl": "./",
+        "jsx": "react-jsx",
+        "paths": {
+            "@/*": ["apps/seal-components/src/*"],
+            "@oneseal/utils": ["libs/utils/src/index.js"],
+            "@seal-components/translation": ["libs/translation/src/index.ts"],
+            "components-styles": ["libs/components-styles/*"]
+        },
+        "skipLibCheck": true,
+        "types": ["node", "react", "react-dom"]
     },
-    "skipLibCheck": true,
-    "types": [
-      "node",
-      "react",
-      "react-dom"
-    ]
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    "exclude": ["node_modules"]
 }

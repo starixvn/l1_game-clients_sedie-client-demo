@@ -4,15 +4,16 @@
   "license": "MIT",
   "scripts": {
     "run-mono-saba-games": "nx serve saba-games",
-    "run-mono-hot-league-wall": "nx serve hot-league-wall",
-    "run-mono-hot-league-wall-test": "nx serve hot-league-wall-test",
     "build-mono-saba-games": "cd libs/saba-games && webpack-cli build --node-env=production --config=webpack.config.js",
     "build-saba-games": "nx build saba-games",
     "build-saba-games:dev": "nx build saba-games --configuration=development",
     "serve-dist-saba-games": "cd dist/libs/saba-games && npx serve . -s -p 3000 -C",
     "serve-dev": "nx serve saba-games --configuration=development --port=4200",
     "build-and-serve-dev": "cross-env NODE_ENV=development nx build saba-games --configuration=development && cd dist/libs/saba-games && npx http-server -p 4200 --cors -c-1",
-    "build-and-serve-dev-hot-league-wall-test": "cross-env NODE_ENV=development nx build hot-league-wall-test --configuration=development && cd dist/libs/hot-league-wall-test && npx http-server -p 4321 --cors -c-1"
+    "test-coverage": "nx test saba-games --coverage",
+    "test-saba-games": "nx test saba-games",
+    "test-saba-games:watch": "nx test saba-games --watch",
+    "test-saba-games:debug": "nx test saba-games --runInBand"
   },
   "private": true,
   "devDependencies": {

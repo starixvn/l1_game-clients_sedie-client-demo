@@ -42,7 +42,7 @@ const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProp
     return (
         <>
             <IframeContainer
-                src="http://localhost:4200"
+                src="https://l1-sedie-client-demo1.lumigame.com/"
                 token={token}
                 language={language}
                 renewToken={renewToken}

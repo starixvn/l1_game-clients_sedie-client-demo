@@ -1,21 +1,21 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "isolatedModules": false,
-    "jsx": "react",
-    "noImplicitAny": false,
-    "removeComments": false,
-    "noLib": false,
-    "preserveConstEnums": true,
-    "ignoreDeprecations": "5.0",
-    "suppressImplicitAnyIndexErrors": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true
-  },
-  "extends": "./tsconfig.base.json",
-  "ts-node": {
     "compilerOptions": {
-      "module": "commonjs"
+        "strict": true,
+        "isolatedModules": false,
+        "jsx": "react",
+        "noImplicitAny": false,
+        "removeComments": false,
+        "noLib": false,
+        "preserveConstEnums": true,
+        "ignoreDeprecations": "5.0",
+        "suppressImplicitAnyIndexErrors": true,
+        "forceConsistentCasingInFileNames": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "extends": "./tsconfig.base.json",
+    "ts-node": {
+        "compilerOptions": {
+            "module": "commonjs"
+        }
     }
-  }
 }
