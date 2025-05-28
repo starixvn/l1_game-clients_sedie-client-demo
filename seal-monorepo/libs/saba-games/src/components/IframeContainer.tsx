@@ -1,7 +1,9 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { useIframeHeight } from '../hooks/useIframeHeight';
 import { useBettingPanel } from '../hooks/useBettingPanel';
 import { BettingPanelPortal } from './BettingPanelPortal';
+import { ConfirmBetPortal } from './ConfirmBetPortal';
+import { ConfirmBetState } from './ConfirmBet';
 
 interface IframeContainerProps {
     src: string;
@@ -45,11 +47,38 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { iframeHeight, requestIframeHeight, handleHeightMessage } = useIframeHeight();
     const { betPanelState, handleBettingMessage } = useBettingPanel();
+    const [confirmBetState, setConfirmBetState] = useState<ConfirmBetState>({
+        isVisible: false,
+        totalStake: 0,
+        betChoice: '',
+        namespace: ''
+    });
+
+    const handleConfirmBetMessage = useCallback((data: any) => {
+        console.log('%c[IFRAME_CONTAINER] Received confirm bet message:', 'color: red; font-weight: bold;', data);
+
+        switch (data.type) {
+            case 'SHOW_CONFIRM_BET':
+                console.log('%c[IFRAME_CONTAINER] Showing confirm bet', 'color: red; font-weight: bold;', data.payload);
+                setConfirmBetState({
+                    ...data.payload,
+                    isVisible: true
+                });
+                break;
+            case 'HIDE_CONFIRM_BET':
+                console.log('%c[IFRAME_CONTAINER] Hiding confirm bet', 'color: red; font-weight: bold;');
+                setConfirmBetState(prev => ({
+                    ...prev,
+                    isVisible: false
+                }));
+                break;
+        }
+    }, []);
 
     const handleMessage = useCallback((event: MessageEvent) => {
         // Log the actual origin for debugging
-        console.log('Received message from origin:', event.origin);
-        console.log('Allowed origins:', allowedOrigins);
+        console.log('%c[IFRAME_CONTAINER] Received message from origin:', 'color: red; font-weight: bold;', event.origin);
+        console.log('%c[IFRAME_CONTAINER] Allowed origins:', 'color: red; font-weight: bold;', allowedOrigins);
 
         // Remove trailing slashes and normalize the origin
         const normalizedOrigin = event.origin.replace(/\/$/, '');
@@ -69,6 +98,9 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
             // Handle betting related messages
             handleBettingMessage(data);
 
+            // Handle confirm bet messages
+            handleConfirmBetMessage(data);
+
             // Handle bet response
             if (data.type === 'BET_RESPONSE') {
                 console.log('Parent: Received bet response:', data);
@@ -77,7 +109,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
-    }, [handleHeightMessage, handleBettingMessage, allowedOrigins]);
+    }, [handleHeightMessage, handleBettingMessage, handleConfirmBetMessage, allowedOrigins]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
@@ -149,6 +181,9 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                         iframeRef={iframeRef}
                     />
                 )}
+                <ConfirmBetPortal
+                    iframeRef={iframeRef}
+                />
             </div>
         </CustomContainer>
     );
