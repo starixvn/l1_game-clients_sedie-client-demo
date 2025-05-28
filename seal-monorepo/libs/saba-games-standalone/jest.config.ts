@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'saba-games',
+  displayName: 'saba-games-standalone',
   setupFiles: ['reflect-metadata'],
   preset: '../../jest.preset.js',
   transform: {
@@ -8,7 +8,7 @@ export default {
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/saba-games',
+  coverageDirectory: '../../coverage/libs/saba-games-standalone',
   collectCoverage: true,
   coverageReporters: ['text', 'lcov', 'text-summary'],
   collectCoverageFrom: [
@@ -19,5 +19,6 @@ export default {
     '!src/**/type.ts',
     '!src/**/index.ts'
   ],
-  coverageProvider: 'v8'
+  coverageProvider: 'v8',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
 };

@@ -1,0 +1,77 @@
+{
+  "name": "saba-games-standalone",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/saba-games-standalone/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/libs/saba-games-standalone",
+        "main": "libs/saba-games-standalone/src/main.tsx",
+        "tsConfig": "libs/saba-games-standalone/tsconfig.app.json",
+        "assets": [
+          "libs/saba-games-standalone/src/assets"
+        ],
+        "isolatedConfig": true,
+        "webpackConfig": "libs/saba-games-standalone/webpack.config.js"
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production",
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:webpack",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "saba-games-standalone:build",
+        "hmr": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "saba-games-standalone:build:development"
+        },
+        "production": {
+          "buildTarget": "saba-games-standalone:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "libs/saba-games-standalone/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    }
+  },
+  "tags": []
+}

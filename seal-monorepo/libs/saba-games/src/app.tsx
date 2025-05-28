@@ -49,8 +49,8 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc }: App
     return (
         <>
             <IframeContainer
-                // src={iframeSrc || 'http://localhost:4551'}
-                src={iframeSrc || 'https://l1-standalone-live-page-local1.lumigame.com'}
+                src={iframeSrc || 'http://localhost:4551'}
+                // src={iframeSrc || 'https://l1-standalone-live-page-local1.lumigame.com'}
                 token={token}
                 language={language}
                 renewToken={renewToken}
