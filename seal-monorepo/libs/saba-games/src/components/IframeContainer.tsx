@@ -51,7 +51,11 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         isVisible: false,
         totalStake: 0,
         betChoice: '',
-        namespace: ''
+        namespace: '',
+        position: {
+            top: 0,
+            left: 0
+        }
     });
 
     const handleConfirmBetMessage = useCallback((data: any) => {

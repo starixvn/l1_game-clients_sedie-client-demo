@@ -19,6 +19,10 @@ export const ConfirmBetPortal: React.FC<ConfirmBetPortalProps> = ({
         totalStake: 0,
         betChoice: '',
         namespace: '',
+        position: {
+            top: 0,
+            left: 0
+        }
     });
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
     const panelRef = useRef<HTMLDivElement>(null);
@@ -61,9 +65,11 @@ export const ConfirmBetPortal: React.FC<ConfirmBetPortalProps> = ({
             switch (event.data.type) {
                 case 'SHOW_CONFIRM_BET':
                     console.log('%c[PORTAL] Showing confirm bet', DEBUG_STYLE, event.data.payload);
+                    const { top = 0, left = 0 } = event.data.payload.position || {};
                     setConfirmBetState({
                         ...event.data.payload,
-                        isVisible: true
+                        isVisible: true,
+                        position: { top, left }
                     });
                     setIsVisible(true);
                     break;
@@ -111,11 +117,9 @@ export const ConfirmBetPortal: React.FC<ConfirmBetPortalProps> = ({
     console.log('%c[PORTAL] Rendering portal', DEBUG_STYLE);
     return createPortal(
         <div style={{
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
+            position: 'absolute',
+            top: `${confirmBetState.position.top}px`,
+            left: `${confirmBetState.position.left}px`,
             pointerEvents: 'auto',
             zIndex: 9999
         }}>

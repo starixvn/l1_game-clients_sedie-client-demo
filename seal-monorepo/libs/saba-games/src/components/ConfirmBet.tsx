@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import classNames from 'classnames';
-import './ConfirmBet.scss';
+import styles from './confirm-bet.module.scss';
 
 const DEBUG_STYLE = 'color: red; font-weight: bold;';
 
@@ -9,7 +9,7 @@ export interface ConfirmBetState {
     totalStake: number;
     betChoice: string;
     namespace: string;
-    position?: {
+    position: {
         top: number;
         left: number;
     };
@@ -77,82 +77,71 @@ export const ConfirmBet: React.FC<ConfirmBetProps> = ({
     });
 
     return (
-        <div className="seal-vg-sg-index" style={{
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            zIndex: 9999
-        }}>
+        <div className={styles.overlay}>
             <div
                 ref={panelRef}
-                className="overlay"
+                className={styles['confirm-bet']}
                 style={{
-                    pointerEvents: 'auto',
                     position: 'absolute',
                     top: confirmBetState.position?.top || '50%',
                     left: confirmBetState.position?.left || '50%',
                     transform: 'translate(-50%, -50%)'
                 }}
             >
-                <div className="c-modal">
-                    <div className="c-modal__heading">
-                        <i className="c-icon c-icon--info"></i>
-                        <div className="c-text" title="INFORMATION">
-                            INFORMATION
-                        </div>
+                <div className={styles.heading}>
+                    <i className="c-icon c-icon--info"></i>
+                    <div className="c-text" title="INFORMATION">
+                        INFORMATION
                     </div>
-                    <div className="c-modal__container">
-                        <div className="c-modal__content">
-                            <div className="c-modal__section padding-top-10">
-                                <div className="c-text-group">
+                </div>
+                <div className="c-modal__container">
+                    <div className="c-modal__content">
+                        <div className="c-modal__section padding-top-10">
+                            <div className={styles['bet-accepted']}>
+                                <span className="c-text-label">
+                                    BET ACCEPTED: {confirmBetState.betChoice}
+                                </span>
+                            </div>
+                            <div className={styles['betting-results']}>
+                                <div className={styles['betting-row']}>
                                     <span className="c-text-label">
-                                        BET ACCEPTED: {confirmBetState.betChoice}
+                                        TOTAL BETS
+                                    </span>
+                                    <span className="colon"> : </span>
+                                    <span className="c-text-value">&nbsp;1</span>
+                                </div>
+
+                                <div className={styles['betting-row']}>
+                                    <span className="c-text-label">
+                                        TOTAL STAKE
+                                    </span>
+                                    <span className="colon"> : </span>
+                                    <span className="c-text-value">
+                                        &nbsp;{totalStakeWithCommas}
                                     </span>
                                 </div>
-                                <div className="result-flex">
-                                    <div className="betting-row">
-                                        <span className="c-text-label">
-                                            TOTAL BETS
-                                        </span>
-                                        <span className="colon"> : </span>
-                                        <span className="c-text-value">&nbsp;1</span>
-                                    </div>
-
-                                    <div className="betting-row">
-                                        <span className="c-text-label">
-                                            TOTAL STAKE
-                                        </span>
-                                        <span className="colon"> : </span>
-                                        <span className="c-text-value">
-                                            &nbsp;{totalStakeWithCommas}
-                                        </span>
-                                    </div>
-                                </div>
-                                <label className="noti-label">
-                                    <input
-                                        id="notification"
-                                        className="noti-input"
-                                        type="checkbox"
-                                        onChange={handleCheckboxChange}
-                                        checked={turnOffNotification}
-                                    />
-                                    TURN OFF NOTIFICATION
-                                </label>
                             </div>
-                            <div className="c-btn-group">
-                                <div
-                                    tabIndex={0}
-                                    id="popup_confirm_button"
-                                    className="c-btn c-btn--primary confirm-btn"
-                                    title="OK"
-                                    onClick={handleClose}
-                                >
-                                    OK
-                                </div>
-                            </div>
+                            <label className={styles['noti-label']}>
+                                <input
+                                    id="notification"
+                                    className={styles['noti-input']}
+                                    type="checkbox"
+                                    onChange={handleCheckboxChange}
+                                    checked={turnOffNotification}
+                                />
+                                TURN OFF NOTIFICATION
+                            </label>
+                        </div>
+                        <div className="c-btn-group">
+                            <button
+                                tabIndex={0}
+                                id="popup_confirm_button"
+                                className={styles['confirm-btn']}
+                                title="OK"
+                                onClick={handleClose}
+                            >
+                                OK
+                            </button>
                         </div>
                     </div>
                 </div>

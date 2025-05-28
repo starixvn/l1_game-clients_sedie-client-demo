@@ -3,6 +3,7 @@ import { render } from "@sg/sg-observer";
 import React from 'react';
 
 import { IPropsObserver, IStateObserver, ObserverComponent } from "../observer-component/observer-component";
+import BetModalSuccess from "../bet-modal-success";
 
 const DEBUG_STYLE = 'color: red; font-weight: bold;';
 
@@ -26,7 +27,7 @@ export class ConfirmBet extends ObserverComponent<IPropsObserver, IConfirmBet> {
       totalStake: 0,
       validBet: {},
       betChoice: '',
-      turnOffNotification: sessionStorage.getItem(NOTIF_KEY) === 'true',
+      turnOffNotification: false,
       namespace: props.namespace,
     } as IConfirmBet;
 
@@ -59,7 +60,8 @@ export class ConfirmBet extends ObserverComponent<IPropsObserver, IConfirmBet> {
       console.log('%c[IFRAME] Checking notification setting:', DEBUG_STYLE, { isNotificationTurnedOff });
 
       if (isNotificationTurnedOff) {
-        console.log('%c[IFRAME] Notifications turned off, skipping confirm bet', DEBUG_STYLE);
+        console.log('%c[IFRAME] Notifications turned off, showing BetModalSuccess', DEBUG_STYLE);
+        this.setState({ totalStake: lastReceivedBet.value });
         return;
       }
 
@@ -128,8 +130,33 @@ export class ConfirmBet extends ObserverComponent<IPropsObserver, IConfirmBet> {
     });
   };
 
+  private shouldShowBetModalSuccess(): boolean {
+    const { validBet, totalStake } = this.state;
+    const isNotificationTurnedOff = sessionStorage.getItem(NOTIF_KEY) === 'true';
+
+    console.log('%c[IFRAME] Checking if should show BetModalSuccess:', DEBUG_STYLE, {
+      hasValidBet: !!validBet?.value,
+      totalStake,
+      isNotificationTurnedOff
+    });
+
+    return !!validBet?.value && isNotificationTurnedOff && totalStake > 0;
+  }
+
   render() {
-    // Don't render anything in the iframe
+    const { totalStake, validBet } = this.state;
+
+    if (!validBet?.value) {
+      console.log('%c[IFRAME] Not rendering - invalid bet', DEBUG_STYLE);
+      return <></>;
+    }
+
+    if (this.shouldShowBetModalSuccess()) {
+      console.log('%c[IFRAME] Rendering BetModalSuccess', DEBUG_STYLE, { totalStake });
+      return <BetModalSuccess totalStake={totalStake} />;
+    }
+
+    console.log('%c[IFRAME] Not rendering - waiting for parent window', DEBUG_STYLE);
     return <></>;
   }
 }
