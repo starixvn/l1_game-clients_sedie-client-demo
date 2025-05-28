@@ -38,7 +38,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     allowedOrigins = [
         'http://localhost:4200',
         'http://localhost:4551',
-        'https://l1-sedie-client-demo1.lumigame.com',
+        'https://l1-standalone-live-page-local1.lumigame.com',
         'https://l1-seal-live-page-client-demo1.lumigame.com'
     ]
 }) => {

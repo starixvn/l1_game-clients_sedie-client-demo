@@ -4,6 +4,7 @@ import React from 'react';
 export interface IPropsObserver {
     namespace: string;
     language?: string;
+    isShowBetSlip?: boolean;
 }
 export interface IStateObserver {
     dispose: (() => void) | null;

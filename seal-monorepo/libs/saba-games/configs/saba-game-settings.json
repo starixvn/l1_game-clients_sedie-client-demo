@@ -6,7 +6,7 @@
         "namespaces": [
             "SeDie"
         ],
-        "isVisible": false,
+        "isVisible": true,
         "durations": {
             "wholeRound": 39,
             "lockingBet": 5,
@@ -31,7 +31,7 @@
         "namespaces": [
             "FishPrawnCrab"
         ],
-        "isVisible": false,
+        "isVisible": true,
         "durations": {
             "wholeRound": 41,
             "lockingBet": 5,
@@ -57,7 +57,7 @@
         "namespaces": [
             "Baccarat"
         ],
-        "isVisible": false,
+        "isVisible": true,
         "durations": {
             "wholeRound": 46,
             "lockingBet": 3,
@@ -84,7 +84,7 @@
         "namespaces": [
             "VipSeDie"
         ],
-        "isVisible": true,
+        "isVisible": false,
         "durations": {
             "wholeRound": 39,
             "lockingBet": 5,
@@ -109,7 +109,7 @@
         "namespaces": [
             "UnbalancedBigSmall4"
         ],
-        "isVisible": true,
+        "isVisible": false,
         "durations": {
             "wholeRound": 40,
             "lockingBet": 5,
@@ -136,7 +136,7 @@
         "namespaces": [
             "ColorGame"
         ],
-        "isVisible": true,
+        "isVisible": false,
         "durations": {
             "wholeRound": 40,
             "lockingBet": 3,
@@ -162,7 +162,7 @@
         "namespaces": [
             "CoinToss"
         ],
-        "isVisible": true,
+        "isVisible": false,
         "durations": {
             "wholeRound": 29,
             "lockingBet": 3,

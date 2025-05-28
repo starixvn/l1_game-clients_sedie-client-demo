@@ -4,13 +4,13 @@ const { join } = require('path');
 
 module.exports = {
     output: {
-        path: join(__dirname, '../../dist/libs/saba-games'),
-        publicPath: '/saba-games/',
+        path: join(__dirname, '../../dist/libs/hot-league-wall'),
+        publicPath: '/hot-league-wall/',
     },
     devServer: {
-        port: 4200,
+        port: 4551,
         historyApiFallback: {
-            index: '/saba-games/index.html',
+            index: '/hot-league-wall/index.html',
         },
         headers: {
             'Access-Control-Allow-Origin': '*',
@@ -22,16 +22,16 @@ module.exports = {
             compiler: 'babel',
             main: './src/main.tsx',
             index: './preview-template/index.html',
-            baseHref: '/saba-games/',
+            baseHref: '/hot-league-wall/',
             assets: [
                 {
                     glob: '**/*',
-                    input: 'libs/saba-games/preview-template',
+                    input: 'libs/hot-league-wall/preview-template',
                     output: '/',
                 },
                 {
                     glob: '**/*',
-                    input: 'libs/saba-games/src/assets',
+                    input: 'libs/hot-league-wall/src/assets',
                     output: '/assets',
                 },
             ],

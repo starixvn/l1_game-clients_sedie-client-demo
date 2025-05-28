@@ -1,27 +1,24 @@
 {
-    "compilerOptions": {
-        "jsx": "react-jsx",
-        "allowJs": false,
-        "esModuleInterop": false,
-        "allowSyntheticDefaultImports": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "strict": true,
-        "noImplicitAny": false
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "allowJs": false,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "noImplicitAny": false
+  },
+  "files": [],
+  "include": [],
+  "types": ["reflect-metadata"],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
     },
-    "files": [],
-    "include": [],
-    "types": ["reflect-metadata"],
-    "references": [
-        {
-            "path": "./tsconfig.app.json"
-        },
-        {
-            "path": "./tsconfig.spec.json"
-        },
-        {
-            "path": "./tsconfig.storybook.json"
-        }
-    ],
-    "extends": "../../tsconfig.base.json"
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../../tsconfig.base.json"
 }

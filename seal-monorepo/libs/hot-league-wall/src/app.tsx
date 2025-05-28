@@ -5,7 +5,6 @@ import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
-import IframeContainer from './components/IframeContainer';
 
 interface AppProps extends AppContentProps {
     appEnv: string;
@@ -13,31 +12,24 @@ interface AppProps extends AppContentProps {
     language: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
-    iframeSrc?: string;
 }
 
 interface AppContentProps {
     token: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
-    iframeSrc?: string;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, iframeSrc }: AppProps) => {
+const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
-            <AppContent
-                token={token}
-                renewToken={renewToken}
-                updateBalanceCallback={updateBalanceCallback}
-                iframeSrc={iframeSrc}
-            />
+            <AppContent token={token} renewToken={renewToken} updateBalanceCallback={updateBalanceCallback} />
         </AppProvider>
     );
 };
 
-const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc }: AppContentProps) => {
-    const { language } = useAppContext();
+const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProps) => {
+    const { language, theme, isDarkMode } = useAppContext();
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -45,19 +37,23 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc }: App
         }
     }, [updateBalanceCallback]);
 
+    // Update theme and dark mode when they change
+    useEffect(() => {
+        console.log('AppContent theme', theme);
+        console.log('AppContent isDarkMode', isDarkMode);
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
+    }, [theme, isDarkMode]);
+
+    useEffect(() => {
+        console.log('AppContent language', language);
+    }, [language]);
+
     loadI18n(language);
     return (
-        <>
-            <IframeContainer
-                src={iframeSrc || 'http://localhost:4200'}
-                token={token}
-                language={language}
-                renewToken={renewToken}
-            />
-            <div data-react="true" style={{ width: '100%' }}>
-                {token && <Lobby token={token} language={language} renewToken={renewToken} />}
-            </div>
-        </>
+        <div data-react="true" style={{ width: '100%' }}>
+            {token && <Lobby token={token} language={language} renewToken={renewToken} />}
+        </div>
     );
 };
 

@@ -150,11 +150,11 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     setPanelId = (id: string) => {
-        // this.setState({ activePanelId: id });
+        this.setState({ activePanelId: id });
     };
 
     setShowBetPanel = (show: boolean) => {
-        // this.setState({ showBetPanel: show });
+        this.setState({ showBetPanel: show });
     };
 
     @render(Settlements.SettlementStatusStore, (store) => store.settlementStatus, {
@@ -247,16 +247,7 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     toggleStatistic() {
-        const newState = !this.state.isOpenStatistic;
-        this.setState({ isOpenStatistic: newState });
-
-        // Notify parent window about statistic toggle
-        if (window.parent && window.parent !== window) {
-            window.parent.postMessage({
-                type: 'TOGGLE_STATISTIC',
-                isOpen: newState
-            }, '*');
-        }
+        this.setState({ isOpenStatistic: !this.state.isOpenStatistic });
     }
 
     renderWaitingForNextRound() {
@@ -271,14 +262,14 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     resetBettingPanel = () => {
-        // this.setState({
-        //     activePanelId: null,
-        //     showBetPanel: false,
-        // });
+        this.setState({
+            activePanelId: null,
+            showBetPanel: false,
+        });
     };
 
     handleBetOption = () => {
-        // this.resetBettingPanel();
+        this.resetBettingPanel();
         this.setState({ isShowNextRoundMessage: true });
         setTimeout(() => {
             this.setState({ isShowNextRoundMessage: false });

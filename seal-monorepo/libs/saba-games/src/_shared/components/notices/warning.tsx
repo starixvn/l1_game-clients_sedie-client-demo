@@ -35,7 +35,6 @@ export default class Warning extends ObserverComponent<IPropsObserver, IWarningS
 
     @render(gc.Notices.NoticeStore, (store) => store.processingWarning, { fireImmediately: false })
     showProcessingWarning(processingWarning: gc.Notices.Warning) {
-        console.log(`showProcessingWarning ${processingWarning}`);
         this.addProcessingWarning(processingWarning);
     }
 

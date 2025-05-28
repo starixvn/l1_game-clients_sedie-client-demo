@@ -4,7 +4,7 @@ import { GameBaseProps } from './type';
 import { handle, render } from '@sg/sg-observer';
 import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import { StorageManager, localStorageKeys } from '../../utils/storage-manager';
-import { ILatestBetRecord } from '../bet-panel/bet-panel';
+import { ILatestBetRecord } from '../../types/betting';
 import AuthorizationHandler from '../../handlers/authorization-handler';
 
 export interface IGatewayGameBaseState extends IGameBaseState {
@@ -57,7 +57,7 @@ export default abstract class GatewayGameBase<P extends GameBaseProps, S extends
     }
 
     @handle(gc.Auth.AuthHandlers.Authorize, (handler) => handler.handleAutoGenerateName())
-    protected autoCreateNickname() {}
+    protected autoCreateNickname() { }
 
     @render(gc.GatewayConnection.GatewayConnectionStore, (store) => store.isConnected)
     handleConnectLiveGatewayForGame(isConnected: boolean) {
@@ -67,7 +67,7 @@ export default abstract class GatewayGameBase<P extends GameBaseProps, S extends
     }
 
     @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => handler.handleGateway())
-    connectLiveGateway() {}
+    connectLiveGateway() { }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
     handleJoinGame(isConnected: boolean) {
@@ -82,12 +82,12 @@ export default abstract class GatewayGameBase<P extends GameBaseProps, S extends
     }
 
     @handle(gc.Connection.ConnectionHandlers.SignInHandler)
-    signIn() {}
+    signIn() { }
 
     override handleConnected(signedIn: boolean) {
         signedIn && this.inGameLiveGateway();
     }
 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler, (handler) => handler.handleGateway())
-    inGameLiveGateway() {}
+    inGameLiveGateway() { }
 }

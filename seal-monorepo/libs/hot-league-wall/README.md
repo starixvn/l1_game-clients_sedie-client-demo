@@ -1,64 +1,52 @@
-# Hot League Wall
+# Sedie Client Demo
 
-This library was generated with [Nx](https://nx.dev).
 
-## Development Guide
+| Project | Node |
+|---------|------|
+| seal-monorepo/saba-games | v20.9.0 |
+| seal-monorepo | v18.20.2 |
 
-### Working Directory
+
+-   yarn install
+-   yarn run dev (SG/VG), or
+-   yarn run dev-gn (xD)
+
+## Demo page
+
+-   SG/VG : https://l1-sedie-client-demo1.lumigame.com/token
+-   xD: https://gn-core-client-demo.lumigame.com/token
+
 ```bash
-# Switch to working directory
-cd seal-monorepo 
+## 還原 npm registry
+## npm set registry https://registry.npmjs.org/
+npm set registry http://npm.lumigame.com
+yarn add @sg/sg-game-client
+yarn add @sg/sg-observer
+yarn add reflect-metadata
+yarn add mobx
+yarn add axios
 ```
 
-### Environment Setup
-```bash
-# Install dependencies
-npm install
 ```
+upgrade to 1.1.1
+[ O ] public
+[ O ] _shared
+[ O ] games
+[ O ] i18n
+[ O ] main.scss
+[] lobby
+[] main.scss , 
+[] root
 
-### Development Workflow
-1. Start Development Server
-```bash
-nx serve hot-league-wall
+[] vip-sedie header
+[] lobby scss
+
+
+
+
+* 目前每次重新載入，初始狀態都是 stopGameLoop -> 再切換到目前狀態(如 placingBet ...)
+* roundState: stopGameLoop , clientRoundId: 3575940
+* roundState: placingBet , clientRoundId: 3575941
+* 為了配合計時器同時切換狀態，更換 roundId 需要延遲兩秒
+* 只有當載入次數大於等於 2 時才延遲
 ```
-Development server will start at http://localhost:4201 (configured in webpack.dev.js)
-
-2. Code Linting
-```bash
-nx lint hot-league-wall
-```
-
-### Testing
-Run unit tests:
-```bash
-nx test hot-league-wall
-```
-
-Update test snapshots:
-```bash
-nx test hot-league-wall --update-snapshot
-```
-
-### Build & Deployment
-This library is part of the @seal-components package. To build the entire package can to found in [README.md](../../README.md) under `seal-monorepo`
-
-## Project Structure
-```
-hot-league-wall/
-├── src/                # Source code directory
-├── preview-template/   # Development preview template
-├── webpack.dev.js     # Webpack development configuration
-├── project.json       # Nx project configuration
-├── tsconfig.json      # TypeScript configuration
-└── README.md         # Project documentation
-```
-
-## Important Notes
-- Run tests and lint checks before committing
-- For any issues, refer to Nx documentation or contact team members
-- This library is built as part of @seal-components package
-
-## Related Documentation
-- [Nx Documentation](https://nx.dev)
-- [Jest Documentation](https://jestjs.io)
-- [@seal-components Documentation](../../README.md) 
