@@ -26,14 +26,43 @@ export class ConfirmBet extends ObserverComponent<IPropsObserver, IConfirmBet> {
       totalStake: 0,
       validBet: {},
       betChoice: '',
-      turnOffNotification: false,
+      turnOffNotification: sessionStorage.getItem(NOTIF_KEY) === 'true',
       namespace: props.namespace,
     } as IConfirmBet;
+
+    // Listen for messages from parent window
+    window.addEventListener('message', this.handleParentMessage);
   }
+
+  componentWillUnmount() {
+    window.removeEventListener('message', this.handleParentMessage);
+  }
+
+  private handleParentMessage = (event: MessageEvent) => {
+    if (event.data.type === 'HIDE_CONFIRM_BET') {
+      console.log('%c[IFRAME] Received HIDE_CONFIRM_BET with notification setting:', DEBUG_STYLE, event.data);
+
+      // Update notification setting
+      if (typeof event.data.turnOffNotification === 'boolean') {
+        console.log('%c[IFRAME] Updating notification setting:', DEBUG_STYLE, event.data.turnOffNotification);
+        sessionStorage.setItem(NOTIF_KEY, event.data.turnOffNotification ? 'true' : 'false');
+        this.setState({ turnOffNotification: event.data.turnOffNotification });
+      }
+    }
+  };
 
   @render(gc.Bet.BetStore, (store) => store.lastReceivedBet)
   setTotalStake(lastReceivedBet: gc.Bet.ILastReceivedBet) {
     if (lastReceivedBet) {
+      // Check if notifications are turned off
+      const isNotificationTurnedOff = sessionStorage.getItem(NOTIF_KEY) === 'true';
+      console.log('%c[IFRAME] Checking notification setting:', DEBUG_STYLE, { isNotificationTurnedOff });
+
+      if (isNotificationTurnedOff) {
+        console.log('%c[IFRAME] Notifications turned off, skipping confirm bet', DEBUG_STYLE);
+        return;
+      }
+
       console.log('%c[IFRAME] Sending SHOW_CONFIRM_BET message', DEBUG_STYLE, {
         totalStake: lastReceivedBet.value,
         betChoice: this.state.betChoice,

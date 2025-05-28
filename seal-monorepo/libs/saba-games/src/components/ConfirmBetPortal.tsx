@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ConfirmBet } from './ConfirmBet';
 import { ConfirmBetState } from './ConfirmBet';
@@ -22,6 +22,23 @@ export const ConfirmBetPortal: React.FC<ConfirmBetPortalProps> = ({
     });
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
     const panelRef = useRef<HTMLDivElement>(null);
+
+    const handleClose = useCallback((turnOffNotification: boolean) => {
+        console.log('%c[PORTAL] Closing confirm bet with notification setting:', DEBUG_STYLE, { turnOffNotification });
+
+        if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({
+                type: 'HIDE_CONFIRM_BET',
+                turnOffNotification
+            }, '*');
+        }
+
+        setConfirmBetState(prev => ({
+            ...prev,
+            isVisible: false
+        }));
+        setIsVisible(false);
+    }, [iframeRef]);
 
     useEffect(() => {
         console.log('%c[PORTAL] Initializing portal container', DEBUG_STYLE);
@@ -107,6 +124,7 @@ export const ConfirmBetPortal: React.FC<ConfirmBetPortalProps> = ({
                 isPanelVisible={isVisible}
                 panelRef={panelRef}
                 iframeRef={iframeRef}
+                onClose={handleClose}
             />
         </div>,
         portalContainerRef.current

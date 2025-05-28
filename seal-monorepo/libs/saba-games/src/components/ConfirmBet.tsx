@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import classNames from 'classnames';
 import './ConfirmBet.scss';
 
+const DEBUG_STYLE = 'color: red; font-weight: bold;';
+
 export interface ConfirmBetState {
     isVisible: boolean;
     totalStake: number;
@@ -18,6 +20,7 @@ interface ConfirmBetProps {
     isPanelVisible: boolean;
     panelRef: React.RefObject<HTMLDivElement>;
     iframeRef: React.RefObject<HTMLIFrameElement>;
+    onClose: (turnOffNotification: boolean) => void;
 }
 
 const NOTIF_KEY = 'turnOffNotification';
@@ -26,34 +29,52 @@ export const ConfirmBet: React.FC<ConfirmBetProps> = ({
     confirmBetState,
     isPanelVisible,
     panelRef,
-    iframeRef
+    iframeRef,
+    onClose
 }) => {
     const [turnOffNotification, setTurnOffNotification] = useState(
         sessionStorage.getItem(NOTIF_KEY) === 'true'
     );
 
     useEffect(() => {
+        console.log('%c[CONFIRM_BET] Component mounted', DEBUG_STYLE);
         setTurnOffNotification(sessionStorage.getItem(NOTIF_KEY) === 'true');
     }, []);
 
-    if (!isPanelVisible || !confirmBetState.isVisible) return null;
+    useEffect(() => {
+        console.log('%c[CONFIRM_BET] Props changed', DEBUG_STYLE, {
+            isPanelVisible,
+            confirmBetState
+        });
+    }, [isPanelVisible, confirmBetState]);
+
+    if (!isPanelVisible || !confirmBetState.isVisible) {
+        console.log('%c[CONFIRM_BET] Not rendering', DEBUG_STYLE, {
+            isPanelVisible,
+            isVisible: confirmBetState.isVisible
+        });
+        return null;
+    }
 
     const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const isChecked = e.target.checked;
+        console.log('%c[CONFIRM_BET] Notification setting changed', DEBUG_STYLE, { isChecked });
         sessionStorage.setItem(NOTIF_KEY, isChecked ? 'true' : 'false');
         setTurnOffNotification(isChecked);
     };
 
     const handleClose = useCallback(() => {
-        if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({
-                type: 'HIDE_CONFIRM_BET'
-            }, '*');
-        }
-    }, [iframeRef]);
+        console.log('%c[CONFIRM_BET] Closing modal with notification setting:', DEBUG_STYLE, { turnOffNotification });
+        onClose(turnOffNotification);
+    }, [onClose, turnOffNotification]);
 
     const addCommas = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     const totalStakeWithCommas = addCommas(confirmBetState.totalStake);
+
+    console.log('%c[CONFIRM_BET] Rendering modal', DEBUG_STYLE, {
+        totalStake: totalStakeWithCommas,
+        betChoice: confirmBetState.betChoice
+    });
 
     return (
         <div className="seal-vg-sg-index" style={{
