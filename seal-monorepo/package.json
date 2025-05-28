@@ -4,7 +4,9 @@
   "license": "MIT",
   "scripts": {
     "run-mono-saba-games": "nx serve saba-games",
+    "run-mono-saba-games-standalone": "nx serve saba-games-standalone",
     "build-mono-saba-games": "cd libs/saba-games && webpack-cli build --node-env=production --config=webpack.config.js",
+    "build-mono-saba-games-standalone": "cd libs/saba-games-standalone && webpack-cli build --node-env=production --config=webpack.config.js",
     "build-saba-games": "nx build saba-games",
     "build-saba-games:dev": "nx build saba-games --configuration=development",
     "serve-dist-saba-games": "cd dist/libs/saba-games && npx serve . -s -p 3000 -C",
@@ -13,7 +15,10 @@
     "test-coverage": "nx test saba-games --coverage",
     "test-saba-games": "nx test saba-games",
     "test-saba-games:watch": "nx test saba-games --watch",
-    "test-saba-games:debug": "nx test saba-games --runInBand"
+    "test-saba-games:debug": "nx test saba-games --runInBand",
+    "test-saba-games-standalone": "nx test saba-games-standalone",
+    "test-saba-games-standalone:watch": "nx test saba-games-standalone --watch",
+    "test-saba-games-standalone:debug": "nx test saba-games-standalone --runInBand"
   },
   "private": true,
   "devDependencies": {

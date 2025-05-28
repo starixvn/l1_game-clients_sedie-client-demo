@@ -8,7 +8,7 @@ const getPreviewAssets = (isDev) => {
     return [
         {
             glob: '**/*',
-            input: 'libs/hot-league-wall/preview-template',
+            input: 'libs/saba-games/preview-template',
             output: '/',
         },
     ];
@@ -16,7 +16,7 @@ const getPreviewAssets = (isDev) => {
 
 module.exports = {
     output: {
-        path: join(__dirname, '../../dist/libs/hot-league-wall'),
+        path: join(__dirname, '../../dist/libs/saba-games'),
     },
     devServer: {
         port: 4201,
@@ -32,7 +32,7 @@ module.exports = {
                 ...getPreviewAssets(process.env.NODE_ENV === 'development'),
                 {
                     glob: '**/*',
-                    input: 'libs/hot-league-wall/src/assets',
+                    input: 'libs/saba-games/src/assets',
                     output: '/assets',
                 },
             ],

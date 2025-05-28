@@ -1,13 +1,13 @@
 {
-  "name": "hot-league-wall",
+  "name": "saba-games",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/hot-league-wall/src",
+  "sourceRoot": "libs/saba-games/src",
   "projectType": "library",
   "tags": [],
   "targets": {
     "serve": {
       "options": {
-        "cwd": "libs/hot-league-wall",
+        "cwd": "libs/saba-games",
         "args": [
           "--node-env=development",
           "--config=webpack.dev.js"
@@ -19,7 +19,7 @@
     },
     "build": {
       "options": {
-        "cwd": "libs/hot-league-wall",
+        "cwd": "libs/saba-games",
         "args": [
           "--node-env=development",
           "--config=webpack.config.js"
@@ -40,7 +40,7 @@
         }
       ],
       "outputs": [
-        "{workspaceRoot}/dist\\libs\\hot-league-wall"
+        "{workspaceRoot}/dist\\libs\\saba-games"
       ],
       "executor": "nx:run-commands",
       "configurations": {
@@ -57,7 +57,7 @@
     "lint": {
       "cache": true,
       "options": {
-        "cwd": "libs/hot-league-wall",
+        "cwd": "libs/saba-games",
         "command": "eslint ."
       },
       "inputs": [
@@ -79,7 +79,7 @@
         "{workspaceRoot}/coverage/{projectRoot}"
       ],
       "options": {
-        "jestConfig": "libs/hot-league-wall/jest.config.ts"
+        "jestConfig": "libs/saba-games/jest.config.ts"
       }
     }
   }

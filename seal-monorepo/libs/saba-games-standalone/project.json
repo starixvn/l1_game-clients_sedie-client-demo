@@ -1,60 +1,76 @@
 {
   "name": "saba-games-standalone",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/saba-games-standalone/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": [
-        "{options.outputPath}"
-      ],
-      "defaultConfiguration": "production",
-      "options": {
-        "target": "node",
-        "compiler": "tsc",
-        "outputPath": "dist/libs/saba-games-standalone",
-        "main": "libs/saba-games-standalone/src/main.tsx",
-        "tsConfig": "libs/saba-games-standalone/tsconfig.app.json",
-        "assets": [
-          "libs/saba-games-standalone/src/assets"
-        ],
-        "isolatedConfig": true,
-        "webpackConfig": "libs/saba-games-standalone/webpack.config.js"
-      },
-      "configurations": {
-        "development": {
-          "mode": "development"
-        },
-        "production": {
-          "mode": "production",
-          "optimization": true,
-          "extractLicenses": true,
-          "inspect": false
-        }
-      }
-    },
     "serve": {
-      "executor": "@nx/webpack:webpack",
-      "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "saba-games-standalone:build",
-        "hmr": true
+        "cwd": "libs/saba-games-standalone",
+        "args": [
+          "--node-env=development",
+          "--config=webpack.dev.js"
+        ],
+        "command": "webpack-cli serve"
       },
+      "executor": "nx:run-commands",
+      "configurations": {}
+    },
+    "build": {
+      "options": {
+        "cwd": "libs/saba-games-standalone",
+        "args": [
+          "--node-env=development",
+          "--config=webpack.config.js"
+        ],
+        "command": "webpack-cli build"
+      },
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "externalDependencies": [
+            "webpack-cli"
+          ]
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist\\libs\\saba-games-standalone"
+      ],
+      "executor": "nx:run-commands",
       "configurations": {
         "development": {
-          "buildTarget": "saba-games-standalone:build:development"
-        },
-        "production": {
-          "buildTarget": "saba-games-standalone:build:production"
+          "options": {
+            "args": [
+              "--node-env=development",
+              "--config=webpack.dev.js"
+            ]
+          }
         }
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "cache": true,
+      "options": {
+        "cwd": "libs/saba-games-standalone",
+        "command": "eslint ."
+      },
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": [
+            "eslint"
+          ]
+        }
+      ],
+      "executor": "nx:run-commands",
+      "configurations": {}
     },
     "test": {
       "executor": "@nx/jest:jest",
@@ -62,14 +78,7 @@
         "{workspaceRoot}/coverage/{projectRoot}"
       ],
       "options": {
-        "jestConfig": "libs/saba-games-standalone/jest.config.ts",
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
+        "jestConfig": "libs/saba-games-standalone/jest.config.ts"
       }
     }
   },

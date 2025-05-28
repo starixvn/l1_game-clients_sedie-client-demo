@@ -1,47 +1,52 @@
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
 const { join } = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
+const getPreviewAssets = (isDev) => {
+    if (!isDev) return [];
+
+    return [
+        {
+            glob: '**/*',
+            input: 'libs/saba-games-standalone/preview-template',
+            output: '/',
+        },
+    ];
+};
 
 module.exports = {
-    mode: 'production',
-    entry: {
-        main: join(__dirname, 'src/main.tsx'),
-    },
     output: {
         path: join(__dirname, '../../dist/libs/saba-games-standalone'),
-        filename: '[name].[contenthash].js',
     },
-    module: {
-        rules: [
-            {
-                test: /\.(ts|tsx)$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: 'babel-loader',
-                },
-            },
-            {
-                test: /\.(png|jpg|gif|svg)$/,
-                type: 'asset/resource',
-            },
-        ],
-    },
-    resolve: {
-        extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    devServer: {
+        port: 4200,
+        historyApiFallback: true,
     },
     plugins: [
-        new CleanWebpackPlugin(),
-        new HtmlWebpackPlugin({
-            template: join(__dirname, 'preview-template/index.html'),
-        }),
-        new CopyPlugin({
-            patterns: [
+        new NxWebpackPlugin({
+            tsConfig: './tsconfig.app.json',
+            compiler: 'babel',
+            main: './src/main.tsx',
+            index: process.env.NODE_ENV === 'development' ? './preview-template/index.html' : './src/index.html',
+            assets: [
+                ...getPreviewAssets(process.env.NODE_ENV === 'development'),
                 {
-                    from: 'src/assets',
-                    to: 'assets',
+                    glob: '**/*',
+                    input: 'libs/saba-games-standalone/src/assets',
+                    output: '/assets',
                 },
             ],
+
+            styles: process.env.NODE_ENV === 'development' ? ['./preview-template/styles.scss'] : [],
+            outputHashing: 'all',
+            optimization: process.env.NODE_ENV === 'production',
+            sourceMap: false,
+        }),
+
+        new NxReactWebpackPlugin({
+            // Uncomment this line if you don't want to use SVGR
+            // See: https://react-svgr.com/
+            svgr: true,
         }),
     ],
 };
