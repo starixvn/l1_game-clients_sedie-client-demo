@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { BetPanel } from './BetPanel';
-import { BetPanelState } from './BetPanel';
+import { BetPanel } from '.';
+import { BetPanelState } from '.';
 
 interface BettingPanelPortalProps {
     betPanelState: BetPanelState;

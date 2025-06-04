@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ConfirmBet } from './ConfirmBet';
-import { ConfirmBetState } from './ConfirmBet';
+import { ConfirmBet } from '.';
+import { ConfirmBetState } from '.';
 
 const DEBUG_STYLE = 'color: red; font-weight: bold;';
 

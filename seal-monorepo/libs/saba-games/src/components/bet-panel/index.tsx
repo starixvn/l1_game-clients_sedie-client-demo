@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import classNames from 'classnames';
-import BettingChips from './BettingChips';
-import './BetPanel.scss';
+import BettingChips from '../betting-chips';
+import './bet-panel.scss';
 
 export interface BetPanelState {
     isShowBetSlip: boolean;

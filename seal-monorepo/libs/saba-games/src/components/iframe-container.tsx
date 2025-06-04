@@ -1,9 +1,9 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { useIframeHeight } from '../hooks/useIframeHeight';
-import { useBettingPanel } from '../hooks/useBettingPanel';
-import { BettingPanelPortal } from './BettingPanelPortal';
-import { ConfirmBetPortal } from './ConfirmBetPortal';
-import { ConfirmBetState } from './ConfirmBet';
+import { useIframeHeight } from '../hooks/use-iframe-height';
+import { useBettingPanel } from '../hooks/use-betting-panel';
+import { BettingPanelPortal } from './bet-panel/betting-panel-portal';
+import { ConfirmBetPortal } from './confirm-bet/confirm-bet-portal';
+import { ConfirmBetState } from './confirm-bet';
 
 interface IframeContainerProps {
     src: string;

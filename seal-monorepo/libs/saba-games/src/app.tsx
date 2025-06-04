@@ -4,7 +4,7 @@ import { loadI18n } from './i18n';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
-import IframeContainer from './components/IframeContainer';
+import IframeContainer from './components/iframe-container';
 
 interface AppProps extends AppContentProps {
     appEnv: string;

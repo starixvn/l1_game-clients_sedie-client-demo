@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import classNames from 'classnames';
 import styles from './confirm-bet.module.scss';
 
 const DEBUG_STYLE = 'color: red; font-weight: bold;';
