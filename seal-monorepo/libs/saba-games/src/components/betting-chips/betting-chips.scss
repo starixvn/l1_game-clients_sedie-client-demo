@@ -7,7 +7,7 @@
             position: relative;
             width: 55px;
             height: 55px;
-            background-image: url(../assets/chip/Chip-1.svg);
+            background-image: url(../../assets/chip/Chip-1.svg);
             background-size: 106% 106%;
             background-position: center;
             background-repeat: no-repeat;
@@ -21,15 +21,15 @@
             }
 
             &:nth-child(2) {
-                background-image: url(../assets/chip/Chip-2.svg);
+                background-image: url(../../assets/chip/Chip-2.svg);
             }
 
             &:nth-child(3) {
-                background-image: url(../assets/chip/Chip-3.svg);
+                background-image: url(../../assets/chip/Chip-3.svg);
             }
 
             &:last-child {
-                background-image: url(../assets/chip/ChipMax.svg);
+                background-image: url(../../assets/chip/ChipMax.svg);
 
                 .c-text {
                     top: 46%;
