@@ -85,6 +85,7 @@ export const getSiteConfig = (gameId: number) => {
         subGuideDomain: '',
         subDirectory: appSettings.subDirectory,
         userServicePath: appSettings.userServicePath,
+        appType: appSettings.appType,
     };
 
     return config;

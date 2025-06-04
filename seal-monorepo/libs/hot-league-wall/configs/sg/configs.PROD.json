@@ -12,5 +12,6 @@
     "enableMsgpackParserOnNotification": true,
     "enableSourceMap": false,
     "defaultGameId": 118,
-    "userServicePath": "livepageuser"
+    "userServicePath": "livepageuser",
+    "appType": 8
 }

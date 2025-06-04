@@ -18,5 +18,6 @@
         "operatorToken": "ONEworks1Token"
     },
     "defaultGameId": 118,
-    "userServicePath": "livepageuser"
+    "userServicePath": "livepageuser",
+    "appType": 8
 }

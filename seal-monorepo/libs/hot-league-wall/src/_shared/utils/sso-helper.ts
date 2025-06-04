@@ -20,7 +20,7 @@ export const requestSSO = async (gameId = 0) => {
     const playerId = Number(searchParams.get('playerId')) || randomPlayerId;
     const currency = searchParams.get('currency');
 
-    const appType = 6;
+
     const playerBalance = 10000;
 
     //temp hard code to get token
@@ -46,7 +46,7 @@ export const requestSSO = async (gameId = 0) => {
         operatorToken,
         gameId,
         domain: 'example.com',
-        appType,
+        appType: appSettings.appType,
         isCash: true,
         partner: '1W',
     };
