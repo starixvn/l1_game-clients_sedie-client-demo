@@ -1,7 +1,6 @@
 import './styles/main.scss';
 import './_shared/utils/string-helper';
 import { loadI18n } from './i18n';
-import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
@@ -49,15 +48,12 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc }: App
     return (
         <>
             <IframeContainer
-                // src={iframeSrc || 'http://localhost:4551'}
-                src={iframeSrc || 'https://l1-standalone-live-page-local1.lumigame.com'}
+                src={iframeSrc || 'http://localhost:4551'}
+                // src={iframeSrc || 'https://l1-standalone-live-page-local1.lumigame.com'}
                 token={token}
                 language={language}
                 renewToken={renewToken}
             />
-            <div data-react="true" style={{ width: '100%' }}>
-                {token && <Lobby token={token} language={language} renewToken={renewToken} />}
-            </div>
         </>
     );
 };

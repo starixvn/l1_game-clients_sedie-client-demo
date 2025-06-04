@@ -6,7 +6,6 @@ import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import DiceDemo from './_shared/components/color-game-dice/dice-demo';
 
 declare global {
     interface Window {
@@ -220,7 +219,6 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
             <div ref={contentRef}>
                 <ProviderSetDropDown />
                 <Routes>
-                    <Route path="/color-games-demo" element={<DiceDemo />} />
                     <Route path="*" element={
                         <App
                             appEnv={appEnv}

@@ -1,1 +1,0 @@
-export {default as CoinTossScoreBoard} from "./coin-toss-scoreboard";

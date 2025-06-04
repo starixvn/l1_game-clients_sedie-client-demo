@@ -12,10 +12,4 @@ const numberWithCommas = (number: number, toFixed = 2, minimumFractionDigits = 0
     return number.toLocaleString('en-US', options);
 };
 
-
-const getRandomDiceNumbers = () => Array.from({ length: 3 }, () => Math.floor(Math.random() * 6) + 1);
-
-const calculateTotalDiceNumber = (diceNumbers: number[]) => diceNumbers.reduce((acc, num) => acc + num, 0);
-
-
-export { formatOdds, getRandomDiceNumbers, calculateTotalDiceNumber };
+export { formatOdds };
