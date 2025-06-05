@@ -54,15 +54,17 @@ The following diagram illustrates the essential communication between the Member
 
 ```mermaid
 flowchart TD
-    subgraph Membersite Monorepo
+    subgraph Membersite_Monorepo
         MembersiteLivePage[Membersite \nLive Page\nHost App]
         SabaGamesAdapter[saba-games Adapter]
+        SabaGamesComponents["@components (bet-panel, confirm-bet, betting-chips, iframe-container, ...)"]
         IframeContainer[iframe-container-tsx]
         MembersiteLivePage --> SabaGamesAdapter
-        SabaGamesAdapter --> IframeContainer
+        SabaGamesAdapter --> SabaGamesComponents
+        SabaGamesComponents --> IframeContainer
     end
 
-    subgraph SabaGames Standalone Repo
+    subgraph SabaGames_Standalone_Repo
         SabaGamesStandalone[saba-games-standalone iframe]
         BetOption[bet-option]
         SabaGamesStandalone --> BetOption
@@ -76,7 +78,8 @@ flowchart TD
 **Flow Description:**
 
 -   User actions in the iframe (bet-option) send encrypted messages to the Membersite Live Page using `window.parent.postMessage`.
--   The Membersite Live Page (via the adapter and iframe-container) can send encrypted messages back to the iframe using `postMessage`, which are handled by listeners inside the iframe.
+-   The Membersite Live Page (via the adapter, @components, and iframe-container) can send encrypted messages back to the iframe using `postMessage`, which are handled by listeners inside the iframe.
+-   `@components` includes UI and logic for overlays, betting panels, confirmation dialogs, and the iframe-container itself, all orchestrated by the adapter.
 
 ## Communication Protocol
 
