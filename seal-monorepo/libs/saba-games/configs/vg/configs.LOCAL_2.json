@@ -19,6 +19,6 @@
     },
     "defaultGameId": 2,
     "userServicePath": "livepageuser",
-    "standaloneUrl": "http://localhost:4551",
+    "standaloneUrl": "https://l2-standalone-live-page-local2.lumigame.com",
     "encryptionKey": "development-key"
 }

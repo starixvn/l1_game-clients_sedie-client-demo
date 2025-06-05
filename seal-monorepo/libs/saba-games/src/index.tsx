@@ -26,7 +26,7 @@ const SabaGamesGroup = ({
     siteId = '',
     language = 'en',
     updateBalanceCallback = null,
-    encryptionKey = process.env.REACT_APP_ENCRYPTION_KEY || 'development-key'
+    encryptionKey = appSettings.encryptionKey || 'development-key'
 }) => {
     const platform = PLATFORM_TYPE_MAPPING[platformType] || '';
     useSentryInit({ siteId, appEnv });

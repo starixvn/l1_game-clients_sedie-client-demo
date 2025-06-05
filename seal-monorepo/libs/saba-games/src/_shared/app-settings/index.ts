@@ -1,6 +1,6 @@
 import * as gc from '@sg/sg-game-client';
 
-import SG_LOCAL_CONFIG from '../../../configs/configs.json';
+import SG_LOCAL_CONFIG from '../../../configs/sg/configs.LOCAL_1.json';
 import SG_SIT_CONFIG from '../../../configs/sg/configs.SIT.json';
 import SG_UAT_CONFIG from '../../../configs/sg/configs.UAT.json';
 import SG_PROD_CONFIG from '../../../configs/sg/configs.PROD.json';
