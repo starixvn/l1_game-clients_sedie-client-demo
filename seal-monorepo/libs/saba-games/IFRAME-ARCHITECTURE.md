@@ -10,6 +10,7 @@ graph TD;
   SabaGamesAdapter -->|Renders| IframeContainer["iframe-container.tsx"]
   IframeContainer -->|Loads| SabaGamesStandalone["@saba-games-standalone (iframe, separate repo)"]
   MembersiteLivePage <--> |postMessage| SabaGamesStandalone
+  SabaGamesStandalone -->|postMessage| MembersiteLivePage
 ```
 
 ## Overview

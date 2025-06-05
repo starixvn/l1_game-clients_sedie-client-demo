@@ -4,12 +4,14 @@ import { useBettingPanel } from '../hooks/use-betting-panel';
 import { BettingPanelPortal } from './bet-panel/betting-panel-portal';
 import { ConfirmBetPortal } from './confirm-bet/confirm-bet-portal';
 import { ConfirmBetState } from './confirm-bet';
+import { MessageEncryption, EncryptedMessage } from '../utils/encryption';
 
 interface IframeContainerProps {
     src: string;
     token: string;
     language: string;
     renewToken?: Function;
+    encryptionKey: string;
     allowedOrigins?: string[];
 }
 
@@ -37,6 +39,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     token,
     language,
     renewToken,
+    encryptionKey,
     allowedOrigins = [
         'http://localhost:4200',
         'http://localhost:4551',
@@ -57,6 +60,15 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
             left: 0
         }
     });
+
+    const messageEncryption = new MessageEncryption(encryptionKey);
+
+    const sendEncryptedMessage = useCallback((data: any) => {
+        if (!iframeRef.current?.contentWindow) return;
+
+        const encryptedMessage = messageEncryption.encrypt(data);
+        iframeRef.current.contentWindow.postMessage(encryptedMessage, '*');
+    }, [messageEncryption]);
 
     const handleConfirmBetMessage = useCallback((data: any) => {
         console.log('%c[IFRAME_CONTAINER] Received confirm bet message:', 'color: red; font-weight: bold;', data);
@@ -80,22 +92,16 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     }, []);
 
     const handleMessage = useCallback((event: MessageEvent) => {
-        // Log the actual origin for debugging
-        console.log('%c[IFRAME_CONTAINER] Received message from origin:', 'color: red; font-weight: bold;', event.origin);
-        console.log('%c[IFRAME_CONTAINER] Allowed origins:', 'color: red; font-weight: bold;', allowedOrigins);
-
-        // Remove trailing slashes and normalize the origin
-        const normalizedOrigin = event.origin.replace(/\/$/, '');
-
-        // Strict origin validation
-        if (!allowedOrigins.includes(normalizedOrigin)) {
-            console.warn(`Blocked message from unauthorized origin: ${event.origin}`);
-            console.warn(`Normalized origin: ${normalizedOrigin}`);
-            return;
-        }
-
         try {
-            const data = event.data;
+            // Validate and decrypt the message
+            const encryptedMessage = event.data as EncryptedMessage;
+            if (!messageEncryption.validateMessage(encryptedMessage)) {
+                console.warn('Received invalid encrypted message');
+                return;
+            }
+
+            const data = messageEncryption.decrypt(encryptedMessage);
+
             // Handle height update message
             handleHeightMessage(data);
 
@@ -113,23 +119,24 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
-    }, [handleHeightMessage, handleBettingMessage, handleConfirmBetMessage, allowedOrigins]);
+    }, [handleHeightMessage, handleBettingMessage, handleConfirmBetMessage, messageEncryption]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
         console.log('Iframe loaded from src:', src);
 
-        // Check if iframe is from same origin
-        const isSameOrigin = isSameOriginFrame(iframeRef.current);
-        console.log('Is same origin iframe:', isSameOrigin);
+        // Send initial configuration to iframe
+        sendEncryptedMessage({
+            type: 'INIT_CONFIG',
+            payload: {
+                token,
+                language
+            }
+        });
 
-        if (isSameOrigin) {
-            // Only request height if same origin
-            setTimeout(() => requestIframeHeight(iframeRef.current), 500);
-        } else {
-            console.warn('Cross-origin iframe detected. Height adjustment may be limited.');
-        }
-    }, [requestIframeHeight, src]);
+        // Request initial height
+        setTimeout(() => requestIframeHeight(iframeRef.current), 500);
+    }, [requestIframeHeight, src, token, language, sendEncryptedMessage]);
 
     // Add effect to check iframe origin on mount and src change
     useEffect(() => {
@@ -185,6 +192,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                         iframeRef={iframeRef}
                     />
                 )}
+
                 <ConfirmBetPortal
                     iframeRef={iframeRef}
                 />
