@@ -2,11 +2,11 @@
 
 ## Overview Diagram
 
-This diagram provides a high-level overview of the architecture, showing the relationship between the Membersite Live Page (host app), the @saba-games (Adapter), the iframe container, and the standalone client.
+This diagram provides a high-level overview of the architecture, showing the relationship between the Membersite Live Page (host app), the @saba-games-mono-repo (Adapter), the iframe container, and the standalone client (@saba-games-standalone).
 
 ```mermaid
 graph TD;
-  MembersiteLivePage["Membersite Live Page (Host App)"] -->|Imports| SabaGamesAdapter["@saba-games (Adapter)\n(current @saba-games in membersite monorepo)"]
+  MembersiteLivePage["Membersite Live Page (Host App)"] -->|Imports| SabaGamesAdapter["@saba-games-mono-repo (Adapter) (current @saba-games in membersite monorepo)"]
   SabaGamesAdapter -->|Renders| IframeContainer["iframe-container.tsx"]
   IframeContainer -->|Loads| SabaGamesStandalone["@saba-games-standalone (iframe, separate repo)"]
   MembersiteLivePage <--> |postMessage| SabaGamesStandalone
@@ -17,13 +17,13 @@ graph TD;
 The Saba Games project is split across two repositories:
 
 -   **@saba-games-standalone** (Separate Repository): A standalone, self-contained game client hosted on its own domain. It exposes the full game UI and logic, designed to be embedded via an iframe. Repository URL: https://git3.nexdev.net/l1/game-clients/standalone-saba-games-live-page
--   **@saba-games (Adapter)** (This Repository): The current `@saba-games` in the membersite monorepo, now serves as an adapter package that loads the standalone client in an iframe and provides additional integration components and logic for the Membersite Live Page.
+-   **@saba-games-mono-repo (Adapter)** (This Repository): The current `@saba-games` in the membersite monorepo, now serves as an adapter package that loads the standalone client in an iframe and provides additional integration components and logic for the Membersite Live Page.
 
 This separation allows for independent development, deployment, and versioning, as well as easier integration with multiple host platforms.
 
 ## What is the Adapter?
 
-The **@saba-games (Adapter)** acts as a bridge between the Membersite Live Page and the standalone game client. Its responsibilities include:
+The **@saba-games-mono-repo (Adapter)** acts as a bridge between the Membersite Live Page and the standalone game client. Its responsibilities include:
 
 -   Providing React components (such as `iframe-container.tsx`) to embed the standalone client via iframe.
 -   Managing communication between the host and the iframe using `postMessage`.
@@ -32,7 +32,7 @@ The **@saba-games (Adapter)** acts as a bridge between the Membersite Live Page 
 
 ## Detailed Architecture
 
-### @saba-games (Adapter, This Repository)
+### @saba-games-mono-repo (Adapter, This Repository)
 
 -   **Purpose:** Provides React components and utilities to embed and interact with the standalone client.
 -   **Key Component:** `iframe-container.tsx` – loads the standalone client in an iframe and manages communication.
@@ -53,16 +53,16 @@ The following diagram illustrates the essential communication between the Member
 
 ```mermaid
 flowchart TD
-    subgraph MembersiteMonorepo
-        MembersiteLivePage[Membersite Live Page\nHost App]
+    subgraph Membersite Monorepo
+        MembersiteLivePage[Membersite \nLive Page\nHost App]
         SabaGamesAdapter[saba-games Adapter]
         IframeContainer[iframe-container-tsx]
         MembersiteLivePage --> SabaGamesAdapter
         SabaGamesAdapter --> IframeContainer
     end
 
-    subgraph SabaGamesStandaloneRepo
-        SabaGamesStandalone[saba-games-standalone\niframe]
+    subgraph SabaGames Standalone Repo
+        SabaGamesStandalone[saba-games-standalone iframe]
         BetOption[bet-option]
         SabaGamesStandalone --> BetOption
     end
