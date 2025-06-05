@@ -1,1 +1,0 @@
-export { ColorGameResultHistory } from './color-game-result-history'; 

@@ -1,1 +1,0 @@
-export { default as CoinTossResultHistory } from "./coin-toss-result-history"; 

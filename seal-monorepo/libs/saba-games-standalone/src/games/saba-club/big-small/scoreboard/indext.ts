@@ -1,1 +1,0 @@
-export {default as BigSmallScoreBoard} from "./big-small-scoreboard";

@@ -1,1 +1,0 @@
-export { default as ColorGameScoreBoard } from './color-game-scoreboard'; 
