@@ -5,6 +5,7 @@ import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
 import IframeContainer from './components/iframe-container';
+import { appSettings } from './_shared/app-settings/vgaming-index';
 
 interface AppProps extends AppContentProps {
     appEnv: string;
@@ -13,6 +14,7 @@ interface AppProps extends AppContentProps {
     renewToken?: Function;
     updateBalanceCallback?: void | null;
     iframeSrc?: string;
+    encryptionKey: string;
 }
 
 interface AppContentProps {
@@ -20,9 +22,10 @@ interface AppContentProps {
     renewToken?: Function;
     updateBalanceCallback?: void | null;
     iframeSrc?: string;
+    encryptionKey: string;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, iframeSrc }: AppProps) => {
+const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, iframeSrc, encryptionKey }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
             <AppContent
@@ -30,12 +33,13 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
                 renewToken={renewToken}
                 updateBalanceCallback={updateBalanceCallback}
                 iframeSrc={iframeSrc}
+                encryptionKey={encryptionKey}
             />
         </AppProvider>
     );
 };
 
-const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc }: AppContentProps) => {
+const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc, encryptionKey }: AppContentProps) => {
     const { language } = useAppContext();
 
     useEffect(() => {
@@ -48,11 +52,11 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc }: App
     return (
         <>
             <IframeContainer
-                src={iframeSrc || 'http://localhost:4551'}
-                // src={iframeSrc || 'https://l1-standalone-live-page-local1.lumigame.com'}
+                src={appSettings.standaloneUrl}
                 token={token}
                 language={language}
                 renewToken={renewToken}
+                encryptionKey={encryptionKey}
             />
         </>
     );

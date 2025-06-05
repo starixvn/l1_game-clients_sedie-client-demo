@@ -6,6 +6,7 @@ import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { appSettings } from './_shared/app-settings/vgaming-index';
 
 declare global {
     interface Window {
@@ -61,6 +62,7 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
     const siteId = VIVA88_SITE_ID;
     const platformType = PLATFORM_TYPE_NUMBER.DESKTOP;
     const platform = PLATFORM_TYPE_MAPPING[platformType];
+    const encryptionKey = appSettings.encryptionKey || 'development-key';
     useSentryInit();
 
     useEffect(() => {
@@ -227,6 +229,7 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
                             siteId={siteId}
                             renewToken={renewToken}
                             updateBalanceCallback={updateBalanceCallback}
+                            encryptionKey={encryptionKey}
                         />
                     } />
                 </Routes>

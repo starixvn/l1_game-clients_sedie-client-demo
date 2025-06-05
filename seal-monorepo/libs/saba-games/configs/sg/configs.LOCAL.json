@@ -17,5 +17,7 @@
         "operatorSecret": "ONEworks1@20luminet&"
     },
     "defaultGameId": 2,
-    "userServicePath": "livepageuser"
+    "userServicePath": "livepageuser",
+    "standaloneUrl": "http://localhost:4551",
+    "encryptionKey": "development-key"
 }

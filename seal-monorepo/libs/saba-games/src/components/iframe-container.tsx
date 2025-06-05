@@ -12,7 +12,6 @@ interface IframeContainerProps {
     language: string;
     renewToken?: Function;
     encryptionKey: string;
-    allowedOrigins?: string[];
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -39,13 +38,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     token,
     language,
     renewToken,
-    encryptionKey,
-    allowedOrigins = [
-        'http://localhost:4200',
-        'http://localhost:4551',
-        'https://l1-standalone-live-page-local1.lumigame.com',
-        'https://l1-seal-live-page-client-demo1.lumigame.com'
-    ]
+    encryptionKey
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { iframeHeight, requestIframeHeight, handleHeightMessage } = useIframeHeight();

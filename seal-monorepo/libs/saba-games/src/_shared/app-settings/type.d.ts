@@ -55,4 +55,5 @@ export default interface AppSettings {
     simulatorConfigs: SimulatorConfigs;
     defaultGameId: number;
     userServicePath: string;
+    standaloneUrl: string;
 }

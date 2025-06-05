@@ -9,8 +9,8 @@ graph TD;
   MembersiteLivePage["Membersite Live Page (Host App)"] -->|Imports| SabaGamesAdapter["@saba-games-mono-repo (Adapter) (current @saba-games in membersite monorepo)"]
   SabaGamesAdapter -->|Renders| IframeContainer["iframe-container.tsx"]
   IframeContainer -->|Loads| SabaGamesStandalone["@saba-games-standalone (iframe, separate repo)"]
-  MembersiteLivePage <--> |postMessage| SabaGamesStandalone
-  SabaGamesStandalone -->|postMessage| MembersiteLivePage
+  MembersiteLivePage <--> |Encrypted postMessage| SabaGamesStandalone
+  SabaGamesStandalone -->|Encrypted postMessage| MembersiteLivePage
 ```
 
 ## Overview
@@ -27,7 +27,7 @@ This separation allows for independent development, deployment, and versioning, 
 The **@saba-games-mono-repo (Adapter)** acts as a bridge between the Membersite Live Page and the standalone game client. Its responsibilities include:
 
 -   Providing React components (such as `iframe-container.tsx`) to embed the standalone client via iframe.
--   Managing communication between the host and the iframe using `postMessage`.
+-   Managing encrypted communication between the host and the iframe using `postMessage`.
 -   Handling integration logic, overlays, and UI state that connect the Membersite Live Page to the game client.
 -   Abstracting away cross-domain messaging and providing a clean API for the host app.
 
@@ -36,17 +36,17 @@ The **@saba-games-mono-repo (Adapter)** acts as a bridge between the Membersite 
 ### @saba-games-mono-repo (Adapter, This Repository)
 
 -   **Purpose:** Provides React components and utilities to embed and interact with the standalone client.
--   **Key Component:** `iframe-container.tsx` – loads the standalone client in an iframe and manages communication.
+-   **Key Component:** `iframe-container.tsx` – loads the standalone client in an iframe and manages encrypted communication.
 -   **Hooks:** `use-iframe-height`, `use-betting-panel` – handle message types and manage related state/UI.
 -   **Portals:** `BettingPanelPortal`, `ConfirmBetPortal` – overlays/dialogs in response to messages.
--   **Configuration:** Allows the host to specify the URL of the standalone client.
+-   **Configuration:** Allows the host to specify the URL of the standalone client and encryption key.
 
 ### @saba-games-standalone (Separate Repository)
 
 -   **Purpose:** Contains the full game client, including all UI, business logic, and assets.
 -   **Deployment:** Built and deployed to a dedicated domain (e.g., `https://games.example.com`).
 -   **Usage:** Not imported as a library; loaded via an iframe by host applications.
--   **Communication:** Uses `window.parent.postMessage` to send messages to the host; listens for messages from the host.
+-   **Communication:** Uses encrypted `window.parent.postMessage` to send messages to the host; listens for encrypted messages from the host.
 
 ## Communication Flow Diagram
 
@@ -69,14 +69,14 @@ flowchart TD
     end
 
     IframeContainer --> SabaGamesStandalone
-    BetOption -- window parent postMessage --> IframeContainer
-    IframeContainer -- postMessage --> BetOption
+    BetOption -- Encrypted postMessage --> IframeContainer
+    IframeContainer -- Encrypted postMessage --> BetOption
 ```
 
 **Flow Description:**
 
--   User actions in the iframe (bet-option) send messages to the Membersite Live Page using `window.parent.postMessage`.
--   The Membersite Live Page (via the adapter and iframe-container) can send messages back to the iframe using `postMessage`, which are handled by listeners inside the iframe.
+-   User actions in the iframe (bet-option) send encrypted messages to the Membersite Live Page using `window.parent.postMessage`.
+-   The Membersite Live Page (via the adapter and iframe-container) can send encrypted messages back to the iframe using `postMessage`, which are handled by listeners inside the iframe.
 
 ## Communication Protocol
 
@@ -90,26 +90,33 @@ flowchart TD
 | BET_RESULT       | host → iframe | `{ betId: 123, result: 'win' }`   | Notify result of a bet   |
 | IFRAME_READY     | iframe → host | `{}`                              | Iframe loaded and ready  |
 
--   **Example: Sending a message from iframe to host:**
+-   **Example: Sending an encrypted message from iframe to host:**
     ```js
     // Inside the iframe (standalone)
     const message = { type: 'BET_PLACED', payload: { amount: 100, choice: 'A' } };
-    window.parent.postMessage(message, '*');
+    const encryptedMessage = messageEncryption.encrypt(message);
+    window.parent.postMessage(encryptedMessage, '*');
     ```
--   **Example: Receiving a message from host in iframe:**
+-   **Example: Receiving and decrypting a message from host in iframe:**
     ```js
     // Inside the iframe (standalone)
     window.addEventListener('message', (event) => {
-        if (event.origin !== 'https://expected-host.com') return;
-        const { type, payload } = event.data;
+        const encryptedMessage = event.data;
+        if (!messageEncryption.validateMessage(encryptedMessage)) {
+            console.warn('Received invalid encrypted message');
+            return;
+        }
+        const { type, payload } = messageEncryption.decrypt(encryptedMessage);
         if (type === 'SHOW_CONFIRM_BET') {
             // Show confirm bet dialog
         }
     });
     ```
 -   **Security:**
-    -   Always validate the origin of incoming messages using `event.origin`.
-    -   Never trust data from the parent window without validation and sanitization.
+    -   All messages are encrypted using AES encryption with a shared secret key
+    -   Each message includes an IV (Initialization Vector) for additional security
+    -   Messages are validated before decryption to prevent tampering
+    -   The encryption key is provided through the transform config's `encryptionKey` property
 -   **Extensibility:**
     -   New message types can be added as needed for future features.
     -   Use a version field in messages if protocol changes are expected.
@@ -133,6 +140,8 @@ flowchart TD
 -   Document all public events and APIs for cross-domain communication.
 -   Version and deploy each package independently.
 -   Maintain clear documentation in both repositories about integration points and communication contracts.
+-   Keep encryption keys secure and never commit them to version control.
+-   Use different encryption keys for different environments (development, staging, production).
 
 ## Suggested Improvements
 
@@ -141,3 +150,5 @@ flowchart TD
 -   Add integration tests to verify iframe communication.
 -   Provide example host apps for reference.
 -   Synchronize protocol changes between repositories.
+-   Implement key rotation mechanisms for enhanced security.
+-   Add message signing for additional security layer.

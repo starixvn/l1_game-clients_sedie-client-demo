@@ -1,6 +1,6 @@
 import * as gc from '@sg/sg-game-client';
 
-import SG_LOCAL_CONFIG from '../../../configs/sg/configs.LOCAL_1.json';
+import SG_LOCAL_CONFIG from '../../../configs/configs.json';
 import SG_SIT_CONFIG from '../../../configs/sg/configs.SIT.json';
 import SG_UAT_CONFIG from '../../../configs/sg/configs.UAT.json';
 import SG_PROD_CONFIG from '../../../configs/sg/configs.PROD.json';
@@ -59,8 +59,8 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
 // getSiteConfig(gameId, { siteId, appEnv })
 // getGameSetting(gameId, { siteId, appEnv })
 export const appSettings = getEnvironmentConfig({
-    appEnv: APP_ENV.UAT,
-    siteId: NOVA88_SITE_ID
+    appEnv: APP_ENV.LOCAL,
+    siteId: VIVA88_SITE_ID
 });
 
 export const getSiteConfig = (gameId: number) => {

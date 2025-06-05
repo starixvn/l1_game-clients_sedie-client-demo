@@ -12,5 +12,7 @@
     "enableMsgpackParserAllGames": true,
     "enableMsgpackParserOnNotification": true,
     "defaultGameId": 2,
-    "userServicePath": "livepageuser"
+    "userServicePath": "livepageuser",
+    "standaloneUrl": "https://l1-standalone-live-page-uat.lumigame.com",
+    "encryptionKey": "development-key"
 }
