@@ -48,6 +48,7 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, iframeSrc, encry
         }
     }, [updateBalanceCallback]);
 
+    console.log('jim appSettings', appSettings);
     loadI18n(language);
     return (
         <>
