@@ -1,0 +1,7 @@
+// Import unified styles
+@import '../../../../styles';
+
+// Import game-specific styles for backward compatibility
+@import './variables';
+@import './mixins';
+@import './animations'; 

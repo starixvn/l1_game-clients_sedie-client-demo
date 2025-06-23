@@ -1,0 +1,134 @@
+.scoreboard {
+    padding: 10px 0 0 10px;
+    width: calc(100% - 450px);
+    height: 100%;
+
+    .scoreboard-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .scoreboard-percentage {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        color: white;
+        background: #2D4976;
+
+        .symbol-percentage {
+            flex: 1;
+            text-align: center;
+        }
+    }
+
+    .scoreboard-content {
+        overflow-x: auto;
+        overflow-y: hidden;
+        background:  var(--scoreboard-content-bg);
+        scrollbar-width: thin;
+        scrollbar-color: var(--scroll-bar-track) var(--c-av-lv1-theme-bg-2);
+        height: calc(100% - 45px);
+        max-height: 236px;
+        padding: 8px 0px ;
+
+        .scoreboard-dice-container {
+            display: flex;
+            flex-direction: row;
+            min-height: 100%;
+            padding: 8px;
+            background: var(--scoreboard-content-bg);
+            min-width: 100%;
+        }
+
+        .dice-result {
+            display: flex;
+            flex-direction: column;
+            margin-right: 8px;
+            border-right: none !important;
+            padding-right: 8px;
+            min-width: 55px;
+        }
+
+        .dice-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-height: 120px;
+            justify-content: center;
+        }
+
+        .dot-item {
+            border-right: 1px solid #ebe4e4;
+            border-bottom: 1px solid #ebe4e4;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            font: 0.5rem var(--font-number);
+            pointer-events: none;
+            color: #fff;
+            z-index: 1;
+            font-size: 0.9rem;
+            padding: 4px;
+        }
+
+        .symbol-fish,
+        .symbol-prawn,
+        .symbol-crab,
+        .symbol-coin,
+        .symbol-chicken,
+        .symbol-calabash,
+        .symbol-blink {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font: 0.5rem var(--font-number);
+            pointer-events: none;
+            color: #fff;
+            z-index: 1;
+            font-size: 0.9rem;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .symbol-fish {
+            background: linear-gradient(180deg, #3e9bff, #0056a3);
+        }
+
+        .symbol-prawn {
+            background: linear-gradient(180deg, #ff7f50, #b83c00);
+        }
+
+        .symbol-crab {
+            background: linear-gradient(180deg, #ff5661, #be1c28);
+        }
+
+        .symbol-coin {
+            background: linear-gradient(180deg, #ffd700, #b8860b);
+        }
+
+        .symbol-chicken {
+            background: linear-gradient(180deg, #f5f5dc, #e3e3b5);
+            color: #000;
+        }
+
+        .symbol-calabash {
+            background: linear-gradient(180deg, #00cc66, #008040);
+        }
+
+        .symbol-blink {
+            background: #8b8686;
+            color: rgb(211, 202, 202);
+            animation: blinker 1.3s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% {
+                opacity: 0.3;
+            }
+        }
+    }
+} 

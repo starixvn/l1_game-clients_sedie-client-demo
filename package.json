@@ -1,0 +1,24 @@
+{
+    "name": "sedie-client-demo",
+    "version": "1.0.0",
+    "description": "Game client demo application",
+    "private": true,
+    "workspaces": [
+        "seal-monorepo"
+    ],
+    "scripts": {
+        "start-saba-games": "cd seal-monorepo && nx serve saba-games",
+        "start-hot-league": "cd seal-monorepo && nx serve hot-league-wall",
+        "test-saba-games": "cd seal-monorepo && nx test saba-games",
+        "test-hot-league-wall": "cd seal-monorepo && nx test hot-league-wall",
+        "test-coverage:saba": "cd seal-monorepo && nx test saba-games --coverage",
+        "test-coverage:hot-league": "cd seal-monorepo && nx test hot-league-wall --coverage",
+        "test-coverage": "cd seal-monorepo && nx run-many --target=test --all --coverage"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+    },
+    "author": "",
+    "license": "MIT"
+}

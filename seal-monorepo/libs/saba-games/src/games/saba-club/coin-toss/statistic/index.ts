@@ -1,0 +1,1 @@
+export { default as CoinStatisticStatistic } from './coin-toss-statistic';

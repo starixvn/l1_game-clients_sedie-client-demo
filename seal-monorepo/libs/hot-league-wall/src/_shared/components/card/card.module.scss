@@ -1,0 +1,124 @@
+.card-shadow {
+    width: 47px;
+    height: 60px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 7px;
+    z-index: 1;
+}
+
+.text-red {
+    color: #d40000;
+}
+
+.text-black {
+    color: #000;
+}
+
+.card-number {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.6rem;
+    line-height: 3.3rem;
+    font-size: 2.8rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.card {
+    position: relative;
+    z-index: 1;
+
+    &.small,
+    &.collapse {
+        .card-shadow {
+            left: 0;
+            height: 100%;
+            border-radius: 0.4rem;
+        }
+
+        .card-number {
+            top: 0.6rem;
+            line-height: 0.5;
+        }
+
+        .card-suite-mini {
+            border-radius: 0.5rem;
+        }
+    }
+
+    &.small {
+        .card-shadow {
+            width: 3rem;
+        }
+
+        .card-number {
+            left: 0.45rem;
+            font-size: 1rem;
+
+            &.card-number-10 {
+                left: 0.35rem;
+            }
+
+            &.number-ios {
+                top: 0.4rem;
+                left: 0.5rem;
+
+                &.card-number-10 {
+                    left: 0.2rem;
+                }
+            }
+        }
+
+        .card-suite-mini {
+            width: 3rem;
+            height: 4.25rem;
+        }
+    }
+
+    &.collapse {
+        .card-shadow {
+            width: 3.45rem;
+        }
+
+        .card-number {
+            font-size: 1.7rem;
+            top: 0.45rem;
+            left: 0.5rem;
+
+            &.card-number-10 {
+                left: 0.2rem;
+            }
+        }
+    }
+}
+
+.card-front-box {
+    position: relative;
+
+    .card-rank {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: unset;
+        width: 20px;
+        height: 19px;
+        object-fit: cover;
+    }
+
+    .card-suit {
+        position: absolute;
+        top: 2px;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.card-suite {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

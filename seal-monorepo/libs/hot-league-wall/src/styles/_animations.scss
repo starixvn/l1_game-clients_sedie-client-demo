@@ -1,0 +1,147 @@
+@import './variables';
+
+//
+// Score animations
+//
+
+@keyframes scoreAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+//
+// Pop animations
+//
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes popOut {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+
+//
+// Pulse animations
+//
+
+@keyframes pulseScore {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+//
+// Fade animations
+//
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+//
+// Glow animations
+//
+
+@keyframes glow {
+  0% {
+    box-shadow: 0px 0px 5px 0px rgba(255, 234, 0, 0.5) inset;
+  }
+  50% {
+    box-shadow: 0px 0px 10px 5px rgba(255, 234, 0, 0.5) inset;
+  }
+  100% {
+    box-shadow: 0px 0px 5px 0px rgba(255, 234, 0, 0.5) inset;
+  }
+}
+
+//
+// Spinner animations
+//
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+//
+// Dots animations
+//
+
+@keyframes dots-animation {
+  20% {
+    background-position: 0% 0%, 50% 50%, 100% 50%;
+  }
+  40% {
+    background-position: 0% 100%, 50% 0%, 100% 50%;
+  }
+  60% {
+    background-position: 0% 50%, 50% 100%, 100% 0%;
+  }
+  80% {
+    background-position: 0% 50%, 50% 50%, 100% 100%;
+  }
+}
+
+//
+// Card animations
+//
+
+@keyframes cardFlip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(180deg);
+  }
+} 

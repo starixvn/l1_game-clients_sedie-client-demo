@@ -1,0 +1,79 @@
+@import '../styles/variables';
+@import '../styles/mixins';
+@import '../styles/animations';
+
+// Main wrapper
+.bet-options-wrapper {
+    @include fullsize-container;
+    display: flex;
+}
+
+// Bet options container
+.bet-options-container {
+    @include fullsize-container;
+    @include flex-row-between;
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr;
+    gap: $spacing-xs;
+    flex-wrap: nowrap;
+}
+
+// Background for bet options
+.bets-bg {
+    min-width: 90px;
+    border-radius: $border-radius-md;
+    @include transition-default;
+    box-sizing: border-box;
+
+    &[data-choice="home"] {
+        background-color: rgba(54, 118, 255, 0.4);
+        &:hover {
+            background-color: rgba(54, 118, 255, 0.6);
+        }
+    }
+
+    &[data-choice="draw"] {
+        background-color: rgba(35, 202, 25, 0.4);
+        &:hover {
+            background-color: rgba(35, 202, 25, 0.6);
+        }
+    }
+
+    &[data-choice="away"] {
+        background-color: rgba(255, 42, 42, 0.5);
+        &:hover {
+            background-color: rgba(255, 42, 42, 0.6);
+        }
+    }
+}
+
+// Individual bet padding container
+.padding-bet {
+    @include flex-row-between;
+    @include fullsize-container;
+    padding: 10px 6px;
+    cursor: pointer;
+    border-radius: $border-radius-md;
+    box-sizing: border-box;
+}
+
+// Bet option styling
+.bet-option {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: $spacing-sm;
+    font-weight: $font-weight-bold !important;
+    font-size: $font-size-sm;
+    color: $color-white;
+}
+
+// Bet choice text styling
+.bet-choice-text {
+    text-transform: capitalize;
+    font-weight: 600;
+    color: $color-white;
+    white-space: nowrap;
+    font-weight: $font-weight-bold !important;
+    font-size: $font-size-xs;
+}

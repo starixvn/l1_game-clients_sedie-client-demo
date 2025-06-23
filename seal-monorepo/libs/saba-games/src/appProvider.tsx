@@ -31,7 +31,7 @@ export const AppContextConsumer = AppContext.Consumer;
 // Hook for functional components
 export const useAppContext = () => useContext(AppContext);
 
-export const AppProvider: React.FC<AppProviderProps> = ({ 
+export const AppProvider: React.FC<AppProviderProps> = ({
     children,
     appEnv,
     language,

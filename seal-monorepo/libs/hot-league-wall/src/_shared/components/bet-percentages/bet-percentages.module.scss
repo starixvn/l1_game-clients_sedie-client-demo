@@ -1,0 +1,37 @@
+// Variables
+$font-family: 'Segoe UI';
+$font-size-base: 13px;
+$font-size-large: 16px;
+$text-color: #fff;
+$border-radius: 5px;
+$spacing-base: 5px;
+$spacing-large: 10px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin text-base {
+  font-family: $font-family;
+  font-size: $font-size-large;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  text-transform: capitalize;
+}
+
+// Main styles
+.scoreboard-percentage {
+      @include flex-center;
+      gap: 40px;
+    
+      &-item {
+        color: $text-color;
+        font-size: $font-size-base;
+        font-weight: 700;
+        text-transform: capitalize;
+      }
+}

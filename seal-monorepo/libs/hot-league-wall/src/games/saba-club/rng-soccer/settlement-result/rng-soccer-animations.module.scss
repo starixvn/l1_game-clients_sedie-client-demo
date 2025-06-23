@@ -1,0 +1,145 @@
+@import '../styles/variables';
+@import '../styles/mixins';
+@import '../styles/animations';
+
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes popOut {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(0);
+    }
+}
+
+// Container layouts
+.container-bets {
+    @include flex-column-center;
+    position: relative;
+    @include fullsize-container;
+}
+
+// Result container
+.result-container {
+    @include flex-center;
+    gap: $spacing-md;
+}
+
+// Result item styling
+.result-item {
+    position: relative;
+    perspective: 1000px;
+    transform: scale(0);
+    opacity: 0;
+    transition: transform $animation-duration-fast ease-out, opacity $animation-duration-fast ease-out;
+    margin: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+
+    // Show items without animation by default
+    &:not(.has-animation .result-item) {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+// Animation classes
+.pop-in-animation {
+    animation: popIn $animation-duration-slow cubic-bezier(.53,-0.01,.33,1) forwards;
+}
+
+.pop-out-animation {
+    animation: popOut $animation-duration-slow ease-out forwards;
+}
+
+// Result display container
+.rng-soccer-result {
+    width: 100%;
+    @include flex-column-center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    color: $color-white;
+    animation: fadeIn $animation-duration-fast ease-in-out;
+}
+
+// Score display
+.score-display {
+    @include flex-row-between;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+// Team name styling
+.team-name {
+    font-size: 1.2rem;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    padding: 0 1rem;
+    flex: 1;
+    text-align: center;
+}
+
+// Score styling
+.score {
+    font-size: 2rem;
+    font-weight: $font-weight-bold;
+    color: $color-white;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.25rem 1rem;
+    border-radius: $border-radius-sm;
+    min-width: 7rem;
+    text-align: center;
+}
+
+// Winning symbols container
+.winning-symbols {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseScore {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+// Animation status classes
+.score-changed {
+    animation: pulseScore $animation-duration-slow ease-in-out;
+} 

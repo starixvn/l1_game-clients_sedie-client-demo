@@ -1,0 +1,147 @@
+.container {
+    width: 100%;
+}
+
+.game-title {
+    background-color: var(--c-av-league-header-bg);
+    display: flex;
+    text-align: center;
+    align-items: center;
+    position: relative;
+    min-height: 1.625rem;
+    border: 1px solid var(--c-av-theme-border-1);
+
+    >* {
+        &:last-child {
+            border-right: none;
+        }
+    }
+}
+
+.collapse-btn {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: inherit;
+    border-right-width: 1px;
+    border-color: var(--c-av-theme-border-1);
+    border-top-left-radius: inherit;
+    width: 24px;
+    color: var(--c-av-oddstable-btn-collapse);
+    position: relative;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    cursor: pointer;
+}
+
+.collapse-icon {
+    width: 18px;
+    height: 18px;
+    margin-left: 2px;
+    background-image: url("../../../assets/caret.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transition: transform 0.3s ease;
+}
+
+[data-theme^="dark"],
+[data-darkmode="true"] {
+    .collapse-icon {
+        background-image: url("../../../assets/caret-white.svg");
+    }
+}
+
+.game-header {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    justify-self: flex-start;
+    min-width: calc(22rem - 24px);
+    width: calc(70% - 22px);
+}
+
+.game-icon {
+    width: 24px;
+    height: 24px;
+    background-image: url("../../../assets/game-icons/coin-toss.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0 4px;
+}
+
+.game-name {
+    text-align: center;
+}
+
+.header {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    flex-flow: row wrap;
+    padding: var(--c-6px-6);
+    width: 100%;
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+    position: relative;
+}
+
+.game-title {
+    background-color: var(--c-av-league-header-bg);
+    border-bottom: 1px solid var(--c-av-theme-border-1);
+    display: grid;
+    grid-template-columns: 379px auto !important;
+
+    @media (min-width: 1400px) {
+        grid-template-columns: 529px auto !important;
+    }
+
+    >div {
+        display: flex;
+    }
+}
+
+.dropdown-content {
+    display: block;
+}
+
+.expanded {
+    visibility: visible;
+}
+
+.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.game-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 6.5rem;
+    height: 40%;
+    min-height: 26px;
+}
+
+.game-option:last-child {
+    min-width: 25.5rem;
+    width: 100%;
+    border-left: 1px solid var(--c-av-theme-border-1);
+    min-width: 511px;
+}
+
+.roundInfo, .timer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .roundLabel, .timeLabel {
+        color: var(--c-av-theme-text-secondary);
+    }
+
+    .roundValue, .timeValue {
+        font-weight: bold;
+        color: var(--c-av-theme-text-primary);
+    }
+} 

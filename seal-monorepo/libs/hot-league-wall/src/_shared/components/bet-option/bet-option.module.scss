@@ -1,0 +1,99 @@
+@import '../../../styles/variables';
+
+.odd {
+    font-weight: $font-weight-bold;
+    font-size: $font-size-xs;
+    color: $color-white;
+    cursor: pointer;
+}
+
+.boosted-odd {
+    background: linear-gradient(180deg, #fefea3 0%, #ffffea 49%, #fefea3 100%);
+    border: 1px solid #ff8800;
+    border-radius: 0.3rem;
+    padding: 0 0.4rem;
+    box-shadow: 0 0 2px #ee0505;
+    color: #ff0000;
+    height: 21px;
+    display: flex;
+    align-items: center;
+}
+
+@keyframes start-boosted-odds {
+    0%,
+    100% {
+        box-shadow: none;
+    }
+
+    50% {
+        box-shadow:
+            0 0 5px #c01357,
+            0 0 8px #ff8dba inset;
+    }
+}
+
+.total-stakes {
+    font-weight: 500;
+    height: 1.5rem;
+}
+
+.own-bet {
+    font-weight: 700;
+    color: yellow;
+}
+.betting-block {
+    display: block;
+    height: 100%;
+    cursor: pointer;
+    position: relative;
+    --highlight-result-delay: 2s;
+    border-radius: var(--c-av-border-radius);
+    border: 1px solid var(--c-av-odds-button-border);
+}
+
+.betting-block:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+    background-image: var(--c-av-odds-in-play-hover-img);
+}
+
+.open-panel-background-color {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.flash-and-keep-background-color {
+    animation: flash-background 1.5s ease-in-out 6;
+    animation-fill-mode: forwards;
+    animation-delay: 0;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+.highlight-static-bet-choice {
+    border: 1px solid transparent;
+    border-radius: 3px;
+    box-shadow: inset 0 0 8px #ffae00;
+    border-color: #e0e023;
+}
+
+@keyframes flash-background {
+    0% {
+        box-shadow: inset 0 0 8px #ffae00;
+        border-color: #e0e023;
+    }
+
+    50% {
+        box-shadow: none;
+        border-color: #e0e023;
+    }
+
+    100% {
+        box-shadow: inset 0 0 8px #ffae00;
+        border-color: #e0e023;
+    }
+}
+
+@keyframes show-background {
+    to {
+        background-color: var(--c-av-odds-hover-bg);
+    }
+}

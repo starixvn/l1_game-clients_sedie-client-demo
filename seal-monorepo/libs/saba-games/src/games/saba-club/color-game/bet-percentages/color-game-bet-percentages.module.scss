@@ -1,0 +1,33 @@
+@import '../styles/overrides';
+
+.color-game-percentages {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-radius: 5px 5px 0 0;
+    justify-content: center;
+    background: #2D4976;
+    padding: 4px;
+
+    @media (min-width: 1400px) {
+        gap: 24px;
+    }
+}
+
+.percentage-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+
+    @media (min-width: 1400px) {
+        font-size: 14px;
+    }
+}
+
+.count {
+    margin-left: 4px;
+}

@@ -1,0 +1,75 @@
+.confirm-bet {
+  width: 340px;
+  height: 150px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -85%);
+  z-index: 9;
+  background-color: var(--c-av-lv2-theme-bg-1);
+  border-radius: var(--c-av-border-radius);
+  box-shadow:
+    0 24px 38px rgba(0, 0, 0, 0.14),
+    0 9px 46px rgba(0, 0, 0, 0.12),
+    0 11px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  font-size: 14px;
+
+  .heading {
+    display: flex;
+    padding: 2px 6px;
+    align-items: center;
+    gap: 5px;
+    align-self: stretch;
+    width: 100%;
+    border-radius: var(--c-av-border-radius) var(--c-av-border-radius) 0 0;
+    color: var(--c-av-white-opacity-1);
+    background-color: var(--c-av-primary-500);
+    font-family: 'Segoe UI';
+
+    font-weight: 400;
+    text-transform: capitalize;
+  }
+
+  .bet-accepted {
+    text-align: center;
+    font-weight: 400;
+    margin: 5px 0;
+  }
+
+  .betting-results {
+    display: flex;
+    gap: 6px;
+    flex-direction: column;
+    font-weight: 400;
+    text-align: center;
+    margin-bottom: 5px;
+
+    .betting-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      span {
+        margin: 0 !important;
+      }
+    }
+  }
+
+  .confirm-btn {
+    width: 160px;
+    padding: 6px;
+    font-size: 10px;
+    margin: 5px 0;
+  }
+}
+
+.noti-label {
+  padding-left: 0;
+}
+
+.noti-input {
+  display: inline-block !important;
+  margin-top: 2px;
+  margin-right: 5px;
+}

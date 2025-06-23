@@ -1,0 +1,137 @@
+.variables {
+    --cell-size: 32px;
+    --grid-gap: 1px;
+    --border-radius: 4px;
+    --scoreboard-bg: transparent;
+    --content-bg: #274980;
+    --home-color: #fff;
+    --away-color: #fff;
+    --draw-color: #fff;
+    --percentage-bg: #274980;
+    --dot-size: 26px;
+}
+
+.scoreboard {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--scoreboard-bg);
+    box-sizing: border-box;
+    min-width: 0;
+    gap: 4px;
+
+    &-content {
+        flex: 1;
+        overflow-x: auto;
+        overflow-y: hidden;
+        position: relative;
+        background: #fff;
+        scrollbar-width: thin;
+        scrollbar-color: hsla(0, 0%, 0%, .32) HSL(var(--c-av-primary-h), 40%, 95%);
+        border-radius: 6px;
+        width: 100%;
+        min-width: 0;
+
+        &::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #c9c4c4;
+            border-radius: 3px;
+        }
+
+        &:global(.soccer-big-road) {
+            --cell-size: 18px;
+            --dot-size: 18px;
+        }
+    }
+}
+
+.grid-container {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(6, 20px);
+    grid-auto-columns: 14px;
+    gap: 0;
+    min-width: 100%;
+}
+
+.dot-item {
+    width: 20px;
+    height: 20px;
+    border-right: 1px solid HSL(var(--c-av-primary-h), 40%, 95%);
+    border-bottom: 1px solid HSL(var(--c-av-primary-h), 40%, 95%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    aspect-ratio: 1;
+    pointer-events: none;
+    box-sizing: border-box;
+    padding: 2px;
+}
+
+.dot-image {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    position: relative;
+
+    img {
+        width: 50%;
+        height: 50%;
+        object-fit: contain;
+        position: relative;
+        z-index: 1;
+    }
+}
+
+.dot-blink {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #8b8686;
+    animation: blink 1.3s linear infinite;
+}
+
+.dot-empty {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.draw-count {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #000;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.draw-image {
+    position: absolute;
+    transform: translate(-80%, -50%);
+    width: 1px;
+    height: 1px;
+    z-index: 1;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0.3;
+    }
+}

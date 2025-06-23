@@ -1,0 +1,68 @@
+$color-success: #00ff00;
+$color-error: #FF0101;
+
+.count-down {
+    position: relative;
+
+    .timer-wrapper {
+        display: inline-flex;
+        position: relative;
+
+        .counting-text {
+            font-weight: 700;
+            font-size: 16px;
+            line-height: 100%;
+            text-align: center;
+            vertical-align: middle;
+            text-transform: capitalize;
+
+            .waiting-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .dot-elastic {
+                width: 20px;
+                height: 8.9px;
+                background: radial-gradient(circle closest-side, $color-success 90%, #0000) 0% 50%,
+                    radial-gradient(circle closest-side, $color-success 90%, #0000) 50% 50%,
+                    radial-gradient(circle closest-side, $color-success 90%, #0000) 100% 50%;
+                background-size: calc(100%/3) 5px;
+                background-repeat: no-repeat;
+                animation: dots-loading 1s infinite linear;
+            }
+        }
+    }
+
+    .placing-bet-state,
+    .show-result-state {
+        .counting-text {
+            color: $color-success;
+        }
+    }
+
+    .no-more-bet-state {
+        .counting-text {
+            color: $color-error;
+        }
+    }
+
+    @keyframes dots-loading {
+        20% {
+            background-position: 0% 0%, 50% 50%, 100% 50%;
+        }
+
+        40% {
+            background-position: 0% 100%, 50% 0%, 100% 50%;
+        }
+
+        60% {
+            background-position: 0% 50%, 50% 100%, 100% 0%;
+        }
+
+        80% {
+            background-position: 0% 50%, 50% 50%, 100% 100%;
+        }
+    }
+}

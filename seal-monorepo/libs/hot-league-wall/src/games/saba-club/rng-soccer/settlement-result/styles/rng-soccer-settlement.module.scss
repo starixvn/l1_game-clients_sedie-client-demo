@@ -1,0 +1,204 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+@import '../../styles/animations';
+
+// Sport layout
+.wrapper-sport-middle {
+    display: grid;
+    grid-template-columns: 81px 1fr 81px;
+    align-items: flex-end;
+}
+
+// Team styling
+.sport-team {
+    @include flex-column;
+
+    &.home-team {
+        align-items: flex-start;
+    }
+
+    &.away-team {
+        align-items: flex-end;
+    }
+
+    &-img {
+        width: $team-img-size;
+        height: $team-img-size;
+        margin-bottom: $spacing-xs;
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    }
+
+    &-name {
+        font-size: $font-size-xs;
+        font-weight: $font-weight-bold;
+        color: $color-white;
+        text-transform: capitalize;
+    }
+}
+
+// Result styling
+.sport-result {
+    position: relative;
+
+    .container-result {
+        @include flex-center;
+        align-items: flex-start;
+        gap: $spacing-md;
+    }
+
+    .card-section {
+        @include card-style;
+        
+        img {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+    }
+}
+
+// Result section
+.result-section {
+    @include flex-center;
+    gap: $spacing-xs;
+}
+
+// Score styling
+.score, .result {
+    @include score-box;
+}
+
+// Timer styling
+.timer {
+    position: absolute;
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -60px);
+    display: flex;
+    align-items: center;
+}
+
+// Loading dots
+.dots {
+    width: $dots-size;
+    height: $dots-size;
+    background: radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 0% 50%, 
+                radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 50% 50%, 
+                radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 100% 50%;
+    background-size: calc(100%/3) 13.4px;
+    background-repeat: no-repeat;
+    animation: dots-animation $animation-duration-very-slow infinite linear;
+}
+
+// Settlement container
+.settlement-container {
+    @include flex-center;
+    @include fullsize-container;
+}
+
+// Score animation
+.score-pop-in {
+    animation: scoreAppear $animation-duration-medium ease-out forwards;
+}
+
+/* Card animations */
+.card-flip {
+    transition: transform $animation-duration-slow;
+    transform-style: preserve-3d;
+
+    &-enter {
+        transform: rotateY(0deg);
+    }
+
+    &-enter-active {
+        transform: rotateY(180deg);
+    }
+
+    &-exit {
+        transform: rotateY(180deg);
+    }
+
+    &-exit-active {
+        transform: rotateY(0deg);
+    }
+}
+
+// Loading container
+.loading-container {
+    @include status-container;
+}
+
+// Loading spinner
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: $color-white;
+    animation: spin $animation-duration-very-slow linear infinite;
+    margin-bottom: $spacing-lg;
+}
+
+// Loading message
+.loading-message {
+    color: $color-white;
+    font-size: $font-size-md;
+    text-align: center;
+}
+
+// Error container
+.error-container {
+    @include status-container;
+    color: $color-white;
+    text-align: center;
+
+    h3 {
+        font-size: $font-size-lg;
+        margin-bottom: 12px;
+    }
+
+    p {
+        font-size: $font-size-md;
+        opacity: 0.8;
+    }
+}
+
+@keyframes dots-7ar3yq {
+    20% {
+        background-position: 0% 0%, 50% 50%, 100% 50%;
+    }
+
+    40% {
+        background-position: 0% 100%, 50% 0%, 100% 50%;
+    }
+
+    60% {
+        background-position: 0% 50%, 50% 100%, 100% 0%;
+    }
+
+    80% {
+        background-position: 0% 50%, 50% 50%, 100% 100%;
+    }
+}
+
+@keyframes scoreAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.5) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+} 

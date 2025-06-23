@@ -1,0 +1,25 @@
+
+.stake {
+    animation: fadeOutUp 3s ease-out forwards;
+}
+.win-amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffd700;
+    animation: fadeOutUp 2.5s ease-in forwards;
+}
+@keyframes fadeOutUp {
+    0% {
+        opacity: 1;
+        transform: translateY(60px);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(38px);
+    }
+
+    100% {
+        transform: translateY(0px);
+        opacity: 0;
+    }
+}

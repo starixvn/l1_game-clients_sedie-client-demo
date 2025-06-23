@@ -1,0 +1,53 @@
+// EXAMPLE FILE: Demonstrates the recommended import approach
+// ------------------------------------------------------------
+
+// OPTION 1: Import the unified styles from the game's styles index
+// This includes both centralized styles and any game-specific overrides
+@import '../styles';
+
+// OPTION 2: Import directly from the centralized styles (preferred for new components)
+// @import '../../../../styles';
+
+// OPTION 3: Import specific modules if you only need certain styles
+// @import '../../../../styles/variables';
+// @import '../../../../styles/mixins';
+
+// Component styles using the imported variables and mixins
+.example-component {
+  @include flex-column;
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  background-color: $color-bg-main;
+  
+  &__header {
+    @include text-style-heading;
+    margin-bottom: $spacing-sm;
+  }
+  
+  &__content {
+    @include flex-center;
+    gap: $spacing-md;
+  }
+  
+  &__item {
+    @include card-style;
+    transition: transform $animation-duration-fast ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+    
+    &--active {
+      border: 1px solid $color-highlight;
+    }
+  }
+  
+  // Responsive layout
+  @include mobile-only {
+    padding: $spacing-sm;
+  }
+  
+  @include tablet-up {
+    max-width: 500px;
+  }
+} 

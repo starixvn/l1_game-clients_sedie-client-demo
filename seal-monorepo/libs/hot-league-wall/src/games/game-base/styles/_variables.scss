@@ -1,0 +1,46 @@
+// Import global variables
+@import '../../../styles/variables';
+
+// Game-specific variables can be added below if needed
+// This file is maintained for backward compatibility
+// For new components, use the central styles directly
+
+// Colors
+$color-bg-main: var(--c-av-match-live-bg);
+$color-border: var(--c-av-theme-border-1);
+$color-text-primary: var(--c-av-text-primary);
+$color-text-secondary: var(--c-av-text-secondary);
+$color-disabled: rgba(0, 0, 0, 0.6);
+
+// Typography
+$font-size-xs: 13px;
+$font-size-sm: 14px;
+$font-size-md: 16px;
+$font-weight-normal: 400;
+$font-weight-bold: 700;
+
+// Layout
+$border-radius-sm: 0.4rem;
+$border-radius-md: 0.6rem;
+$spacing-xs: 0.4rem;
+$spacing-sm: 0.6rem;
+$spacing-md: 0.8rem;
+$spacing-lg: 1rem;
+$spacing-xl: 1.2rem;
+
+// Component sizes
+$info-width-default: 16%;
+$info-width-large: 20%;
+$result-width-default: 17%;
+$result-width-large: 20%;
+$bet-options-width: 60%;
+$bet-options-min-width: 32rem;
+$container-gap: 0.5rem;
+$result-item-size: 2.5rem;
+
+// Breakpoints
+$breakpoint-large: 1102px;
+
+// Z-index
+$z-index-base: 1;
+$z-index-overlay: 9999; 

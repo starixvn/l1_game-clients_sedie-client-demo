@@ -1,0 +1,116 @@
+.result-collapse-mode {
+    display: grid;
+    justify-content: center;
+    grid-gap: 0.5rem;
+
+    .result-item {
+        display: grid;
+    }
+
+    .dice-collape-mode {
+        display: none;
+        grid-area: 1/1;
+        background-position: 0% 100%;
+        animation-name: random-animation, random-slow-animation, hide-random-animation;
+        animation-timing-function: steps(5, start), steps(5, start), linear;
+        animation-fill-mode: forwards, forwards, forwards;
+        animation-iteration-count: 2, 1, 1;
+    }
+
+    .dice1 {
+        @extend .dice-collape-mode;
+        animation-duration: 0.6s, 0.8s, 0.2s;
+        animation-delay: 0s, 1.2s, 2s;
+    }
+
+    .dice2 {
+        @extend .dice-collape-mode;
+        animation-duration: 0.65s, 0.8s, 0.2s;
+        animation-delay: 0s, 1.3s, 2.1s;
+    }
+
+    .dice3 {
+        @extend .dice-collape-mode;
+        animation-duration: 0.7s, 0.8s, 0.2s;
+        animation-delay: 0s, 1.4s, 2.2s;
+    }
+
+    @keyframes random-animation {
+        0% {
+            background-position: 0% 0%;
+        }
+        100% {
+            background-position: 100% 100%;
+        }
+    }
+
+    @keyframes random-slow-animation {
+        0% {
+            background-position: 0% 0%;
+        }
+        100% {
+            background-position: 100% 100%;
+        }
+    }
+
+    %result {
+        grid-area: 1/1;
+        opacity: 0;
+    }
+
+    .result1 {
+        @extend %result;
+        animation: show-result-collapse-mode-amimation 0.1s 0s forwards linear;
+    }
+
+    .result2 {
+        @extend %result;
+        animation: show-result-collapse-mode-amimation 0.1s 0.1s forwards linear;
+    }
+
+    .result3 {
+        @extend %result;
+        animation: show-result-collapse-mode-amimation 0.1s 0.2s forwards linear;
+    }
+
+    &.has-animation {
+        .dice-collape-mode {
+            display: block;
+        }
+
+        .result1 {
+            animation-delay: 2s;
+        }
+
+        .result2 {
+            animation-delay: 2.1s;
+        }
+
+        .result3 {
+            animation-delay: 2.2s;
+        }
+    }
+
+    @keyframes hide-random-animation {
+        0% {
+            opacity: 1;
+        }
+        75% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+            transform: scale(0);
+        }
+    }
+
+    @keyframes show-result-collapse-mode-amimation {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+}

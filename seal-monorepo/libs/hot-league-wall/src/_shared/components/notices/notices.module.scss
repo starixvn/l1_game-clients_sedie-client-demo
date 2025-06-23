@@ -1,0 +1,24 @@
+.title-white{
+    color: white;
+}
+
+// Notice dialog 的背景圖樣需下次更新優化
+.disconnect-container {
+    position: relative;
+    width: 100%;
+    max-width: 344px;
+    min-height: 154px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(54, 118, 255, 0.40);
+
+    &.has-background {
+        background-image: url('../../../assets/rng-soccer/blur-bg-game.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+}

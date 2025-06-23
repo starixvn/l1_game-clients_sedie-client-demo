@@ -1,0 +1,26 @@
+.title {
+      display: flex;
+      gap: 10px;
+      height: 14px;
+      width: 100%;
+
+      .title-text {
+            font-family: Segoe UI;
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 100%;
+            letter-spacing: 0%;
+            vertical-align: middle;
+            text-transform: capitalize;
+            color: rgba(255, 255, 255, 0.6);
+      }
+
+      .title-icon {
+            width: 16px;
+            height: 16px;
+            background-image: url("../../../assets/icon-live.png");
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 0;
+      }
+}

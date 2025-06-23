@@ -1,0 +1,201 @@
+@import './variables';
+
+//
+// Layout mixins 
+//
+
+// Flex layouts
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-column-center {
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// Grid layouts
+@mixin grid-layout($columns, $rows, $gap) {
+  display: grid;
+  grid-template-columns: $columns;
+  grid-template-rows: $rows;
+  grid-gap: $gap;
+}
+
+// Container sizing
+@mixin fullsize-container {
+  width: 100%;
+  height: 100%;
+}
+
+@mixin fullsize-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  @include fullsize-container;
+}
+
+//
+// Responsive mixins
+//
+
+@mixin responsive-width($default-width, $large-width, $breakpoint: $breakpoint-xl) {
+  width: $default-width;
+  
+  @media screen and (min-width: $breakpoint) {
+    width: $large-width;
+  }
+}
+
+@mixin mobile-only {
+  @media screen and (max-width: ($breakpoint-md - 1px)) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media screen and (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media screen and (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+//
+// Typography mixins
+//
+
+@mixin text-style-default {
+  font-weight: $font-weight-bold;
+  color: $color-white;
+}
+
+@mixin text-style-heading {
+  @include text-style-default;
+  font-size: $font-size-md;
+  text-transform: capitalize;
+}
+
+@mixin text-style-score {
+  @include text-style-default;
+  font-size: $font-size-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+//
+// Component mixins
+//
+
+@mixin score-box {
+  @include text-style-score;
+  width: $score-width;
+  height: $score-height;
+  background: $color-white-20;
+  border-radius: $border-radius-lg;
+  border: 1px solid $color-white-50;
+  overflow: hidden;
+
+  span {
+    animation: scoreAppear $animation-duration-medium ease-out forwards;
+  }
+}
+
+@mixin card-style {
+  width: $card-width;
+  height: $card-height;
+  @include flex-center;
+  
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: $border-radius-sm;
+  }
+}
+
+//
+// State mixins
+//
+
+@mixin disabled-state {
+  position: relative;
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: $color-bg-main;
+}
+
+//
+// Animation and transition mixins
+//
+
+@mixin transition-default {
+  transition: all $animation-duration-fast ease;
+}
+
+//
+// Interaction mixins
+//
+
+@mixin no-select {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+//
+// Position mixins
+//
+
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@mixin absolute-horizontal-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+//
+// Status containers
+//
+
+@mixin status-container {
+  @include flex-column-center;
+  @include fullsize-container;
+  padding: $spacing-xl;
+} 

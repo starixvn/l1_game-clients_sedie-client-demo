@@ -8,19 +8,19 @@ WORKDIR /app
 ARG PORT=5000
 ENV PORT=$PORT
 
-# Copy package files
-COPY package*.json ./
+# Copy package files from seal-monorepo directory
+COPY seal-monorepo/package*.json ./
 
 # Install dependencies and global packages
-RUN yarn install && \
-    yarn global add cross-env nx
+RUN npm install && \
+    npm install -g cross-env nx
 
 # Copy the rest of the application
 COPY . .
 
 # Build the application for development
 WORKDIR /app/seal-monorepo
-RUN yarn install && \
+RUN npm install && \
     nx reset && \
     cross-env NODE_ENV=development nx build saba-games --configuration=development
 

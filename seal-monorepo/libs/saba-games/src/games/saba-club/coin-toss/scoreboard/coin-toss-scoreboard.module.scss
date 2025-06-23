@@ -1,0 +1,102 @@
+.scoreboard {
+    padding: 10px 0 0 10px;
+    width: calc(100% - 360px);
+    height: 100%;
+
+    .scoreboard-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .scoreboard-percentage {
+        display: flex;
+        align-items: center;
+        /* Align items vertically centered */
+        justify-content: space-between;
+        /* Distributes space between items */
+        width: 100%;
+        /* Make the parent container full width */
+        color: white;
+        background: #2D4976;
+        ;
+
+        .big-percentage {
+            flex: 1;
+            /* Allows this to take available space on the left */
+            text-align: right;
+            /* Align text to the left */
+        }
+
+        .split-percentage {
+            margin: 0 10px;
+            /* Optional: Add some horizontal margin for spacing */
+            text-align: center;
+            /* Center the split indicator */
+        }
+
+        .small-percentage {
+            flex: 1;
+            /* Allows this to take available space on the right */
+            text-align: left;
+            /* Align text to the right */
+        }
+    }
+
+    .scoreboard-content {
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: grid;
+        //grid-gap: 0.4rem;
+        background: var(--c-av-lv1-theme-bg-2);
+        scrollbar-width: thin;
+        /* Set scrollbar width to thin */
+        scrollbar-color: var(--scroll-bar-track) var(--c-av-lv1-theme-bg-2);
+
+        .dot-item {
+            border-right: 1px solid #ebe4e4;
+            /* Border for each grid item */
+            border-bottom: 1px solid #ebe4e4;
+            /* Border for each grid item */
+            position: relative;
+            display: -moz-box;
+            display: flex;
+            -moz-box-align: center;
+            -moz-box-pack: center;
+            justify-content: center;
+            font: 0.5rem var(--font-number);
+            pointer-events: none;
+            color: #fff;
+            z-index: 1;
+            font-size: 0.9rem;
+            padding: 4px;
+        }
+
+        .dot-blink {
+            display: flex;
+            -moz-box-align: center;
+            align-items: center;
+            -moz-box-pack: center;
+            justify-content: center;
+            width: 1.3rem;
+            height: 1.3rem;
+            border-radius: 50%;
+            font: 0.5rem var(--font-number);
+            pointer-events: none;
+            color: #fff;
+            z-index: 1;
+            font-size: 0.9rem;
+        }
+
+        .dot-blink {
+            background: #8b8686;
+            color: rgb(211, 202, 202);
+            animation: blinker 1.3s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% {
+                opacity: 0.3;
+            }
+        }
+    }
+}

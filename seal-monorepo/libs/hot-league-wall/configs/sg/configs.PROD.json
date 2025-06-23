@@ -1,0 +1,17 @@
+{
+    "sentry": {
+        "dsn": "https://19b3909c434341f0b13eb3a8529e5862@sentry.sabagame.com/9",
+        "environment": "PROD"
+    },
+    "systemType": "SG",
+    "serverDomain": "sabagame.com",
+    "ssl": true,
+    "subDomain": "proxy",
+    "env": "PROD",
+    "enableMsgpackParserAllGames": true,
+    "enableMsgpackParserOnNotification": true,
+    "enableSourceMap": false,
+    "defaultGameId": 118,
+    "userServicePath": "livepageuser",
+    "appType": 6
+}

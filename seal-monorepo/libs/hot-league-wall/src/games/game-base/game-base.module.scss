@@ -1,0 +1,225 @@
+// Import the unified styles from the game's styles index
+// This includes both centralized styles and backward compatibility
+@import './styles';
+
+@import './styles/variables';
+@import './styles/mixins';
+
+// Main container
+.game-container {
+    width: 100%;
+    max-width: 344px;
+    min-height: 154px;
+    border-radius: $border-radius-md;
+    padding: $spacing-xs;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+
+// Game header section
+.game-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    .game-name {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        .live-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .game-name-text {
+            font-size: $font-size-sm;
+            font-weight: $font-weight-bold;
+            color: $color-light-gray;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: $spacing-xs;
+        }
+
+        .game-name-round {
+            font-size: $font-size-xs;
+            font-weight: $font-weight-medium;
+            color: $color-light-gray;
+        }
+    }
+
+    .stats-icon {
+        display: flex;
+        align-self: flex-start;
+        cursor: pointer;
+    }
+
+    .timer {
+        .count-down {
+            color: $color-green;
+            font-size: $font-size-md;
+            font-weight: $font-weight-bold;
+            line-height: normal;
+            text-transform: capitalize;
+        }
+    }
+}
+
+// Game content section
+.game-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+// Game footer section
+.game-footer {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    // Balance animation
+    .animation-balance {
+        position: absolute;
+        width: 100%;
+        top:-200%;
+        left: 50%;
+        transform: translate(-50%, -100%);
+        z-index: 2;
+        @include flex-center;
+    }
+}
+
+// Game popup section
+.game-popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+.game-messages {
+    z-index: 2;
+}
+
+.block-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    max-width: 319px;
+    min-height: 109px;
+    border-radius: $border-radius-md;
+    background-color: rgba(0, 6, 17, 0.9);
+
+    // Info section
+    .info {
+        padding: $spacing-lg;
+        align-items: center;
+        gap: $spacing-xs;
+        @include responsive-width($info-width-default, $info-width-large);
+    }
+
+    // Result section
+    .result {
+        @include flex-center;
+        padding: $spacing-lg;
+        min-width: 12rem;
+        @include responsive-width($result-width-default, $result-width-large);
+        height: 100%;
+
+        // Result grid container
+        .result-container {
+            @include grid-layout(repeat(4, $result-item-size), $result-item-size, $container-gap);
+        }
+    }
+
+    // Turn counter
+    .turn-counter {
+        font-weight: $font-weight-bold;
+        font-size: $font-size-xs;
+        position: absolute;
+        left: 10rem;
+    }
+
+    // Bet options section
+    .bet-options {
+        min-width: $bet-options-min-width;
+        width: $bet-options-width;
+        position: relative;
+
+        // Disabled state
+        &.disabled {
+            @include disabled-state;
+        }
+    }
+}
+
+// History section
+.history-block {
+    position: relative;
+    @include flex-row-between;
+    background-color: $color-bg-main;
+    border-top: 1px solid $color-border;
+
+    // Statistics button
+    &>.statistic-btn {
+        flex: 1;
+        width: 100%;
+        max-width: 15rem;
+        @include flex-center;
+    }
+}
+
+// Reconnect section
+.reconnect-btn-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: $spacing-md;
+    margin-bottom: $spacing-md;
+}
+
+.reconnect-btn {
+    padding: $spacing-sm $spacing-xl;
+}
+
+.reconnect-text {
+    text-align: center;
+    font-size: $font-size-xs;
+    font-style: normal;
+    font-weight: $font-weight-normal;
+    line-height: 150%;
+    color: $color-white;
+}
+
+.disconnect-container {
+    position: relative;
+    width: 100%;
+    max-width: 344px;
+    min-height: 154px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(54, 118, 255, 0.40);
+
+    &.has-background {
+        background-image: url('../../assets/rng-soccer/blur-bg-game.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+}

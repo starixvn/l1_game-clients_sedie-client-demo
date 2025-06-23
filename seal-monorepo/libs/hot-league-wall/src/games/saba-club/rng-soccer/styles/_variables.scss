@@ -1,0 +1,47 @@
+// Import global variables
+@import '../../../../styles/variables';
+
+// Game-specific variables can be added below if needed
+// This file is maintained for backward compatibility
+// For new components, use the central styles directly
+
+// Colors
+$color-white: #fff;
+$color-light-gray: #A0A8C3;
+$color-green: #01FF0B;
+$color-black-80: rgba(0, 0, 0, 0.8);
+$color-white-20: rgba(255, 255, 255, 0.2);
+$color-white-50: rgba(255, 255, 255, 0.5);
+$color-highlight: #B7C711;
+
+// Typography
+$font-size-xs: 13px;
+$font-size-sm: 14px;
+$font-size-md: 16px;
+$font-size-lg: 24px;
+$font-weight-medium: 500;
+$font-weight-bold: 700;
+
+// Layout
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 7px;
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 10px;
+$spacing-lg: 16px;
+$spacing-xl: 20px;
+
+// Animation durations
+$animation-duration-fast: 0.3s;
+$animation-duration-medium: 0.4s;
+$animation-duration-slow: 0.5s;
+$animation-duration-very-slow: 1s;
+
+// Component sizes
+$card-width: 45px;
+$card-height: 65px;
+$score-width: 24px;
+$score-height: 28px;
+$team-img-size: 40px;
+$dots-size: 12px; 
