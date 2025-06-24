@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { FAKE_RNG_SOCCER_DATA } from './fake-data';
 import { RNGSoccerChoices } from './type';
 import styles from './rng-soccer.module.scss';
-import rngSoccerStyles from './bet-option/rng-soccer-bet-options.module.scss';
 
 // Static prototype component for RNG Soccer
 export const RNGSoccerStaticPrototype: React.FC = () => {
@@ -86,16 +85,6 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
         }
     };
 
-    const getRoundStateClass = () => {
-        switch (currentState.currentRound.roundState) {
-            case 'placingBets': return styles['placing-bet'];
-            case 'lockingBet': return styles['locking-bet'];
-            case 'showingResult': return styles['showing-result'];
-            case 'finished': return styles['finished'];
-            default: return '';
-        }
-    };
-
     return (
         <div className={styles['sport-item']}>
             {/* Header Section */}
@@ -110,10 +99,7 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                     </div>
                 </div>
                 <div className={styles['timer']}>
-                    <div className={getRoundStateClass()}>
-                        {getRoundStateText()}
-                    </div>
-                    <div className={styles['countdown']}>
+                    <div className={styles['count-down']}>
                         {countdown}s
                     </div>
                 </div>
@@ -154,27 +140,18 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
 
             {/* Footer Section */}
             <div className={styles['wrapper-sport-bottom']}>
-                <div className={rngSoccerStyles['bet-options-wrapper']}>
-                    <div className={rngSoccerStyles['bet-options-container']}>
-                        {Object.values(RNGSoccerChoices).map((choice) => (
-                            <div className={rngSoccerStyles['bets-bg']} key={choice}>
-                                <div className={`${styles['container-bets']} ${rngSoccerStyles['padding-bet']}`}>
-                                    <span className={rngSoccerStyles['bet-choice-text']}>
-                                        {choice.charAt(0).toUpperCase() + choice.slice(1)}
-                                    </span>
-                                    <div className={styles['odds']}>
-                                        {currentState.roundOdds.odds[choice]}
-                                    </div>
-                                    <button
-                                        onClick={() => handleBet(choice)}
-                                        disabled={currentState.currentRound.roundState !== 'placingBets'}
-                                    >
-                                        Bet
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                <div className={styles['bet-option']}>
+                    {Object.entries(currentState.roundOdds.odds).map(([choice, odd]) => (
+                        <div
+                            key={choice}
+                            className={styles['bet-option-item']}
+                            onClick={() => handleBet(choice)}
+                            style={{ cursor: currentState.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed' }}
+                        >
+                            <span>{choice.charAt(0).toUpperCase() + choice.slice(1)}</span>
+                            <span>{odd}</span>
+                        </div>
+                    ))}
                 </div>
             </div>
 
