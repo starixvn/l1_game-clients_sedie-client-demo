@@ -12,6 +12,8 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [showBetPanel, setShowBetPanel] = useState(false);
     const [activePanelId, setActivePanelId] = useState<string | null>(null);
+    const [showHomeScore, setShowHomeScore] = useState(false);
+    const [showAwayScore, setShowAwayScore] = useState(false);
 
     // Simulate countdown timer
     useEffect(() => {
@@ -44,6 +46,18 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                 isLocking: roundState === 'lockingBet'
             }
         }));
+
+        // Reset score display when starting new round
+        if (roundState === 'placingBets') {
+            setShowHomeScore(false);
+            setShowAwayScore(false);
+        }
+
+        // Simulate card flip animations
+        if (roundState === 'showingResult') {
+            setTimeout(() => setShowHomeScore(true), 500);
+            setTimeout(() => setShowAwayScore(true), 1500);
+        }
     }, [countdown]);
 
     const handleBet = (choice: string) => {
@@ -87,6 +101,11 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
         }
     };
 
+    const shouldHideCards = currentState.currentRound.roundState !== 'showingResult';
+    const showHighLight = currentState.currentRound.roundState === 'showingResult';
+    const isHomeHigher = currentState.currentResult.homeScore > currentState.currentResult.awayScore;
+    const isAwayHigher = currentState.currentResult.awayScore > currentState.currentResult.homeScore;
+
     return (
         <div className={styles['sport-item']}>
             {/* Header Section */}
@@ -110,35 +129,71 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                 </div>
             </div>
 
-            {/* Content Section - Using settlement-result styles */}
+            {/* Content Section - Mimicking settlement-result structure */}
             <div className={styles['wrapper-sport-middle']}>
+                {/* Home Team Card */}
+                <div className={`${styles['sport-team']} ${styles['home-team']}`}>
+                    <div className={styles['sport-team-img']}>
+                        <img src={`/assets/rng-soccer/teams/${currentState.teamData.home.name.toLowerCase().replace(/\s+/g, '-')}.png`} alt="home-team" />
+                    </div>
+                </div>
+
+                {/* Result Section with Cards */}
                 <div className={styles['sport-result']}>
                     <div className={styles['container-result']}>
-                        {currentState.currentRound.roundState === 'showingResult' && (
-                            <div className={settlementStyles['rng-soccer-result']}>
-                                <div className={settlementStyles['score-display']}>
-                                    <div className={settlementStyles['team-name']}>Home</div>
-                                    <div className={settlementStyles['score']}>
-                                        {currentState.currentResult.homeScore}
+                        {/* Home Card */}
+                        <div className={`${styles['card-section']} ${showHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
+                            <div className={styles['card']}>
+                                {shouldHideCards ? (
+                                    <div className={styles['card-back']}>🂠</div>
+                                ) : (
+                                    <div className={styles['card-front']}>
+                                        {`${currentState.currentResult.home.rank}${['♠', '♥', '♦', '♣'][currentState.currentResult.home.suit - 1]}`}
                                     </div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>VS</div>
-                                    <div className={settlementStyles['score']}>
-                                        {currentState.currentResult.awayScore}
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Score Display */}
+                        <div className={styles['result-section']}>
+                            <div className={`${styles['result']} ${isHomeHigher && showHighLight ? styles['higher-score'] : ''}`}>
+                                <span>{showHomeScore ? currentState.currentResult.homeScore : ''}</span>
+                            </div>
+                            <div className={`${styles['result']} ${isAwayHigher && showHighLight ? styles['higher-score'] : ''}`}>
+                                <span>{showAwayScore ? currentState.currentResult.awayScore : ''}</span>
+                            </div>
+                        </div>
+
+                        {/* Away Card */}
+                        <div className={`${styles['card-section']} ${showHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
+                            <div className={styles['card']}>
+                                {shouldHideCards ? (
+                                    <div className={styles['card-back']}>🂠</div>
+                                ) : (
+                                    <div className={styles['card-front']}>
+                                        {`${currentState.currentResult.away.rank}${['♠', '♥', '♦', '♣'][currentState.currentResult.away.suit - 1]}`}
                                     </div>
-                                    <div className={settlementStyles['team-name']}>Away</div>
-                                </div>
-                                <div className={settlementStyles['winning-symbols']}>
-                                    Winner: {currentState.settlementResult.home ? 'Home' :
-                                        currentState.settlementResult.away ? 'Away' : 'Draw'}
-                                </div>
+                                )}
                             </div>
-                        )}
-                        {currentState.currentRound.roundState !== 'showingResult' && (
-                            <div className={styles['result-section']}>
-                                <div className={styles['dots']}></div>
-                            </div>
-                        )}
+                        </div>
                     </div>
+                </div>
+
+                {/* Away Team Card */}
+                <div className={`${styles['sport-team']} ${styles['away-team']}`}>
+                    <div className={styles['sport-team-img']}>
+                        <img src={`/assets/rng-soccer/teams/${currentState.teamData.away.name.toLowerCase().replace(/\s+/g, '-')}.png`} alt="away-team" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Team Names */}
+            <div className={styles['wrapper-team-name']}>
+                <div className={styles['name']}>
+                    {currentState.teamData.home.name}
+                </div>
+                <div className={styles['name']}>
+                    {currentState.teamData.away.name}
                 </div>
             </div>
 
