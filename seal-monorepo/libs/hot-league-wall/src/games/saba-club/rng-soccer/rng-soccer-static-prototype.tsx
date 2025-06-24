@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FAKE_RNG_SOCCER_DATA } from './fake-data';
 import { RNGSoccerChoices } from './type';
 import styles from './rng-soccer.module.scss';
+import settlementStyles from './settlement-result/rng-soccer-animations.module.scss';
+import betOptionStyles from './bet-option/rng-soccer-bet-options.module.scss';
 
 // Static prototype component for RNG Soccer
 export const RNGSoccerStaticPrototype: React.FC = () => {
@@ -108,50 +110,62 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                 </div>
             </div>
 
-            {/* Content Section */}
-            <div className={styles['wrapper-sport-content']}>
-                <div className={styles['settlement-result']}>
-                    {currentState.currentRound.roundState === 'showingResult' && (
-                        <div className={styles['result-display']}>
-                            <div className={styles['team-scores']}>
-                                <div className={styles['team']}>
-                                    <span>Home</span>
-                                    <span>{currentState.currentResult.homeScore}</span>
+            {/* Content Section - Using settlement-result styles */}
+            <div className={styles['wrapper-sport-middle']}>
+                <div className={styles['sport-result']}>
+                    <div className={styles['container-result']}>
+                        {currentState.currentRound.roundState === 'showingResult' && (
+                            <div className={settlementStyles['rng-soccer-result']}>
+                                <div className={settlementStyles['score-display']}>
+                                    <div className={settlementStyles['team-name']}>Home</div>
+                                    <div className={settlementStyles['score']}>
+                                        {currentState.currentResult.homeScore}
+                                    </div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>VS</div>
+                                    <div className={settlementStyles['score']}>
+                                        {currentState.currentResult.awayScore}
+                                    </div>
+                                    <div className={settlementStyles['team-name']}>Away</div>
                                 </div>
-                                <div>VS</div>
-                                <div className={styles['team']}>
-                                    <span>Away</span>
-                                    <span>{currentState.currentResult.awayScore}</span>
+                                <div className={settlementStyles['winning-symbols']}>
+                                    Winner: {currentState.settlementResult.home ? 'Home' :
+                                        currentState.settlementResult.away ? 'Away' : 'Draw'}
                                 </div>
                             </div>
-                            <div className={styles['winner']}>
-                                Winner: {currentState.settlementResult.home ? 'Home' :
-                                    currentState.settlementResult.away ? 'Away' : 'Draw'}
+                        )}
+                        {currentState.currentRound.roundState !== 'showingResult' && (
+                            <div className={styles['result-section']}>
+                                <div className={styles['dots']}></div>
                             </div>
-                        </div>
-                    )}
-                    {currentState.currentRound.roundState !== 'showingResult' && (
-                        <div className={styles['waiting-for-result']}>
-                            <div>Waiting for result...</div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Footer Section */}
+            {/* Footer Section - Using bet-option styles */}
             <div className={styles['wrapper-sport-bottom']}>
-                <div className={styles['bet-option']}>
-                    {Object.entries(currentState.roundOdds.odds).map(([choice, odd]) => (
-                        <div
-                            key={choice}
-                            className={styles['bet-option-item']}
-                            onClick={() => handleBet(choice)}
-                            style={{ cursor: currentState.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed' }}
-                        >
-                            <span>{choice.charAt(0).toUpperCase() + choice.slice(1)}</span>
-                            <span>{odd}</span>
-                        </div>
-                    ))}
+                <div className={betOptionStyles['bet-options-wrapper']}>
+                    <div className={betOptionStyles['bet-options-container']}>
+                        {Object.entries(currentState.roundOdds.odds).map(([choice, odd]) => (
+                            <div
+                                key={choice}
+                                className={betOptionStyles['bets-bg']}
+                                data-choice={choice}
+                                onClick={() => handleBet(choice)}
+                                style={{
+                                    cursor: currentState.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
+                                    opacity: currentState.currentRound.roundState === 'placingBets' ? 1 : 0.6
+                                }}
+                            >
+                                <div className={betOptionStyles['padding-bet']}>
+                                    <span className={betOptionStyles['bet-choice-text']}>
+                                        {choice.charAt(0).toUpperCase() + choice.slice(1)}
+                                    </span>
+                                    <span className={betOptionStyles['bet-option']}>{odd}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -161,11 +175,17 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                     <div className={styles['close-popup']} onClick={togglePopup}>
                         <span>×</span>
                     </div>
-                    <div className={styles['statistics-content']}>
-                        <h3>Round History</h3>
-                        <div className={styles['history-list']}>
+                    <div className={styles['block-wrapper']}>
+                        <h3 style={{ color: 'white', margin: '0 0 1rem 0' }}>Round History</h3>
+                        <div className={styles['info-block']}>
                             {currentState.roundHistory.slice(0, 10).map((round) => (
-                                <div key={round.roundId} className={styles['history-item']}>
+                                <div key={round.roundId} style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    padding: '0.5rem',
+                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'white'
+                                }}>
                                     <span>Round #{round.roundId}</span>
                                     <span>
                                         {round.settlementResult.home ? 'Home' :
@@ -181,7 +201,18 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
 
             {/* Next Round Message */}
             {currentState.uiState.isShowNextRoundMessage && (
-                <div className={styles['next-round-message']}>
+                <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'rgba(0,0,0,0.8)',
+                    color: 'white',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    zIndex: 1000,
+                    textAlign: 'center'
+                }}>
                     Bet placed successfully! Next round starting soon...
                 </div>
             )}

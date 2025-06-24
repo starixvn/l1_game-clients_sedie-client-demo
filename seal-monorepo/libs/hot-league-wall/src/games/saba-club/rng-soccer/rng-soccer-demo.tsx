@@ -3,6 +3,8 @@ import RNGSoccerStaticPrototype from './rng-soccer-static-prototype';
 import { FAKE_RNG_SOCCER_DATA } from './fake-data';
 import styles from './rng-soccer.module.scss';
 import demoStyles from './rng-soccer-demo.module.scss';
+import settlementStyles from './settlement-result/rng-soccer-animations.module.scss';
+import betOptionStyles from './bet-option/rng-soccer-bet-options.module.scss';
 
 // Demo page for RNG Soccer static prototype
 export const RNGSoccerDemo: React.FC = () => {
@@ -77,45 +79,53 @@ export const RNGSoccerDemo: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Content Section */}
-                    <div className={styles['wrapper-sport-content']}>
-                        <div className={styles['settlement-result']}>
-                            {FAKE_RNG_SOCCER_DATA.currentRound.roundState === 'showingResult' && (
-                                <div className={styles['result-display']}>
-                                    <div className={styles['team-scores']}>
-                                        <div className={styles['team']}>
-                                            <span>Home</span>
-                                            <span>{FAKE_RNG_SOCCER_DATA.currentResult.homeScore}</span>
+                    {/* Content Section - Using settlement-result styles */}
+                    <div className={styles['wrapper-sport-middle']}>
+                        <div className={styles['sport-result']}>
+                            <div className={styles['container-result']}>
+                                {FAKE_RNG_SOCCER_DATA.currentRound.roundState === 'showingResult' && (
+                                    <div className={settlementStyles['rng-soccer-result']}>
+                                        <div className={settlementStyles['score-display']}>
+                                            <div className={settlementStyles['team-name']}>Home</div>
+                                            <div className={settlementStyles['score']}>
+                                                {FAKE_RNG_SOCCER_DATA.currentResult.homeScore}
+                                            </div>
+                                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>VS</div>
+                                            <div className={settlementStyles['score']}>
+                                                {FAKE_RNG_SOCCER_DATA.currentResult.awayScore}
+                                            </div>
+                                            <div className={settlementStyles['team-name']}>Away</div>
                                         </div>
-                                        <div>VS</div>
-                                        <div className={styles['team']}>
-                                            <span>Away</span>
-                                            <span>{FAKE_RNG_SOCCER_DATA.currentResult.awayScore}</span>
+                                        <div className={settlementStyles['winning-symbols']}>
+                                            Winner: {FAKE_RNG_SOCCER_DATA.settlementResult.home ? 'Home' :
+                                                FAKE_RNG_SOCCER_DATA.settlementResult.away ? 'Away' : 'Draw'}
                                         </div>
                                     </div>
-                                    <div className={styles['winner']}>
-                                        Winner: {FAKE_RNG_SOCCER_DATA.settlementResult.home ? 'Home' :
-                                            FAKE_RNG_SOCCER_DATA.settlementResult.away ? 'Away' : 'Draw'}
+                                )}
+                                {FAKE_RNG_SOCCER_DATA.currentRound.roundState !== 'showingResult' && (
+                                    <div className={styles['result-section']}>
+                                        <div className={styles['dots']}></div>
                                     </div>
-                                </div>
-                            )}
-                            {FAKE_RNG_SOCCER_DATA.currentRound.roundState !== 'showingResult' && (
-                                <div className={styles['waiting-for-result']}>
-                                    <div>Waiting for result...</div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Footer Section */}
+                    {/* Footer Section - Using bet-option styles */}
                     <div className={styles['wrapper-sport-bottom']}>
-                        <div className={styles['bet-option']}>
-                            {Object.entries(FAKE_RNG_SOCCER_DATA.roundOdds.odds).map(([choice, odd]) => (
-                                <div key={choice} className={styles['bet-option-item']}>
-                                    <span>{choice.charAt(0).toUpperCase() + choice.slice(1)}</span>
-                                    <span>{odd}</span>
-                                </div>
-                            ))}
+                        <div className={betOptionStyles['bet-options-wrapper']}>
+                            <div className={betOptionStyles['bet-options-container']}>
+                                {Object.entries(FAKE_RNG_SOCCER_DATA.roundOdds.odds).map(([choice, odd]) => (
+                                    <div key={choice} className={betOptionStyles['bets-bg']} data-choice={choice}>
+                                        <div className={betOptionStyles['padding-bet']}>
+                                            <span className={betOptionStyles['bet-choice-text']}>
+                                                {choice.charAt(0).toUpperCase() + choice.slice(1)}
+                                            </span>
+                                            <span className={betOptionStyles['bet-option']}>{odd}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
