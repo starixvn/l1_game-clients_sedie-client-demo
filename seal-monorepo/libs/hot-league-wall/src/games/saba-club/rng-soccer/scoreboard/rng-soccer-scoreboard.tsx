@@ -21,6 +21,7 @@ interface IBaccaratScoreboardState extends IStateObserver {
 
 class RNGSoccerBigRoadConverter extends Converter<RNGSoccerSettlementItemResult> {
     static addBlinkNode(rounds: RNGSoccerSettlementItemResult[]) {
+        console.log('🟠 RNGSoccerBigRoadConverter: addBlinkNode called with rounds:', rounds);
         const lastRound = rounds.find((round) => round?.home || round?.draw || round?.away);
         if (!lastRound) return;
 
@@ -30,6 +31,7 @@ class RNGSoccerBigRoadConverter extends Converter<RNGSoccerSettlementItemResult>
             away: lastRound?.away || false
         };
 
+        console.log('🟠 RNGSoccerBigRoadConverter: Adding blink round:', blinkRound);
         rounds.unshift(blinkRound);
     }
 
@@ -44,7 +46,9 @@ class RNGSoccerBigRoadConverter extends Converter<RNGSoccerSettlementItemResult>
     }
 
     convert(group: RNGSoccerSettlementItemResult[]): boolean {
-        return group.filter((result) => (result as any)[this.positiveKey()]).length !== 0;
+        const result = group.filter((result) => (result as any)[this.positiveKey()]).length !== 0;
+        console.log('🟠 RNGSoccerBigRoadConverter: convert called with group:', group, 'result:', result);
+        return result;
     }
 }
 
@@ -53,6 +57,7 @@ export class RNGSoccerScoreboard extends ObserverComponent<Props, IBaccaratScore
     private readonly bigRoad: BigRoadScoreboard<RNGSoccerSettlementItemResult>;
 
     constructor(props: Props) {
+        console.log('🟠 RNGSoccerScoreboard: Constructor called with props:', props);
         super(props);
         this.state = {
             rounds: [],
@@ -63,15 +68,18 @@ export class RNGSoccerScoreboard extends ObserverComponent<Props, IBaccaratScore
             converter: RNGSoccerBigRoadConverter.instance,
             height: this.DEFAULT_MAX_ROWS,
         });
+        console.log('🟠 RNGSoccerScoreboard: Initial state set:', this.state);
     }
 
     @render(gc.RoundHistories.RoundHistoryStore, (store) => store.histories)
     private onRoundHistoryUpdate(rounds: gc.RoundHistories.RoundHistory[]) {
+        console.log('🟠 RNGSoccerScoreboard: onRoundHistoryUpdate called with rounds:', rounds);
         this.setState({ rounds, isLockingBet: false });
     }
 
     @render(gc.Rounds.RoundTimeStore, (store) => store.isLocking)
     private renderCountDownTimerState(isLocking: boolean) {
+        console.log('🟠 RNGSoccerScoreboard: renderCountDownTimerState called with isLocking:', isLocking);
         if (isLocking) {
             this.setState({ isLockingBet: true });
         }
@@ -81,13 +89,19 @@ export class RNGSoccerScoreboard extends ObserverComponent<Props, IBaccaratScore
         const { noRender, gameName, maxRows = this.DEFAULT_MAX_ROWS } = this.props;
         const { rounds, isLockingBet } = this.state;
 
+        console.log('🟠 RNGSoccerScoreboard: render called with props:', { noRender, gameName, maxRows }, 'state:', { rounds: rounds?.length, isLockingBet });
+
         if (noRender || !rounds?.length) {
+            console.log('🟠 RNGSoccerScoreboard: Early return due to noRender or no rounds');
             return <div />;
         }
 
         const input = [...rounds].map((round) => round.settlementResult as unknown as RNGSoccerSettlementItemResult).reverse();
+        console.log('🟠 RNGSoccerScoreboard: Processed input data:', input);
+
         this.bigRoad.initialize(input, isLockingBet);
         const rows = this.bigRoad.rows();
+        console.log('🟠 RNGSoccerScoreboard: Big road rows generated:', rows);
 
         return (
             <div className={styles.scoreboard}>

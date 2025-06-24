@@ -14,16 +14,26 @@ export function getMessage(
     state: GameState,
     translator: Translator
 ): string | null {
+    console.log('🔴 getMessage: Called with state:', state);
+
+    let message: string | null = null;
+
     switch (state.roundState) {
         case ROUND_STATE.PLACING_BET:
-            return state.placingBetStartTime === state.countdownTimer
+            message = state.placingBetStartTime === state.countdownTimer
                 ? translator.t('Common.message_place_bets')
                 : null;
+            break;
         case ROUND_STATE.LOCKING_BET:
-            return translator.t('Common.message_stop_bet');
+            message = translator.t('Common.message_stop_bet');
+            break;
         default:
-            return state.isShowNextRoundMessage
+            message = state.isShowNextRoundMessage
                 ? translator.t('Common.message_placebet_next_round')
                 : null;
+            break;
     }
+
+    console.log('🔴 getMessage: Returning message:', message);
+    return message;
 } 

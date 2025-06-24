@@ -56,15 +56,19 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     protected extensionOptions: UIExtensionOptions = {};
 
     constructor(options?: UIExtensionOptions) {
+        console.log('🔴 GameUIRenderer: Constructor called with options:', options);
         this.extensionOptions = options || {};
     }
 
     setExtensionOptions(options: UIExtensionOptions): void {
+        console.log('🔴 GameUIRenderer: setExtensionOptions called with:', options);
         this.extensionOptions = { ...this.extensionOptions, ...options };
     }
 
     getExtensionClass(key: string): string {
-        return this.extensionOptions.classes?.[key as keyof UIExtensionOptions['classes']] || '';
+        const result = this.extensionOptions.classes?.[key as keyof UIExtensionOptions['classes']] || '';
+        console.log('🔴 GameUIRenderer: getExtensionClass called with key:', key, 'result:', result);
+        return result;
     }
 
     // Helper method to resolve JSX elements, handling null/undefined values
@@ -72,10 +76,12 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         customSection: JSX.Element | null | undefined,
         defaultRenderer: () => JSX.Element
     ): JSX.Element {
+        console.log('🔴 GameUIRenderer: resolveCustomSection called with customSection:', !!customSection);
         return customSection || defaultRenderer();
     }
 
     renderNotice(props: P, state: S): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderNotice called');
         return (
             <Notice
                 namespace={props.namespace}
@@ -86,24 +92,29 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderWarning(props: P): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderWarning called');
         return <Warning namespace={props.namespace} />;
     }
 
     renderRoundIdSection(state: S) {
         const { roundId, roundState } = state;
+        console.log('🔴 GameUIRenderer: renderRoundIdSection called with:', { roundId, roundState });
         return <RoundId clientRoundId={roundId} roundState={roundState} />;
     }
 
 
     renderCountDownTimer(props: P, setState: (state: Partial<S>) => void) {
+        console.log('🔴 GameUIRenderer: renderCountDownTimer called');
         return (
             <CountDownTimer
                 namespace={props.namespace}
                 language={props.language}
                 onComplete={() => {
+                    console.log('🔴 GameUIRenderer: CountDownTimer onComplete triggered');
                     setState({ isAllowedBet: true } as Partial<S>);
                 }}
                 onCountdownTimerChange={(countdownTimer: number) => {
+                    console.log('🔴 GameUIRenderer: CountDownTimer onCountdownTimerChange:', countdownTimer);
                     setState({ countdownTimer } as Partial<S>);
                 }}
             />
@@ -111,6 +122,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderResultBlock(props?: P, state?: S): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderResultBlock called');
         if (this.extensionOptions.components?.customResult && props && state) {
             return this.extensionOptions.components.customResult(props, state);
         }
@@ -118,6 +130,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderStatistic(props?: P, state?: S): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderStatistic called');
         if (this.extensionOptions.components?.customStatistic && props && state) {
             return this.extensionOptions.components.customStatistic(props, state);
         }
@@ -125,6 +138,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderWaitingForNextRound(state: S) {
+        console.log('🔴 GameUIRenderer: renderWaitingForNextRound called');
         const message = getGameMessage(state, gc.Translator);
         if (!message) return null;
         return (
@@ -133,6 +147,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderBettingBlock(props?: P, state?: S): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderBettingBlock called');
         if (this.extensionOptions.components?.customBetting && props && state) {
             return this.extensionOptions.components.customBetting(props, state);
         }
@@ -140,6 +155,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderAnimationBalance(state: S) {
+        console.log('🔴 GameUIRenderer: renderAnimationBalance called');
         const { statusSettlement, isFinishShowResult } = state;
 
         if (!statusSettlement || !statusSettlement.win) {
@@ -154,6 +170,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderGameHeaderSection(props: P, state: S, setState: (state: Partial<S>) => void, overrideClasses?: any): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderGameHeaderSection called');
         if (this.extensionOptions.components?.customHeader) {
             return this.extensionOptions.components.customHeader(props, state);
         }
@@ -184,6 +201,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     renderStandardGameHeader(props: P, state: S, setState: (state: Partial<S>) => void, overrideClasses?: any): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderStandardGameHeader called');
         const headerClass = classNames(
             Styles['game-header'],
             this.getExtensionClass('header'),
@@ -215,6 +233,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         const statsIconUrl = this.extensionOptions.config?.statsIconUrl;
 
         const toggleStatistic = () => {
+            console.log('🔴 GameUIRenderer: toggleStatistic called');
             if (typeof this.extensionOptions.config?.onStatsIconClick === 'function') {
                 this.extensionOptions.config.onStatsIconClick();
             }

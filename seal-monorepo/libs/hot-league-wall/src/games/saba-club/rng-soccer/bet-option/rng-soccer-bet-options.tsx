@@ -10,7 +10,7 @@ interface RNGSoccerBetOptionsProps {
     gameName: string;
     namespace: string;
     language: string;
-    onBet: (symbol: string, amount: number) => void;
+    onBet: () => void;
 }
 
 const betOptionsList = [
@@ -21,6 +21,7 @@ const betOptionsList = [
 
 export default class RNGSoccerBetOptions extends BetOptions {
     renderBetOptions(betChoice: string, odd: number, name: string = '', isBoostedChoice: boolean = false) {
+        console.log('🟣 RNGSoccerBetOptions: renderBetOptions called with:', { betChoice, odd, name, isBoostedChoice });
         const { settlementResult } = this.state;
 
         return (
@@ -30,7 +31,10 @@ export default class RNGSoccerBetOptions extends BetOptions {
                 gameName={this.props.gameName}
                 namespace={this.props.namespace}
                 settlementResult={settlementResult}
-                onBet={this.props.onBet}
+                onBet={() => {
+                    console.log('🟣 RNGSoccerBetOptions: Bet placed for choice:', betChoice);
+                    this.props.onBet();
+                }}
             >
                 <div className={`${styles['container-bets']} ${rngSoccerStyles['padding-bet']}`}>
                     <span className={rngSoccerStyles['bet-choice-text']} title={name}>{name}</span>
@@ -41,10 +45,9 @@ export default class RNGSoccerBetOptions extends BetOptions {
     }
 
     isBoostedChoice = (choice: string, boostedChoices: string[] | null) => {
-        if (!boostedChoices) {
-            return false;
-        }
-        return boostedChoices.includes(choice);
+        const result = boostedChoices ? boostedChoices.includes(choice) : false;
+        console.log('🟣 RNGSoccerBetOptions: isBoostedChoice called with:', { choice, boostedChoices, result });
+        return result;
     };
 
     render() {
@@ -52,6 +55,8 @@ export default class RNGSoccerBetOptions extends BetOptions {
         const odds = roundOdds?.odds || {};
         const boostedChoices = boostedOdds ? boostedOdds.boostedChoices : roundOdds?.boostedChoices;
         const t = (key) => gc.Translator.translate(key, { languageId: gc.Translator.getCurrentLanguageId() });
+
+        console.log('🟣 RNGSoccerBetOptions: render called with state:', { roundOdds, boostedOdds, odds, boostedChoices });
 
         return (
             <div className={rngSoccerStyles['bet-options-wrapper']}>

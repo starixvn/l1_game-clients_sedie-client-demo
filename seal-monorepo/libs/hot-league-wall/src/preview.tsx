@@ -6,7 +6,8 @@ import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import RngSoccerDemo from './pages/demos/rng-soccer/rng-soccer-demo';
+import RngSoccerDemo from './games/saba-club/rng-soccer/rng-soccer-demo';
+import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/rng-soccer-static-prototype';
 
 const Preview = () => {
     const [token, setToken] = useState('');
@@ -57,6 +58,7 @@ const PreviewContext = ({ token, renewToken }) => {
             <ProviderSetDropDown />
             <Routes>
                 <Route path="/rng-soccer-demo" element={<RngSoccerDemo />} />
+                <Route path="/rng-soccer-prototype" element={<RNGSoccerStaticPrototype />} />
                 <Route path="*" element={
                     <App
                         appEnv={appEnv}
