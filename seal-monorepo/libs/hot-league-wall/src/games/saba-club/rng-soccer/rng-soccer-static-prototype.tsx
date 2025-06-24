@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FAKE_RNG_SOCCER_DATA } from './fake-data';
 import { RNGSoccerChoices } from './type';
 import styles from './rng-soccer.module.scss';
+import gameBaseStyles from '../../game-base/game-base.module.scss';
+import countDownTimerStyles from '../../../_shared/components/count-down-timer/count-down-timer.module.scss';
 import settlementStyles from './settlement-result/rng-soccer-animations.module.scss';
 import betOptionStyles from './bet-option/rng-soccer-bet-options.module.scss';
 import cardStyles from '../../../_shared/components/card/card.module.scss';
@@ -11,6 +13,7 @@ import CardBack from '../../../_shared/components/card/card-back';
 import { CardResult } from '../../../_shared/components/card/type';
 import TeamCard, { TeamCardAnimation } from './settlement-result/components/team-card';
 import { TeamUtils } from './settlement-result/utils/team-utils';
+import { RoundId } from '../../../_shared/components/round-id';
 
 // Function to get team logo using TeamUtils
 const getTeamLogo = (teamName: string): string => {
@@ -57,9 +60,9 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
     // Simulate round state changes
     useEffect(() => {
         let roundState = 'placingBets';
-        if (countdown <= 10) roundState = 'lockingBet';
-        if (countdown <= 5) roundState = 'showingResult';
-        if (countdown <= 1) roundState = 'finished';
+        if (countdown <= 19) roundState = 'showingResult';
+        if (countdown <= 16) roundState = 'finished';
+        if (countdown <= 3) roundState = 'lockingBet';
 
         setCurrentState(prev => ({
             ...prev,
@@ -145,22 +148,39 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
     const homeTeamLogo = getTeamLogo(currentState.teamData.home.name);
     const awayTeamLogo = getTeamLogo(currentState.teamData.away.name);
 
+    // Determine countdown state classes
+    const getCountdownStateClass = () => {
+        switch (currentState.currentRound.roundState) {
+            case 'placingBets': return countDownTimerStyles['placing-bet-state'];
+            case 'lockingBet': return countDownTimerStyles['no-more-bet-state'];
+            case 'showingResult':
+            case 'finished': return countDownTimerStyles['show-result-state'];
+            default: return '';
+        }
+    };
+
     return (
         <div className={styles['sport-item']}>
-            {/* Header Section */}
-            <div className={styles['wrapper-sport-top']}>
-                <div className={styles['game-name']}>
-                    <div className={styles['game-name-text']}>
+            {/* Header Section - Using game-base styling structure */}
+            <div className={gameBaseStyles['game-header']}>
+                <div className={gameBaseStyles['game-name']}>
+                    <div className={gameBaseStyles['game-name-text']}>
                         {currentState.gameSettings.gameName}
                         <span className={styles['live-icon']}>🔴</span>
                     </div>
-                    <div className={styles['game-name-round']}>
-                        Round #{currentState.currentRound.roundId}
-                    </div>
+                    <RoundId
+                        clientRoundId={currentState.currentRound.roundId}
+                        roundState={currentState.currentRound.roundState}
+                        className={gameBaseStyles['game-name-round']}
+                    />
                 </div>
-                <div className={styles['timer']}>
-                    <div className={styles['count-down']}>
-                        {countdown}s
+                <div className={gameBaseStyles['timer']}>
+                    <div className={countDownTimerStyles['count-down']}>
+                        <div className={`${countDownTimerStyles['timer-wrapper']} ${getCountdownStateClass()}`}>
+                            <div className={countDownTimerStyles['counting-text']}>
+                                {countdown}s
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className={styles['score-board-img']} onClick={togglePopup}>

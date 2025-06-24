@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import RNGSoccerStaticPrototype from './rng-soccer-static-prototype';
 import { FAKE_RNG_SOCCER_DATA } from './fake-data';
 import styles from './rng-soccer.module.scss';
+import gameBaseStyles from '../../game-base/game-base.module.scss';
+import countDownTimerStyles from '../../../_shared/components/count-down-timer/count-down-timer.module.scss';
 import demoStyles from './rng-soccer-demo.module.scss';
 import settlementStyles from './settlement-result/rng-soccer-animations.module.scss';
 import betOptionStyles from './bet-option/rng-soccer-bet-options.module.scss';
@@ -12,6 +14,7 @@ import CardBack from '../../../_shared/components/card/card-back';
 import { CardResult } from '../../../_shared/components/card/type';
 import TeamCard, { TeamCardAnimation } from './settlement-result/components/team-card';
 import { TeamUtils } from './settlement-result/utils/team-utils';
+import { RoundId } from '../../../_shared/components/round-id';
 
 // Function to get team logo using TeamUtils
 const getTeamLogo = (teamName: string): string => {
@@ -76,6 +79,17 @@ export const RNGSoccerDemo: React.FC = () => {
     const homeTeamLogo = getTeamLogo(FAKE_RNG_SOCCER_DATA.teamData.home.name);
     const awayTeamLogo = getTeamLogo(FAKE_RNG_SOCCER_DATA.teamData.away.name);
 
+    // Determine countdown state classes
+    const getCountdownStateClass = () => {
+        switch (FAKE_RNG_SOCCER_DATA.currentRound.roundState) {
+            case 'placingBets': return countDownTimerStyles['placing-bet-state'];
+            case 'lockingBet': return countDownTimerStyles['no-more-bet-state'];
+            case 'showingResult':
+            case 'finished': return countDownTimerStyles['show-result-state'];
+            default: return '';
+        }
+    };
+
     return (
         <div className={demoStyles['demo-container']}>
             {/* Header */}
@@ -102,20 +116,26 @@ export const RNGSoccerDemo: React.FC = () => {
             {/* Game Container - Using actual RNG Soccer styles */}
             <div className={demoStyles['game-demo-container']}>
                 <div className={styles['sport-item']}>
-                    {/* Header Section */}
-                    <div className={styles['wrapper-sport-top']}>
-                        <div className={styles['game-name']}>
-                            <div className={styles['game-name-text']}>
+                    {/* Header Section - Using game-base styling structure */}
+                    <div className={gameBaseStyles['game-header']}>
+                        <div className={gameBaseStyles['game-name']}>
+                            <div className={gameBaseStyles['game-name-text']}>
                                 {FAKE_RNG_SOCCER_DATA.gameSettings.gameName}
                                 <span className={styles['live-icon']}>🔴</span>
                             </div>
-                            <div className={styles['game-name-round']}>
-                                Round #{FAKE_RNG_SOCCER_DATA.currentRound.roundId}
-                            </div>
+                            <RoundId
+                                clientRoundId={FAKE_RNG_SOCCER_DATA.currentRound.roundId}
+                                roundState={FAKE_RNG_SOCCER_DATA.currentRound.roundState}
+                                className={gameBaseStyles['game-name-round']}
+                            />
                         </div>
-                        <div className={styles['timer']}>
-                            <div className={styles['count-down']}>
-                                {FAKE_RNG_SOCCER_DATA.currentRound.countdownTimer}s
+                        <div className={gameBaseStyles['timer']}>
+                            <div className={countDownTimerStyles['count-down']}>
+                                <div className={`${countDownTimerStyles['timer-wrapper']} ${getCountdownStateClass()}`}>
+                                    <div className={countDownTimerStyles['counting-text']}>
+                                        {FAKE_RNG_SOCCER_DATA.currentRound.countdownTimer}s
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className={styles['score-board-img']}>
