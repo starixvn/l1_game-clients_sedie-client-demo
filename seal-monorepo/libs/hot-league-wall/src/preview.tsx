@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSentryInit } from './saba-games-index';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER, VIVA88_SITE_ID } from '../constant/app';
 import App from './app';
@@ -9,8 +9,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RngSoccerDemo from './games/saba-club/rng-soccer/rng-soccer-demo';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/rng-soccer-static-prototype';
 
-const Preview = () => {
+const Preview = (): React.ReactElement | null => {
     const [token, setToken] = useState('');
+    const [hasClickedPlay, setHasClickedPlay] = useState(false);
 
     const isInitialMount = useRef(true);
 
@@ -21,6 +22,10 @@ const Preview = () => {
         }
     }, []);
 
+    const handlePlayButtonClick = useCallback(() => {
+        setHasClickedPlay(true);
+    }, []);
+
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -28,18 +33,35 @@ const Preview = () => {
         }
     }, [handleGetToken]);
 
+    if (!token) {
+        return null;
+    }
+
     return (
-        token && (
-            <PreviewProvider>
-                <Router>
-                    <PreviewContext token={token} renewToken={handleGetToken} />
-                </Router>
-            </PreviewProvider>
-        )
+        <PreviewProvider>
+            <Router>
+                <PreviewContext
+                    token={token}
+                    renewToken={handleGetToken}
+                    hasClickedPlay={hasClickedPlay}
+                    onPlayButtonClick={handlePlayButtonClick}
+                />
+            </Router>
+        </PreviewProvider>
     );
 };
 
-const PreviewContext = ({ token, renewToken }) => {
+const PreviewContext = ({
+    token,
+    renewToken,
+    hasClickedPlay,
+    onPlayButtonClick
+}: {
+    token: string;
+    renewToken: () => void;
+    hasClickedPlay: boolean;
+    onPlayButtonClick: () => void;
+}) => {
     const { theme, isDarkMode, language } = usePreviewContext();
 
     const appEnv = '';
@@ -60,13 +82,17 @@ const PreviewContext = ({ token, renewToken }) => {
                 <Route path="/rng-soccer-demo" element={<RngSoccerDemo />} />
                 <Route path="/rng-soccer-prototype" element={<RNGSoccerStaticPrototype />} />
                 <Route path="*" element={
-                    <App
-                        appEnv={appEnv}
-                        token={token}
-                        language={language}
-                        siteId={siteId}
-                        renewToken={renewToken}
-                    />
+                    hasClickedPlay ? (
+                        <App
+                            appEnv={appEnv}
+                            token={token}
+                            language={language}
+                            siteId={siteId}
+                            renewToken={renewToken}
+                        />
+                    ) : (
+                        <RNGSoccerStaticPrototype onPlayButtonClick={onPlayButtonClick} />
+                    )
                 } />
             </Routes>
         </div>

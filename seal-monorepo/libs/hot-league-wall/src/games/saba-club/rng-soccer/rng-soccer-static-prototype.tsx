@@ -33,7 +33,7 @@ const getTeamLogo = (teamName: string): string => {
 };
 
 // Static prototype component for RNG Soccer
-export const RNGSoccerStaticPrototype: React.FC = () => {
+export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void }> = ({ onPlayButtonClick }) => {
     const [currentState, setCurrentState] = useState(FAKE_RNG_SOCCER_DATA);
     const [countdown, setCountdown] = useState(15);
     const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -41,12 +41,10 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
     const [activePanelId, setActivePanelId] = useState<string | null>(null);
     const [showHomeScore, setShowHomeScore] = useState(false);
     const [showAwayScore, setShowAwayScore] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPlayButtonVisible, setIsPlayButtonVisible] = useState(true);
 
     // Simulate countdown timer
     useEffect(() => {
-        if (!isPlaying) return;
-
         const timer = setInterval(() => {
             setCountdown(prev => {
                 if (prev <= 1) {
@@ -56,14 +54,11 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                 return prev - 1;
             });
         }, 1000);
-
         return () => clearInterval(timer);
-    }, [isPlaying]);
+    }, []);
 
     // Simulate round state changes
     useEffect(() => {
-        if (!isPlaying) return;
-
         let roundState = 'placingBets';
         if (countdown <= 19) roundState = 'showingResult';
         if (countdown <= 16) roundState = 'finished';
@@ -90,11 +85,13 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
             setTimeout(() => setShowHomeScore(true), 500);
             setTimeout(() => setShowAwayScore(true), 1500);
         }
-    }, [countdown, isPlaying]);
+    }, [countdown]);
 
     const handlePlayClick = () => {
-        console.log('▶️ Play button clicked');
-        setIsPlaying(true);
+        setIsPlayButtonVisible(false);
+        if (onPlayButtonClick) {
+            onPlayButtonClick();
+        }
     };
 
     const handleBet = (choice: string) => {
@@ -171,8 +168,8 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
 
     return (
         <div className={styles['sport-item']} style={{ position: 'relative' }}>
-            {/* Play Overlay */}
-            {!isPlaying && (
+            {/* Play Overlay (visual only, game always runs) */}
+            {isPlayButtonVisible && (
                 <div style={{
                     position: 'absolute',
                     top: 0,
@@ -233,7 +230,7 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                     <div className={countDownTimerStyles['count-down']}>
                         <div className={`${countDownTimerStyles['timer-wrapper']} ${getCountdownStateClass()}`}>
                             <div className={countDownTimerStyles['counting-text']}>
-                                {isPlaying ? `${countdown}s` : '--'}
+                                {countdown}s
                             </div>
                         </div>
                     </div>
@@ -318,8 +315,8 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                                 data-choice={choice}
                                 onClick={() => handleBet(choice)}
                                 style={{
-                                    cursor: currentState.currentRound.roundState === 'placingBets' && isPlaying ? 'pointer' : 'not-allowed',
-                                    opacity: currentState.currentRound.roundState === 'placingBets' && isPlaying ? 1 : 0.6
+                                    cursor: currentState.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
+                                    opacity: currentState.currentRound.roundState === 'placingBets' ? 1 : 0.6
                                 }}
                             >
                                 <div className={betOptionStyles['padding-bet']}>
