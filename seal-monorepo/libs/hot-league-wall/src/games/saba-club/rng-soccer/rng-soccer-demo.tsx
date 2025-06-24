@@ -5,6 +5,30 @@ import styles from './rng-soccer.module.scss';
 import demoStyles from './rng-soccer-demo.module.scss';
 import settlementStyles from './settlement-result/rng-soccer-animations.module.scss';
 import betOptionStyles from './bet-option/rng-soccer-bet-options.module.scss';
+import cardStyles from '../../../_shared/components/card/card.module.scss';
+import flipCardStyles from '../../../_shared/components/card/flip-card/flip-card.module.scss';
+import Card from '../../../_shared/components/card';
+import CardBack from '../../../_shared/components/card/card-back';
+import { CardResult } from '../../../_shared/components/card/type';
+import TeamCard, { TeamCardAnimation } from './settlement-result/components/team-card';
+import { TeamUtils } from './settlement-result/utils/team-utils';
+
+// Function to get team logo using TeamUtils
+const getTeamLogo = (teamName: string): string => {
+    // Try to find the team abbreviation by matching the full name
+    const teamEntry = Object.entries(TeamUtils.TEAM_INFO).find(
+        ([_, info]) => info.fullName === teamName
+    );
+
+    if (teamEntry) {
+        return TeamUtils.getTeamLogo(teamEntry[0]);
+    }
+
+    // Fallback to default icons
+    return teamName.toLowerCase().includes('home')
+        ? TeamUtils.getTeamLogo('DEFAULT_HOME')
+        : TeamUtils.getTeamLogo('DEFAULT_AWAY');
+};
 
 // Demo page for RNG Soccer static prototype
 export const RNGSoccerDemo: React.FC = () => {
@@ -36,6 +60,21 @@ export const RNGSoccerDemo: React.FC = () => {
     const showHighLight = FAKE_RNG_SOCCER_DATA.currentRound.roundState === 'showingResult';
     const isHomeHigher = FAKE_RNG_SOCCER_DATA.currentResult.homeScore > FAKE_RNG_SOCCER_DATA.currentResult.awayScore;
     const isAwayHigher = FAKE_RNG_SOCCER_DATA.currentResult.awayScore > FAKE_RNG_SOCCER_DATA.currentResult.homeScore;
+
+    // Create card data for the Card component
+    const homeCardData: CardResult = {
+        rank: FAKE_RNG_SOCCER_DATA.currentResult.home.rank,
+        suit: FAKE_RNG_SOCCER_DATA.currentResult.home.suit
+    };
+
+    const awayCardData: CardResult = {
+        rank: FAKE_RNG_SOCCER_DATA.currentResult.away.rank,
+        suit: FAKE_RNG_SOCCER_DATA.currentResult.away.suit
+    };
+
+    // Get team logo URLs using TeamUtils
+    const homeTeamLogo = getTeamLogo(FAKE_RNG_SOCCER_DATA.teamData.home.name);
+    const awayTeamLogo = getTeamLogo(FAKE_RNG_SOCCER_DATA.teamData.away.name);
 
     return (
         <div className={demoStyles['demo-container']}>
@@ -84,27 +123,25 @@ export const RNGSoccerDemo: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Content Section - Mimicking settlement-result structure */}
+                    {/* Content Section - Using actual card components and CSS */}
                     <div className={styles['wrapper-sport-middle']}>
                         {/* Home Team Card */}
-                        <div className={`${styles['sport-team']} ${styles['home-team']}`}>
-                            <div className={styles['sport-team-img']}>
-                                <img src={`/assets/rng-soccer/teams/${FAKE_RNG_SOCCER_DATA.teamData.home.name.toLowerCase().replace(/\s+/g, '-')}.png`} alt="home-team" />
-                            </div>
-                        </div>
+                        <TeamCard
+                            logo={homeTeamLogo}
+                            isHomeTeam={true}
+                            animation={TeamCardAnimation.NONE}
+                        />
 
                         {/* Result Section with Cards */}
                         <div className={styles['sport-result']}>
                             <div className={styles['container-result']}>
                                 {/* Home Card */}
                                 <div className={`${styles['card-section']} ${showHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
-                                    <div className={styles['card']}>
+                                    <div className={flipCardStyles['card']}>
                                         {shouldHideCards ? (
-                                            <div className={styles['card-back']}>🂠</div>
+                                            <CardBack />
                                         ) : (
-                                            <div className={styles['card-front']}>
-                                                {`${FAKE_RNG_SOCCER_DATA.currentResult.home.rank}${['♠', '♥', '♦', '♣'][FAKE_RNG_SOCCER_DATA.currentResult.home.suit - 1]}`}
-                                            </div>
+                                            <Card result={homeCardData} customClassName="card-baccarat" />
                                         )}
                                     </div>
                                 </div>
@@ -121,13 +158,11 @@ export const RNGSoccerDemo: React.FC = () => {
 
                                 {/* Away Card */}
                                 <div className={`${styles['card-section']} ${showHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
-                                    <div className={styles['card']}>
+                                    <div className={flipCardStyles['card']}>
                                         {shouldHideCards ? (
-                                            <div className={styles['card-back']}>🂠</div>
+                                            <CardBack />
                                         ) : (
-                                            <div className={styles['card-front']}>
-                                                {`${FAKE_RNG_SOCCER_DATA.currentResult.away.rank}${['♠', '♥', '♦', '♣'][FAKE_RNG_SOCCER_DATA.currentResult.away.suit - 1]}`}
-                                            </div>
+                                            <Card result={awayCardData} customClassName="card-baccarat" />
                                         )}
                                     </div>
                                 </div>
@@ -135,20 +170,20 @@ export const RNGSoccerDemo: React.FC = () => {
                         </div>
 
                         {/* Away Team Card */}
-                        <div className={`${styles['sport-team']} ${styles['away-team']}`}>
-                            <div className={styles['sport-team-img']}>
-                                <img src={`/assets/rng-soccer/teams/${FAKE_RNG_SOCCER_DATA.teamData.away.name.toLowerCase().replace(/\s+/g, '-')}.png`} alt="away-team" />
-                            </div>
-                        </div>
-                    </div>
+                        <TeamCard
+                            logo={awayTeamLogo}
+                            isHomeTeam={false}
+                            animation={TeamCardAnimation.NONE}
+                        />
 
-                    {/* Team Names */}
-                    <div className={styles['wrapper-team-name']}>
-                        <div className={styles['name']}>
-                            {FAKE_RNG_SOCCER_DATA.teamData.home.name}
-                        </div>
-                        <div className={styles['name']}>
-                            {FAKE_RNG_SOCCER_DATA.teamData.away.name}
+                        {/* Team Names - Inside the middle section to match game-display.tsx */}
+                        <div className={styles['wrapper-team-name']}>
+                            <div className={styles['name']}>
+                                {FAKE_RNG_SOCCER_DATA.teamData.home.name}
+                            </div>
+                            <div className={styles['name']}>
+                                {FAKE_RNG_SOCCER_DATA.teamData.away.name}
+                            </div>
                         </div>
                     </div>
 

@@ -4,6 +4,30 @@ import { RNGSoccerChoices } from './type';
 import styles from './rng-soccer.module.scss';
 import settlementStyles from './settlement-result/rng-soccer-animations.module.scss';
 import betOptionStyles from './bet-option/rng-soccer-bet-options.module.scss';
+import cardStyles from '../../../_shared/components/card/card.module.scss';
+import flipCardStyles from '../../../_shared/components/card/flip-card/flip-card.module.scss';
+import Card from '../../../_shared/components/card';
+import CardBack from '../../../_shared/components/card/card-back';
+import { CardResult } from '../../../_shared/components/card/type';
+import TeamCard, { TeamCardAnimation } from './settlement-result/components/team-card';
+import { TeamUtils } from './settlement-result/utils/team-utils';
+
+// Function to get team logo using TeamUtils
+const getTeamLogo = (teamName: string): string => {
+    // Try to find the team abbreviation by matching the full name
+    const teamEntry = Object.entries(TeamUtils.TEAM_INFO).find(
+        ([_, info]) => info.fullName === teamName
+    );
+
+    if (teamEntry) {
+        return TeamUtils.getTeamLogo(teamEntry[0]);
+    }
+
+    // Fallback to default icons
+    return teamName.toLowerCase().includes('home')
+        ? TeamUtils.getTeamLogo('DEFAULT_HOME')
+        : TeamUtils.getTeamLogo('DEFAULT_AWAY');
+};
 
 // Static prototype component for RNG Soccer
 export const RNGSoccerStaticPrototype: React.FC = () => {
@@ -21,7 +45,7 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
             setCountdown(prev => {
                 if (prev <= 1) {
                     console.log('🔄 Round completed, starting new round');
-                    return 30;
+                    return 20;
                 }
                 return prev - 1;
             });
@@ -106,6 +130,21 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
     const isHomeHigher = currentState.currentResult.homeScore > currentState.currentResult.awayScore;
     const isAwayHigher = currentState.currentResult.awayScore > currentState.currentResult.homeScore;
 
+    // Create card data for the Card component
+    const homeCardData: CardResult = {
+        rank: currentState.currentResult.home.rank,
+        suit: currentState.currentResult.home.suit
+    };
+
+    const awayCardData: CardResult = {
+        rank: currentState.currentResult.away.rank,
+        suit: currentState.currentResult.away.suit
+    };
+
+    // Get team logo URLs using TeamUtils
+    const homeTeamLogo = getTeamLogo(currentState.teamData.home.name);
+    const awayTeamLogo = getTeamLogo(currentState.teamData.away.name);
+
     return (
         <div className={styles['sport-item']}>
             {/* Header Section */}
@@ -129,27 +168,25 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                 </div>
             </div>
 
-            {/* Content Section - Mimicking settlement-result structure */}
+            {/* Content Section - Using actual card components and CSS */}
             <div className={styles['wrapper-sport-middle']}>
                 {/* Home Team Card */}
-                <div className={`${styles['sport-team']} ${styles['home-team']}`}>
-                    <div className={styles['sport-team-img']}>
-                        <img src={`/assets/rng-soccer/teams/${currentState.teamData.home.name.toLowerCase().replace(/\s+/g, '-')}.png`} alt="home-team" />
-                    </div>
-                </div>
+                <TeamCard
+                    logo={homeTeamLogo}
+                    isHomeTeam={true}
+                    animation={TeamCardAnimation.NONE}
+                />
 
                 {/* Result Section with Cards */}
                 <div className={styles['sport-result']}>
                     <div className={styles['container-result']}>
                         {/* Home Card */}
                         <div className={`${styles['card-section']} ${showHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
-                            <div className={styles['card']}>
+                            <div className={flipCardStyles['card']}>
                                 {shouldHideCards ? (
-                                    <div className={styles['card-back']}>🂠</div>
+                                    <CardBack />
                                 ) : (
-                                    <div className={styles['card-front']}>
-                                        {`${currentState.currentResult.home.rank}${['♠', '♥', '♦', '♣'][currentState.currentResult.home.suit - 1]}`}
-                                    </div>
+                                    <Card result={homeCardData} customClassName="card-baccarat" />
                                 )}
                             </div>
                         </div>
@@ -157,22 +194,20 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                         {/* Score Display */}
                         <div className={styles['result-section']}>
                             <div className={`${styles['result']} ${isHomeHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showHomeScore ? currentState.currentResult.homeScore : ''}</span>
+                                <span>{showHighLight ? currentState.currentResult.homeScore : ''}</span>
                             </div>
                             <div className={`${styles['result']} ${isAwayHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showAwayScore ? currentState.currentResult.awayScore : ''}</span>
+                                <span>{showHighLight ? currentState.currentResult.awayScore : ''}</span>
                             </div>
                         </div>
 
                         {/* Away Card */}
                         <div className={`${styles['card-section']} ${showHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
-                            <div className={styles['card']}>
+                            <div className={flipCardStyles['card']}>
                                 {shouldHideCards ? (
-                                    <div className={styles['card-back']}>🂠</div>
+                                    <CardBack />
                                 ) : (
-                                    <div className={styles['card-front']}>
-                                        {`${currentState.currentResult.away.rank}${['♠', '♥', '♦', '♣'][currentState.currentResult.away.suit - 1]}`}
-                                    </div>
+                                    <Card result={awayCardData} customClassName="card-baccarat" />
                                 )}
                             </div>
                         </div>
@@ -180,20 +215,20 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                 </div>
 
                 {/* Away Team Card */}
-                <div className={`${styles['sport-team']} ${styles['away-team']}`}>
-                    <div className={styles['sport-team-img']}>
-                        <img src={`/assets/rng-soccer/teams/${currentState.teamData.away.name.toLowerCase().replace(/\s+/g, '-')}.png`} alt="away-team" />
-                    </div>
-                </div>
-            </div>
+                <TeamCard
+                    logo={awayTeamLogo}
+                    isHomeTeam={false}
+                    animation={TeamCardAnimation.NONE}
+                />
 
-            {/* Team Names */}
-            <div className={styles['wrapper-team-name']}>
-                <div className={styles['name']}>
-                    {currentState.teamData.home.name}
-                </div>
-                <div className={styles['name']}>
-                    {currentState.teamData.away.name}
+                {/* Team Names - Inside the middle section to match game-display.tsx */}
+                <div className={styles['wrapper-team-name']}>
+                    <div className={styles['name']}>
+                        {currentState.teamData.home.name}
+                    </div>
+                    <div className={styles['name']}>
+                        {currentState.teamData.away.name}
+                    </div>
                 </div>
             </div>
 

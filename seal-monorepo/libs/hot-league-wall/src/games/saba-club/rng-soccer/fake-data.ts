@@ -1,4 +1,5 @@
 import { RNGSoccerChoices, RNGSoccerResult, RNGSoccerSettlementItemResult, RNGSoccerRoundHistory } from './type';
+import { TeamUtils } from './settlement-result/utils/team-utils';
 
 // Fake data for RNG Soccer game
 export const FAKE_RNG_SOCCER_DATA = {
@@ -9,7 +10,7 @@ export const FAKE_RNG_SOCCER_DATA = {
         gameName: 'RNGSoccer',
         mainObserverNamespace: 'rng-soccer',
         durations: {
-            placingBet: 30,
+            placingBet: 20,
             lockingBet: 10,
             showingResult: 15,
             finished: 5
@@ -28,16 +29,16 @@ export const FAKE_RNG_SOCCER_DATA = {
         isTimerActive: true
     },
 
-    // Team data
+    // Team data - using TeamUtils for consistency
     teamData: {
         home: {
-            name: 'Manchester United',
+            name: TeamUtils.getTeamFullName('ARS'),
             rank: 1,
             suit: 2,
             score: 2
         },
         away: {
-            name: 'Liverpool',
+            name: TeamUtils.getTeamFullName('LIV'),
             rank: 3,
             suit: 1,
             score: 1
@@ -96,7 +97,7 @@ export const FAKE_RNG_SOCCER_DATA = {
         draw: false
     },
 
-    // Round history (last 10 rounds)
+    // Round history (last 10 rounds) - using TeamUtils for team names
     roundHistory: [
         { roundId: 12344, settlementResult: { home: true, away: false, draw: false }, result: { homeScore: 2, awayScore: 0, home: { rank: 1, suit: 2 }, away: { rank: 4, suit: 3 } } },
         { roundId: 12343, settlementResult: { home: false, away: true, draw: false }, result: { homeScore: 0, awayScore: 1, home: { rank: 2, suit: 1 }, away: { rank: 1, suit: 4 } } },
@@ -190,6 +191,59 @@ export const FakeDataHelpers = {
             baseBets[key] += variation;
         });
         return baseBets;
+    },
+
+    // Get random team pair for variety
+    getRandomTeamPair: () => {
+        const teams = TeamUtils.TEAMS.filter(team => team !== 'DEFAULT_HOME' && team !== 'DEFAULT_AWAY');
+        const homeTeam = teams[Math.floor(Math.random() * teams.length)];
+        const awayTeam = teams.filter(team => team !== homeTeam)[Math.floor(Math.random() * (teams.length - 1))];
+
+        return {
+            home: {
+                name: TeamUtils.getTeamFullName(homeTeam),
+                abbreviation: homeTeam,
+                rank: Math.floor(Math.random() * 4) + 1,
+                suit: Math.floor(Math.random() * 4) + 1,
+                score: Math.floor(Math.random() * 4)
+            },
+            away: {
+                name: TeamUtils.getTeamFullName(awayTeam),
+                abbreviation: awayTeam,
+                rank: Math.floor(Math.random() * 4) + 1,
+                suit: Math.floor(Math.random() * 4) + 1,
+                score: Math.floor(Math.random() * 4)
+            }
+        };
+    },
+
+    // Generate random round history with proper team names
+    generateRandomRoundHistory: (count: number = 10): RNGSoccerRoundHistory[] => {
+        const history: RNGSoccerRoundHistory[] = [];
+        for (let i = 0; i < count; i++) {
+            const teamPair = FakeDataHelpers.getRandomTeamPair();
+            const homeScore = Math.floor(Math.random() * 4);
+            const awayScore = Math.floor(Math.random() * 4);
+            const homeWins = homeScore > awayScore;
+            const awayWins = awayScore > homeScore;
+            const isDraw = homeScore === awayScore;
+
+            history.push({
+                roundId: 12345 - i,
+                settlementResult: {
+                    home: homeWins,
+                    away: awayWins,
+                    draw: isDraw
+                },
+                result: {
+                    homeScore,
+                    awayScore,
+                    home: { rank: teamPair.home.rank, suit: teamPair.home.suit },
+                    away: { rank: teamPair.away.rank, suit: teamPair.away.suit }
+                }
+            });
+        }
+        return history;
     }
 };
 
