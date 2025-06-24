@@ -7,11 +7,9 @@ import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RngSoccerDemo from './games/saba-club/rng-soccer/rng-soccer-demo';
-import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/rng-soccer-static-prototype';
 
 const Preview = (): React.ReactElement | null => {
     const [token, setToken] = useState('');
-    const [hasClickedPlay, setHasClickedPlay] = useState(false);
 
     const isInitialMount = useRef(true);
 
@@ -20,10 +18,6 @@ const Preview = (): React.ReactElement | null => {
         if (result?.token) {
             setToken(result.token);
         }
-    }, []);
-
-    const handlePlayButtonClick = useCallback(() => {
-        setHasClickedPlay(true);
     }, []);
 
     useEffect(() => {
@@ -40,12 +34,7 @@ const Preview = (): React.ReactElement | null => {
     return (
         <PreviewProvider>
             <Router>
-                <PreviewContext
-                    token={token}
-                    renewToken={handleGetToken}
-                    hasClickedPlay={hasClickedPlay}
-                    onPlayButtonClick={handlePlayButtonClick}
-                />
+                <PreviewContext token={token} renewToken={handleGetToken} />
             </Router>
         </PreviewProvider>
     );
@@ -53,14 +42,10 @@ const Preview = (): React.ReactElement | null => {
 
 const PreviewContext = ({
     token,
-    renewToken,
-    hasClickedPlay,
-    onPlayButtonClick
+    renewToken
 }: {
     token: string;
     renewToken: () => void;
-    hasClickedPlay: boolean;
-    onPlayButtonClick: () => void;
 }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
 
@@ -80,19 +65,14 @@ const PreviewContext = ({
             <ProviderSetDropDown />
             <Routes>
                 <Route path="/rng-soccer-demo" element={<RngSoccerDemo />} />
-                <Route path="/rng-soccer-prototype" element={<RNGSoccerStaticPrototype />} />
                 <Route path="*" element={
-                    hasClickedPlay ? (
-                        <App
-                            appEnv={appEnv}
-                            token={token}
-                            language={language}
-                            siteId={siteId}
-                            renewToken={renewToken}
-                        />
-                    ) : (
-                        <RNGSoccerStaticPrototype onPlayButtonClick={onPlayButtonClick} />
-                    )
+                    <App
+                        appEnv={appEnv}
+                        token={token}
+                        language={language}
+                        siteId={siteId}
+                        renewToken={renewToken}
+                    />
                 } />
             </Routes>
         </div>
