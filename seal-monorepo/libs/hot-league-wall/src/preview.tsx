@@ -6,7 +6,7 @@ import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import RngSoccerDemo from './games/saba-club/rng-soccer/rng-soccer-demo';
+import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-demo';
 
 const Preview = (): React.ReactElement | null => {
     const [token, setToken] = useState('');

@@ -5,7 +5,7 @@ import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect, useState, useCallback } from 'react';
-import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/rng-soccer-static-prototype';
+import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 
 interface AppProps extends AppContentProps {
     appEnv: string;

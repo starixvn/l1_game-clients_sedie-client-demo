@@ -1,19 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { FAKE_RNG_SOCCER_DATA } from './fake-data';
-import { RNGSoccerChoices } from './type';
-import styles from './rng-soccer.module.scss';
-import gameBaseStyles from '../../game-base/game-base.module.scss';
-import countDownTimerStyles from '../../../_shared/components/count-down-timer/count-down-timer.module.scss';
-import settlementStyles from './settlement-result/rng-soccer-animations.module.scss';
-import betOptionStyles from './bet-option/rng-soccer-bet-options.module.scss';
-import cardStyles from '../../../_shared/components/card/card.module.scss';
-import flipCardStyles from '../../../_shared/components/card/flip-card/flip-card.module.scss';
-import Card from '../../../_shared/components/card';
-import CardBack from '../../../_shared/components/card/card-back';
-import { CardResult } from '../../../_shared/components/card/type';
-import TeamCard, { TeamCardAnimation } from './settlement-result/components/team-card';
-import { TeamUtils } from './settlement-result/utils/team-utils';
-import { RoundId } from '../../../_shared/components/round-id';
+import React from 'react';
+import styles from '../rng-soccer.module.scss';
+import gameBaseStyles from '../../../game-base/game-base.module.scss';
+import countDownTimerStyles from '../../../../_shared/components/count-down-timer/count-down-timer.module.scss';
+import betOptionStyles from '../bet-option/rng-soccer-bet-options.module.scss';
+import flipCardStyles from '../../../../_shared/components/card/flip-card/flip-card.module.scss';
+import Card from '../../../../_shared/components/card';
+import CardBack from '../../../../_shared/components/card/card-back';
+import { CardResult } from '../../../../_shared/components/card/type';
+import TeamCard, { TeamCardAnimation } from '../settlement-result/components/team-card';
+import { TeamUtils } from '../settlement-result/utils/team-utils';
+import { RoundId } from '../../../../_shared/components/round-id';
+
+// Shared types for the base component
+export interface RNGSoccerGameData {
+    gameSettings: {
+        gameName: string;
+    };
+    currentRound: {
+        roundId: number;
+        roundState: string;
+        countdownTimer: number;
+    };
+    teamData: {
+        home: { name: string; rank: number; suit: number; score: number };
+        away: { name: string; rank: number; suit: number; score: number };
+    };
+    currentResult: {
+        homeScore: number;
+        awayScore: number;
+        home: { rank: number; suit: number };
+        away: { rank: number; suit: number };
+    };
+    roundOdds: {
+        odds: Record<string, number>;
+    };
+    roundHistory?: Array<{
+        roundId: number;
+        settlementResult: { home: boolean; away: boolean; draw: boolean };
+        result: { homeScore: number; awayScore: number };
+    }>;
+    uiState?: {
+        isShowNextRoundMessage?: boolean;
+    };
+}
+
+export interface RNGSoccerBaseProps {
+    gameData: RNGSoccerGameData;
+    onBetClick?: (choice: string) => void;
+    onStatisticsClick?: () => void;
+    showPlayOverlay?: boolean;
+    onPlayClick?: () => void;
+    isInteractive?: boolean;
+    showStatisticsPopup?: boolean;
+    onCloseStatistics?: () => void;
+}
 
 // Function to get team logo using TeamUtils
 const getTeamLogo = (teamName: string): string => {
@@ -32,132 +72,40 @@ const getTeamLogo = (teamName: string): string => {
         : TeamUtils.getTeamLogo('DEFAULT_AWAY');
 };
 
-// Static prototype component for RNG Soccer
-export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void }> = ({ onPlayButtonClick }) => {
-    const [currentState, setCurrentState] = useState(FAKE_RNG_SOCCER_DATA);
-    const [countdown, setCountdown] = useState(15);
-    const [isPopupVisible, setIsPopupVisible] = useState(false);
-    const [showBetPanel, setShowBetPanel] = useState(false);
-    const [activePanelId, setActivePanelId] = useState<string | null>(null);
-    const [showHomeScore, setShowHomeScore] = useState(false);
-    const [showAwayScore, setShowAwayScore] = useState(false);
-    const [isPlayButtonVisible, setIsPlayButtonVisible] = useState(true);
-
-    // Simulate countdown timer
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) {
-                    console.log('🔄 Round completed, starting new round');
-                    return 20;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    // Simulate round state changes
-    useEffect(() => {
-        let roundState = 'placingBets';
-        if (countdown <= 19) roundState = 'showingResult';
-        if (countdown <= 16) roundState = 'finished';
-        if (countdown <= 3) roundState = 'lockingBet';
-
-        setCurrentState(prev => ({
-            ...prev,
-            currentRound: {
-                ...prev.currentRound,
-                roundState,
-                countdownTimer: countdown,
-                isLocking: roundState === 'lockingBet'
-            }
-        }));
-
-        // Reset score display when starting new round
-        if (roundState === 'placingBets') {
-            setShowHomeScore(false);
-            setShowAwayScore(false);
-        }
-
-        // Simulate card flip animations
-        if (roundState === 'showingResult') {
-            setTimeout(() => setShowHomeScore(true), 500);
-            setTimeout(() => setShowAwayScore(true), 1500);
-        }
-    }, [countdown]);
-
-    const handlePlayClick = () => {
-        setIsPlayButtonVisible(false);
-        if (onPlayButtonClick) {
-            onPlayButtonClick();
-        }
-    };
-
-    const handleBet = (choice: string) => {
-        console.log('🎯 Bet placed:', choice);
-        setShowBetPanel(false);
-        setActivePanelId(null);
-
-        setTimeout(() => {
-            setCurrentState(prev => ({
-                ...prev,
-                uiState: {
-                    ...prev.uiState,
-                    isShowNextRoundMessage: true
-                }
-            }));
-
-            setTimeout(() => {
-                setCurrentState(prev => ({
-                    ...prev,
-                    uiState: {
-                        ...prev.uiState,
-                        isShowNextRoundMessage: false
-                    }
-                }));
-            }, 3000);
-        }, 1000);
-    };
-
-    const togglePopup = () => {
-        console.log('📊 Toggle popup');
-        setIsPopupVisible(!isPopupVisible);
-    };
-
-    const getRoundStateText = () => {
-        switch (currentState.currentRound.roundState) {
-            case 'placingBets': return 'Place Your Bets';
-            case 'lockingBet': return 'Betting Locked';
-            case 'showingResult': return 'Showing Result';
-            case 'finished': return 'Round Finished';
-            default: return 'Waiting...';
-        }
-    };
-
-    const shouldHideCards = currentState.currentRound.roundState !== 'showingResult';
-    const showHighLight = currentState.currentRound.roundState === 'showingResult';
-    const isHomeHigher = currentState.currentResult.homeScore > currentState.currentResult.awayScore;
-    const isAwayHigher = currentState.currentResult.awayScore > currentState.currentResult.homeScore;
+// Base component that contains all the shared UI logic
+export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
+    gameData,
+    onBetClick,
+    onStatisticsClick,
+    showPlayOverlay = false,
+    onPlayClick,
+    isInteractive = true,
+    showStatisticsPopup = false,
+    onCloseStatistics
+}) => {
+    const shouldHideCards = gameData.currentRound.roundState !== 'showingResult';
+    const showHighLight = gameData.currentRound.roundState === 'showingResult';
+    const isHomeHigher = gameData.currentResult.homeScore > gameData.currentResult.awayScore;
+    const isAwayHigher = gameData.currentResult.awayScore > gameData.currentResult.homeScore;
 
     // Create card data for the Card component
     const homeCardData: CardResult = {
-        rank: currentState.currentResult.home.rank,
-        suit: currentState.currentResult.home.suit
+        rank: gameData.currentResult.home.rank,
+        suit: gameData.currentResult.home.suit
     };
 
     const awayCardData: CardResult = {
-        rank: currentState.currentResult.away.rank,
-        suit: currentState.currentResult.away.suit
+        rank: gameData.currentResult.away.rank,
+        suit: gameData.currentResult.away.suit
     };
 
     // Get team logo URLs using TeamUtils
-    const homeTeamLogo = getTeamLogo(currentState.teamData.home.name);
-    const awayTeamLogo = getTeamLogo(currentState.teamData.away.name);
+    const homeTeamLogo = getTeamLogo(gameData.teamData.home.name);
+    const awayTeamLogo = getTeamLogo(gameData.teamData.away.name);
 
     // Determine countdown state classes
     const getCountdownStateClass = () => {
-        switch (currentState.currentRound.roundState) {
+        switch (gameData.currentRound.roundState) {
             case 'placingBets': return countDownTimerStyles['placing-bet-state'];
             case 'lockingBet': return countDownTimerStyles['no-more-bet-state'];
             case 'showingResult':
@@ -166,10 +114,20 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
         }
     };
 
+    const getRoundStateText = () => {
+        switch (gameData.currentRound.roundState) {
+            case 'placingBets': return 'Place Your Bets';
+            case 'lockingBet': return 'Betting Locked';
+            case 'showingResult': return 'Showing Result';
+            case 'finished': return 'Round Finished';
+            default: return 'Waiting...';
+        }
+    };
+
     return (
         <div className={styles['sport-item']} style={{ position: 'relative' }}>
-            {/* Play Overlay (visual only, game always runs) */}
-            {isPlayButtonVisible && (
+            {/* Play Overlay */}
+            {showPlayOverlay && (
                 <div style={{
                     position: 'absolute',
                     top: 0,
@@ -183,7 +141,7 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
                     justifyContent: 'center'
                 }}>
                     <button
-                        onClick={handlePlayClick}
+                        onClick={onPlayClick}
                         style={{
                             background: 'linear-gradient(180deg, #4a5a6a 0%, #222c36 100%)',
                             border: '2px solid #fff',
@@ -213,16 +171,16 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
                 </div>
             )}
 
-            {/* Header Section - Using game-base styling structure */}
+            {/* Header Section */}
             <div className={gameBaseStyles['game-header']}>
                 <div className={gameBaseStyles['game-name']}>
                     <div className={gameBaseStyles['game-name-text']}>
-                        {currentState.gameSettings.gameName}
+                        {gameData.gameSettings.gameName}
                         <span className={styles['live-icon']}>🔴</span>
                     </div>
                     <RoundId
-                        clientRoundId={currentState.currentRound.roundId}
-                        roundState={currentState.currentRound.roundState}
+                        clientRoundId={gameData.currentRound.roundId}
+                        roundState={gameData.currentRound.roundState}
                         className={gameBaseStyles['game-name-round']}
                     />
                 </div>
@@ -230,17 +188,21 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
                     <div className={countDownTimerStyles['count-down']}>
                         <div className={`${countDownTimerStyles['timer-wrapper']} ${getCountdownStateClass()}`}>
                             <div className={countDownTimerStyles['counting-text']}>
-                                {countdown}s
+                                {gameData.currentRound.countdownTimer}s
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className={styles['score-board-img']} onClick={togglePopup}>
+                <div
+                    className={styles['score-board-img']}
+                    onClick={onStatisticsClick}
+                    style={{ cursor: onStatisticsClick ? 'pointer' : 'default' }}
+                >
                     📊
                 </div>
             </div>
 
-            {/* Content Section - Using actual card components and CSS */}
+            {/* Content Section */}
             <div className={styles['wrapper-sport-middle']}>
                 {/* Home Team Card */}
                 <TeamCard
@@ -266,10 +228,10 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
                         {/* Score Display */}
                         <div className={styles['result-section']}>
                             <div className={`${styles['result']} ${isHomeHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showHighLight ? currentState.currentResult.homeScore : ''}</span>
+                                <span>{showHighLight ? gameData.currentResult.homeScore : ''}</span>
                             </div>
                             <div className={`${styles['result']} ${isAwayHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showHighLight ? currentState.currentResult.awayScore : ''}</span>
+                                <span>{showHighLight ? gameData.currentResult.awayScore : ''}</span>
                             </div>
                         </div>
 
@@ -293,30 +255,30 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
                     animation={TeamCardAnimation.NONE}
                 />
 
-                {/* Team Names - Inside the middle section to match game-display.tsx */}
+                {/* Team Names */}
                 <div className={styles['wrapper-team-name']}>
                     <div className={styles['name']}>
-                        {currentState.teamData.home.name}
+                        {gameData.teamData.home.name}
                     </div>
                     <div className={styles['name']}>
-                        {currentState.teamData.away.name}
+                        {gameData.teamData.away.name}
                     </div>
                 </div>
             </div>
 
-            {/* Footer Section - Using bet-option styles */}
+            {/* Footer Section */}
             <div className={styles['wrapper-sport-bottom']}>
                 <div className={betOptionStyles['bet-options-wrapper']}>
                     <div className={betOptionStyles['bet-options-container']}>
-                        {Object.entries(currentState.roundOdds.odds).map(([choice, odd]) => (
+                        {Object.entries(gameData.roundOdds.odds).map(([choice, odd]) => (
                             <div
                                 key={choice}
                                 className={betOptionStyles['bets-bg']}
                                 data-choice={choice}
-                                onClick={() => handleBet(choice)}
+                                onClick={() => onBetClick?.(choice)}
                                 style={{
-                                    cursor: currentState.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
-                                    opacity: currentState.currentRound.roundState === 'placingBets' ? 1 : 0.6
+                                    cursor: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
+                                    opacity: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 1 : 0.6
                                 }}
                             >
                                 <div className={betOptionStyles['padding-bet']}>
@@ -332,15 +294,15 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
             </div>
 
             {/* Statistics Popup */}
-            {isPopupVisible && (
+            {showStatisticsPopup && gameData.roundHistory && (
                 <div className={`${styles['wrapper-popup']} ${styles['active']}`}>
-                    <div className={styles['close-popup']} onClick={togglePopup}>
+                    <div className={styles['close-popup']} onClick={onCloseStatistics}>
                         <span>×</span>
                     </div>
                     <div className={styles['block-wrapper']}>
                         <h3 style={{ color: 'white', margin: '0 0 1rem 0' }}>Round History</h3>
                         <div className={styles['info-block']}>
-                            {currentState.roundHistory.slice(0, 10).map((round) => (
+                            {gameData.roundHistory.slice(0, 10).map((round) => (
                                 <div key={round.roundId} style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
@@ -362,7 +324,7 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
             )}
 
             {/* Next Round Message */}
-            {currentState.uiState.isShowNextRoundMessage && (
+            {gameData.uiState?.isShowNextRoundMessage && (
                 <div style={{
                     position: 'absolute',
                     top: '50%',
@@ -382,4 +344,4 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => void
     );
 };
 
-export default RNGSoccerStaticPrototype; 
+export default RNGSoccerBase; 

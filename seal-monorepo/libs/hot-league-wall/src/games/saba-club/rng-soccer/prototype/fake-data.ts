@@ -1,5 +1,5 @@
-import { RNGSoccerChoices, RNGSoccerResult, RNGSoccerSettlementItemResult, RNGSoccerRoundHistory } from './type';
-import { TeamUtils } from './settlement-result/utils/team-utils';
+import { RNGSoccerChoices, RNGSoccerResult, RNGSoccerSettlementItemResult, RNGSoccerRoundHistory } from '../type';
+import { TeamUtils } from '../settlement-result/utils/team-utils';
 
 // Fake data for RNG Soccer game
 export const FAKE_RNG_SOCCER_DATA = {
