@@ -41,9 +41,12 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
     const [activePanelId, setActivePanelId] = useState<string | null>(null);
     const [showHomeScore, setShowHomeScore] = useState(false);
     const [showAwayScore, setShowAwayScore] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
 
     // Simulate countdown timer
     useEffect(() => {
+        if (!isPlaying) return;
+
         const timer = setInterval(() => {
             setCountdown(prev => {
                 if (prev <= 1) {
@@ -55,10 +58,12 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [isPlaying]);
 
     // Simulate round state changes
     useEffect(() => {
+        if (!isPlaying) return;
+
         let roundState = 'placingBets';
         if (countdown <= 19) roundState = 'showingResult';
         if (countdown <= 16) roundState = 'finished';
@@ -85,7 +90,12 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
             setTimeout(() => setShowHomeScore(true), 500);
             setTimeout(() => setShowAwayScore(true), 1500);
         }
-    }, [countdown]);
+    }, [countdown, isPlaying]);
+
+    const handlePlayClick = () => {
+        console.log('▶️ Play button clicked');
+        setIsPlaying(true);
+    };
 
     const handleBet = (choice: string) => {
         console.log('🎯 Bet placed:', choice);
@@ -160,7 +170,52 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
     };
 
     return (
-        <div className={styles['sport-item']}>
+        <div className={styles['sport-item']} style={{ position: 'relative' }}>
+            {/* Play Overlay */}
+            {!isPlaying && (
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    <button
+                        onClick={handlePlayClick}
+                        style={{
+                            background: 'linear-gradient(180deg, #4a5a6a 0%, #222c36 100%)',
+                            border: '2px solid #fff',
+                            borderRadius: '24px',
+                            padding: '8px 28px',
+                            fontSize: '20px',
+                            fontWeight: 'bold',
+                            color: 'white',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                            transition: 'all 0.2s',
+                            textTransform: 'none',
+                            letterSpacing: '0.5px',
+                            zIndex: 1001,
+                            outline: 'none',
+                            minWidth: '120px',
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.filter = 'brightness(1.1)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.filter = 'none';
+                        }}
+                    >
+                        Play Now
+                    </button>
+                </div>
+            )}
+
             {/* Header Section - Using game-base styling structure */}
             <div className={gameBaseStyles['game-header']}>
                 <div className={gameBaseStyles['game-name']}>
@@ -178,7 +233,7 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                     <div className={countDownTimerStyles['count-down']}>
                         <div className={`${countDownTimerStyles['timer-wrapper']} ${getCountdownStateClass()}`}>
                             <div className={countDownTimerStyles['counting-text']}>
-                                {countdown}s
+                                {isPlaying ? `${countdown}s` : '--'}
                             </div>
                         </div>
                     </div>
@@ -263,8 +318,8 @@ export const RNGSoccerStaticPrototype: React.FC = () => {
                                 data-choice={choice}
                                 onClick={() => handleBet(choice)}
                                 style={{
-                                    cursor: currentState.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
-                                    opacity: currentState.currentRound.roundState === 'placingBets' ? 1 : 0.6
+                                    cursor: currentState.currentRound.roundState === 'placingBets' && isPlaying ? 'pointer' : 'not-allowed',
+                                    opacity: currentState.currentRound.roundState === 'placingBets' && isPlaying ? 1 : 0.6
                                 }}
                             >
                                 <div className={betOptionStyles['padding-bet']}>
