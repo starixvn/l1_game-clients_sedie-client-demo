@@ -42,14 +42,42 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, onPlayButtonToke
     const [currentToken, setCurrentToken] = useState(token);
 
     const handlePlayButtonClick = useCallback(async () => {
+        const appStartTime = performance.now();
+        console.log('🎮 [APP_TIMING] Play button clicked in App component at:', new Date().toISOString());
+
         // If we have a token request callback, use it to get a fresh token
         if (onPlayButtonTokenRequest) {
-            const newToken = await onPlayButtonTokenRequest();
-            if (newToken) {
-                setCurrentToken(newToken);
+            console.log('🔄 [APP_TIMING] Calling token request callback...');
+            const tokenStartTime = performance.now();
+
+            try {
+                const newToken = await onPlayButtonTokenRequest();
+                const tokenEndTime = performance.now();
+                const tokenDuration = tokenEndTime - tokenStartTime;
+
+                if (newToken) {
+                    console.log(`✅ [APP_TIMING] Token callback completed - Duration: ${tokenDuration.toFixed(2)}ms`);
+                    console.log(`🔄 [APP_TIMING] Updating current token...`);
+                    setCurrentToken(newToken);
+                } else {
+                    console.log(`⚠️ [APP_TIMING] Token callback returned null - Duration: ${tokenDuration.toFixed(2)}ms`);
+                }
+            } catch (error) {
+                const tokenEndTime = performance.now();
+                const tokenDuration = tokenEndTime - tokenStartTime;
+                console.log(`💥 [APP_TIMING] Token callback failed - Duration: ${tokenDuration.toFixed(2)}ms`);
+                console.error('[APP_TIMING] Token callback error:', error);
             }
+        } else {
+            console.log('⚠️ [APP_TIMING] No token request callback provided');
         }
+
+        console.log('🎯 [APP_TIMING] Setting hasClickedPlay to true...');
         setHasClickedPlay(true);
+
+        const appEndTime = performance.now();
+        const appDuration = appEndTime - appStartTime;
+        console.log(`🏁 [APP_TIMING] Play button handling completed - Total duration: ${appDuration.toFixed(2)}ms`);
     }, [onPlayButtonTokenRequest]);
 
     useEffect(() => {

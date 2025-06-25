@@ -42,16 +42,37 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => Prom
     }, [countdown]);
 
     const handlePlayClick = async () => {
+        const prototypeStartTime = performance.now();
+        console.log('🎯 [PROTOTYPE_TIMING] Play button clicked in RNG Soccer prototype at:', new Date().toISOString());
+
+        console.log('👁️ [PROTOTYPE_TIMING] Hiding play button overlay...');
         setIsPlayButtonVisible(false);
+
         if (onPlayButtonClick) {
+            console.log('🔄 [PROTOTYPE_TIMING] Calling onPlayButtonClick callback...');
+            const callbackStartTime = performance.now();
+
             try {
                 await onPlayButtonClick();
+                const callbackEndTime = performance.now();
+                const callbackDuration = callbackEndTime - callbackStartTime;
+                console.log(`✅ [PROTOTYPE_TIMING] onPlayButtonClick callback completed - Duration: ${callbackDuration.toFixed(2)}ms`);
             } catch (error) {
-                console.error('Error during play button click:', error);
+                const callbackEndTime = performance.now();
+                const callbackDuration = callbackEndTime - callbackStartTime;
+                console.log(`💥 [PROTOTYPE_TIMING] onPlayButtonClick callback failed - Duration: ${callbackDuration.toFixed(2)}ms`);
+                console.error('[PROTOTYPE_TIMING] Error during play button click:', error);
                 // Re-show the play button if there was an error
+                console.log('🔄 [PROTOTYPE_TIMING] Re-showing play button due to error...');
                 setIsPlayButtonVisible(true);
             }
+        } else {
+            console.log('⚠️ [PROTOTYPE_TIMING] No onPlayButtonClick callback provided');
         }
+
+        const prototypeEndTime = performance.now();
+        const prototypeDuration = prototypeEndTime - prototypeStartTime;
+        console.log(`🏁 [PROTOTYPE_TIMING] Play button handling completed - Total duration: ${prototypeDuration.toFixed(2)}ms`);
     };
 
     const handleBet = (choice: string) => {
