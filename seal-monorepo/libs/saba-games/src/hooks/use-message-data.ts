@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { MessageType } from '../_shared/types/message-types';
+import { MessageData, MessageType } from '../_shared/types/message-types';
 import { useMessageContext } from '../_shared/contexts/message-context';
 
 export const useMessageData = <T extends MessageType>(messageType: T) => {
@@ -7,31 +7,31 @@ export const useMessageData = <T extends MessageType>(messageType: T) => {
     return getMessageData(messageType);
 };
 
-export const useBetPanelData = () => {
+export const useBetPanelData = (): MessageData[MessageType.BET_PANEL_STATE] | undefined => {
     return useMessageData(MessageType.BET_PANEL_STATE);
 };
 
-export const useStatisticData = () => {
+export const useStatisticData = (): MessageData[MessageType.TOGGLE_STATISTIC] | undefined => {
     return useMessageData(MessageType.TOGGLE_STATISTIC);
 };
 
-export const useSettingsData = () => {
+export const useSettingsData = (): MessageData[MessageType.UPDATE_SETTINGS] | undefined => {
     return useMessageData(MessageType.UPDATE_SETTINGS);
 };
 
-export const useBettingBlockData = () => {
+export const useBettingBlockData = (): MessageData[MessageType.BETTING_BLOCK_STATE] | undefined => {
     return useMessageData(MessageType.BETTING_BLOCK_STATE);
 };
 
-export const useHandleBetData = () => {
+export const useHandleBetData = (): MessageData[MessageType.HANDLE_BET] | undefined => {
     return useMessageData(MessageType.HANDLE_BET);
 };
 
-export const useInputChangeData = () => {
+export const useInputChangeData = (): MessageData[MessageType.HANDLE_INPUT_CHANGE] | undefined => {
     return useMessageData(MessageType.HANDLE_INPUT_CHANGE);
 };
 
-export const useHeightData = () => {
+export const useHeightData = (): MessageData[MessageType.SET_HEIGHT] | undefined => {
     return useMessageData(MessageType.SET_HEIGHT);
 };
 

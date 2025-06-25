@@ -1,19 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { MessageHandlerManager, MessageHandlerConfig, MessageHandlerOptions } from '../utils/message-handler-manager';
-import { WindowMessage, MessageType } from '../types/message-types';
-
-interface MessageData {
-    [MessageType.UPDATE_SETTINGS]?: any;
-    [MessageType.BETTING_BLOCK_STATE]?: any;
-    [MessageType.BET_PANEL_STATE]?: any;
-    [MessageType.HANDLE_BET]?: any;
-    [MessageType.HANDLE_INPUT_CHANGE]?: any;
-    [MessageType.HANDLE_CLEAR]?: any;
-    [MessageType.HIDE_ALL_BET_PANELS]?: any;
-    [MessageType.TOGGLE_STATISTIC]?: any;
-    [MessageType.GET_HEIGHT]?: any;
-    [MessageType.SET_HEIGHT]?: any;
-}
+import { WindowMessage, MessageType, MessageData } from '../types/message-types';
 
 interface MessageContextType {
     sendMessage: (message: WindowMessage) => void;

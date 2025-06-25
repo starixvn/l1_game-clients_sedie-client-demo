@@ -44,7 +44,6 @@ export class MessageHandlerManager {
             return;
         }
 
-        // 創建標準處理器
         const handlers: Partial<Record<MessageType, (data: any) => void>> = {
             [MessageType.UPDATE_SETTINGS]: this.options.onUpdateSettings,
             [MessageType.BETTING_BLOCK_STATE]: this.options.onBettingBlockState,
