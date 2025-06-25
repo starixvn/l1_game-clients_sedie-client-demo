@@ -13,35 +13,55 @@ interface AppProps extends AppContentProps {
     language: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
+    onPlayButtonTokenRequest?: () => Promise<string | null>;
 }
 
 interface AppContentProps {
     token: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
+    onPlayButtonTokenRequest?: () => Promise<string | null>;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback }: AppProps) => {
+const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, onPlayButtonTokenRequest }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
-            <AppContent token={token} renewToken={renewToken} updateBalanceCallback={updateBalanceCallback} />
+            <AppContent
+                token={token}
+                renewToken={renewToken}
+                updateBalanceCallback={updateBalanceCallback}
+                onPlayButtonTokenRequest={onPlayButtonTokenRequest}
+            />
         </AppProvider>
     );
 };
 
-const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProps) => {
+const AppContent = ({ token, renewToken, updateBalanceCallback, onPlayButtonTokenRequest }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
+    const [currentToken, setCurrentToken] = useState(token);
 
-    const handlePlayButtonClick = useCallback(() => {
+    const handlePlayButtonClick = useCallback(async () => {
+        // If we have a token request callback, use it to get a fresh token
+        if (onPlayButtonTokenRequest) {
+            const newToken = await onPlayButtonTokenRequest();
+            if (newToken) {
+                setCurrentToken(newToken);
+            }
+        }
         setHasClickedPlay(true);
-    }, []);
+    }, [onPlayButtonTokenRequest]);
 
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
         }
     }, [updateBalanceCallback]);
+
+    // Update current token when prop changes
+    useEffect(() => {
+        setCurrentToken(token);
+    }, [token]);
 
     loadI18n(language);
 
@@ -56,7 +76,7 @@ const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProp
 
     return (
         <div data-react="true" style={{ width: '100%' }}>
-            {token && <Lobby token={token} language={language} renewToken={renewToken} />}
+            {currentToken && <Lobby token={currentToken} language={language} renewToken={renewToken} />}
         </div>
     );
 };

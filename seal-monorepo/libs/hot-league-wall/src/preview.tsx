@@ -20,6 +20,16 @@ const Preview = (): React.ReactElement | null => {
         }
     }, []);
 
+    // Callback function to get token when Play button is clicked
+    const handlePlayButtonTokenRequest = useCallback(async () => {
+        const result = await requestSSO();
+        if (result?.token) {
+            setToken(result.token);
+            return result.token;
+        }
+        return null;
+    }, []);
+
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -34,7 +44,7 @@ const Preview = (): React.ReactElement | null => {
     return (
         <PreviewProvider>
             <Router>
-                <PreviewContext token={token} renewToken={handleGetToken} />
+                <PreviewContext token={token} renewToken={handleGetToken} onPlayButtonTokenRequest={handlePlayButtonTokenRequest} />
             </Router>
         </PreviewProvider>
     );
@@ -42,10 +52,12 @@ const Preview = (): React.ReactElement | null => {
 
 const PreviewContext = ({
     token,
-    renewToken
+    renewToken,
+    onPlayButtonTokenRequest
 }: {
     token: string;
     renewToken: () => void;
+    onPlayButtonTokenRequest: () => Promise<string | null>;
 }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
 
@@ -72,6 +84,7 @@ const PreviewContext = ({
                         language={language}
                         siteId={siteId}
                         renewToken={renewToken}
+                        onPlayButtonTokenRequest={onPlayButtonTokenRequest}
                     />
                 } />
             </Routes>

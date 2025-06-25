@@ -49,7 +49,7 @@ export interface RNGSoccerBaseProps {
     onBetClick?: (choice: string) => void;
     onStatisticsClick?: () => void;
     showPlayOverlay?: boolean;
-    onPlayClick?: () => void;
+    onPlayClick?: () => Promise<void>;
     isInteractive?: boolean;
     showStatisticsPopup?: boolean;
     onCloseStatistics?: () => void;
@@ -141,7 +141,15 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                     justifyContent: 'center'
                 }}>
                     <button
-                        onClick={onPlayClick}
+                        onClick={async () => {
+                            if (onPlayClick) {
+                                try {
+                                    await onPlayClick();
+                                } catch (error) {
+                                    console.error('Error during play button click:', error);
+                                }
+                            }
+                        }}
                         style={{
                             background: 'linear-gradient(180deg, #4a5a6a 0%, #222c36 100%)',
                             border: '2px solid #fff',
