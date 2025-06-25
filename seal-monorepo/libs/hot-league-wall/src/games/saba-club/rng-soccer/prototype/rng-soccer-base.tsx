@@ -12,6 +12,7 @@ import { TeamUtils } from '../settlement-result/utils/team-utils';
 import { RoundId } from '../../../../_shared/components/round-id';
 import liveIcon from '../../../../assets/rng-soccer/live-icon.svg';
 import historyBtnIcon from '../../../../assets/rng-soccer/history-btn.svg';
+import Loading from '../../../../_shared/components/loading';
 import classNames from 'classnames';
 
 // Shared types for the base component
@@ -56,6 +57,7 @@ export interface RNGSoccerBaseProps {
     isInteractive?: boolean;
     showStatisticsPopup?: boolean;
     onCloseStatistics?: () => void;
+    isLoading?: boolean;
 }
 
 // Function to get team logo using TeamUtils
@@ -81,7 +83,13 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     isInteractive = true,
     showStatisticsPopup = false,
     onCloseStatistics,
+    isLoading = false,
 }) => {
+    // Show loading component if isLoading is true
+    if (isLoading) {
+        return <Loading />;
+    }
+
     const shouldHideCards = gameData.currentRound.roundState !== 'showingResult';
     const showHighLight = gameData.currentRound.roundState === 'showingResult';
     const isHomeHigher = gameData.currentResult.homeScore > gameData.currentResult.awayScore;
