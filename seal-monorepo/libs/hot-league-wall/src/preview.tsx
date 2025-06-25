@@ -8,6 +8,7 @@ import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-demo';
 import { TokenRequestManager } from './_shared/utils/token-request-manager';
+import { SSOControlSimulator, useSSOSimulator } from './_shared/components/sso-control-simulator';
 
 // Global flag to simulate SSO failures (for testing purposes)
 let simulateSSOFailure = false;
@@ -90,7 +91,12 @@ const PreviewContext = ({
     onPlayButtonTokenRequest: () => Promise<string | null>;
 }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
-    const [showControls, setShowControls] = useState(false);
+
+    // Use the SSO simulator hook for state management
+    const ssoSimulator = useSSOSimulator({
+        isFailureMode: simulateSSOFailure,
+        failureCount: failureCount
+    });
 
     const appEnv = '';
     const siteId = VIVA88_SITE_ID;
@@ -103,77 +109,21 @@ const PreviewContext = ({
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
 
+    // Update global variables when state changes
+    React.useEffect(() => {
+        simulateSSOFailure = ssoSimulator.isFailureMode;
+        failureCount = ssoSimulator.failureCount;
+    }, [ssoSimulator.isFailureMode, ssoSimulator.failureCount]);
+
     return (
         <div data-platform={platform} data-version={process.env.TAG_VERSION} className={'seal-vg-sg-index'}>
-            {/* SSO Simulation Controls */}
-            <div style={{
-                position: 'fixed',
-                top: '10px',
-                right: '10px',
-                zIndex: 9999,
-                background: 'rgba(0,0,0,0.8)',
-                padding: '10px',
-                borderRadius: '5px',
-                color: 'white',
-                fontSize: '12px'
-            }}>
-                <button
-                    onClick={() => setShowControls(!showControls)}
-                    style={{
-                        background: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        padding: '5px 10px',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        marginBottom: showControls ? '10px' : '0'
-                    }}
-                >
-                    {showControls ? 'Hide' : 'Show'} SSO Controls
-                </button>
-
-                {showControls && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                        <div>
-                            <strong>SSO Failure Simulation:</strong> {simulateSSOFailure ? '🟢 ON' : '🔴 OFF'}
-                        </div>
-                        <div>
-                            <strong>Failure Count:</strong> {failureCount}
-                        </div>
-                        <button
-                            onClick={toggleSSOFailure}
-                            style={{
-                                background: simulateSSOFailure ? '#dc3545' : '#28a745',
-                                color: 'white',
-                                border: 'none',
-                                padding: '3px 8px',
-                                borderRadius: '3px',
-                                cursor: 'pointer',
-                                fontSize: '11px'
-                            }}
-                        >
-                            {simulateSSOFailure ? 'Disable' : 'Enable'} SSO Failures
-                        </button>
-                        <button
-                            onClick={resetSSOFailureCount}
-                            style={{
-                                background: '#6c757d',
-                                color: 'white',
-                                border: 'none',
-                                padding: '3px 8px',
-                                borderRadius: '3px',
-                                cursor: 'pointer',
-                                fontSize: '11px'
-                            }}
-                        >
-                            Reset Count
-                        </button>
-                        <div style={{ fontSize: '10px', opacity: 0.8 }}>
-                            Click "Play Now" to test
-                        </div>
-                    </div>
-                )}
-            </div>
+            {/* SSO Control Simulator */}
+            <SSOControlSimulator
+                onToggleFailure={ssoSimulator.toggleFailureMode}
+                onResetCount={ssoSimulator.resetFailureCount}
+                failureCount={ssoSimulator.failureCount}
+                isFailureMode={ssoSimulator.isFailureMode}
+            />
 
             <ProviderSetDropDown />
             <Routes>
