@@ -2,21 +2,15 @@
 
 ## Overview
 
-This implementation defines a callback function to get a fresh token when the user clicks the "Play" button in the RNG Soccer prototype page. The token is then passed to the App component for authentication.
+This implementation defines a callback function to get a fresh token **only when the user clicks the "Play" button** in the RNG Soccer prototype page. The token is then passed to the App component for authentication. **No initial token loading occurs** - tokens are only requested on user interaction.
 
 ## Flow Diagram
 
 ```
-Preview Component
-    ↓ (creates handlePlayButtonTokenRequest callback)
-App Component
-    ↓ (passes callback to AppContent)
-AppContent Component
-    ↓ (passes callback to RNGSoccerStaticPrototype)
-RNGSoccerStaticPrototype Component
-    ↓ (passes callback to RNGSoccerBase)
-RNGSoccerBase Component
-    ↓ (user clicks "Play Now" button)
+Preview Component (No initial token)
+    ↓ (waits for user interaction)
+User Clicks "Play Now" Button
+    ↓ (triggers handlePlayButtonTokenRequest)
 Token Request via requestSSO()
     ↓ (returns fresh token)
 App Component (updates token state)
@@ -30,24 +24,44 @@ Lobby Component (receives fresh token)
 
 **Changes Made:**
 
--   Added `handlePlayButtonTokenRequest` callback function that calls `requestSSO()`
--   Updated `PreviewContext` to accept and pass the callback
--   The callback returns a fresh token and updates the component's token state
+-   **Removed** `handleGetToken` function and initial token loading
+-   **Removed** `useEffect` for automatic token loading
+-   **Removed** `renewToken` prop (no session renewal functionality)
+-   **Kept** `handlePlayButtonTokenRequest` callback function that calls `requestSSO()`
+-   **Updated** component to render immediately without waiting for token
 
 **Key Features:**
 
 -   Uses `useCallback` for performance optimization
 -   Handles both success and failure cases
 -   Returns the token for immediate use
+-   **No automatic token loading** - only on user interaction
 
 ```typescript
+// Only token request function - no initial loading
 const handlePlayButtonTokenRequest = useCallback(async () => {
-    const result = await requestSSO();
-    if (result?.token) {
-        setToken(result.token);
-        return result.token;
+    const startTime = performance.now();
+    console.log('🕐 [TOKEN_TIMING] Play button clicked in PROTOTYPE - Starting token request at:', new Date().toISOString());
+
+    try {
+        const result = await requestSSO();
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        if (result?.token) {
+            console.log(`✅ [TOKEN_TIMING] Token request SUCCESS for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+            setToken(result.token);
+            return result.token;
+        } else {
+            console.log(`❌ [TOKEN_TIMING] Token request FAILED for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+            return null;
+        }
+    } catch (error) {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        console.log(`💥 [TOKEN_TIMING] Token request ERROR for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+        return null;
     }
-    return null;
 }, []);
 ```
 
@@ -55,16 +69,17 @@ const handlePlayButtonTokenRequest = useCallback(async () => {
 
 **Changes Made:**
 
--   Added `onPlayButtonTokenRequest` prop to both `AppProps` and `AppContentProps` interfaces
--   Updated `AppContent` to handle async token requests
--   Added `currentToken` state to manage token updates
--   Modified `handlePlayButtonClick` to be async and handle token requests
+-   **Removed** `renewToken` prop from interfaces
+-   **Updated** `AppContent` to handle async token requests
+-   **Added** `currentToken` state to manage token updates
+-   **Modified** `handlePlayButtonClick` to be async and handle token requests
 
 **Key Features:**
 
 -   Maintains token state independently
 -   Handles token updates gracefully
 -   Provides fallback behavior if token request fails
+-   **No session renewal** - simplified token management
 
 ```typescript
 const handlePlayButtonClick = useCallback(async () => {
@@ -78,59 +93,96 @@ const handlePlayButtonClick = useCallback(async () => {
 }, [onPlayButtonTokenRequest]);
 ```
 
-### 3. RNGSoccerStaticPrototype Component (`rng-soccer-static-prototype.tsx`)
+### 3. Lobby Component (`lobby.tsx`)
 
 **Changes Made:**
 
--   Updated `onPlayButtonClick` prop type to accept async function
--   Modified `handlePlayClick` to handle async operations
--   Added error handling with fallback behavior
+-   **Removed** `renewToken` prop dependency
+-   **Updated** session timeout handling to show simple message
+-   **Simplified** session management
 
 **Key Features:**
 
--   Re-shows play button if token request fails
--   Proper error logging
--   Maintains UI state consistency
+-   No automatic token renewal
+-   Simple session expired message
+-   Reduced complexity
 
 ```typescript
-const handlePlayClick = async () => {
-    setIsPlayButtonVisible(false);
-    if (onPlayButtonClick) {
-        try {
-            await onPlayButtonClick();
-        } catch (error) {
-            console.error('Error during play button click:', error);
-            setIsPlayButtonVisible(true);
-        }
-    }
-};
+if (isSessionTimeout) {
+    return (
+        <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            color: 'white',
+            fontSize: '18px'
+        }}>
+            Session expired. Please refresh the page to continue.
+        </div>
+    );
+}
 ```
 
-### 4. RNGSoccerBase Component (`rng-soccer-base.tsx`)
+## Key Changes Summary
 
-**Changes Made:**
+### **Removed Functionality:**
 
--   Updated `onPlayClick` prop type to accept async function
--   Modified Play button click handler to handle async operations
--   Added error handling for async callbacks
+1. **Initial token loading** - No automatic token requests on app start
+2. **Session renewal** - No automatic token refresh during app usage
+3. **Session timeout recovery** - Simple message instead of automatic retry
 
-**Key Features:**
+### **Kept Functionality:**
 
--   Proper async/await handling
--   Error logging for debugging
--   Maintains component stability
+1. **Play button token request** - Only when user clicks "Play Now"
+2. **Timing logs** - Comprehensive performance tracking
+3. **Error handling** - Graceful failure handling
+4. **Prototype → Real App transition** - Smooth user experience
+
+## Benefits
+
+1. **Simplified Architecture:**
+
+    - No complex session management
+    - Clear single point of token acquisition
+    - Reduced state management complexity
+
+2. **Better User Experience:**
+
+    - App loads immediately (no waiting for token)
+    - Token only requested when needed
+    - Clear user-initiated action
+
+3. **Improved Performance:**
+
+    - No unnecessary initial API calls
+    - Faster app startup
+    - Reduced server load
+
+4. **Clearer Intent:**
+    - Token acquisition is explicit user action
+    - No hidden background processes
+    - Easier to debug and monitor
+
+## Usage Example
 
 ```typescript
-onClick={async () => {
-    if (onPlayClick) {
-        try {
-            await onPlayClick();
-        } catch (error) {
-            console.error('Error during play button click:', error);
-        }
-    }
-}}
+// The flow is now:
+// 1. App loads immediately (no token)
+// 2. User sees RNG Soccer prototype
+// 3. User clicks "Play Now" button
+// 4. Token is requested and received
+// 5. User transitions to Real App with fresh token
 ```
+
+## Future Considerations
+
+1. **Session Management:** If session renewal is needed, it can be implemented separately
+2. **Token Caching:** Could add token caching for better performance
+3. **Error Recovery:** Could add retry mechanisms for failed token requests
+4. **User Feedback:** Could add loading states during token acquisition
+
+The implementation now focuses solely on the user-initiated token request flow, making it simpler and more predictable.
 
 ## Testing
 

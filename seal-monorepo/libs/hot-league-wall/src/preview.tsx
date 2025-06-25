@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSentryInit } from './saba-games-index';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER, VIVA88_SITE_ID } from '../constant/app';
 import App from './app';
@@ -8,17 +8,8 @@ import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-demo';
 
-const Preview = (): React.ReactElement | null => {
+const Preview = (): React.ReactElement => {
     const [token, setToken] = useState('');
-
-    const isInitialMount = useRef(true);
-
-    const handleGetToken = useCallback(async () => {
-        const result = await requestSSO();
-        if (result?.token) {
-            setToken(result.token);
-        }
-    }, []);
 
     // Callback function to get token when Play button is clicked
     const handlePlayButtonTokenRequest = useCallback(async () => {
@@ -50,21 +41,10 @@ const Preview = (): React.ReactElement | null => {
         }
     }, []);
 
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            handleGetToken();
-        }
-    }, [handleGetToken]);
-
-    if (!token) {
-        return null;
-    }
-
     return (
         <PreviewProvider>
             <Router>
-                <PreviewContext token={token} renewToken={handleGetToken} onPlayButtonTokenRequest={handlePlayButtonTokenRequest} />
+                <PreviewContext token={token} onPlayButtonTokenRequest={handlePlayButtonTokenRequest} />
             </Router>
         </PreviewProvider>
     );
@@ -72,11 +52,9 @@ const Preview = (): React.ReactElement | null => {
 
 const PreviewContext = ({
     token,
-    renewToken,
     onPlayButtonTokenRequest
 }: {
     token: string;
-    renewToken: () => void;
     onPlayButtonTokenRequest: () => Promise<string | null>;
 }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
@@ -87,7 +65,7 @@ const PreviewContext = ({
     const platform = PLATFORM_TYPE_MAPPING[platformType];
     useSentryInit();
 
-    useEffect(() => {
+    React.useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
@@ -103,7 +81,6 @@ const PreviewContext = ({
                         token={token}
                         language={language}
                         siteId={siteId}
-                        renewToken={renewToken}
                         onPlayButtonTokenRequest={onPlayButtonTokenRequest}
                     />
                 } />

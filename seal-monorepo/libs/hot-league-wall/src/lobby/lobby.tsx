@@ -70,7 +70,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
-    connectLiveGateway() {}
+    connectLiveGateway() { }
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
@@ -121,12 +121,16 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
         const renderGameContent = () => {
             if (isSessionTimeout) {
                 return (
-                    <SessionTimeout
-                        token={this.props.token}
-                        renewToken={this.props.renewToken}
-                        language={this.props.language}
-                        username={username}
-                    />
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        height: '100vh',
+                        color: 'white',
+                        fontSize: '18px'
+                    }}>
+                        Session expired. Please refresh the page to continue.
+                    </div>
                 );
             }
 

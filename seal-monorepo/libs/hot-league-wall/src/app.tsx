@@ -11,24 +11,21 @@ interface AppProps extends AppContentProps {
     appEnv: string;
     siteId: string;
     language: string;
-    renewToken?: Function;
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
 }
 
 interface AppContentProps {
     token: string;
-    renewToken?: Function;
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, onPlayButtonTokenRequest }: AppProps) => {
+const App = ({ appEnv, token, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
             <AppContent
                 token={token}
-                renewToken={renewToken}
                 updateBalanceCallback={updateBalanceCallback}
                 onPlayButtonTokenRequest={onPlayButtonTokenRequest}
             />
@@ -36,7 +33,7 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
     );
 };
 
-const AppContent = ({ token, renewToken, updateBalanceCallback, onPlayButtonTokenRequest }: AppContentProps) => {
+const AppContent = ({ token, updateBalanceCallback, onPlayButtonTokenRequest }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState(token);
@@ -104,7 +101,7 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, onPlayButtonToke
 
     return (
         <div data-react="true" style={{ width: '100%' }}>
-            {currentToken && <Lobby token={currentToken} language={language} renewToken={renewToken} />}
+            {currentToken && <Lobby token={currentToken} language={language} />}
         </div>
     );
 };

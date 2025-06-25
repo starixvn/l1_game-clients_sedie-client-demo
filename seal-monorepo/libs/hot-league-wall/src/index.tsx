@@ -21,7 +21,6 @@ const SabaGamesGroup = ({
     isDarkMode = false,
     platformType = PLATFORM_TYPE_NUMBER.DESKTOP,
     token = '',
-    renewToken = () => {},
     appEnv = '',
     siteId = '',
     language = 'en',
@@ -32,7 +31,7 @@ const SabaGamesGroup = ({
 
     return (
         <div data-platform={platform} data-version={process.env.TAG_VERSION} className={'seal-vg-sg-index'}>
-            <App appEnv={appEnv} token={token} language={language} siteId={siteId} renewToken={renewToken} updateBalanceCallback={updateBalanceCallback} />
+            <App appEnv={appEnv} token={token} language={language} siteId={siteId} updateBalanceCallback={updateBalanceCallback} />
         </div>
     );
 };
