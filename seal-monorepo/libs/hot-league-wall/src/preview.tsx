@@ -44,7 +44,10 @@ const Preview = (): React.ReactElement => {
     return (
         <PreviewProvider>
             <Router>
-                <PreviewContext token={token} onPlayButtonTokenRequest={handlePlayButtonTokenRequest} />
+                <PreviewContext
+                    token={token}
+                    onPlayButtonTokenRequest={handlePlayButtonTokenRequest}
+                />
             </Router>
         </PreviewProvider>
     );
@@ -78,7 +81,6 @@ const PreviewContext = ({
                 <Route path="*" element={
                     <App
                         appEnv={appEnv}
-                        token={token}
                         language={language}
                         siteId={siteId}
                         onPlayButtonTokenRequest={onPlayButtonTokenRequest}

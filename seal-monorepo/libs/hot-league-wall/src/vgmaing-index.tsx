@@ -24,13 +24,19 @@ const SabaGamesGroup = ({
     appEnv = '',
     siteId = '',
     language = 'en',
+    onPlayButtonTokenRequest = undefined
 }) => {
     const platform = PLATFORM_TYPE_MAPPING[platformType] || '';
     useSentryInit();
 
     return (
         <div data-platform={platform} data-version={process.env.TAG_VERSION} className={'seal-vg-sg-index'}>
-            <App appEnv={appEnv} token={token} language={language} siteId={siteId} />
+            <App
+                appEnv={appEnv}
+                language={language}
+                siteId={siteId}
+                onPlayButtonTokenRequest={onPlayButtonTokenRequest}
+            />
         </div>
     );
 };

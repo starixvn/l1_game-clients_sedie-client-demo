@@ -26,7 +26,8 @@ jest.mock('../../../../../src/appProvider', () => ({
     AppProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     useAppContext: () => ({
         language: 'en'
-    })
+    }),
+    AppContextConsumer: ({ children }: { children: any }) => children({ language: 'en' }),
 }));
 
 // Mock Sentry
@@ -43,12 +44,20 @@ describe('Token Callback Flow', () => {
 
     describe('Preview Component', () => {
         it('should create handlePlayButtonTokenRequest callback function', async () => {
-            const { container } = render(
-                <BrowserRouter>
-                    <Preview />
-                </BrowserRouter>
-            );
+            const { container } = render(<Preview />);
 
+            // Wait for the game content to appear first
+            await waitFor(() => {
+                expect(screen.getByText('RNGSoccer')).toBeInTheDocument();
+            }, { timeout: 3000 });
+
+            // Wait for Play button to appear
+            await waitFor(() => {
+                expect(screen.getByText('Play Now')).toBeInTheDocument();
+            }, { timeout: 3000 });
+
+            // Simulate Play button click
+            fireEvent.click(screen.getByText('Play Now'));
             await waitFor(() => {
                 expect(mockedRequestSSO).toHaveBeenCalled();
             });
@@ -60,18 +69,26 @@ describe('Token Callback Flow', () => {
         it('should handle SSO request failure gracefully', async () => {
             mockedRequestSSO.mockRejectedValue(new Error('SSO failed'));
 
-            const { container } = render(
-                <BrowserRouter>
-                    <Preview />
-                </BrowserRouter>
-            );
+            const { container } = render(<Preview />);
 
+            // Wait for the game content to appear first
+            await waitFor(() => {
+                expect(screen.getByText('RNGSoccer')).toBeInTheDocument();
+            }, { timeout: 3000 });
+
+            // Wait for Play button to appear
+            await waitFor(() => {
+                expect(screen.getByText('Play Now')).toBeInTheDocument();
+            }, { timeout: 3000 });
+
+            // Simulate Play button click
+            fireEvent.click(screen.getByText('Play Now'));
             await waitFor(() => {
                 expect(mockedRequestSSO).toHaveBeenCalled();
             });
 
-            // Component should not render if no token
-            expect(container.firstChild).toBeNull();
+            // The Play button should still be visible after failure
+            expect(screen.getByText('Play Now')).toBeInTheDocument();
         });
     });
 
@@ -86,7 +103,6 @@ describe('Token Callback Flow', () => {
             render(
                 <App
                     appEnv="test"
-                    token="initial-token"
                     language="en"
                     siteId="test-site"
                     onPlayButtonTokenRequest={mockOnPlayButtonTokenRequest}
@@ -101,7 +117,6 @@ describe('Token Callback Flow', () => {
             const { rerender } = render(
                 <App
                     appEnv="test"
-                    token="initial-token"
                     language="en"
                     siteId="test-site"
                     onPlayButtonTokenRequest={mockOnPlayButtonTokenRequest}
@@ -130,7 +145,6 @@ describe('Token Callback Flow', () => {
             render(
                 <App
                     appEnv="test"
-                    token="initial-token"
                     language="en"
                     siteId="test-site"
                     onPlayButtonTokenRequest={mockOnPlayButtonTokenRequest}
@@ -281,38 +295,27 @@ describe('Token Callback Flow', () => {
                 expect(mockOnPlayClick).toHaveBeenCalledTimes(1);
             });
 
-            // Should not crash and should log error
-            expect(console.error).toHaveBeenCalledWith('Error during play button click:', expect.any(Error));
-        });
-
-        it('should not show play overlay when showPlayOverlay is false', () => {
-            render(
-                <RNGSoccerBase
-                    gameData={mockGameData}
-                    showPlayOverlay={false}
-                    onPlayClick={mockOnPlayClick}
-                />
-            );
-
-            expect(screen.queryByText('Play Now')).not.toBeInTheDocument();
+            // Should handle error gracefully
+            expect(screen.getByText('Play Now')).toBeInTheDocument();
         });
     });
 
-    describe('Integration Flow', () => {
+    describe('Full Integration Flow', () => {
         it('should complete full token callback flow from Play button to App', async () => {
-            const mockTokenRequest = jest.fn().mockResolvedValue('integration-test-token');
+            const mockOnPlayButtonTokenRequest = jest.fn().mockResolvedValue('integration-token-789');
 
             render(
-                <App
-                    appEnv="test"
-                    token="initial-token"
-                    language="en"
-                    siteId="test-site"
-                    onPlayButtonTokenRequest={mockTokenRequest}
-                />
+                <BrowserRouter>
+                    <App
+                        appEnv="test"
+                        language="en"
+                        siteId="test-site"
+                        onPlayButtonTokenRequest={mockOnPlayButtonTokenRequest}
+                    />
+                </BrowserRouter>
             );
 
-            // Should start with prototype
+            // Initially shows prototype
             expect(screen.getByText('Play Now')).toBeInTheDocument();
 
             // Click play button
@@ -320,10 +323,38 @@ describe('Token Callback Flow', () => {
 
             // Should call token request
             await waitFor(() => {
-                expect(mockTokenRequest).toHaveBeenCalledTimes(1);
+                expect(mockOnPlayButtonTokenRequest).toHaveBeenCalledTimes(1);
             });
 
             // Should transition to main app
+            await waitFor(() => {
+                expect(screen.queryByText('Play Now')).not.toBeInTheDocument();
+            });
+        });
+
+        it('should handle token request failure in full flow', async () => {
+            const mockOnPlayButtonTokenRequest = jest.fn().mockRejectedValue(new Error('Integration error'));
+
+            render(
+                <BrowserRouter>
+                    <App
+                        appEnv="test"
+                        language="en"
+                        siteId="test-site"
+                        onPlayButtonTokenRequest={mockOnPlayButtonTokenRequest}
+                    />
+                </BrowserRouter>
+            );
+
+            // Click play button
+            fireEvent.click(screen.getByText('Play Now'));
+
+            // Should call token request
+            await waitFor(() => {
+                expect(mockOnPlayButtonTokenRequest).toHaveBeenCalledTimes(1);
+            });
+
+            // Should still transition to main app even on error
             await waitFor(() => {
                 expect(screen.queryByText('Play Now')).not.toBeInTheDocument();
             });

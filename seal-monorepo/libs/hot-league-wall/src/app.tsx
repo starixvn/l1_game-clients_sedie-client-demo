@@ -4,10 +4,11 @@ import { loadI18n } from './i18n';
 import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
+import { TokenRequestManager } from './_shared/utils/token-request-manager';
 import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 
-interface AppProps extends AppContentProps {
+interface AppProps {
     appEnv: string;
     siteId: string;
     language: string;
@@ -16,16 +17,14 @@ interface AppProps extends AppContentProps {
 }
 
 interface AppContentProps {
-    token: string;
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
 }
 
-const App = ({ appEnv, token, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest }: AppProps) => {
+const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
             <AppContent
-                token={token}
                 updateBalanceCallback={updateBalanceCallback}
                 onPlayButtonTokenRequest={onPlayButtonTokenRequest}
             />
@@ -33,40 +32,37 @@ const App = ({ appEnv, token, language, siteId, updateBalanceCallback, onPlayBut
     );
 };
 
-const AppContent = ({ token, updateBalanceCallback, onPlayButtonTokenRequest }: AppContentProps) => {
+const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
-    const [currentToken, setCurrentToken] = useState(token);
+    const [currentToken, setCurrentToken] = useState<string | null>(null);
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
         console.log('🎮 [APP_TIMING] Play button clicked in PROTOTYPE - App component handling at:', new Date().toISOString());
 
-        // If we have a token request callback, use it to get a fresh token
-        if (onPlayButtonTokenRequest) {
-            console.log('🔄 [APP_TIMING] Calling token request callback for REAL APP...');
-            const tokenStartTime = performance.now();
+        // Use TokenRequestManager to get a fresh token
+        const tokenManager = TokenRequestManager.getInstance();
+        console.log('🔄 [APP_TIMING] Using TokenRequestManager for REAL APP...');
+        const tokenStartTime = performance.now();
 
-            try {
-                const newToken = await onPlayButtonTokenRequest();
-                const tokenEndTime = performance.now();
-                const tokenDuration = tokenEndTime - tokenStartTime;
+        try {
+            const newToken = await tokenManager.executeTokenRequest();
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
 
-                if (newToken) {
-                    console.log(`✅ [APP_TIMING] Token callback completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                    console.log(`🔄 [APP_TIMING] Updating current token for REAL APP...`);
-                    setCurrentToken(newToken);
-                } else {
-                    console.log(`⚠️ [APP_TIMING] Token callback returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                }
-            } catch (error) {
-                const tokenEndTime = performance.now();
-                const tokenDuration = tokenEndTime - tokenStartTime;
-                console.log(`💥 [APP_TIMING] Token callback failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                console.error('[APP_TIMING] Token callback error:', error);
+            if (newToken) {
+                console.log(`✅ [APP_TIMING] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
+                console.log(`🔄 [APP_TIMING] Updating current token for REAL APP...`);
+                setCurrentToken(newToken);
+            } else {
+                console.log(`⚠️ [APP_TIMING] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
             }
-        } else {
-            console.log('⚠️ [APP_TIMING] No token request callback provided for REAL APP');
+        } catch (error) {
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
+            console.log(`💥 [APP_TIMING] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
+            console.error('[APP_TIMING] TokenRequestManager error:', error);
         }
 
         console.log('🎯 [APP_TIMING] Setting hasClickedPlay to true - Transitioning from PROTOTYPE to REAL APP...');
@@ -75,7 +71,7 @@ const AppContent = ({ token, updateBalanceCallback, onPlayButtonTokenRequest }: 
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, [onPlayButtonTokenRequest]);
+    }, []);
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -83,10 +79,11 @@ const AppContent = ({ token, updateBalanceCallback, onPlayButtonTokenRequest }: 
         }
     }, [updateBalanceCallback]);
 
-    // Update current token when prop changes
     useEffect(() => {
-        setCurrentToken(token);
-    }, [token]);
+        if (onPlayButtonTokenRequest) {
+            TokenRequestManager.getInstance().setTokenRequestCallback(onPlayButtonTokenRequest);
+        }
+    }, [onPlayButtonTokenRequest]);
 
     loadI18n(language);
 
