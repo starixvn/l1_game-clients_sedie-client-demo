@@ -10,6 +10,9 @@ import { CardResult } from '../../../../_shared/components/card/type';
 import TeamCard, { TeamCardAnimation } from '../settlement-result/components/team-card';
 import { TeamUtils } from '../settlement-result/utils/team-utils';
 import { RoundId } from '../../../../_shared/components/round-id';
+import liveIcon from '../../../../assets/rng-soccer/live-icon.svg';
+import historyBtnIcon from '../../../../assets/rng-soccer/history-btn.svg';
+import classNames from 'classnames';
 
 // Shared types for the base component
 export interface RNGSoccerGameData {
@@ -58,18 +61,14 @@ export interface RNGSoccerBaseProps {
 // Function to get team logo using TeamUtils
 const getTeamLogo = (teamName: string): string => {
     // Try to find the team abbreviation by matching the full name
-    const teamEntry = Object.entries(TeamUtils.TEAM_INFO).find(
-        ([_, info]) => info.fullName === teamName
-    );
+    const teamEntry = Object.entries(TeamUtils.TEAM_INFO).find(([_, info]) => info.fullName === teamName);
 
     if (teamEntry) {
         return TeamUtils.getTeamLogo(teamEntry[0]);
     }
 
     // Fallback to default icons
-    return teamName.toLowerCase().includes('home')
-        ? TeamUtils.getTeamLogo('DEFAULT_HOME')
-        : TeamUtils.getTeamLogo('DEFAULT_AWAY');
+    return teamName.toLowerCase().includes('home') ? TeamUtils.getTeamLogo('DEFAULT_HOME') : TeamUtils.getTeamLogo('DEFAULT_AWAY');
 };
 
 // Base component that contains all the shared UI logic
@@ -81,7 +80,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     onPlayClick,
     isInteractive = true,
     showStatisticsPopup = false,
-    onCloseStatistics
+    onCloseStatistics,
 }) => {
     const shouldHideCards = gameData.currentRound.roundState !== 'showingResult';
     const showHighLight = gameData.currentRound.roundState === 'showingResult';
@@ -91,12 +90,12 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     // Create card data for the Card component
     const homeCardData: CardResult = {
         rank: gameData.currentResult.home.rank,
-        suit: gameData.currentResult.home.suit
+        suit: gameData.currentResult.home.suit,
     };
 
     const awayCardData: CardResult = {
         rank: gameData.currentResult.away.rank,
-        suit: gameData.currentResult.away.suit
+        suit: gameData.currentResult.away.suit,
     };
 
     // Get team logo URLs using TeamUtils
@@ -106,21 +105,30 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     // Determine countdown state classes
     const getCountdownStateClass = () => {
         switch (gameData.currentRound.roundState) {
-            case 'placingBets': return countDownTimerStyles['placing-bet-state'];
-            case 'lockingBet': return countDownTimerStyles['no-more-bet-state'];
+            case 'placingBets':
+                return countDownTimerStyles['placing-bet-state'];
+            case 'lockingBet':
+                return countDownTimerStyles['no-more-bet-state'];
             case 'showingResult':
-            case 'finished': return countDownTimerStyles['show-result-state'];
-            default: return '';
+            case 'finished':
+                return countDownTimerStyles['show-result-state'];
+            default:
+                return '';
         }
     };
 
     const getRoundStateText = () => {
         switch (gameData.currentRound.roundState) {
-            case 'placingBets': return 'Place Your Bets';
-            case 'lockingBet': return 'Betting Locked';
-            case 'showingResult': return 'Showing Result';
-            case 'finished': return 'Round Finished';
-            default: return 'Waiting...';
+            case 'placingBets':
+                return 'Place Your Bets';
+            case 'lockingBet':
+                return 'Betting Locked';
+            case 'showingResult':
+                return 'Showing Result';
+            case 'finished':
+                return 'Round Finished';
+            default:
+                return 'Waiting...';
         }
     };
 
@@ -128,19 +136,9 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
         <div className={styles['sport-item']} style={{ position: 'relative' }}>
             {/* Play Overlay */}
             {showPlayOverlay && (
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                    zIndex: 1000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
+                <div className={styles['overlay-container']}>
                     <button
+                        className={styles['btn-play-now']}
                         onClick={async () => {
                             const baseStartTime = performance.now();
                             console.log('🎮 [BASE_TIMING] Play button clicked in RNG SOCCER PROTOTYPE BASE at:', new Date().toISOString());
@@ -153,42 +151,33 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                     await onPlayClick();
                                     const callbackEndTime = performance.now();
                                     const callbackDuration = callbackEndTime - callbackStartTime;
-                                    console.log(`✅ [BASE_TIMING] onPlayClick callback completed - PROTOTYPE to REAL APP transition - Duration: ${callbackDuration.toFixed(2)}ms`);
+                                    console.log(
+                                        `✅ [BASE_TIMING] onPlayClick callback completed - PROTOTYPE to REAL APP transition - Duration: ${callbackDuration.toFixed(2)}ms`,
+                                    );
                                 } catch (error) {
                                     const callbackEndTime = performance.now();
                                     const callbackDuration = callbackEndTime - callbackStartTime;
-                                    console.log(`💥 [BASE_TIMING] onPlayClick callback failed - PROTOTYPE transition error - Duration: ${callbackDuration.toFixed(2)}ms`);
+                                    console.log(
+                                        `💥 [BASE_TIMING] onPlayClick callback failed - PROTOTYPE transition error - Duration: ${callbackDuration.toFixed(2)}ms`,
+                                    );
                                     console.error('[BASE_TIMING] Error during play button click:', error);
                                 }
                             } else {
-                                console.log('⚠️ [BASE_TIMING] No onPlayClick callback provided - Cannot transition from PROTOTYPE to REAL APP');
+                                console.log(
+                                    '⚠️ [BASE_TIMING] No onPlayClick callback provided - Cannot transition from PROTOTYPE to REAL APP',
+                                );
                             }
 
                             const baseEndTime = performance.now();
                             const baseDuration = baseEndTime - baseStartTime;
-                            console.log(`🏁 [BASE_TIMING] RNG SOCCER PROTOTYPE BASE handling completed - Total duration: ${baseDuration.toFixed(2)}ms`);
+                            console.log(
+                                `🏁 [BASE_TIMING] RNG SOCCER PROTOTYPE BASE handling completed - Total duration: ${baseDuration.toFixed(2)}ms`,
+                            );
                         }}
-                        style={{
-                            background: 'linear-gradient(180deg, #4a5a6a 0%, #222c36 100%)',
-                            border: '2px solid #fff',
-                            borderRadius: '24px',
-                            padding: '8px 28px',
-                            fontSize: '20px',
-                            fontWeight: 'bold',
-                            color: 'white',
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-                            transition: 'all 0.2s',
-                            textTransform: 'none',
-                            letterSpacing: '0.5px',
-                            zIndex: 1001,
-                            outline: 'none',
-                            minWidth: '120px',
-                        }}
-                        onMouseEnter={e => {
+                        onMouseEnter={(e) => {
                             e.currentTarget.style.filter = 'brightness(1.1)';
                         }}
-                        onMouseLeave={e => {
+                        onMouseLeave={(e) => {
                             e.currentTarget.style.filter = 'none';
                         }}
                     >
@@ -202,7 +191,8 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                 <div className={gameBaseStyles['game-name']}>
                     <div className={gameBaseStyles['game-name-text']}>
                         {gameData.gameSettings.gameName}
-                        <span className={styles['live-icon']}>🔴</span>
+
+                        <img src={liveIcon} alt="live" className={classNames(gameBaseStyles['live-icon'], styles['liveIcon'])} />
                     </div>
                     <RoundId
                         clientRoundId={gameData.currentRound.roundId}
@@ -213,29 +203,22 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                 <div className={gameBaseStyles['timer']}>
                     <div className={countDownTimerStyles['count-down']}>
                         <div className={`${countDownTimerStyles['timer-wrapper']} ${getCountdownStateClass()}`}>
-                            <div className={countDownTimerStyles['counting-text']}>
-                                {gameData.currentRound.countdownTimer}s
-                            </div>
+                            <div className={countDownTimerStyles['counting-text']}>{gameData.currentRound.countdownTimer}s</div>
                         </div>
                     </div>
                 </div>
                 <div
-                    className={styles['score-board-img']}
+                    className={classNames(styles['score-board-img'], styles['statsIcon'], gameBaseStyles['stats-icon'])}
                     onClick={onStatisticsClick}
-                    style={{ cursor: onStatisticsClick ? 'pointer' : 'default' }}
                 >
-                    📊
+                    <img src={historyBtnIcon} alt="statistics" />
                 </div>
             </div>
 
             {/* Content Section */}
             <div className={styles['wrapper-sport-middle']}>
                 {/* Home Team Card */}
-                <TeamCard
-                    logo={homeTeamLogo}
-                    isHomeTeam={true}
-                    animation={TeamCardAnimation.NONE}
-                />
+                <TeamCard logo={homeTeamLogo} isHomeTeam={true} animation={TeamCardAnimation.NONE} />
 
                 {/* Result Section with Cards */}
                 <div className={styles['sport-result']}>
@@ -243,11 +226,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                         {/* Home Card */}
                         <div className={`${styles['card-section']} ${showHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
                             <div className={flipCardStyles['card']}>
-                                {shouldHideCards ? (
-                                    <CardBack />
-                                ) : (
-                                    <Card result={homeCardData} customClassName="card-baccarat" />
-                                )}
+                                {shouldHideCards ? <CardBack /> : <Card result={homeCardData} customClassName="card-baccarat" />}
                             </div>
                         </div>
 
@@ -264,31 +243,19 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                         {/* Away Card */}
                         <div className={`${styles['card-section']} ${showHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
                             <div className={flipCardStyles['card']}>
-                                {shouldHideCards ? (
-                                    <CardBack />
-                                ) : (
-                                    <Card result={awayCardData} customClassName="card-baccarat" />
-                                )}
+                                {shouldHideCards ? <CardBack /> : <Card result={awayCardData} customClassName="card-baccarat" />}
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Away Team Card */}
-                <TeamCard
-                    logo={awayTeamLogo}
-                    isHomeTeam={false}
-                    animation={TeamCardAnimation.NONE}
-                />
+                <TeamCard logo={awayTeamLogo} isHomeTeam={false} animation={TeamCardAnimation.NONE} />
 
                 {/* Team Names */}
                 <div className={styles['wrapper-team-name']}>
-                    <div className={styles['name']}>
-                        {gameData.teamData.home.name}
-                    </div>
-                    <div className={styles['name']}>
-                        {gameData.teamData.away.name}
-                    </div>
+                    <div className={styles['name']}>{gameData.teamData.home.name}</div>
+                    <div className={styles['name']}>{gameData.teamData.away.name}</div>
                 </div>
             </div>
 
@@ -304,7 +271,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                 onClick={() => onBetClick?.(choice)}
                                 style={{
                                     cursor: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
-                                    opacity: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 1 : 0.6
+                                    opacity: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 1 : 0.6,
                                 }}
                             >
                                 <div className={betOptionStyles['padding-bet']}>
@@ -329,19 +296,21 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                         <h3 style={{ color: 'white', margin: '0 0 1rem 0' }}>Round History</h3>
                         <div className={styles['info-block']}>
                             {gameData.roundHistory.slice(0, 10).map((round) => (
-                                <div key={round.roundId} style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    padding: '0.5rem',
-                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                    color: 'white'
-                                }}>
+                                <div
+                                    key={round.roundId}
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        padding: '0.5rem',
+                                        borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                        color: 'white',
+                                    }}
+                                >
                                     <span>Round #{round.roundId}</span>
+                                    <span>{round.settlementResult.home ? 'Home' : round.settlementResult.away ? 'Away' : 'Draw'}</span>
                                     <span>
-                                        {round.settlementResult.home ? 'Home' :
-                                            round.settlementResult.away ? 'Away' : 'Draw'}
+                                        {round.result.homeScore}-{round.result.awayScore}
                                     </span>
-                                    <span>{round.result.homeScore}-{round.result.awayScore}</span>
                                 </div>
                             ))}
                         </div>
@@ -351,18 +320,20 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
             {/* Next Round Message */}
             {gameData.uiState?.isShowNextRoundMessage && (
-                <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'rgba(0,0,0,0.8)',
-                    color: 'white',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    zIndex: 1000,
-                    textAlign: 'center'
-                }}>
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        background: 'rgba(0,0,0,0.8)',
+                        color: 'white',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        zIndex: 1000,
+                        textAlign: 'center',
+                    }}
+                >
                     Bet placed successfully! Next round starting soon...
                 </div>
             )}
@@ -370,4 +341,4 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     );
 };
 
-export default RNGSoccerBase; 
+export default RNGSoccerBase;
