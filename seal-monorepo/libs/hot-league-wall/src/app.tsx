@@ -8,6 +8,7 @@ import { TokenRequestManager } from './_shared/utils/token-request-manager';
 import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 import { GameDisconnectView } from './games/game-base/components/game-disconnect-view';
+import blurBgGame from './assets/rng-soccer/blur-bg-game.png';
 
 interface AppProps {
     appEnv: string;
@@ -25,10 +26,7 @@ interface AppContentProps {
 const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
-            <AppContent
-                updateBalanceCallback={updateBalanceCallback}
-                onPlayButtonTokenRequest={onPlayButtonTokenRequest}
-            />
+            <AppContent updateBalanceCallback={updateBalanceCallback} onPlayButtonTokenRequest={onPlayButtonTokenRequest} />
         </AppProvider>
     );
 };
@@ -109,6 +107,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
                     isSSOFailure={true}
                     customMessage="Login failed. Please check your connection and try again."
                     customButtonText="Retry Login"
+                    backgroundImage={blurBgGame}
                 />
             </div>
         );
@@ -118,10 +117,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
     if (!hasClickedPlay) {
         return (
             <div data-react="true" style={{ width: '100%' }}>
-                <RNGSoccerStaticPrototype
-                    onPlayButtonClick={handlePlayButtonClick}
-                    isLoading={isLoading}
-                />
+                <RNGSoccerStaticPrototype onPlayButtonClick={handlePlayButtonClick} isLoading={isLoading} />
             </div>
         );
     }
