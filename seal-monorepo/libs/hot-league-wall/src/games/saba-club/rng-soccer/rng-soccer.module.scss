@@ -275,12 +275,11 @@
 
     .btn-play-now {
         display: flex;
+        justify-content: center;
+        align-items: center;
         width: 96px;
         height: 36px;
         padding: 4px 6px;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
         border-radius: 29px;
         border: 1px solid #fff;
         background: rgba(255, 255, 255, 0.2);
@@ -289,5 +288,15 @@
         text-align: center;
         font-size: 16px;
         font-weight: 700;
+        animation: shadow-pulse 1.5s infinite;
+    }
+
+    @keyframes shadow-pulse {
+        0% {
+            box-shadow: 0 0 0 0px rgba(255, 255, 255, 0.4);
+        }
+        100% {
+            box-shadow: 0 0 4px 20px rgba(255, 255, 255, 0);
+        }
     }
 }
