@@ -10,73 +10,13 @@ import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-dem
 import { TokenRequestManager } from './_shared/utils/token-request-manager';
 import { SSOControlSimulator, useSSOSimulator } from './_shared/components/sso-control-simulator';
 
-// Global flag to simulate SSO failures (for testing purposes)
-let simulateSSOFailure = false;
-let failureCount = 0;
-
-// Function to toggle SSO failure simulation
-export const toggleSSOFailure = () => {
-    simulateSSOFailure = !simulateSSOFailure;
-    failureCount = 0;
-    console.log(`🔄 [SSO_SIMULATION] SSO failure simulation ${simulateSSOFailure ? 'ENABLED' : 'DISABLED'}`);
-};
-
-// Function to reset failure count
-export const resetSSOFailureCount = () => {
-    failureCount = 0;
-    console.log(`🔄 [SSO_SIMULATION] SSO failure count reset to 0`);
-};
-
 const Preview = (): React.ReactElement => {
     const [token, setToken] = useState('');
-
-    // Callback function to get token when Play button is clicked
-    const handlePlayButtonTokenRequest = useCallback(async () => {
-        const startTime = performance.now();
-        console.log('🕐 [TOKEN_TIMING] Play button clicked in PROTOTYPE - Starting token request at:', new Date().toISOString());
-
-        try {
-            // Simulate SSO failure if enabled
-            if (simulateSSOFailure) {
-                failureCount++;
-                console.log(`💥 [SSO_SIMULATION] Simulating SSO failure #${failureCount}`);
-
-                // Simulate different failure scenarios
-                if (failureCount === 1) {
-                    throw new Error('Network timeout - Please check your connection');
-                } else if (failureCount === 2) {
-                    throw new Error('Authentication failed - Invalid credentials');
-                } else {
-                    throw new Error('Server error - Please try again later');
-                }
-            }
-
-            console.log('🎯 [TOKEN_TIMING] Transitioning from PROTOTYPE to REAL APP...');
-            const result = await requestSSO();
-            const endTime = performance.now();
-            const duration = endTime - startTime;
-            console.log(`✅ [TOKEN_TIMING] Token request SUCCESS for REAL APP - Duration: ${duration.toFixed(2)}ms`);
-            return result.token;
-        } catch (error) {
-            const endTime = performance.now();
-            const duration = endTime - startTime;
-            console.log(`💥 [TOKEN_TIMING] Token request ERROR for REAL APP - Duration: ${duration.toFixed(2)}ms`);
-            console.error('[TOKEN_TIMING] Error details:', error);
-            return null;
-        }
-    }, []);
-
-    // Set up the token request callback
-    React.useEffect(() => {
-        TokenRequestManager.getInstance().setTokenRequestCallback(handlePlayButtonTokenRequest);
-    }, [handlePlayButtonTokenRequest]);
-
     return (
         <PreviewProvider>
             <Router>
                 <PreviewContext
                     token={token}
-                    onPlayButtonTokenRequest={handlePlayButtonTokenRequest}
                 />
             </Router>
         </PreviewProvider>
@@ -84,19 +24,12 @@ const Preview = (): React.ReactElement => {
 };
 
 const PreviewContext = ({
-    token,
-    onPlayButtonTokenRequest
+    token
 }: {
     token: string;
-    onPlayButtonTokenRequest: () => Promise<string | null>;
 }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
-
-    // Use the SSO simulator hook for state management
-    const ssoSimulator = useSSOSimulator({
-        isFailureMode: simulateSSOFailure,
-        failureCount: failureCount
-    });
+    const ssoSimulator = useSSOSimulator();
 
     const appEnv = '';
     const siteId = VIVA88_SITE_ID;
@@ -109,11 +42,23 @@ const PreviewContext = ({
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
 
-    // Update global variables when state changes
-    React.useEffect(() => {
-        simulateSSOFailure = ssoSimulator.isFailureMode;
-        failureCount = ssoSimulator.failureCount;
-    }, [ssoSimulator.isFailureMode, ssoSimulator.failureCount]);
+    // Play button handler uses ssoSimulator state
+    const handlePlayButtonTokenRequest = useCallback(async () => {
+        const startTime = performance.now();
+        try {
+            if (ssoSimulator.isFailureMode) {
+                ssoSimulator.incrementFailureCount();
+                const count = ssoSimulator.failureCount + 1; // increment is async, so +1
+                if (count === 1) throw new Error('Network timeout - Please check your connection');
+                if (count === 2) throw new Error('Authentication failed - Invalid credentials');
+                throw new Error('Server error - Please try again later');
+            }
+            const result = await requestSSO();
+            return result.token;
+        } catch (error) {
+            return null;
+        }
+    }, [ssoSimulator]);
 
     return (
         <div data-platform={platform} data-version={process.env.TAG_VERSION} className={'seal-vg-sg-index'}>
@@ -133,7 +78,7 @@ const PreviewContext = ({
                         appEnv={appEnv}
                         language={language}
                         siteId={siteId}
-                        onPlayButtonTokenRequest={onPlayButtonTokenRequest}
+                        onPlayButtonTokenRequest={handlePlayButtonTokenRequest}
                     />
                 } />
             </Routes>
