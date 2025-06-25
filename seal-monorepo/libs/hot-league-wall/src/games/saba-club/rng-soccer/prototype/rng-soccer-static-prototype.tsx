@@ -3,7 +3,10 @@ import { FAKE_RNG_SOCCER_DATA } from './fake-data';
 import RNGSoccerBase, { RNGSoccerGameData } from './rng-soccer-base';
 
 // Static prototype component for RNG Soccer
-export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => Promise<void> }> = ({ onPlayButtonClick }) => {
+export const RNGSoccerStaticPrototype: React.FC<{
+    onPlayButtonClick?: () => Promise<void>;
+    isLoading?: boolean;
+}> = ({ onPlayButtonClick, isLoading = false }) => {
     const [currentState, setCurrentState] = useState<RNGSoccerGameData>(FAKE_RNG_SOCCER_DATA);
     const [countdown, setCountdown] = useState(15);
     const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -114,6 +117,7 @@ export const RNGSoccerStaticPrototype: React.FC<{ onPlayButtonClick?: () => Prom
             isInteractive={true}
             showStatisticsPopup={isPopupVisible}
             onCloseStatistics={togglePopup}
+            isLoading={isLoading}
         />
     );
 };

@@ -7,6 +7,7 @@ import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance'
 import { TokenRequestManager } from './_shared/utils/token-request-manager';
 import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
+import { GameDisconnectView } from './games/game-base/components/game-disconnect-view';
 
 interface AppProps {
     appEnv: string;
@@ -36,10 +37,15 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
+    const [ssoFailure, setSsoFailure] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
         console.log('🎮 [APP_TIMING] Play button clicked in PROTOTYPE - App component handling at:', new Date().toISOString());
+
+        setIsLoading(true);
+        setSsoFailure(false);
 
         // Use TokenRequestManager to get a fresh token
         const tokenManager = TokenRequestManager.getInstance();
@@ -55,23 +61,30 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
                 console.log(`✅ [APP_TIMING] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 console.log(`🔄 [APP_TIMING] Updating current token for REAL APP...`);
                 setCurrentToken(newToken);
+                setHasClickedPlay(true);
             } else {
                 console.log(`⚠️ [APP_TIMING] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
+                setSsoFailure(true);
             }
         } catch (error) {
             const tokenEndTime = performance.now();
             const tokenDuration = tokenEndTime - tokenStartTime;
             console.log(`💥 [APP_TIMING] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
             console.error('[APP_TIMING] TokenRequestManager error:', error);
+            setSsoFailure(true);
+        } finally {
+            setIsLoading(false);
         }
-
-        console.log('🎯 [APP_TIMING] Setting hasClickedPlay to true - Transitioning from PROTOTYPE to REAL APP...');
-        setHasClickedPlay(true);
 
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
     }, []);
+
+    const handleSSORetry = useCallback(async () => {
+        console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
+        await handlePlayButtonClick();
+    }, [handlePlayButtonClick]);
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -87,11 +100,28 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
 
     loadI18n(language);
 
+    // Show SSO failure view if token request failed
+    if (ssoFailure) {
+        return (
+            <div data-react="true" style={{ width: '100%' }}>
+                <GameDisconnectView
+                    onReconnect={handleSSORetry}
+                    isSSOFailure={true}
+                    customMessage="Login failed. Please check your connection and try again."
+                    customButtonText="Retry Login"
+                />
+            </div>
+        );
+    }
+
     // Show RNG Soccer prototype first, then main app after play button click
     if (!hasClickedPlay) {
         return (
             <div data-react="true" style={{ width: '100%' }}>
-                <RNGSoccerStaticPrototype onPlayButtonClick={handlePlayButtonClick} />
+                <RNGSoccerStaticPrototype
+                    onPlayButtonClick={handlePlayButtonClick}
+                    isLoading={isLoading}
+                />
             </div>
         );
     }

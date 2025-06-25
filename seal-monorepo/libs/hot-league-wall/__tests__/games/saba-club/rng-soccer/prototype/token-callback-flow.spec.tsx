@@ -22,13 +22,18 @@ jest.mock('../../../../../src/previewProvider', () => ({
 }));
 
 // Mock the app provider
-jest.mock('../../../../../src/appProvider', () => ({
-    AppProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    useAppContext: () => ({
-        language: 'en'
-    }),
-    AppContextConsumer: ({ children }: { children: any }) => children({ language: 'en' }),
-}));
+jest.mock('../../../../../src/appProvider', () => {
+    const React = require('react');
+    return {
+        AppProvider: ({ children }: { children: React.ReactNode }) => React.createElement('div', {}, children),
+        useAppContext: () => ({
+            language: 'en'
+        }),
+        AppContextConsumer: ({ children }: { children: any }) => {
+            return React.createElement('div', {}, children({ language: 'en' }));
+        },
+    };
+});
 
 // Mock Sentry
 jest.mock('../../../../../src/saba-games-index', () => ({
@@ -78,17 +83,29 @@ describe('Token Callback Flow', () => {
 
             // Wait for Play button to appear
             await waitFor(() => {
-                expect(screen.getByText('Play Now')).toBeInTheDocument();
+                expect(screen.getByRole('button', { name: /play/i })).toBeInTheDocument();
             }, { timeout: 3000 });
 
             // Simulate Play button click
-            fireEvent.click(screen.getByText('Play Now'));
+            fireEvent.click(screen.getByRole('button', { name: /play/i }));
             await waitFor(() => {
                 expect(mockedRequestSSO).toHaveBeenCalled();
             });
 
-            // The Play button should still be visible after failure
-            expect(screen.getByText('Play Now')).toBeInTheDocument();
+            // Wait for Play button to reappear after failure (by role)
+            let playButton;
+            try {
+                playButton = await screen.findByRole('button', { name: /play/i }, { timeout: 3000 });
+            } catch (e) {
+                // Print all buttons for debugging
+                const buttons = Array.from(container.querySelectorAll('button')).map(btn => btn.textContent);
+                // eslint-disable-next-line no-console
+                console.log('All buttons:', buttons);
+                // eslint-disable-next-line no-console
+                console.log(container.innerHTML);
+                throw e;
+            }
+            expect(playButton).toBeInTheDocument();
         });
     });
 
