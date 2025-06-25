@@ -1,0 +1,34 @@
+{
+    "sentry": {
+        "dsn": "https://2af29bdacdbf4d9ba2db6600b450541f@sentry.lumigame.com/28",
+        "environment": "SIMULATOR"
+    },
+    "systemType": "SG",
+    "serverDomain": "localhost",
+    "ssl": false,
+    "subDomain": "simulator",
+    "env": "SIMULATOR",
+    "enableMsgpackParserAllGames": false,
+    "enableMsgpackParserOnNotification": false,
+    "simulatorConfigs": {
+        "enabled": true,
+        "gameLobbySimulatorUrl": "http://localhost:3000/simulator",
+        "owApiSimulatorUrl": "http://localhost:3000/simulator/api",
+        "operatorId": "SIMULATOR_OP",
+        "operatorSecret": "simulator_secret_key",
+        "operatorToken": "simulator_token",
+        "updateInterval": 1000,
+        "enableErrorSimulation": false,
+        "defaultGameType": "rng-soccer"
+    },
+    "defaultGameId": 118,
+    "userServicePath": "simulator-user",
+    "appType": 6,
+    "simulationMode": {
+        "enabled": true,
+        "autoConnect": true,
+        "autoAuthorize": true,
+        "realTimeUpdates": true,
+        "fakeDataGeneration": true
+    }
+}
