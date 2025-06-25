@@ -52,6 +52,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
 
         try {
             const newToken = await tokenManager.executeTokenRequest();
+            console.log('🔄 [APP_TIMING] TokenRequestManager returned token:', newToken);
             const tokenEndTime = performance.now();
             const tokenDuration = tokenEndTime - tokenStartTime;
 
