@@ -143,30 +143,30 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                     <button
                         onClick={async () => {
                             const baseStartTime = performance.now();
-                            console.log('🎮 [BASE_TIMING] Play button clicked in RNG Soccer base at:', new Date().toISOString());
+                            console.log('🎮 [BASE_TIMING] Play button clicked in RNG SOCCER PROTOTYPE BASE at:', new Date().toISOString());
 
                             if (onPlayClick) {
-                                console.log('🔄 [BASE_TIMING] Calling onPlayClick callback...');
+                                console.log('🔄 [BASE_TIMING] Calling onPlayClick callback to transition from PROTOTYPE to REAL APP...');
                                 const callbackStartTime = performance.now();
 
                                 try {
                                     await onPlayClick();
                                     const callbackEndTime = performance.now();
                                     const callbackDuration = callbackEndTime - callbackStartTime;
-                                    console.log(`✅ [BASE_TIMING] onPlayClick callback completed - Duration: ${callbackDuration.toFixed(2)}ms`);
+                                    console.log(`✅ [BASE_TIMING] onPlayClick callback completed - PROTOTYPE to REAL APP transition - Duration: ${callbackDuration.toFixed(2)}ms`);
                                 } catch (error) {
                                     const callbackEndTime = performance.now();
                                     const callbackDuration = callbackEndTime - callbackStartTime;
-                                    console.log(`💥 [BASE_TIMING] onPlayClick callback failed - Duration: ${callbackDuration.toFixed(2)}ms`);
+                                    console.log(`💥 [BASE_TIMING] onPlayClick callback failed - PROTOTYPE transition error - Duration: ${callbackDuration.toFixed(2)}ms`);
                                     console.error('[BASE_TIMING] Error during play button click:', error);
                                 }
                             } else {
-                                console.log('⚠️ [BASE_TIMING] No onPlayClick callback provided');
+                                console.log('⚠️ [BASE_TIMING] No onPlayClick callback provided - Cannot transition from PROTOTYPE to REAL APP');
                             }
 
                             const baseEndTime = performance.now();
                             const baseDuration = baseEndTime - baseStartTime;
-                            console.log(`🏁 [BASE_TIMING] Play button handling completed - Total duration: ${baseDuration.toFixed(2)}ms`);
+                            console.log(`🏁 [BASE_TIMING] RNG SOCCER PROTOTYPE BASE handling completed - Total duration: ${baseDuration.toFixed(2)}ms`);
                         }}
                         style={{
                             background: 'linear-gradient(180deg, #4a5a6a 0%, #222c36 100%)',

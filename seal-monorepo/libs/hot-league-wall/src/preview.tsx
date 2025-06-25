@@ -23,7 +23,7 @@ const Preview = (): React.ReactElement | null => {
     // Callback function to get token when Play button is clicked
     const handlePlayButtonTokenRequest = useCallback(async () => {
         const startTime = performance.now();
-        console.log('🕐 [TOKEN_TIMING] Play button clicked - Starting token request at:', new Date().toISOString());
+        console.log('🕐 [TOKEN_TIMING] Play button clicked in PROTOTYPE - Starting token request at:', new Date().toISOString());
 
         try {
             const result = await requestSSO();
@@ -31,19 +31,20 @@ const Preview = (): React.ReactElement | null => {
             const duration = endTime - startTime;
 
             if (result?.token) {
-                console.log(`✅ [TOKEN_TIMING] Token request SUCCESS - Duration: ${duration.toFixed(2)}ms`);
-                console.log(`📊 [TOKEN_TIMING] Token received at: ${new Date().toISOString()}`);
+                console.log(`✅ [TOKEN_TIMING] Token request SUCCESS for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+                console.log(`📊 [TOKEN_TIMING] Token received for REAL APP at: ${new Date().toISOString()}`);
                 console.log(`🔑 [TOKEN_TIMING] Token length: ${result.token.length} characters`);
+                console.log(`🎯 [TOKEN_TIMING] Transitioning from PROTOTYPE to REAL APP...`);
                 setToken(result.token);
                 return result.token;
             } else {
-                console.log(`❌ [TOKEN_TIMING] Token request FAILED - Duration: ${duration.toFixed(2)}ms - No token in response`);
+                console.log(`❌ [TOKEN_TIMING] Token request FAILED for REAL APP - Duration: ${duration.toFixed(2)}ms - No token in response`);
                 return null;
             }
         } catch (error) {
             const endTime = performance.now();
             const duration = endTime - startTime;
-            console.log(`💥 [TOKEN_TIMING] Token request ERROR - Duration: ${duration.toFixed(2)}ms`);
+            console.log(`💥 [TOKEN_TIMING] Token request ERROR for REAL APP - Duration: ${duration.toFixed(2)}ms`);
             console.error('[TOKEN_TIMING] Error details:', error);
             return null;
         }

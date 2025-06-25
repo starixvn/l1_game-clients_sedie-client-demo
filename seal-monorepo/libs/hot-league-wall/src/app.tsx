@@ -43,11 +43,11 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, onPlayButtonToke
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
-        console.log('🎮 [APP_TIMING] Play button clicked in App component at:', new Date().toISOString());
+        console.log('🎮 [APP_TIMING] Play button clicked in PROTOTYPE - App component handling at:', new Date().toISOString());
 
         // If we have a token request callback, use it to get a fresh token
         if (onPlayButtonTokenRequest) {
-            console.log('🔄 [APP_TIMING] Calling token request callback...');
+            console.log('🔄 [APP_TIMING] Calling token request callback for REAL APP...');
             const tokenStartTime = performance.now();
 
             try {
@@ -56,28 +56,28 @@ const AppContent = ({ token, renewToken, updateBalanceCallback, onPlayButtonToke
                 const tokenDuration = tokenEndTime - tokenStartTime;
 
                 if (newToken) {
-                    console.log(`✅ [APP_TIMING] Token callback completed - Duration: ${tokenDuration.toFixed(2)}ms`);
-                    console.log(`🔄 [APP_TIMING] Updating current token...`);
+                    console.log(`✅ [APP_TIMING] Token callback completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
+                    console.log(`🔄 [APP_TIMING] Updating current token for REAL APP...`);
                     setCurrentToken(newToken);
                 } else {
-                    console.log(`⚠️ [APP_TIMING] Token callback returned null - Duration: ${tokenDuration.toFixed(2)}ms`);
+                    console.log(`⚠️ [APP_TIMING] Token callback returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 }
             } catch (error) {
                 const tokenEndTime = performance.now();
                 const tokenDuration = tokenEndTime - tokenStartTime;
-                console.log(`💥 [APP_TIMING] Token callback failed - Duration: ${tokenDuration.toFixed(2)}ms`);
+                console.log(`💥 [APP_TIMING] Token callback failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 console.error('[APP_TIMING] Token callback error:', error);
             }
         } else {
-            console.log('⚠️ [APP_TIMING] No token request callback provided');
+            console.log('⚠️ [APP_TIMING] No token request callback provided for REAL APP');
         }
 
-        console.log('🎯 [APP_TIMING] Setting hasClickedPlay to true...');
+        console.log('🎯 [APP_TIMING] Setting hasClickedPlay to true - Transitioning from PROTOTYPE to REAL APP...');
         setHasClickedPlay(true);
 
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
-        console.log(`🏁 [APP_TIMING] Play button handling completed - Total duration: ${appDuration.toFixed(2)}ms`);
+        console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
     }, [onPlayButtonTokenRequest]);
 
     useEffect(() => {
