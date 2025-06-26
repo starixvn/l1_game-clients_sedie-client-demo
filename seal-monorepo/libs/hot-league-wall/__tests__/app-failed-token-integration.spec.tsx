@@ -51,7 +51,7 @@ jest.mock('../src/games/game-base/components/game-disconnect-view', () => ({
 const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 
-describe('App FailedToken Integration', () => {
+describe('App Token Request Integration', () => {
     let mockTokenRequestManager: jest.Mocked<TokenRequestManager>;
 
     beforeEach(() => {
@@ -73,11 +73,13 @@ describe('App FailedToken Integration', () => {
         console.error = originalConsoleError;
     });
 
-    describe('FailedToken with SSO Controls Enabled', () => {
-        it('should use FailedToken when SSO controls are enabled', async () => {
+    describe('Token Request Flow', () => {
+        it('should always use TokenRequestManager for real token flow regardless of FailedToken', async () => {
             // Arrange
             jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
             const failedToken = 'INVALID_TOKEN_SIMULATION_123';
+            const validToken = 'VALID_TOKEN_123';
+            mockTokenRequestManager.executeTokenRequest.mockResolvedValue(validToken);
 
             const props = {
                 appEnv: 'test',
@@ -93,47 +95,21 @@ describe('App FailedToken Integration', () => {
 
             // Assert
             await waitFor(() => {
+                expect(mockTokenRequestManager.executeTokenRequest).toHaveBeenCalled();
                 expect(screen.getByTestId('lobby-component')).toBeInTheDocument();
-                expect(screen.getByTestId('lobby-component')).toHaveAttribute('data-token', failedToken);
+                expect(screen.getByTestId('lobby-component')).toHaveAttribute('data-token', validToken);
             });
 
-            // Verify TokenRequestManager was not called
-            expect(mockTokenRequestManager.executeTokenRequest).not.toHaveBeenCalled();
+            // Verify FailedToken was not used
+            expect(screen.getByTestId('lobby-component')).not.toHaveAttribute('data-token', failedToken);
 
             // Verify correct logging
             expect(console.log).toHaveBeenCalledWith(
-                expect.stringContaining('Using FailedToken for SSO failure simulation (SSO controls enabled)')
+                expect.stringContaining('Using TokenRequestManager for REAL APP')
             );
         });
 
-        it('should log when FailedToken is being used', async () => {
-            // Arrange
-            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
-            const failedToken = 'INVALID_TOKEN_SIMULATION_123';
-
-            const props = {
-                appEnv: 'test',
-                siteId: 'test-site',
-                language: 'en',
-                FailedToken: failedToken
-            };
-
-            // Act
-            render(<App {...props} />);
-            const playButton = screen.getByTestId('play-button');
-            fireEvent.click(playButton);
-
-            // Assert
-            await waitFor(() => {
-                expect(console.log).toHaveBeenCalledWith(
-                    expect.stringContaining('FailedToken provided but SSO controls are disabled - using normal token flow instead')
-                );
-            });
-        });
-    });
-
-    describe('FailedToken with SSO Controls Disabled', () => {
-        it('should ignore FailedToken and use normal token flow when SSO controls are disabled', async () => {
+        it('should use real token flow when SSO controls are disabled', async () => {
             // Arrange
             jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(false);
             const failedToken = 'INVALID_TOKEN_SIMULATION_123';
@@ -164,103 +140,107 @@ describe('App FailedToken Integration', () => {
 
             // Verify correct logging
             expect(console.log).toHaveBeenCalledWith(
-                expect.stringContaining('FailedToken provided but SSO controls are disabled - using normal token flow instead')
+                expect.stringContaining('Using TokenRequestManager for REAL APP')
             );
         });
 
-        it('should log when FailedToken is being ignored', async () => {
+        it('should handle token request failure gracefully', async () => {
             // Arrange
-            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(false);
-            const failedToken = 'INVALID_TOKEN_SIMULATION_123';
+            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
+            mockTokenRequestManager.executeTokenRequest.mockRejectedValue(new Error('Token request failed'));
+
+            const props = {
+                appEnv: 'test',
+                siteId: 'test-site',
+                language: 'en'
+            };
+
+            // Act
+            render(<App {...props} />);
+            const playButton = screen.getByTestId('play-button');
+            fireEvent.click(playButton);
+
+            // Assert
+            await waitFor(() => {
+                expect(mockTokenRequestManager.executeTokenRequest).toHaveBeenCalled();
+                expect(console.error).toHaveBeenCalledWith(
+                    '[APP_TIMING] TokenRequestManager error:',
+                    expect.any(Error)
+                );
+            });
+
+            // Should still show the prototype since no valid token was obtained
+            expect(screen.getByTestId('rng-soccer-prototype')).toBeInTheDocument();
+        });
+    });
+
+    describe('SSO Failure Mode Integration', () => {
+        it('should show SSO failure view when SSO controls are enabled and isSSOFailureMode is true', async () => {
+            // Arrange
+            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
 
             const props = {
                 appEnv: 'test',
                 siteId: 'test-site',
                 language: 'en',
-                FailedToken: failedToken
+                isSSOFailureMode: true
             };
 
             // Act
             render(<App {...props} />);
 
             // Assert
-            expect(console.log).toHaveBeenCalledWith(
-                expect.stringContaining('FailedToken provided but SSO controls are disabled - ignoring FailedToken')
-            );
+            expect(screen.getByTestId('game-disconnect-view')).toBeInTheDocument();
+            expect(screen.getByTestId('game-disconnect-view')).toHaveAttribute('data-sso-failure', 'true');
         });
-    });
 
-    describe('FailedToken Changes', () => {
-        it('should update token when FailedToken changes and SSO controls are enabled', async () => {
+        it('should not show SSO failure view when SSO controls are disabled even if isSSOFailureMode is true', async () => {
             // Arrange
-            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
-            const initialFailedToken = 'INVALID_TOKEN_1';
-            const newFailedToken = 'INVALID_TOKEN_2';
+            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(false);
 
             const props = {
                 appEnv: 'test',
                 siteId: 'test-site',
                 language: 'en',
-                FailedToken: initialFailedToken
+                isSSOFailureMode: true
             };
 
             // Act
-            const { rerender } = render(<App {...props} />);
-            const playButton = screen.getByTestId('play-button');
-            fireEvent.click(playButton);
+            render(<App {...props} />);
 
-            // Assert initial token
-            await waitFor(() => {
-                expect(screen.getByTestId('lobby-component')).toHaveAttribute('data-token', initialFailedToken);
-            });
-
-            // Act: Change FailedToken
-            rerender(<App {...props} FailedToken={newFailedToken} />);
-
-            // Assert: Token should be updated
-            await waitFor(() => {
-                expect(screen.getByTestId('lobby-component')).toHaveAttribute('data-token', newFailedToken);
-            });
+            // Assert
+            expect(screen.queryByTestId('game-disconnect-view')).not.toBeInTheDocument();
+            expect(screen.getByTestId('rng-soccer-prototype')).toBeInTheDocument();
         });
 
-        it('should not update token when FailedToken changes and SSO controls are disabled', async () => {
+        it('should show normal app flow when isSSOFailureMode is false', async () => {
             // Arrange
-            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(false);
+            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
             const validToken = 'VALID_TOKEN_123';
             mockTokenRequestManager.executeTokenRequest.mockResolvedValue(validToken);
 
-            const initialFailedToken = 'INVALID_TOKEN_1';
-            const newFailedToken = 'INVALID_TOKEN_2';
-
             const props = {
                 appEnv: 'test',
                 siteId: 'test-site',
                 language: 'en',
-                FailedToken: initialFailedToken
+                isSSOFailureMode: false
             };
 
             // Act
-            const { rerender } = render(<App {...props} />);
+            render(<App {...props} />);
             const playButton = screen.getByTestId('play-button');
             fireEvent.click(playButton);
 
-            // Assert initial token (should be valid token, not failed token)
+            // Assert
             await waitFor(() => {
-                expect(screen.getByTestId('lobby-component')).toHaveAttribute('data-token', validToken);
-            });
-
-            // Act: Change FailedToken
-            rerender(<App {...props} FailedToken={newFailedToken} />);
-
-            // Assert: Token should remain the same (valid token)
-            await waitFor(() => {
+                expect(screen.getByTestId('lobby-component')).toBeInTheDocument();
                 expect(screen.getByTestId('lobby-component')).toHaveAttribute('data-token', validToken);
             });
         });
     });
 
     describe('Edge Cases', () => {
-        it('should handle null FailedToken when SSO controls are enabled', async () => {
+        it('should handle null FailedToken gracefully', async () => {
             // Arrange
             jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
             const validToken = 'VALID_TOKEN_123';
@@ -285,7 +265,7 @@ describe('App FailedToken Integration', () => {
             });
         });
 
-        it('should handle undefined FailedToken when SSO controls are enabled', async () => {
+        it('should handle undefined FailedToken gracefully', async () => {
             // Arrange
             jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
             const validToken = 'VALID_TOKEN_123';
@@ -307,6 +287,65 @@ describe('App FailedToken Integration', () => {
             await waitFor(() => {
                 expect(mockTokenRequestManager.executeTokenRequest).toHaveBeenCalled();
                 expect(screen.getByTestId('lobby-component')).toHaveAttribute('data-token', validToken);
+            });
+        });
+
+        it('should handle token request returning null', async () => {
+            // Arrange
+            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
+            mockTokenRequestManager.executeTokenRequest.mockResolvedValue(null);
+
+            const props = {
+                appEnv: 'test',
+                siteId: 'test-site',
+                language: 'en'
+            };
+
+            // Act
+            render(<App {...props} />);
+            const playButton = screen.getByTestId('play-button');
+            fireEvent.click(playButton);
+
+            // Assert
+            await waitFor(() => {
+                expect(mockTokenRequestManager.executeTokenRequest).toHaveBeenCalled();
+                expect(console.log).toHaveBeenCalledWith(
+                    expect.stringContaining('TokenRequestManager returned null for REAL APP')
+                );
+            });
+
+            // Should still show the prototype since no valid token was obtained
+            expect(screen.getByTestId('rng-soccer-prototype')).toBeInTheDocument();
+        });
+    });
+
+    describe('SSO Retry Functionality', () => {
+        it('should retry token request when SSO retry button is clicked', async () => {
+            // Arrange
+            jest.spyOn(ssoControlsConfig, 'shouldShowSSOControls').mockReturnValue(true);
+            const validToken = 'VALID_TOKEN_123';
+            mockTokenRequestManager.executeTokenRequest.mockResolvedValue(validToken);
+
+            const props = {
+                appEnv: 'test',
+                siteId: 'test-site',
+                language: 'en',
+                isSSOFailureMode: true
+            };
+
+            // Act
+            render(<App {...props} />);
+
+            // Initially should show SSO failure view
+            expect(screen.getByTestId('game-disconnect-view')).toBeInTheDocument();
+
+            // Click retry button
+            const retryButton = screen.getByTestId('reconnect-button');
+            fireEvent.click(retryButton);
+
+            // Assert
+            await waitFor(() => {
+                expect(mockTokenRequestManager.executeTokenRequest).toHaveBeenCalled();
             });
         });
     });

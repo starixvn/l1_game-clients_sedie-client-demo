@@ -174,6 +174,7 @@ const PreviewContext = ({
                         siteId={siteId}
                         onPlayButtonTokenRequest={onPlayButtonTokenRequest}
                         FailedToken={failedToken}
+                        isSSOFailureMode={finalShowSSOControls ? ssoSimulator.isFailureMode : false}
                     />
                 } />
             </Routes>
