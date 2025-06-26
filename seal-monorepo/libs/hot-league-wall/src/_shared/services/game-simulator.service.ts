@@ -1,659 +1,417 @@
-import * as gc from '@sg/sg-game-client';
-import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
+import { makeAutoObservable } from 'mobx';
+
+// Constants for round states
+const ROUND_STATE = {
+    PLACING_BET: 'placing_bet',
+    LOCKING_BET: 'locking_bet',
+    COUNTDOWN: 'countdown',
+    RUNNING: 'running',
+    SETTLEMENT: 'settlement',
+    FINISHED: 'finished'
+} as const;
+
+type RoundStateType = typeof ROUND_STATE[keyof typeof ROUND_STATE];
+
+// Constants for game types
+const GAME_TYPE = {
+    RNG_SOCCER: 'rng-soccer',
+    RNG_BASKETBALL: 'rng-basketball',
+    RNG_TENNIS: 'rng-tennis'
+} as const;
 
 /**
  * Game Simulator Service
- * 
- * This service provides a complete simulation environment for game prototyping
- * without requiring real service connections or internet access.
- * 
- * Features:
- * - Simulates all game client stores and handlers
- * - Provides realistic fake data for all game states
- * - Supports multiple game types (RNG Soccer, Baccarat, etc.)
- * - Real-time data updates with configurable intervals
- * - Error simulation for testing edge cases
+ * Provides fake data and real-time updates for development and testing
  */
 export class GameSimulatorService {
-    private static instance: GameSimulatorService;
+    // Simulator state
+    private isInitialized = false;
+    private isRunning = false;
+    private intervalId: NodeJS.Timeout | null = null;
+
+    // Game state
+    private countdownTimer = 30;
+    private roundState: RoundStateType = ROUND_STATE.PLACING_BET;
+    private currentRoundId = '';
+    private isConnected = true;
+    private isSignedIn = true;
+    private isAuthorized = true;
+
+    // Simulator config
     private isSimulationMode: boolean = false;
     private simulationInterval: NodeJS.Timeout | null = null;
-    private currentRoundId: number = 12345;
-    private roundState: string = ROUND_STATE.PLACING_BET;
-    private countdownTimer: number = 30;
-    private isConnected: boolean = true;
-    private isAuthorized: boolean = true;
-    private isSignedIn: boolean = true;
-    private gameConfig: any = null;
-    private fakeData: any = {};
     private errorSimulation: boolean = false;
-    private failureCount: number = 0;
+    private gameConfig: any = null;
     private maxFailures: number = 3;
 
-    // Singleton pattern
-    public static getInstance(): GameSimulatorService {
-        if (!GameSimulatorService.instance) {
-            GameSimulatorService.instance = new GameSimulatorService();
+    // Fake data
+    private fakeData = {
+        teamData: {
+            home: { name: 'Home Team', score: 0, odds: 1.85 },
+            away: { name: 'Away Team', score: 0, odds: 2.10 },
+            draw: { name: 'Draw', odds: 3.25 }
+        },
+        totalBets: {
+            home: 1250.50,
+            away: 890.25,
+            draw: 320.75
+        },
+        ownBets: {
+            home: 50.00,
+            away: 0,
+            draw: 0,
+            totalStake: 50.00
+        },
+        roundHistory: [
+            { roundId: 'RND001', result: 'home', homeScore: 2, awayScore: 1 },
+            { roundId: 'RND002', result: 'away', homeScore: 0, awayScore: 1 },
+            { roundId: 'RND003', result: 'draw', homeScore: 1, awayScore: 1 }
+        ],
+        gameSettings: {
+            durations: {
+                placingBet: 30,
+                lockingBet: 10,
+                showingResult: 15,
+                wholeRound: 60,
+                generatingResult: 5,
+                startRound: 1,
+                wholeShoe: 120
+            }
         }
-        return GameSimulatorService.instance;
+    };
+
+    constructor() {
+        makeAutoObservable(this);
+        console.log('🎮 [GAME_SIMULATOR] Service created');
     }
 
     /**
-     * Initialize the simulator with configuration
+     * Initialize the simulator
      */
     public initialize(config: {
-        gameType: string;
+        gameType?: string;
         enableErrorSimulation?: boolean;
-        updateInterval?: number;
-        customData?: any;
+        gameContainer?: any;
     }): void {
-        console.log('🎮 [GAME_SIMULATOR] Initializing simulator with config:', config);
+        if (this.isInitialized) {
+            console.log('🎮 [GAME_SIMULATOR] Already initialized');
+            return;
+        }
 
-        this.isSimulationMode = true;
-        this.errorSimulation = config.enableErrorSimulation || false;
-        this.gameConfig = config;
+        try {
+            console.log('🎮 [GAME_SIMULATOR] Initializing...');
 
-        // Initialize fake data based on game type
-        this.initializeFakeData(config.gameType, config.customData);
+            this.isSimulationMode = true;
+            this.errorSimulation = config.enableErrorSimulation || false;
+            this.gameConfig = config;
 
-        // Start simulation loop
-        this.startSimulationLoop(config.updateInterval || 1000);
+            // Generate initial round ID
+            this.currentRoundId = this.generateRoundId();
 
-        // Initialize game client stores with fake data
-        this.initializeGameStores();
+            // Initialize fake data based on game type
+            this.initializeFakeData();
 
-        console.log('🎮 [GAME_SIMULATOR] Simulator initialized successfully');
+            // Initialize game stores
+            this.initializeGameStores();
+
+            this.isInitialized = true;
+            console.log('🎮 [GAME_SIMULATOR] Initialized successfully');
+
+        } catch (error) {
+            console.error('🎮 [GAME_SIMULATOR] Error initializing:', error);
+        }
+    }
+
+    /**
+     * Generate a unique round ID
+     */
+    private generateRoundId(): string {
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 1000);
+        return `RND${timestamp}${random}`;
+    }
+
+    /**
+     * Initialize fake data based on game type
+     */
+    private initializeFakeData(): void {
+        const gameType = this.gameConfig?.gameType || 'rng-soccer';
+
+        // Update team data based on game type
+        switch (gameType.toLowerCase()) {
+            case 'rng-soccer':
+                this.fakeData.teamData = {
+                    home: { name: 'Manchester United', score: 0, odds: 1.85 },
+                    away: { name: 'Liverpool', score: 0, odds: 2.10 },
+                    draw: { name: 'Draw', odds: 3.25 }
+                };
+                break;
+            case 'rng-basketball':
+                this.fakeData.teamData = {
+                    home: { name: 'Lakers', score: 0, odds: 1.95 },
+                    away: { name: 'Warriors', score: 0, odds: 1.85 },
+                    draw: { name: 'Draw', odds: 15.00 }
+                };
+                break;
+            case 'rng-tennis':
+                this.fakeData.teamData = {
+                    home: { name: 'Federer', score: 0, odds: 1.75 },
+                    away: { name: 'Nadal', score: 0, odds: 2.15 },
+                    draw: { name: 'Draw', odds: 25.00 }
+                };
+                break;
+        }
+
+        console.log('🎮 [GAME_SIMULATOR] Fake data initialized for game type:', gameType);
+    }
+
+    /**
+     * Initialize game stores (simplified version)
+     */
+    private initializeGameStores(): void {
+        try {
+            console.log('🎮 [GAME_SIMULATOR] Initializing game stores...');
+
+            // For now, we'll just log that stores would be initialized
+            // In a real implementation, this would create and configure the actual stores
+            console.log('🎮 [GAME_SIMULATOR] Game stores initialization completed');
+
+        } catch (error) {
+            console.error('🎮 [GAME_SIMULATOR] Error initializing game stores:', error);
+        }
+    }
+
+    /**
+     * Start the simulation
+     */
+    public start(): void {
+        if (!this.isInitialized) {
+            console.warn('🎮 [GAME_SIMULATOR] Cannot start - not initialized');
+            return;
+        }
+
+        if (this.isRunning) {
+            console.warn('🎮 [GAME_SIMULATOR] Already running');
+            return;
+        }
+
+        console.log('🎮 [GAME_SIMULATOR] Starting simulation...');
+        this.isRunning = true;
+
+        // Start the simulation loop
+        this.startSimulationLoop();
+
+        console.log('🎮 [GAME_SIMULATOR] Simulation started');
+    }
+
+    /**
+     * Stop the simulation
+     */
+    public stop(): void {
+        if (!this.isRunning) {
+            console.warn('🎮 [GAME_SIMULATOR] Not running');
+            return;
+        }
+
+        console.log('🎮 [GAME_SIMULATOR] Stopping simulation...');
+        this.isRunning = false;
+
+        // Clear intervals
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+
+        if (this.simulationInterval) {
+            clearInterval(this.simulationInterval);
+            this.simulationInterval = null;
+        }
+
+        console.log('🎮 [GAME_SIMULATOR] Simulation stopped');
     }
 
     /**
      * Start the simulation loop
      */
-    private startSimulationLoop(interval: number): void {
-        if (this.simulationInterval) {
-            clearInterval(this.simulationInterval);
-        }
+    private startSimulationLoop(): void {
+        // Update every second
+        this.intervalId = setInterval(() => {
+            if (!this.isRunning) return;
 
-        this.simulationInterval = setInterval(() => {
-            this.updateSimulation();
-        }, interval);
-
-        console.log(`🎮 [GAME_SIMULATOR] Simulation loop started with ${interval}ms interval`);
+            this.updateGameState();
+        }, 1000);
     }
 
     /**
-     * Update simulation state
+     * Update the game state
      */
-    private updateSimulation(): void {
-        if (!this.isSimulationMode) return;
+    private updateGameState(): void {
+        try {
+            // Update countdown timer
+            if (this.countdownTimer > 0) {
+                this.countdownTimer--;
+            } else {
+                this.transitionToNextState();
+            }
 
-        // Update countdown timer
-        this.countdownTimer = Math.max(0, this.countdownTimer - 1);
+            // Update stores with current state
+            this.updateStores();
 
-        // Update round state based on countdown
-        this.updateRoundState();
-
-        // Update fake data
-        this.updateFakeData();
-
-        // Simulate errors if enabled
-        if (this.errorSimulation) {
-            this.simulateErrors();
+        } catch (error) {
+            console.error('🎮 [GAME_SIMULATOR] Error updating game state:', error);
         }
-
-        // Emit store updates
-        this.emitStoreUpdates();
     }
 
     /**
-     * Update round state based on countdown timer
+     * Transition to the next round state
      */
-    private updateRoundState(): void {
-        const placingBetDuration = this.fakeData.gameSettings?.durations?.placingBet || 30;
-        const lockingBetDuration = this.fakeData.gameSettings?.durations?.lockingBet || 10;
-        const showingResultDuration = this.fakeData.gameSettings?.durations?.showingResult || 15;
+    private transitionToNextState(): void {
+        switch (this.roundState) {
+            case ROUND_STATE.PLACING_BET:
+                this.roundState = ROUND_STATE.LOCKING_BET;
+                this.countdownTimer = this.fakeData.gameSettings.durations.lockingBet;
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to LOCKING_BET');
+                break;
 
-        if (this.countdownTimer > placingBetDuration) {
-            this.roundState = ROUND_STATE.PLACING_BET;
-        } else if (this.countdownTimer > placingBetDuration - lockingBetDuration) {
-            this.roundState = ROUND_STATE.LOCKING_BET;
-        } else if (this.countdownTimer > 0) {
-            this.roundState = ROUND_STATE.SHOW_RESULT;
-        } else {
-            this.roundState = ROUND_STATE.NONE;
-            this.startNewRound();
+            case ROUND_STATE.LOCKING_BET:
+                this.roundState = ROUND_STATE.COUNTDOWN;
+                this.countdownTimer = this.fakeData.gameSettings.durations.startRound;
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to COUNTDOWN');
+                break;
+
+            case ROUND_STATE.COUNTDOWN:
+                this.roundState = ROUND_STATE.RUNNING;
+                this.countdownTimer = this.fakeData.gameSettings.durations.generatingResult;
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to RUNNING');
+                break;
+
+            case ROUND_STATE.RUNNING:
+                this.roundState = ROUND_STATE.SETTLEMENT;
+                this.countdownTimer = this.fakeData.gameSettings.durations.showingResult;
+                this.generateRoundResult();
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to SETTLEMENT');
+                break;
+
+            case ROUND_STATE.SETTLEMENT:
+                this.roundState = ROUND_STATE.FINISHED;
+                this.countdownTimer = 5;
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to FINISHED');
+                break;
+
+            case ROUND_STATE.FINISHED:
+                this.startNewRound();
+                break;
         }
+    }
+
+    /**
+     * Generate a random round result
+     */
+    private generateRoundResult(): void {
+        const results = ['home', 'away', 'draw'];
+        const randomResult = results[Math.floor(Math.random() * results.length)];
+
+        // Update team scores based on result
+        if (randomResult === 'home') {
+            this.fakeData.teamData.home.score++;
+        } else if (randomResult === 'away') {
+            this.fakeData.teamData.away.score++;
+        }
+
+        // Add to round history
+        this.fakeData.roundHistory.unshift({
+            roundId: this.currentRoundId,
+            result: randomResult,
+            homeScore: this.fakeData.teamData.home.score,
+            awayScore: this.fakeData.teamData.away.score
+        });
+
+        // Keep only last 10 rounds
+        if (this.fakeData.roundHistory.length > 10) {
+            this.fakeData.roundHistory = this.fakeData.roundHistory.slice(0, 10);
+        }
+
+        console.log('🎮 [GAME_SIMULATOR] Round result generated:', randomResult);
     }
 
     /**
      * Start a new round
      */
     private startNewRound(): void {
-        this.currentRoundId++;
-        this.countdownTimer = this.fakeData.gameSettings?.durations?.placingBet || 30;
+        this.currentRoundId = this.generateRoundId();
+        this.countdownTimer = this.fakeData.gameSettings.durations.placingBet;
         this.roundState = ROUND_STATE.PLACING_BET;
 
-        // Generate new fake data for the round
-        this.generateNewRoundData();
+        // Reset team scores
+        this.fakeData.teamData.home.score = 0;
+        this.fakeData.teamData.away.score = 0;
 
-        console.log(`🎮 [GAME_SIMULATOR] New round started: ${this.currentRoundId}`);
+        console.log('🎮 [GAME_SIMULATOR] New round started:', this.currentRoundId);
     }
 
     /**
-     * Initialize fake data based on game type
+     * Update stores with current state (simplified)
      */
-    private initializeFakeData(gameType: string, customData?: any): void {
-        switch (gameType.toLowerCase()) {
-            case 'rng-soccer':
-                this.fakeData = this.getRNGSoccerFakeData();
-                break;
-            case 'baccarat':
-                this.fakeData = this.getBaccaratFakeData();
-                break;
-            case 'fish-prawn-crab':
-                this.fakeData = this.getFishPrawnCrabFakeData();
-                break;
-            default:
-                this.fakeData = this.getDefaultFakeData();
-        }
-
-        // Merge custom data if provided
-        if (customData) {
-            this.fakeData = { ...this.fakeData, ...customData };
-        }
-
-        console.log(`🎮 [GAME_SIMULATOR] Fake data initialized for ${gameType}`);
-    }
-
-    /**
-     * Get RNG Soccer fake data
-     */
-    private getRNGSoccerFakeData(): any {
-        return {
-            gameSettings: {
-                id: 'rng-soccer',
-                name: 'RNGSoccer',
-                durations: {
-                    placingBet: 30,
-                    lockingBet: 10,
-                    showingResult: 15,
-                    finished: 5
-                }
-            },
-            currentRound: {
+    private updateStores(): void {
+        try {
+            // In a real implementation, this would update the actual MobX stores
+            // For now, we'll just log the current state
+            console.log('🎮 [GAME_SIMULATOR] Updating stores:', {
                 roundId: this.currentRoundId,
                 roundState: this.roundState,
                 countdownTimer: this.countdownTimer,
-                isAllowedBet: true,
-                isLocking: false
-            },
-            teamData: {
-                home: { name: 'Arsenal', rank: 1, suit: 2, score: 2 },
-                away: { name: 'Liverpool', rank: 3, suit: 1, score: 1 }
-            },
-            roundOdds: {
-                odds: { home: 1.85, draw: 3.20, away: 2.10 },
-                boostedChoices: ['home']
-            },
-            ownBets: {
-                bets: [{ symbol: 'home', amount: 100 }],
-                totalStake: 100
-            },
-            totalBets: {
-                home: 5000,
-                draw: 2000,
-                away: 3000
-            },
-            settlementResult: {
-                home: true,
-                away: false,
-                draw: false
-            },
-            roundHistory: this.generateRoundHistory(10)
-        };
+                isConnected: this.isConnected,
+                isSignedIn: this.isSignedIn,
+                isAuthorized: this.isAuthorized
+            });
+
+        } catch (error) {
+            console.error('🎮 [GAME_SIMULATOR] Error updating stores:', error);
+        }
     }
 
     /**
-     * Get Baccarat fake data
+     * Get current simulator state
      */
-    private getBaccaratFakeData(): any {
+    public getState(): any {
         return {
-            gameSettings: {
-                id: 'baccarat',
-                name: 'Baccarat',
-                durations: {
-                    placingBet: 25,
-                    lockingBet: 8,
-                    showingResult: 12,
-                    finished: 3
-                }
-            },
-            currentRound: {
-                roundId: this.currentRoundId,
-                roundState: this.roundState,
-                countdownTimer: this.countdownTimer,
-                isAllowedBet: true,
-                isLocking: false
-            },
-            cards: {
-                player: ['♠A', '♥K'],
-                banker: ['♦Q', '♣J']
-            },
-            roundOdds: {
-                odds: { player: 1.95, banker: 1.95, tie: 8.0 },
-                boostedChoices: ['player']
-            },
-            ownBets: {
-                bets: [{ symbol: 'player', amount: 50 }],
-                totalStake: 50
-            },
-            totalBets: {
-                player: 3000,
-                banker: 2500,
-                tie: 500
-            },
-            settlementResult: {
-                player: true,
-                banker: false,
-                tie: false
-            },
-            roundHistory: this.generateBaccaratHistory(10)
-        };
-    }
-
-    /**
-     * Get Fish Prawn Crab fake data
-     */
-    private getFishPrawnCrabFakeData(): any {
-        return {
-            gameSettings: {
-                id: 'fish-prawn-crab',
-                name: 'FishPrawnCrab',
-                durations: {
-                    placingBet: 20,
-                    lockingBet: 5,
-                    showingResult: 10,
-                    finished: 3
-                }
-            },
-            currentRound: {
-                roundId: this.currentRoundId,
-                roundState: this.roundState,
-                countdownTimer: this.countdownTimer,
-                isAllowedBet: true,
-                isLocking: false
-            },
-            dice: [1, 2, 3], // Fish, Prawn, Crab
-            roundOdds: {
-                odds: { fish: 1.5, prawn: 1.5, crab: 1.5, rooster: 2.0, gourd: 2.0, stag: 2.0 },
-                boostedChoices: ['fish']
-            },
-            ownBets: {
-                bets: [{ symbol: 'fish', amount: 25 }],
-                totalStake: 25
-            },
-            totalBets: {
-                fish: 2000,
-                prawn: 1800,
-                crab: 1900,
-                rooster: 800,
-                gourd: 750,
-                stag: 850
-            },
-            settlementResult: {
-                fish: true,
-                prawn: false,
-                crab: false,
-                rooster: false,
-                gourd: false,
-                stag: false
-            },
-            roundHistory: this.generateFishPrawnCrabHistory(10)
-        };
-    }
-
-    /**
-     * Get default fake data
-     */
-    private getDefaultFakeData(): any {
-        return {
-            gameSettings: {
-                id: 'default-game',
-                name: 'DefaultGame',
-                durations: {
-                    placingBet: 30,
-                    lockingBet: 10,
-                    showingResult: 15,
-                    finished: 5
-                }
-            },
-            currentRound: {
-                roundId: this.currentRoundId,
-                roundState: this.roundState,
-                countdownTimer: this.countdownTimer,
-                isAllowedBet: true,
-                isLocking: false
-            },
-            roundOdds: {
-                odds: { option1: 1.5, option2: 2.0, option3: 3.0 },
-                boostedChoices: ['option1']
-            },
-            ownBets: {
-                bets: [{ symbol: 'option1', amount: 100 }],
-                totalStake: 100
-            },
-            totalBets: {
-                option1: 5000,
-                option2: 3000,
-                option3: 2000
-            },
-            settlementResult: {
-                option1: true,
-                option2: false,
-                option3: false
-            },
-            roundHistory: this.generateDefaultHistory(10)
-        };
-    }
-
-    /**
-     * Generate round history
-     */
-    private generateRoundHistory(count: number): any[] {
-        const history: any[] = [];
-        for (let i = 0; i < count; i++) {
-            history.push({
-                roundId: this.currentRoundId - i - 1,
-                settlementResult: {
-                    home: Math.random() > 0.5,
-                    away: Math.random() > 0.5,
-                    draw: Math.random() > 0.7
-                },
-                result: {
-                    homeScore: Math.floor(Math.random() * 4),
-                    awayScore: Math.floor(Math.random() * 4)
-                }
-            });
-        }
-        return history;
-    }
-
-    /**
-     * Generate Baccarat history
-     */
-    private generateBaccaratHistory(count: number): any[] {
-        const history: any[] = [];
-        for (let i = 0; i < count; i++) {
-            history.push({
-                roundId: this.currentRoundId - i - 1,
-                settlementResult: {
-                    player: Math.random() > 0.5,
-                    banker: Math.random() > 0.5,
-                    tie: Math.random() > 0.8
-                },
-                result: {
-                    playerScore: Math.floor(Math.random() * 10),
-                    bankerScore: Math.floor(Math.random() * 10)
-                }
-            });
-        }
-        return history;
-    }
-
-    /**
-     * Generate Fish Prawn Crab history
-     */
-    private generateFishPrawnCrabHistory(count: number): any[] {
-        const history: any[] = [];
-        for (let i = 0; i < count; i++) {
-            history.push({
-                roundId: this.currentRoundId - i - 1,
-                settlementResult: {
-                    fish: Math.random() > 0.8,
-                    prawn: Math.random() > 0.8,
-                    crab: Math.random() > 0.8,
-                    rooster: Math.random() > 0.9,
-                    gourd: Math.random() > 0.9,
-                    stag: Math.random() > 0.9
-                },
-                result: {
-                    dice: [
-                        Math.floor(Math.random() * 6) + 1,
-                        Math.floor(Math.random() * 6) + 1,
-                        Math.floor(Math.random() * 6) + 1
-                    ]
-                }
-            });
-        }
-        return history;
-    }
-
-    /**
-     * Generate default history
-     */
-    private generateDefaultHistory(count: number): any[] {
-        const history: any[] = [];
-        for (let i = 0; i < count; i++) {
-            history.push({
-                roundId: this.currentRoundId - i - 1,
-                settlementResult: {
-                    option1: Math.random() > 0.5,
-                    option2: Math.random() > 0.5,
-                    option3: Math.random() > 0.5
-                },
-                result: {
-                    winner: Math.floor(Math.random() * 3) + 1
-                }
-            });
-        }
-        return history;
-    }
-
-    /**
-     * Update fake data with new values
-     */
-    private updateFakeData(): void {
-        // Update current round data
-        this.fakeData.currentRound = {
-            ...this.fakeData.currentRound,
-            roundId: this.currentRoundId,
+            isInitialized: this.isInitialized,
+            isRunning: this.isRunning,
+            isSimulationMode: this.isSimulationMode,
+            currentRoundId: this.currentRoundId,
             roundState: this.roundState,
             countdownTimer: this.countdownTimer,
-            isLocking: this.roundState === ROUND_STATE.LOCKING_BET
+            isConnected: this.isConnected,
+            isSignedIn: this.isSignedIn,
+            isAuthorized: this.isAuthorized,
+            fakeData: this.fakeData
         };
-
-        // Update odds with small variations
-        if (this.fakeData.roundOdds?.odds) {
-            Object.keys(this.fakeData.roundOdds.odds).forEach(key => {
-                const variation = (Math.random() - 0.5) * 0.05; // ±2.5% variation
-                this.fakeData.roundOdds.odds[key] = Math.max(1.01,
-                    this.fakeData.roundOdds.odds[key] * (1 + variation));
-            });
-        }
-
-        // Update total bets with small increments
-        if (this.fakeData.totalBets) {
-            Object.keys(this.fakeData.totalBets).forEach(key => {
-                const increment = Math.floor(Math.random() * 50);
-                this.fakeData.totalBets[key] += increment;
-            });
-        }
     }
 
     /**
-     * Generate new round data
-     */
-    private generateNewRoundData(): void {
-        // Generate new settlement result
-        if (this.fakeData.settlementResult) {
-            Object.keys(this.fakeData.settlementResult).forEach(key => {
-                this.fakeData.settlementResult[key] = Math.random() > 0.7;
-            });
-        }
-
-        // Update round history
-        if (this.fakeData.roundHistory) {
-            const newHistoryEntry = this.createHistoryEntry();
-            this.fakeData.roundHistory.unshift(newHistoryEntry);
-            this.fakeData.roundHistory = this.fakeData.roundHistory.slice(0, 10); // Keep only last 10
-        }
-    }
-
-    /**
-     * Create a new history entry
-     */
-    private createHistoryEntry(): any {
-        const gameType = this.gameConfig?.gameType?.toLowerCase();
-
-        switch (gameType) {
-            case 'rng-soccer':
-                return {
-                    roundId: this.currentRoundId - 1,
-                    settlementResult: {
-                        home: Math.random() > 0.5,
-                        away: Math.random() > 0.5,
-                        draw: Math.random() > 0.7
-                    },
-                    result: {
-                        homeScore: Math.floor(Math.random() * 4),
-                        awayScore: Math.floor(Math.random() * 4)
-                    }
-                };
-            case 'baccarat':
-                return {
-                    roundId: this.currentRoundId - 1,
-                    settlementResult: {
-                        player: Math.random() > 0.5,
-                        banker: Math.random() > 0.5,
-                        tie: Math.random() > 0.8
-                    },
-                    result: {
-                        playerScore: Math.floor(Math.random() * 10),
-                        bankerScore: Math.floor(Math.random() * 10)
-                    }
-                };
-            default:
-                return {
-                    roundId: this.currentRoundId - 1,
-                    settlementResult: {
-                        option1: Math.random() > 0.5,
-                        option2: Math.random() > 0.5,
-                        option3: Math.random() > 0.5
-                    },
-                    result: {
-                        winner: Math.floor(Math.random() * 3) + 1
-                    }
-                };
-        }
-    }
-
-    /**
-     * Simulate errors for testing
-     */
-    private simulateErrors(): void {
-        if (this.failureCount >= this.maxFailures) {
-            this.failureCount = 0;
-            return;
-        }
-
-        const errorChance = 0.1; // 10% chance of error
-        if (Math.random() < errorChance) {
-            this.failureCount++;
-            this.simulateConnectionError();
-        }
-    }
-
-    /**
-     * Simulate connection error
-     */
-    private simulateConnectionError(): void {
-        console.log(`🎮 [GAME_SIMULATOR] 💥 Simulating connection error #${this.failureCount}`);
-
-        // Temporarily set connection to false
-        this.isConnected = false;
-
-        // Restore connection after 3 seconds
-        setTimeout(() => {
-            this.isConnected = true;
-            console.log('🎮 [GAME_SIMULATOR] ✅ Connection restored');
-        }, 3000);
-    }
-
-    /**
-     * Initialize game client stores with fake data
-     */
-    private initializeGameStores(): void {
-        // This would typically interact with the actual game client stores
-        // For now, we'll just log the initialization
-        console.log('🎮 [GAME_SIMULATOR] Game stores initialized with fake data');
-    }
-
-    /**
-     * Emit store updates to trigger re-renders
-     */
-    private emitStoreUpdates(): void {
-        // This would typically emit events to update the game client stores
-        // For now, we'll just log the updates
-        if (this.countdownTimer % 5 === 0) { // Log every 5 seconds
-            console.log(`🎮 [GAME_SIMULATOR] Round ${this.currentRoundId} - ${this.roundState} - ${this.countdownTimer}s remaining`);
-        }
-    }
-
-    /**
-     * Get current fake data
+     * Get fake data
      */
     public getFakeData(): any {
         return this.fakeData;
     }
 
     /**
-     * Get current simulation state
+     * Check if simulator is running
      */
-    public getSimulationState(): any {
-        return {
-            isSimulationMode: this.isSimulationMode,
-            currentRoundId: this.currentRoundId,
-            roundState: this.roundState,
-            countdownTimer: this.countdownTimer,
-            isConnected: this.isConnected,
-            isAuthorized: this.isAuthorized,
-            isSignedIn: this.isSignedIn
-        };
+    public isSimulatorRunning(): boolean {
+        return this.isRunning;
     }
 
     /**
-     * Toggle error simulation
+     * Check if simulator is initialized
      */
-    public toggleErrorSimulation(): void {
-        this.errorSimulation = !this.errorSimulation;
-        console.log(`🎮 [GAME_SIMULATOR] Error simulation ${this.errorSimulation ? 'enabled' : 'disabled'}`);
-    }
-
-    /**
-     * Reset failure count
-     */
-    public resetFailureCount(): void {
-        this.failureCount = 0;
-        console.log('🎮 [GAME_SIMULATOR] Failure count reset');
-    }
-
-    /**
-     * Stop the simulator
-     */
-    public stop(): void {
-        if (this.simulationInterval) {
-            clearInterval(this.simulationInterval);
-            this.simulationInterval = null;
-        }
-        this.isSimulationMode = false;
-        console.log('🎮 [GAME_SIMULATOR] Simulator stopped');
-    }
-
-    /**
-     * Check if simulator is active
-     */
-    public isActive(): boolean {
-        return this.isSimulationMode;
+    public isSimulatorInitialized(): boolean {
+        return this.isInitialized;
     }
 }
 
+// Export singleton instance
+export const gameSimulatorService = new GameSimulatorService();
+
+// Export default for compatibility
 export default GameSimulatorService; 

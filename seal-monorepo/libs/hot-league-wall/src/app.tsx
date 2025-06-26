@@ -122,7 +122,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
                 {process.env.NODE_ENV === 'development' && (
                     <div style={{
                         position: 'fixed',
-                        top: 0,
+                        bottom: 0,
                         left: 0,
                         right: 0,
                         background: '#333',

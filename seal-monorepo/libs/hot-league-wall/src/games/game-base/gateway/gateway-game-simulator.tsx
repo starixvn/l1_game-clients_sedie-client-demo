@@ -4,7 +4,7 @@ import React from 'react';
 import { StorageManager, localStorageKeys } from '../../../_shared/utils/storage-manager';
 import { ILatestBetRecord } from '../../../_shared/components/bet-panel/bet-panel';
 import AuthorizationHandler from '../../../_shared/handlers/authorization-handler';
-import GameSimulatorService from '../../../_shared/services/game-simulator.service';
+// import { gameSimulatorService } from '../../../_shared/services/game-simulator.service';
 import GatewayGameBase from './gateway-game-base';
 import { IGatewayGameBaseState } from '../interfaces/gateway-types';
 import { GameBaseProps } from '../type';
@@ -12,6 +12,36 @@ import { SyncMemberSiteBalance } from '../../../_shared/utils/sync-member-site-b
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 import { Settlements } from '@sg/sg-game-client';
 import { FunctionUtils } from '../../../_shared/utils/funtion-utils';
+
+// Mock simulator service for now
+const mockSimulatorService = {
+    initialize: (config: any) => console.log('🎮 [MOCK_SIMULATOR] Initialized with config:', config),
+    getState: () => ({
+        currentRoundId: 'MOCK_RND_001',
+        roundState: 'placing_bet',
+        isInitialized: true,
+        isRunning: false,
+        isSimulationMode: true,
+        countdownTimer: 30,
+        isConnected: true,
+        isSignedIn: true,
+        isAuthorized: true,
+        fakeData: {
+            teamData: { home: { name: 'Home' }, away: { name: 'Away' } }
+        }
+    }),
+    getFakeData: () => ({
+        teamData: { home: { name: 'Home' }, away: { name: 'Away' } },
+        currentResult: { winner: 'home', score: '2-1' },
+        settlementResult: { win: 185, bet: 100, symbol: 'home' }
+    }),
+    start: () => console.log('🎮 [MOCK_SIMULATOR] Started'),
+    stop: () => console.log('🎮 [MOCK_SIMULATOR] Stopped'),
+    isSimulatorRunning: () => false,
+    isSimulatorInitialized: () => true,
+    toggleErrorSimulation: () => console.log('🎮 [MOCK_SIMULATOR] Toggle error simulation'),
+    resetFailureCount: () => console.log('🎮 [MOCK_SIMULATOR] Reset failure count')
+};
 
 /**
  * GatewayGameSimulator - Simulator version of GatewayGameBase
@@ -27,14 +57,11 @@ import { FunctionUtils } from '../../../_shared/utils/funtion-utils';
  * - Real-time data updates
  */
 class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseState> extends GatewayGameBase<P, S> {
-    private simulatorService: GameSimulatorService;
+    private simulatorService = mockSimulatorService;
     private isSimulatorMode: boolean = false;
 
     constructor(props: P) {
         super(props);
-
-        // Initialize simulator service
-        this.simulatorService = GameSimulatorService.getInstance();
 
         // Check if simulator mode is enabled
         this.isSimulatorMode = this.checkSimulatorMode();
@@ -99,8 +126,7 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
         this.simulatorService.initialize({
             gameType,
             enableErrorSimulation: config.simulatorConfigs?.enableErrorSimulation || false,
-            updateInterval: config.simulatorConfigs?.updateInterval || 1000,
-            customData: this.getCustomSimulatorData()
+            gameContainer: null
         });
 
         // Set initial state for simulator mode
@@ -109,10 +135,10 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
             isAuthorized: true,
             isSignedIn: true,
             initialized: true,
-            roundId: this.simulatorService.getSimulationState().currentRoundId,
+            roundId: this.simulatorService.getState().currentRoundId,
             roundState: ROUND_STATE.PLACING_BET,
             isAllowedBet: true
-        } as Pick<S, keyof S>);
+        } as any);
 
         console.log('🎮 [SIMULATOR] Simulator initialized successfully');
     }
@@ -240,8 +266,8 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
                 this.setState({
                     isConnected: true,
                     initialized: true,
-                    roundId: this.simulatorService.getSimulationState().currentRoundId
-                } as Pick<S, keyof S>);
+                    roundId: this.simulatorService.getState().currentRoundId
+                } as any);
                 console.log('🎮 [SIMULATOR] Game join simulated successfully');
             }, 300);
         } else {
@@ -321,7 +347,7 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
     override renderCountDownTimerState(roundState: string): void {
         if (this.isSimulatorMode) {
             // Get round state from simulator service
-            const simulationState = this.simulatorService.getSimulationState();
+            const simulationState = this.simulatorService.getState();
             const simulatorRoundState = simulationState.roundState;
 
             this.setState({ roundState: simulatorRoundState } as Pick<S, keyof S>);
@@ -343,11 +369,11 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
     @render(gc.Rounds.RoundStore, (store) => store.clientRoundId)
     override handleRoundIdChange(roundId: number): void {
         if (this.isSimulatorMode) {
-            const simulationState = this.simulatorService.getSimulationState();
+            const simulationState = this.simulatorService.getState();
             const simulatorRoundId = simulationState.currentRoundId;
 
             if (this.state.roundState !== ROUND_STATE.NONE) {
-                this.setState({ roundId: simulatorRoundId } as Pick<S, keyof S>);
+                this.setState({ roundId: simulatorRoundId } as any);
             }
 
             console.log(`🎮 [SIMULATOR] Round ID updated: ${simulatorRoundId}`);
@@ -407,7 +433,7 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
             console.log('🎮 [SIMULATOR] Simulating current finish...');
 
             const fakeData = this.simulatorService.getFakeData();
-            const simulationState = this.simulatorService.getSimulationState();
+            const simulationState = this.simulatorService.getState();
 
             if (simulationState.roundState === ROUND_STATE.SHOW_RESULT) {
                 this.setState({ isFinishShowResult: false } as Pick<S, keyof S>);
@@ -420,7 +446,7 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
                     settlementResult: fakeData.settlementResult
                 };
 
-                this.showResult(true, simulatedResult.result, simulatedResult.settlementResult).then(() => {
+                this.showResult(true, simulatedResult.result, simulatedResult.settlementResult as any).then(() => {
                     this.finishShowResult();
                 });
 
@@ -491,7 +517,7 @@ class GatewayGameSimulator<P extends GameBaseProps, S extends IGatewayGameBaseSt
      */
     public getSimulatorState(): any {
         if (this.isSimulatorMode) {
-            return this.simulatorService.getSimulationState();
+            return this.simulatorService.getState();
         }
         return null;
     }

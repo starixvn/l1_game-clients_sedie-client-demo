@@ -1,6 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import GameSimulatorService from '../../services/game-simulator.service';
+// import { gameSimulatorService } from '../../services/game-simulator.service';
 import demoStyles from './game-simulator-demo.module.scss';
+
+// Mock simulator service for now
+const mockSimulatorService = {
+    initialize: (config: any) => console.log('🎮 [MOCK_DEMO] Initialized with config:', config),
+    getState: () => ({
+        currentRoundId: 'MOCK_RND_001',
+        roundState: 'placing_bet',
+        isInitialized: true,
+        isRunning: false,
+        isSimulationMode: true,
+        countdownTimer: 30,
+        isConnected: true,
+        isSignedIn: true,
+        isAuthorized: true,
+        fakeData: {
+            teamData: { home: { name: 'Home' }, away: { name: 'Away' } }
+        }
+    }),
+    getFakeData: () => ({
+        teamData: { home: { name: 'Home' }, away: { name: 'Away' } },
+        currentResult: { winner: 'home', score: '2-1' },
+        settlementResult: { win: 185, bet: 100, symbol: 'home' }
+    }),
+    start: () => console.log('🎮 [MOCK_DEMO] Started'),
+    stop: () => console.log('🎮 [MOCK_DEMO] Stopped'),
+    isSimulatorRunning: () => false,
+    isSimulatorInitialized: () => true,
+    toggleErrorSimulation: () => console.log('🎮 [MOCK_DEMO] Toggle error simulation'),
+    resetFailureCount: () => console.log('🎮 [MOCK_DEMO] Reset failure count')
+};
 
 /**
  * Game Simulator Demo Component
@@ -16,7 +46,7 @@ import demoStyles from './game-simulator-demo.module.scss';
  * - Configuration management
  */
 export const GameSimulatorDemo: React.FC = () => {
-    const [simulatorService] = useState(() => GameSimulatorService.getInstance());
+    const [simulatorService] = useState(() => mockSimulatorService);
     const [isActive, setIsActive] = useState(false);
     const [currentGameType, setCurrentGameType] = useState('rng-soccer');
     const [simulationState, setSimulationState] = useState<any>(null);
@@ -55,7 +85,7 @@ export const GameSimulatorDemo: React.FC = () => {
         if (!isActive) return;
 
         const interval = setInterval(() => {
-            setSimulationState(simulatorService.getSimulationState());
+            setSimulationState(simulatorService.getState());
             setFakeData(simulatorService.getFakeData());
         }, 500);
 

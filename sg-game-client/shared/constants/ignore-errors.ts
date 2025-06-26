@@ -1,0 +1,17 @@
+export const ignoreErrors = [
+    "fullscreen error",
+    "exitFullscreen",
+    "start the audio device",
+    "Network Error",
+    "zaloJSV2",
+    "socket disconnect",
+    "UnhandledRejectionhttps",
+    "cocos2d-js-min",
+    "cocos-creator",
+    "timeout",
+    "WebGLRenderingContext",
+    "websocket error",
+    "undefined is not an object (evaluating 'cc.RedT.user')",
+    /^.*Cannot read properties.*(?:user|setAvatar|onSet|setLoadingVisibility).*$/gm,
+    /^.*not an object.*(?:openGame|openNewSocket|gameName|language|this.percent|this.pagination|remoteBundle).*$/gm,
+];

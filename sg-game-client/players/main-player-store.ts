@@ -1,0 +1,92 @@
+import { OfferGame } from "@sg/sg-user-service-client/dist/auth";
+import { inject, injectable } from "inversify";
+import { makeAutoObservable } from "mobx";
+import { NoticeStore } from "../game/notices/notice-store";
+import { GameServiceMessage } from "../shared";
+import { localStorageKeys, StorageManager, Translator } from "../shared/utils";
+
+export interface IStakeLevel {
+    minBet: number;
+    maxBet: number;
+}
+
+@injectable()
+export class MainPlayerStore {
+    constructor(
+        @inject(NoticeStore)
+        protected readonly noticeStore: NoticeStore
+    ) {
+        makeAutoObservable(this);
+    }
+
+    stakeLevel: IStakeLevel = { minBet: 0, maxBet: 0 };
+    UID = 0;
+    name = "";
+    balance = 0;
+    avatarId = 1;
+    ss = "";
+    system = 1;
+    operatorName: string;
+    rate = 1;
+    scoin = 0;
+    currency = "";
+    availSpins?: number = 0;
+    fractionalOddsFormat = false;
+    displayPlayerCurrency = true;
+    disableJackpotGames = false;
+    offerGames?: { gameId: number }[] = null;
+    browserUserAgent = "";
+
+    setAuthorizeStore(user: GameServiceMessage.User) {
+        this.UID = user.UID;
+        this.name = user.name;
+        this.avatarId = user.avatarId;
+        this.setBalance(user.red, user.scoins, user.availSpins);
+        this.currency = user.currency;
+        this.setOfferGames(user?.offerGames as OfferGame[]);
+        this.setFractionalOddsFormat(user?.fractionalOddsFormat);
+        this.displayPlayerCurrency = user.isDisplayPlayerCurrency;
+        this.disableJackpotGames = user.disableJackpotGames;
+        this.rate = user.rate;
+    }
+
+    setBalance(balance: number, scoin: number, availSpins: number) {
+        this.balance = balance ?? 0;
+        scoin && (this.scoin = scoin);
+        availSpins && (this.availSpins = availSpins);
+    }
+
+    setStakeLevel(stakeLevel: GameServiceMessage.UserStakeLevel) {
+        stakeLevel && (this.stakeLevel = stakeLevel);
+    }
+
+    showNoticeChangeStakeLevel(stakeLevel: GameServiceMessage.UserStakeLevel, currentStakeLevel: IStakeLevel) {
+        if (
+            currentStakeLevel?.minBet > 0 &&
+            currentStakeLevel?.maxBet > 0 &&
+            (stakeLevel?.minBet !== currentStakeLevel?.minBet || stakeLevel?.maxBet !== currentStakeLevel?.maxBet)
+        ) {
+            this.noticeStore.addWarning(Translator.commonTranslate("message_bet_limit_change"));
+        }
+    }
+
+    setOfferGames(offerGames: OfferGame[]) {
+        this.offerGames = offerGames;
+        StorageManager.set(localStorageKeys.offerGames, offerGames);
+    }
+
+    loadOfferGames() {
+        const storedValue = StorageManager.get(localStorageKeys.offerGames) as OfferGame[];
+        storedValue && this.setOfferGames(storedValue);
+    }
+
+    setFractionalOddsFormat(fractionalOddsFormat = false) {
+        this.fractionalOddsFormat = fractionalOddsFormat;
+        StorageManager.set(localStorageKeys.fractionalOddsFormat, String(fractionalOddsFormat));
+    }
+
+    loadFractionalOddsFormat() {
+        const storedValue = StorageManager.get(localStorageKeys.fractionalOddsFormat);
+        storedValue && this.setFractionalOddsFormat(storedValue === "true");
+    }
+}

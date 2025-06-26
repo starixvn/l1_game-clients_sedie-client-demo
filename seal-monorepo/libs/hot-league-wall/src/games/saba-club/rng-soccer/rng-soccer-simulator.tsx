@@ -7,6 +7,7 @@ import { configGameContainer } from '../../../games/game-base/startup';
 import type { GameBaseProps } from '../../../games/game-base/type';
 import { UIExtensionOptions } from '../../../games/game-base/ui/game-ui-renderer';
 import { GameBettingOptionsContext } from '../../../_shared/react-contexts/game-betting-zone-context/game-betting-zone-context';
+import { gameSimulatorService } from '../../../_shared/services/game-simulator.service';
 import styles from './rng-soccer.module.scss';
 import { containerOptions, setting } from './game-settings';
 import RNGSoccerBetOptions from './bet-option/rng-soccer-bet-options';
@@ -16,6 +17,7 @@ import bgGame from '../../../assets/rng-soccer/bg-game.webp';
 import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
 import RNGSoccerSettlementResult from './settlement-result/rng-soccer-settlement-result';
 import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
+import { autorun } from 'mobx';
 
 interface IRNGSoccerSimulatorState extends IGatewayGameBaseState {
     isTimerActive: boolean;
@@ -40,12 +42,12 @@ interface IRNGSoccerSimulatorState extends IGatewayGameBaseState {
  */
 @observer(setting.mainObserverNamespace)
 export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBaseProps, IRNGSoccerSimulatorState> {
+    private updateInterval: NodeJS.Timeout | null = null;
+    private simulatorDisposer: (() => void) | null = null;
+
     constructor(props: GameBaseProps) {
         console.log('🎮 [SIMULATOR] RNGSoccerSimulator: Constructor called with props:', props);
         super(props);
-
-        console.log('🎮 [SIMULATOR] RNGSoccerSimulator: After super(props) call');
-        console.log('🎮 [SIMULATOR] RNGSoccerSimulator: isSimulatorModeActive =', this.isSimulatorModeActive());
 
         const { placingBet } = setting.durations;
         this.state = {
@@ -72,25 +74,56 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
 
     componentDidMount() {
         console.log('🎮 [SIMULATOR] RNGSoccerSimulator: componentDidMount called');
-        console.log('🎮 [SIMULATOR] RNGSoccerSimulator: Current state:', this.state);
 
-        // Force simulator initialization if not already done
-        if (this.isSimulatorModeActive() && !this.state.initialized) {
-            console.log('🎮 [SIMULATOR] RNGSoccerSimulator: Forcing simulator initialization...');
+        // Initialize and start the real simulator service
+        gameSimulatorService.initialize({ gameType: 'rng-soccer' });
+        gameSimulatorService.start();
 
-            // Manually trigger sign-in and initialization
-            setTimeout(() => {
-                this.setState({
-                    isSignedIn: true,
-                    isAuthorized: true,
-                    initialized: true,
-                    roundId: 12345,
-                    roundState: 'placingBets',
-                    isAllowedBet: true
-                } as Pick<IRNGSoccerSimulatorState, keyof IRNGSoccerSimulatorState>);
+        // MobX autorun to sync simulator state to component state
+        this.simulatorDisposer = autorun(() => {
+            const simState = gameSimulatorService.getState();
+            this.setState({
+                roundId: parseInt(simState.currentRoundId.replace('RND', '')),
+                roundState: this.mapRoundState(simState.roundState),
+                isAllowedBet: simState.roundState === 'placing_bet',
+                isTimerActive: simState.isRunning,
+                placingBetStartTime: simState.countdownTimer,
+                // Connection state properties to prevent reconnecting container
+                isConnected: simState.isConnected,
+                isSignedIn: simState.isSignedIn,
+                isAuthorized: simState.isAuthorized,
+                initialized: simState.isInitialized,
+                // Add more mappings as needed
+            } as Pick<IRNGSoccerSimulatorState, keyof IRNGSoccerSimulatorState>);
+        });
+    }
 
-                console.log('🎮 [SIMULATOR] RNGSoccerSimulator: Manual initialization completed');
-            }, 1000);
+    componentWillUnmount() {
+        // Clean up timer when component unmounts
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+        }
+        gameSimulatorService.stop();
+        if (this.simulatorDisposer) this.simulatorDisposer();
+    }
+
+    private mapRoundState(simulatorState: string): string {
+        // Map simulator states to game client states
+        switch (simulatorState) {
+            case 'placing_bet':
+                return 'placingBets';
+            case 'locking_bet':
+                return 'lockingBet';
+            case 'countdown':
+                return 'countdown';
+            case 'running':
+                return 'running';
+            case 'settlement':
+                return 'settlement';
+            case 'finished':
+                return 'finished';
+            default:
+                return 'placingBets';
         }
     }
 
@@ -116,6 +149,23 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
     override closeConnect() {
         console.log('🎮 [SIMULATOR] RNGSoccerSimulator: closeConnect called');
+    }
+
+    // Override connection methods to ensure simulator always shows as connected
+    isConnected(): boolean {
+        return true; // Simulator is always connected
+    }
+
+    isSignedIn(): boolean {
+        return true; // Simulator is always signed in
+    }
+
+    isAuthorized(): boolean {
+        return true; // Simulator is always authorized
+    }
+
+    isInitialized(): boolean {
+        return gameSimulatorService.isSimulatorInitialized();
     }
 
     override getGameBackgroundImage(): string {
@@ -161,6 +211,7 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
 
     renderCustomContent(): JSX.Element {
         console.log('🎮 [SIMULATOR] RNGSoccerSimulator: renderCustomContent called');
+
         return (
             <Suspense fallback={<div>Loading Simulator...</div>}>
                 <RNGSoccerSettlementResult
@@ -220,5 +271,17 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
                 />
             </Suspense>
         );
+    }
+
+    // Public method to get current simulator state for UI components
+    public getSimulatorState() {
+        const simState = gameSimulatorService.getState();
+        return {
+            countdownTimer: simState.countdownTimer,
+            roundState: simState.roundState,
+            isRunning: simState.isRunning,
+            currentRoundId: simState.currentRoundId,
+            teamData: simState.fakeData.teamData
+        };
     }
 } 
