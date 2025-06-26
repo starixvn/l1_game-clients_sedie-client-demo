@@ -9,7 +9,6 @@ import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 import { GameDisconnectView } from './games/game-base/components/game-disconnect-view';
 import blurBgGame from './assets/rng-soccer/blur-bg-game.png';
-import { shouldShowSSOControls } from './_shared/utils/sso-controls-config';
 
 interface AppProps {
     appEnv: string;
@@ -17,6 +16,7 @@ interface AppProps {
     language: string;
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
+    // SSO-related props (only used when SSO controls are enabled)
     FailedToken?: string | null;
     isSSOFailureMode?: boolean;
     onSSORetry?: () => void;
@@ -25,6 +25,7 @@ interface AppProps {
 interface AppContentProps {
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
+    // SSO-related props (only used when SSO controls are enabled)
     FailedToken?: string | null;
     isSSOFailureMode?: boolean;
     onSSORetry?: () => void;
@@ -49,20 +50,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
-    // Check if SSO controls are enabled for testing
-    const ssoControlsEnabled = shouldShowSSOControls();
-
-    // Use isSSOFailureMode directly for ssoFailure state when SSO controls are enabled
-    const ssoFailure = ssoControlsEnabled && isSSOFailureMode;
-
-    // Effect to log when ssoFailure state changes
-    useEffect(() => {
-        if (ssoControlsEnabled) {
-            console.log(`🔄 [APP_TIMING] SSO Failure Mode changed: ${isSSOFailureMode ? 'ENABLED' : 'DISABLED'}`);
-            console.log(`🔄 [APP_TIMING] ssoFailure state: ${ssoFailure ? 'true' : 'false'}`);
-        }
-    }, [isSSOFailureMode, ssoFailure, ssoControlsEnabled]);
+    const [ssoFailure, setSsoFailure] = useState(false);
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
@@ -85,26 +73,17 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
                 console.log(`🔄 [APP_TIMING] Updating current token for REAL APP...`);
                 setCurrentToken(newToken);
                 setHasClickedPlay(true);
+                setSsoFailure(false); // Clear any SSO failure state
             } else {
                 console.log(`⚠️ [APP_TIMING] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                // ssoFailure is now controlled by isSSOFailureMode prop
-                if (ssoControlsEnabled) {
-                    console.log('🔄 [APP_TIMING] SSO controls enabled - ssoFailure will be controlled by isSSOFailureMode');
-                } else {
-                    console.log('🚫 [APP_TIMING] SSO controls disabled - using normal error handling instead of ssoFailure');
-                }
+                setSsoFailure(true); // Set SSO failure state
             }
         } catch (error) {
             const tokenEndTime = performance.now();
             const tokenDuration = tokenEndTime - tokenStartTime;
             console.log(`💥 [APP_TIMING] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
             console.error('[APP_TIMING] TokenRequestManager error:', error);
-            // ssoFailure is now controlled by isSSOFailureMode prop
-            if (ssoControlsEnabled) {
-                console.log('🔄 [APP_TIMING] SSO controls enabled - ssoFailure will be controlled by isSSOFailureMode');
-            } else {
-                console.log('🚫 [APP_TIMING] SSO controls disabled - using normal error handling instead of ssoFailure');
-            }
+            setSsoFailure(true); // Set SSO failure state
         } finally {
             setIsLoading(false);
         }
@@ -112,14 +91,14 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, [ssoControlsEnabled]);
+    }, []);
 
     const handleSSORetry = useCallback(async () => {
         console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
 
-        // Reset SSO failure mode to false when retry is clicked
-        if (ssoControlsEnabled && onSSORetry) {
-            console.log('🔄 [SSO_RETRY] Calling onSSORetry callback to reset SSO failure mode');
+        // Call parent's onSSORetry callback if provided (for SSO control simulator)
+        if (onSSORetry) {
+            console.log('🔄 [SSO_RETRY] Calling parent onSSORetry callback');
             onSSORetry();
         }
 
@@ -138,10 +117,11 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
                 console.log('🔄 [SSO_RETRY] Token request successful, transitioning to real game');
                 setCurrentToken(newToken);
                 setHasClickedPlay(true);
+                setSsoFailure(false); // Clear SSO failure state
             } else {
                 console.log(`⚠️ [SSO_RETRY] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 console.log('🔄 [SSO_RETRY] Token request failed, staying in SSO failure mode');
-                // Stay in SSO failure mode - the ssoFailure state will remain true
+                // Keep SSO failure state
             }
         } catch (error) {
             const tokenEndTime = performance.now();
@@ -149,9 +129,9 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
             console.log(`💥 [SSO_RETRY] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
             console.error('[SSO_RETRY] TokenRequestManager error:', error);
             console.log('🔄 [SSO_RETRY] Token request failed, staying in SSO failure mode');
-            // Stay in SSO failure mode - the ssoFailure state will remain true
+            // Keep SSO failure state
         }
-    }, [ssoControlsEnabled, onSSORetry]);
+    }, [onSSORetry]);
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -165,9 +145,16 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
         }
     }, [onPlayButtonTokenRequest]);
 
+    // Handle SSO failure mode from props (when SSO controls are enabled)
+    useEffect(() => {
+        if (isSSOFailureMode !== undefined) {
+            setSsoFailure(isSSOFailureMode);
+        }
+    }, [isSSOFailureMode]);
+
     loadI18n(language);
 
-    // Show SSO failure view if ssoFailure is true (controlled by isSSOFailureMode when SSO controls are enabled)
+    // Show SSO failure view if ssoFailure is true
     if (ssoFailure) {
         console.log('🔄 [APP_TIMING] Showing SSO failure view - ssoFailure is true');
         return (
@@ -175,8 +162,6 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
                 <GameDisconnectView
                     onReconnect={handleSSORetry}
                     isSSOFailure={true}
-                    // customMessage="Login failed. Please check your connection and try again."
-                    // customButtonText="Retry Login"
                     backgroundImage={blurBgGame}
                 />
             </div>
