@@ -38,6 +38,34 @@ export class SSOControlSimulatorService implements ISSOSimulatorService {
     }
 
     /**
+     * Log when invalid token mode is toggled
+     */
+    logInvalidTokenToggle(isInvalidTokenMode: boolean): void {
+        console.log(`${this.logPrefix} Invalid token mode ${isInvalidTokenMode ? 'ENABLED' : 'DISABLED'} at:`, new Date().toISOString());
+
+        if (isInvalidTokenMode) {
+            console.log(`${this.logPrefix} 🔑 Invalid tokens will now be simulated and passed to Lobby!`);
+        } else {
+            console.log(`${this.logPrefix} ✅ Invalid token simulation disabled`);
+        }
+    }
+
+    /**
+     * Log when first click invalid token mode is toggled
+     */
+    logFirstClickInvalidTokenToggle(isFirstClickInvalidTokenMode: boolean): void {
+        console.log(`${this.logPrefix} First click invalid token mode ${isFirstClickInvalidTokenMode ? 'ENABLED' : 'DISABLED'} at:`, new Date().toISOString());
+
+        if (isFirstClickInvalidTokenMode) {
+            console.log(`${this.logPrefix} 🔑 First click invalid tokens will now be simulated!`);
+            console.log(`${this.logPrefix} 🔑 Only the first play button click will return an invalid token`);
+            console.log(`${this.logPrefix} 🔑 Subsequent clicks will use real tokens from TokenRequestManager`);
+        } else {
+            console.log(`${this.logPrefix} ✅ First click invalid token simulation disabled`);
+        }
+    }
+
+    /**
      * Log when a failure is simulated
      */
     logFailureSimulation(failureNumber: number, errorMessage: string): void {
@@ -57,5 +85,14 @@ export class SSOControlSimulatorService implements ISSOSimulatorService {
     logFailedSSO(duration: number, error: Error): void {
         console.log(`${this.logPrefix} 💥 SSO request FAILED - Duration: ${duration.toFixed(2)}ms`);
         console.error(`${this.logPrefix} Error details:`, error);
+    }
+
+    /**
+     * Log invalid token simulation
+     */
+    logInvalidTokenSimulation(token: string): void {
+        console.log(`${this.logPrefix} 🔑 Simulating invalid token: ${token.substring(0, 50)}...`);
+        console.log(`${this.logPrefix} 🔑 Token length: ${token.length} characters`);
+        console.log(`${this.logPrefix} 🔑 Token will be passed to Lobby for internal testing`);
     }
 } 

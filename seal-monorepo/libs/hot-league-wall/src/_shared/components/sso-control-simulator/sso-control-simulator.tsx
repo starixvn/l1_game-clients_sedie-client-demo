@@ -15,8 +15,12 @@ import { SSOControlSimulatorService } from './sso-control-simulator.service';
 export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
     onToggleFailure,
     onResetCount,
+    onToggleInvalidToken,
+    onToggleFirstClickInvalidToken,
     failureCount = 0,
     isFailureMode = false,
+    isInvalidTokenMode = false,
+    isFirstClickInvalidTokenMode = false,
     service = new SSOControlSimulatorService()
 }) => {
     const [showControls, setShowControls] = useState(false);
@@ -32,6 +36,20 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
         service.logFailureToggle(!isFailureMode);
     };
 
+    const handleToggleInvalidToken = () => {
+        if (onToggleInvalidToken) {
+            onToggleInvalidToken();
+            service.logInvalidTokenToggle(!isInvalidTokenMode);
+        }
+    };
+
+    const handleToggleFirstClickInvalidToken = () => {
+        if (onToggleFirstClickInvalidToken) {
+            onToggleFirstClickInvalidToken();
+            service.logFirstClickInvalidTokenToggle(!isFirstClickInvalidTokenMode);
+        }
+    };
+
     const handleResetCount = () => {
         onResetCount();
         service.logCountReset();
@@ -45,8 +63,8 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
             {/* Header with Toggle */}
             <div style={styles.header}>
                 <div style={styles.titleContainer}>
-                    <span style={styles.statusIcon(isFailureMode)}>
-                        {isFailureMode ? '⚠️' : '🔒'}
+                    <span style={styles.statusIcon(isFailureMode || isInvalidTokenMode)}>
+                        {isFailureMode ? '⚠️' : isInvalidTokenMode ? '🔑' : '🔒'}
                     </span>
                     SSO Controls
                 </div>
@@ -70,8 +88,8 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                     <div style={styles.statusGrid}>
                         <div style={styles.statusCard}>
                             <div style={styles.statusLabel}>Status</div>
-                            <div style={styles.statusValue(isFailureMode)}>
-                                {isFailureMode ? '🔴 FAILURE MODE' : '🟢 NORMAL'}
+                            <div style={styles.statusValue(isFailureMode || isInvalidTokenMode)}>
+                                {isFailureMode ? '🔴 FAILURE MODE' : isInvalidTokenMode ? '🔑 INVALID TOKEN' : '🟢 NORMAL'}
                             </div>
                         </div>
                         <div style={styles.statusCard}>
@@ -97,6 +115,30 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                         </button>
 
                         <button
+                            onClick={handleToggleInvalidToken}
+                            style={styles.primaryButton(isInvalidTokenMode)}
+                            onMouseEnter={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isInvalidTokenMode, true)}
+                            onMouseLeave={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isInvalidTokenMode, false)}
+                        >
+                            <span style={styles.buttonIcon}>
+                                {isInvalidTokenMode ? '🔑' : '🔑'}
+                            </span>
+                            {isInvalidTokenMode ? 'Disable' : 'Enable'} Invalid Token
+                        </button>
+
+                        <button
+                            onClick={handleToggleFirstClickInvalidToken}
+                            style={styles.primaryButton(isFirstClickInvalidTokenMode)}
+                            onMouseEnter={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isFirstClickInvalidTokenMode, true)}
+                            onMouseLeave={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isFirstClickInvalidTokenMode, false)}
+                        >
+                            <span style={styles.buttonIcon}>
+                                {isFirstClickInvalidTokenMode ? '🚫' : '✅'}
+                            </span>
+                            {isFirstClickInvalidTokenMode ? 'Disable' : 'Enable'} First Click Invalid Token
+                        </button>
+
+                        <button
                             onClick={handleResetCount}
                             style={styles.secondaryButton(failureCount)}
                             onMouseEnter={(e) => styles.handleSecondaryButtonHover(e.currentTarget, failureCount, true)}
@@ -119,6 +161,11 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                             {isFailureMode && (
                                 <span style={styles.warningText}>
                                     {' '}Failures will be simulated!
+                                </span>
+                            )}
+                            {isInvalidTokenMode && (
+                                <span style={styles.warningText}>
+                                    {' '}Invalid tokens will be passed to Lobby!
                                 </span>
                             )}
                         </div>

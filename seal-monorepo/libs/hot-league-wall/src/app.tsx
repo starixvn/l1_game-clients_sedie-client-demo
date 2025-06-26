@@ -58,6 +58,24 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
 
         setIsLoading(true);
 
+        // Check if we have a simulated token (FailedToken prop)
+        if (FailedToken) {
+            console.log('🔑 [APP_TIMING] Using simulated token from FailedToken prop');
+            console.log(`🔑 [APP_TIMING] Simulated token: ${FailedToken.substring(0, 50)}...`);
+            console.log(`🔑 [APP_TIMING] Token length: ${FailedToken.length} characters`);
+
+            // Use the simulated token directly
+            setCurrentToken(FailedToken);
+            setHasClickedPlay(true);
+            setSsoFailure(false);
+
+            const appEndTime = performance.now();
+            const appDuration = appEndTime - appStartTime;
+            console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed with simulated token - Total duration: ${appDuration.toFixed(2)}ms`);
+            setIsLoading(false);
+            return;
+        }
+
         // Always use TokenRequestManager to get a fresh token (real flow)
         const tokenManager = TokenRequestManager.getInstance();
         console.log('🔄 [APP_TIMING] Using TokenRequestManager for REAL APP...');
@@ -91,7 +109,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, []);
+    }, [FailedToken]);
 
     const handleSSORetry = useCallback(async () => {
         console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
