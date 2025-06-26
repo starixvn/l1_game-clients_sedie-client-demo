@@ -6,6 +6,7 @@ import countDownTimerStyles from '../../../../_shared/components/count-down-time
 import betOptionStyles from '../bet-option/rng-soccer-bet-options.module.scss';
 import commonBetOptionStyles from '../../../../_shared/components/bet-option/bet-option.module.scss';
 import flipCardStyles from '../../../../_shared/components/card/flip-card/flip-card.module.scss';
+import demoAnimationStyles from './demo-animation.module.scss';
 import Card from '../../../../_shared/components/card';
 import CardBack from '../../../../_shared/components/card/card-back';
 import { CardResult } from '../../../../_shared/components/card/type';
@@ -141,9 +142,10 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     const awayTeamLogo = getTeamLogo(gameData.teamData.away.name);
 
     return (
-        <div className={rngSoccerStyles['game-container']}>
+        // <Loading />
+        <div className={demoAnimationStyles['game-container']}>
             {/* Main content with slide animation */}
-            <div className={classNames(styles['sport-item'], { [rngSoccerStyles['slide-left']]: isSlidingLeft })}>
+            <div className={classNames(styles['sport-item'], { [demoAnimationStyles['slide-left']]: isSlidingLeft })}>
                 {/* Header Section */}
                 <div className={gameBaseStyles['game-header']}>
                     <div className={gameBaseStyles['game-name']}>
@@ -273,9 +275,9 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
                 {/* Play Overlay */}
                 {showPlayOverlay && !isSlidingLeft && (
-                    <div className={styles['overlay-container']}>
+                    <div className={demoAnimationStyles['overlay-container']}>
                         <button
-                            className={styles['btn-play-now']}
+                            className={demoAnimationStyles['btn-play-now']}
                             onClick={async () => {
                                 const baseStartTime = performance.now();
                                 console.log(
@@ -338,7 +340,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
             {/* Blur background overlay with animation */}
             {showBlurBg && (
-                <div className={rngSoccerStyles['blur-bg-animated']}>
+                <div className={demoAnimationStyles['blur-bg-animated']}>
                     <img src={blurBgGame} alt="Blurred background" />
                 </div>
             )}
