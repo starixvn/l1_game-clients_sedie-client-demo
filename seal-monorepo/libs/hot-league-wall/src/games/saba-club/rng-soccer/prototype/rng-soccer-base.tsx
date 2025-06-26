@@ -4,6 +4,7 @@ import gameBaseStyles from '../../../game-base/game-base.module.scss';
 import rngSoccerStyles from '../rng-soccer.module.scss';
 import countDownTimerStyles from '../../../../_shared/components/count-down-timer/count-down-timer.module.scss';
 import betOptionStyles from '../bet-option/rng-soccer-bet-options.module.scss';
+import commonBetOptionStyles from '../../../../_shared/components/bet-option/bet-option.module.scss';
 import flipCardStyles from '../../../../_shared/components/card/flip-card/flip-card.module.scss';
 import Card from '../../../../_shared/components/card';
 import CardBack from '../../../../_shared/components/card/card-back';
@@ -87,12 +88,17 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     isLoading = false,
 }) => {
     const [isShowResult, setIsShowResult] = useState(false);
+    const [isShowHighLight, setIsShowHighLight] = useState(false);
 
     useEffect(() => {
         if (gameData.currentRound.roundState === 'showingResult') {
             setIsShowResult(true);
+            setTimeout(() => {
+                setIsShowHighLight(true);
+            }, 800);
         } else {
             setIsShowResult(false);
+            setIsShowHighLight(false);
         }
     }, [gameData.currentRound.roundState]);
 
@@ -101,9 +107,19 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
         return <Loading />;
     }
 
-    const showHighLight = gameData.currentRound.roundState === 'showingResult';
     const isHomeHigher = gameData.currentResult.homeScore > gameData.currentResult.awayScore;
     const isAwayHigher = gameData.currentResult.awayScore > gameData.currentResult.homeScore;
+
+    // Function to determine which choice should be highlighted based on scores
+    const getHighlightedChoice = (): string => {
+        if (gameData.currentResult.homeScore === gameData.currentResult.awayScore) {
+            return 'draw';
+        } else if (gameData.currentResult.homeScore > gameData.currentResult.awayScore) {
+            return 'home';
+        } else {
+            return 'away';
+        }
+    };
 
     // Create card data for the Card component
     const homeCardData: CardResult = {
@@ -164,7 +180,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                 <div className={styles['sport-result']}>
                     <div className={styles['container-result']}>
                         {/* Home Card */}
-                        <div className={`${styles['card-section']} ${showHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
+                        <div className={`${styles['card-section']} ${isShowHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
                             <div className={`${flipCardStyles['card']} ${isShowResult ? flipCardStyles['flip'] : ''}`}>
                                 <div className={flipCardStyles['rotate-card']}>
                                     <div className={flipCardStyles.cardFace}>
@@ -181,16 +197,16 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
                         {/* Score Display */}
                         <div className={styles['result-section']}>
-                            <div className={`${styles['result']} ${isHomeHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showHighLight ? gameData.currentResult.homeScore : ''}</span>
+                            <div className={`${styles['result']} ${isHomeHigher && isShowHighLight ? styles['higher-score'] : ''}`}>
+                                <span>{isShowHighLight ? gameData.currentResult.homeScore : ''}</span>
                             </div>
-                            <div className={`${styles['result']} ${isAwayHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showHighLight ? gameData.currentResult.awayScore : ''}</span>
+                            <div className={`${styles['result']} ${isAwayHigher && isShowHighLight ? styles['higher-score'] : ''}`}>
+                                <span>{isShowHighLight ? gameData.currentResult.awayScore : ''}</span>
                             </div>
                         </div>
 
                         {/* Away Card */}
-                        <div className={`${styles['card-section']} ${showHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
+                        <div className={`${styles['card-section']} ${isShowHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
                             <div className={`${flipCardStyles['card']} ${isShowResult ? flipCardStyles['flip'] : ''}`}>
                                 <div className={flipCardStyles['rotate-card']}>
                                     <div className={flipCardStyles.cardFace}>
@@ -232,11 +248,15 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                     opacity: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 1 : 0.6,
                                 }}
                             >
-                                <div className={betOptionStyles['padding-bet']}>
-                                    <span className={betOptionStyles['bet-choice-text']}>
-                                        {choice.charAt(0).toUpperCase() + choice.slice(1)}
-                                    </span>
-                                    <span className={betOptionStyles['bet-option']}>{odd}</span>
+                                <div
+                                    className={`${isShowHighLight && choice === getHighlightedChoice() ? commonBetOptionStyles['highlight-static-bet-choice'] : ''}`}
+                                >
+                                    <div className={betOptionStyles['padding-bet']}>
+                                        <span className={betOptionStyles['bet-choice-text']}>
+                                            {choice.charAt(0).toUpperCase() + choice.slice(1)}
+                                        </span>
+                                        <span className={betOptionStyles['bet-option']}>{odd}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
