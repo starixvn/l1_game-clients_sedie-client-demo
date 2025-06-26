@@ -38,19 +38,6 @@ export class SSOControlSimulatorService implements ISSOSimulatorService {
     }
 
     /**
-     * Log when invalid token mode is toggled
-     */
-    logInvalidTokenToggle(isInvalidTokenMode: boolean): void {
-        console.log(`${this.logPrefix} Invalid token mode ${isInvalidTokenMode ? 'ENABLED' : 'DISABLED'} at:`, new Date().toISOString());
-
-        if (isInvalidTokenMode) {
-            console.log(`${this.logPrefix} 🔑 Invalid tokens will now be simulated and passed to Lobby!`);
-        } else {
-            console.log(`${this.logPrefix} ✅ Invalid token simulation disabled`);
-        }
-    }
-
-    /**
      * Log when first click invalid token mode is toggled
      */
     logFirstClickInvalidTokenToggle(isFirstClickInvalidTokenMode: boolean): void {

@@ -89,7 +89,6 @@ const PreviewContext = ({
     // Use the SSO simulator hook for state management (only when controls are enabled)
     const ssoSimulator = useSSOSimulator({
         isFailureMode: false,
-        isInvalidTokenMode: false,
         isFirstClickInvalidTokenMode: false,
         failureCount: 0
     });
@@ -114,15 +113,38 @@ const PreviewContext = ({
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
 
+    // Determine if SSO failure mode should be active (when any invalid token mode is enabled)
+    const shouldShowSSOFailureMode = () => {
+        if (!showSSOControls) return false;
+
+        // If manual failure mode is enabled, always show failure mode
+        if (ssoSimulator.isFailureMode) {
+            return true;
+        }
+
+        // For first click invalid token mode, only show failure mode if we've already clicked play
+        // This allows users to still click the play button on the prototype
+        if (ssoSimulator.isFirstClickInvalidTokenMode) {
+            return playButtonClickCount > 0; // Only show failure mode after first click
+        }
+
+        return false;
+    };
+
     // Handle successful SSO retry - disable failure mode when token request succeeds
     const handleSuccessfulSSORetry = useCallback(() => {
-        console.log('🔄 [PREVIEW] SSO retry successful - disabling failure mode');
+        console.log('🔄 [PREVIEW] SSO retry successful - checking which modes to disable');
+
+        // Only disable manual failure mode, preserve first click invalid token mode
         if (ssoSimulator.isFailureMode) {
-            console.log('🔄 [PREVIEW] Disabling failure mode in SSO simulator');
-            ssoSimulator.toggleFailureMode(); // This will disable failure mode
+            console.log('🔄 [PREVIEW] Disabling manual failure mode in SSO simulator');
+            ssoSimulator.toggleFailureMode(); // This will disable manual failure mode
         } else {
-            console.log('🔄 [PREVIEW] Failure mode already disabled');
+            console.log('🔄 [PREVIEW] Manual failure mode already disabled');
         }
+
+        // Note: We don't disable first click invalid token mode here
+        // as it should persist for subsequent testing
     }, [ssoSimulator]);
 
     // Determine which token to use based on simulation mode
@@ -139,10 +161,6 @@ const PreviewContext = ({
                     console.log('🔑 [PREVIEW_DEBUG] Subsequent clicks - Using real token from TokenRequestManager');
                     return null; // Use real token for subsequent clicks
                 }
-            } else if (ssoSimulator.isInvalidTokenMode) {
-                const invalidToken = ssoSimulator.getInvalidToken();
-                console.log('🔑 [PREVIEW_DEBUG] Using invalid token for testing:', invalidToken?.substring(0, 50) + '...');
-                return invalidToken;
             } else if (ssoSimulator.isFailureMode) {
                 const failedToken = ssoSimulator.getFailedToken();
                 console.log('🔑 [PREVIEW_DEBUG] Using failed token for testing:', failedToken?.substring(0, 50) + '...');
@@ -158,12 +176,10 @@ const PreviewContext = ({
             {showSSOControls && (
                 <SSOControlSimulator
                     onToggleFailure={ssoSimulator.toggleFailureMode}
-                    onToggleInvalidToken={ssoSimulator.toggleInvalidTokenMode}
                     onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidTokenMode}
                     onResetCount={ssoSimulator.resetFailureCount}
                     failureCount={ssoSimulator.failureCount}
                     isFailureMode={ssoSimulator.isFailureMode}
-                    isInvalidTokenMode={ssoSimulator.isInvalidTokenMode}
                     isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
                 />
             )}
@@ -178,7 +194,7 @@ const PreviewContext = ({
                             language={language}
                             siteId={siteId}
                             onPlayButtonTokenRequest={onPlayButtonTokenRequest}
-                            isSSOFailureMode={showSSOControls ? ssoSimulator.isFailureMode : false}
+                            isSSOFailureMode={shouldShowSSOFailureMode()}
                             onSSORetry={handleSuccessfulSSORetry}
                             FailedToken={getTokenForApp()}
                         />

@@ -13,7 +13,6 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
         showControls: false,
         failureCount: 0,
         isFailureMode: false,
-        isInvalidTokenMode: false,
         isFirstClickInvalidTokenMode: false,
         ...initialState
     });
@@ -25,17 +24,6 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
         const timestamp = Date.now();
         const randomString = Math.random().toString(36).substring(2, 15);
         return `INVALID_TOKEN_${timestamp}_${randomString}`;
-    }, []);
-
-    /**
-     * Generate a random invalid token for simulation
-     */
-    const generateInvalidToken = useCallback(() => {
-        const timestamp = Date.now();
-        const randomString = Math.random().toString(36).substring(2, 15);
-        const randomLength = Math.floor(Math.random() * 50) + 20; // 20-70 characters
-        const randomChars = Math.random().toString(36).substring(2, randomLength);
-        return `SIMULATED_INVALID_TOKEN_${timestamp}_${randomString}_${randomChars}`;
     }, []);
 
     /**
@@ -63,21 +51,6 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
             };
         });
     }, [generateFailedToken]);
-
-    /**
-     * Toggle invalid token mode and generate new invalid token when enabled
-     */
-    const toggleInvalidTokenMode = useCallback(() => {
-        setState(prev => {
-            const newInvalidTokenMode = !prev.isInvalidTokenMode;
-            return {
-                ...prev,
-                isInvalidTokenMode: newInvalidTokenMode,
-                // Generate a new invalid token when enabling invalid token mode
-                invalidToken: newInvalidTokenMode ? generateInvalidToken() : null
-            };
-        });
-    }, [generateInvalidToken]);
 
     /**
      * Toggle first click invalid token mode and generate new token when enabled
@@ -132,13 +105,6 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
     }, [state.isFailureMode]);
 
     /**
-     * Check if should simulate invalid token
-     */
-    const shouldSimulateInvalidToken = useCallback(() => {
-        return state.isInvalidTokenMode;
-    }, [state.isInvalidTokenMode]);
-
-    /**
      * Check if should simulate first click invalid token
      */
     const shouldSimulateFirstClickInvalidToken = useCallback(() => {
@@ -172,16 +138,6 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
     }, [state.isFailureMode, state.failedToken, generateFailedToken]);
 
     /**
-     * Get current invalid token or generate new one if in invalid token mode
-     */
-    const getInvalidToken = useCallback(() => {
-        if (!state.isInvalidTokenMode) {
-            return null;
-        }
-        return state.invalidToken || generateInvalidToken();
-    }, [state.isInvalidTokenMode, state.invalidToken, generateInvalidToken]);
-
-    /**
      * Get current first click invalid token or generate new one if in first click invalid token mode
      */
     const getFirstClickInvalidToken = useCallback(() => {
@@ -197,7 +153,6 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
 
         // Actions
         toggleFailureMode,
-        toggleInvalidTokenMode,
         toggleFirstClickInvalidTokenMode,
         resetFailureCount,
         incrementFailureCount,
@@ -205,11 +160,9 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
 
         // Computed values
         shouldSimulateFailure,
-        shouldSimulateInvalidToken,
         shouldSimulateFirstClickInvalidToken,
         getNextFailureMessage,
         getFailedToken,
-        getInvalidToken,
         getFirstClickInvalidToken
     };
 }; 

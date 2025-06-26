@@ -15,11 +15,9 @@ import { SSOControlSimulatorService } from './sso-control-simulator.service';
 export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
     onToggleFailure,
     onResetCount,
-    onToggleInvalidToken,
     onToggleFirstClickInvalidToken,
     failureCount = 0,
     isFailureMode = false,
-    isInvalidTokenMode = false,
     isFirstClickInvalidTokenMode = false,
     service = new SSOControlSimulatorService()
 }) => {
@@ -34,13 +32,6 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
     const handleToggleFailure = () => {
         onToggleFailure();
         service.logFailureToggle(!isFailureMode);
-    };
-
-    const handleToggleInvalidToken = () => {
-        if (onToggleInvalidToken) {
-            onToggleInvalidToken();
-            service.logInvalidTokenToggle(!isInvalidTokenMode);
-        }
     };
 
     const handleToggleFirstClickInvalidToken = () => {
@@ -63,8 +54,8 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
             {/* Header with Toggle */}
             <div style={styles.header}>
                 <div style={styles.titleContainer}>
-                    <span style={styles.statusIcon(isFailureMode || isInvalidTokenMode)}>
-                        {isFailureMode ? '⚠️' : isInvalidTokenMode ? '🔑' : '🔒'}
+                    <span style={styles.statusIcon(isFailureMode || isFirstClickInvalidTokenMode)}>
+                        {isFailureMode ? '⚠️' : isFirstClickInvalidTokenMode ? '🚫' : '🔒'}
                     </span>
                     SSO Controls
                 </div>
@@ -88,8 +79,8 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                     <div style={styles.statusGrid}>
                         <div style={styles.statusCard}>
                             <div style={styles.statusLabel}>Status</div>
-                            <div style={styles.statusValue(isFailureMode || isInvalidTokenMode)}>
-                                {isFailureMode ? '🔴 FAILURE MODE' : isInvalidTokenMode ? '🔑 INVALID TOKEN' : '🟢 NORMAL'}
+                            <div style={styles.statusValue(isFailureMode || isFirstClickInvalidTokenMode)}>
+                                {isFailureMode ? '🔴 FAILURE MODE' : isFirstClickInvalidTokenMode ? '🚫 FIRST CLICK INVALID' : '🟢 NORMAL'}
                             </div>
                         </div>
                         <div style={styles.statusCard}>
@@ -112,18 +103,6 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                                 {isFailureMode ? '🚫' : '✅'}
                             </span>
                             {isFailureMode ? 'Disable' : 'Enable'} SSO Failures
-                        </button>
-
-                        <button
-                            onClick={handleToggleInvalidToken}
-                            style={styles.primaryButton(isInvalidTokenMode)}
-                            onMouseEnter={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isInvalidTokenMode, true)}
-                            onMouseLeave={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isInvalidTokenMode, false)}
-                        >
-                            <span style={styles.buttonIcon}>
-                                {isInvalidTokenMode ? '🔑' : '🔑'}
-                            </span>
-                            {isInvalidTokenMode ? 'Disable' : 'Enable'} Invalid Token
                         </button>
 
                         <button
@@ -163,9 +142,9 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                                     {' '}Failures will be simulated!
                                 </span>
                             )}
-                            {isInvalidTokenMode && (
+                            {isFirstClickInvalidTokenMode && (
                                 <span style={styles.warningText}>
-                                    {' '}Invalid tokens will be passed to Lobby!
+                                    {' '}First click will return invalid token, then use real tokens!
                                 </span>
                             )}
                         </div>

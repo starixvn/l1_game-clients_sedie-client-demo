@@ -64,14 +64,15 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
             console.log(`🔑 [APP_TIMING] Simulated token: ${FailedToken.substring(0, 50)}...`);
             console.log(`🔑 [APP_TIMING] Token length: ${FailedToken.length} characters`);
 
-            // Use the simulated token directly
+            // Use the simulated token directly - this will trigger SSO failure view
             setCurrentToken(FailedToken);
             setHasClickedPlay(true);
-            setSsoFailure(false);
+            setSsoFailure(true); // Set to true because invalid token should show reconnect page
 
             const appEndTime = performance.now();
             const appDuration = appEndTime - appStartTime;
             console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed with simulated token - Total duration: ${appDuration.toFixed(2)}ms`);
+            console.log('🔑 [APP_TIMING] Invalid token detected - will show SSO failure view');
             setIsLoading(false);
             return;
         }

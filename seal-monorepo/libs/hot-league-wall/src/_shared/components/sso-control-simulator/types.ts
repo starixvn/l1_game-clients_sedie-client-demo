@@ -10,16 +10,12 @@ export interface SSOControlSimulatorProps {
     onToggleFailure: () => void;
     /** Callback function when failure count is reset */
     onResetCount: () => void;
-    /** Callback function when invalid token mode is toggled */
-    onToggleInvalidToken?: () => void;
     /** Callback function when first click invalid token mode is toggled */
     onToggleFirstClickInvalidToken?: () => void;
     /** Current failure count */
     failureCount?: number;
     /** Whether failure mode is currently active */
     isFailureMode?: boolean;
-    /** Whether invalid token mode is currently active */
-    isInvalidTokenMode?: boolean;
     /** Whether first click invalid token mode is currently active */
     isFirstClickInvalidTokenMode?: boolean;
     /** Optional service instance for logging and side effects */
@@ -36,14 +32,10 @@ export interface SSOControlState {
     failureCount: number;
     /** Whether failure mode is active */
     isFailureMode: boolean;
-    /** Whether invalid token mode is active */
-    isInvalidTokenMode: boolean;
     /** Whether first click invalid token mode is active */
     isFirstClickInvalidTokenMode: boolean;
     /** Generated failed token for simulation */
     failedToken?: string | null;
-    /** Generated invalid token for simulation */
-    invalidToken?: string | null;
     /** Generated first click invalid token for simulation */
     firstClickInvalidToken?: string | null;
 }
@@ -59,8 +51,6 @@ export interface ISSOSimulatorService {
     logFailureToggle(isFailureMode: boolean): void;
     /** Log when failure count is reset */
     logCountReset(): void;
-    /** Log when invalid token mode is toggled */
-    logInvalidTokenToggle(isInvalidTokenMode: boolean): void;
     /** Log when first click invalid token mode is toggled */
     logFirstClickInvalidTokenToggle(isFirstClickInvalidTokenMode: boolean): void;
 }
