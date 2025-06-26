@@ -28,6 +28,8 @@ export interface SSOControlState {
     failureCount: number;
     /** Whether failure mode is active */
     isFailureMode: boolean;
+    /** Generated failed token for simulation */
+    failedToken?: string | null;
 }
 
 /**

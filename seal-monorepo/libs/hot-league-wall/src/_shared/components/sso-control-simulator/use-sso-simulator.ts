@@ -17,14 +17,28 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
     });
 
     /**
-     * Toggle failure mode
+     * Generate a random failed token
+     */
+    const generateFailedToken = useCallback(() => {
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(2, 15);
+        return `INVALID_TOKEN_${timestamp}_${randomString}`;
+    }, []);
+
+    /**
+     * Toggle failure mode and generate new failed token when enabled
      */
     const toggleFailureMode = useCallback(() => {
-        setState(prev => ({
-            ...prev,
-            isFailureMode: !prev.isFailureMode
-        }));
-    }, []);
+        setState(prev => {
+            const newFailureMode = !prev.isFailureMode;
+            return {
+                ...prev,
+                isFailureMode: newFailureMode,
+                // Generate a new failed token when enabling failure mode
+                failedToken: newFailureMode ? generateFailedToken() : null
+            };
+        });
+    }, [generateFailedToken]);
 
     /**
      * Reset failure count
@@ -79,6 +93,16 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
         }
     }, [state.failureCount]);
 
+    /**
+     * Get current failed token or generate new one if in failure mode
+     */
+    const getFailedToken = useCallback(() => {
+        if (!state.isFailureMode) {
+            return null;
+        }
+        return state.failedToken || generateFailedToken();
+    }, [state.isFailureMode, state.failedToken, generateFailedToken]);
+
     return {
         // State
         ...state,
@@ -91,6 +115,7 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
 
         // Computed values
         shouldSimulateFailure,
-        getNextFailureMessage
+        getNextFailureMessage,
+        getFailedToken
     };
 }; 

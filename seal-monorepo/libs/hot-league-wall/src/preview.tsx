@@ -115,6 +115,9 @@ const PreviewContext = ({
         failureCount = ssoSimulator.failureCount;
     }, [ssoSimulator.isFailureMode, ssoSimulator.failureCount]);
 
+    // Get failed token from SSO simulator when in failure mode
+    const failedToken = ssoSimulator.getFailedToken();
+
     return (
         <div data-platform={platform} data-version={process.env.TAG_VERSION} className={'seal-vg-sg-index'}>
             {/* SSO Control Simulator */}
@@ -134,6 +137,7 @@ const PreviewContext = ({
                         language={language}
                         siteId={siteId}
                         onPlayButtonTokenRequest={onPlayButtonTokenRequest}
+                        FailedToken={failedToken}
                     />
                 } />
             </Routes>

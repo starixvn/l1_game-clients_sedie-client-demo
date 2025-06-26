@@ -16,27 +16,41 @@ interface AppProps {
     language: string;
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
+    FailedToken?: string | null;
 }
 
 interface AppContentProps {
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
+    FailedToken?: string | null;
 }
 
-const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest }: AppProps) => {
+const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest, FailedToken }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
-            <AppContent updateBalanceCallback={updateBalanceCallback} onPlayButtonTokenRequest={onPlayButtonTokenRequest} />
+            <AppContent
+                updateBalanceCallback={updateBalanceCallback}
+                onPlayButtonTokenRequest={onPlayButtonTokenRequest}
+                FailedToken={FailedToken}
+            />
         </AppProvider>
     );
 };
 
-const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppContentProps) => {
+const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedToken }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [ssoFailure, setSsoFailure] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Effect to handle FailedToken changes and trigger rerender
+    useEffect(() => {
+        if (FailedToken && hasClickedPlay) {
+            console.log(`🔄 [APP_TIMING] FailedToken changed, updating current token to: ${FailedToken}`);
+            setCurrentToken(FailedToken);
+        }
+    }, [FailedToken, hasClickedPlay]);
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
@@ -44,6 +58,30 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
 
         setIsLoading(true);
         setSsoFailure(false);
+
+        // Check if we should use a failed token for simulation
+        if (FailedToken) {
+            console.log('🔄 [APP_TIMING] Using FailedToken for SSO failure simulation...');
+            const tokenStartTime = performance.now();
+
+            // Simulate a delay to make it feel realistic
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
+
+            console.log(`💥 [APP_TIMING] FailedToken simulation completed - Duration: ${tokenDuration.toFixed(2)}ms`);
+            console.log(`🚫 [APP_TIMING] Setting current token to FailedToken: ${FailedToken}`);
+
+            setCurrentToken(FailedToken);
+            setHasClickedPlay(true);
+            setIsLoading(false);
+
+            const appEndTime = performance.now();
+            const appDuration = appEndTime - appStartTime;
+            console.log(`🏁 [APP_TIMING] FailedToken simulation completed - Total duration: ${appDuration.toFixed(2)}ms`);
+            return;
+        }
 
         // Use TokenRequestManager to get a fresh token
         const tokenManager = TokenRequestManager.getInstance();
@@ -77,7 +115,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, []);
+    }, [FailedToken]);
 
     const handleSSORetry = useCallback(async () => {
         console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
