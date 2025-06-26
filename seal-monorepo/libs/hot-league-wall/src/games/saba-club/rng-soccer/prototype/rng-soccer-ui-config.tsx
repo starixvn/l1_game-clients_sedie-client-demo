@@ -18,43 +18,13 @@ export class RNGSoccerUIConfig {
         renderCustomContent: () => JSX.Element,
         renderCustomFooter: () => JSX.Element,
         renderCustomHistory: (state: IRNGSoccerPageState) => JSX.Element,
-        renderCustomBetting: () => JSX.Element
+        renderCustomBetting: () => JSX.Element,
     ) {
         this.togglePopup = togglePopup;
         this.renderCustomContent = renderCustomContent;
         this.renderCustomFooter = renderCustomFooter;
         this.renderCustomHistory = renderCustomHistory;
         this.renderCustomBetting = renderCustomBetting;
-    }
-
-    getUIExtensionOptions(): UIExtensionOptions {
-        console.log('🔵 RNGSoccerUIConfig: getUIExtensionOptions called');
-        return {
-            classes: {
-                gameContainer: styles['sport-item'],
-                header: styles['wrapper-sport-top'],
-                content: styles['wrapper-sport-content'],
-                footer: styles['wrapper-sport-bottom'],
-                popup: styles['statistic-popup'],
-                gameNameText: styles['game-name-text'],
-                gameNameRound: styles['game-name-round'],
-                liveIcon: styles['live-icon'],
-                timer: styles['timer'],
-                statsIcon: styles['score-board-img']
-            },
-            components: {
-                customContent: () => this.renderCustomContent(),
-                customFooter: () => this.renderCustomFooter(),
-                customHistory: (props, state) => this.renderCustomHistory(state as IRNGSoccerPageState),
-                customBetting: () => this.renderCustomBetting()
-            },
-            config: {
-                gameName: 'RNGSoccer',
-                liveIconUrl: liveIcon,
-                statsIconUrl: historyBtnIcon,
-                onStatsIconClick: this.togglePopup
-            }
-        };
     }
 
     getGameBackgroundImage(): string {
@@ -66,4 +36,4 @@ export class RNGSoccerUIConfig {
         console.log('🔵 RNGSoccerUIConfig: getDisconnectViewBackground called, returning:', blurBgGame);
         return blurBgGame;
     }
-} 
+}

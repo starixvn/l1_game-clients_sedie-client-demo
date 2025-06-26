@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from '../rng-soccer.module.scss';
 import gameBaseStyles from '../../../game-base/game-base.module.scss';
+import rngSoccerStyles from '../rng-soccer.module.scss';
 import countDownTimerStyles from '../../../../_shared/components/count-down-timer/count-down-timer.module.scss';
 import betOptionStyles from '../bet-option/rng-soccer-bet-options.module.scss';
 import flipCardStyles from '../../../../_shared/components/card/flip-card/flip-card.module.scss';
@@ -85,12 +86,21 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     onCloseStatistics,
     isLoading = false,
 }) => {
+    const [isShowResult, setIsShowResult] = useState(false);
+
+    useEffect(() => {
+        if (gameData.currentRound.roundState === 'showingResult') {
+            setIsShowResult(true);
+        } else {
+            setIsShowResult(false);
+        }
+    }, [gameData.currentRound.roundState]);
+
     // Show loading component if isLoading is true
     if (isLoading) {
         return <Loading />;
     }
 
-    const shouldHideCards = gameData.currentRound.roundState !== 'showingResult';
     const showHighLight = gameData.currentRound.roundState === 'showingResult';
     const isHomeHigher = gameData.currentResult.homeScore > gameData.currentResult.awayScore;
     const isAwayHigher = gameData.currentResult.awayScore > gameData.currentResult.homeScore;
@@ -110,38 +120,130 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     const homeTeamLogo = getTeamLogo(gameData.teamData.home.name);
     const awayTeamLogo = getTeamLogo(gameData.teamData.away.name);
 
-    // Determine countdown state classes
-    const getCountdownStateClass = () => {
-        switch (gameData.currentRound.roundState) {
-            case 'placingBets':
-                return countDownTimerStyles['placing-bet-state'];
-            case 'lockingBet':
-                return countDownTimerStyles['no-more-bet-state'];
-            case 'showingResult':
-            case 'finished':
-                return countDownTimerStyles['show-result-state'];
-            default:
-                return '';
-        }
-    };
-
-    const getRoundStateText = () => {
-        switch (gameData.currentRound.roundState) {
-            case 'placingBets':
-                return 'Place Your Bets';
-            case 'lockingBet':
-                return 'Betting Locked';
-            case 'showingResult':
-                return 'Showing Result';
-            case 'finished':
-                return 'Round Finished';
-            default:
-                return 'Waiting...';
-        }
-    };
-
     return (
         <div className={styles['sport-item']} style={{ position: 'relative' }}>
+            {/* Header Section */}
+            <div className={gameBaseStyles['game-header']}>
+                <div className={gameBaseStyles['game-name']}>
+                    <div className={gameBaseStyles['game-name-text']}>
+                        {gameData.gameSettings.gameName}
+
+                        <img src={liveIcon} alt="live" className={classNames(gameBaseStyles['live-icon'], styles['liveIcon'])} />
+                    </div>
+                    <RoundId
+                        clientRoundId={gameData.currentRound.roundId}
+                        roundState={gameData.currentRound.roundState}
+                        className={gameBaseStyles['game-name-round']}
+                    />
+                </div>
+                <div className={`${gameBaseStyles['timer']} ${rngSoccerStyles['timer']}`}>
+                    <div className={countDownTimerStyles['count-down']}>
+                        <div className={`${countDownTimerStyles['timer-wrapper']} ${countDownTimerStyles['show-result-state']} `}>
+                            <div className={countDownTimerStyles['counting-text']}>
+                                <div className={countDownTimerStyles['waiting-container']}>
+                                    <div className={countDownTimerStyles['dot-elastic']}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    className={classNames(styles['score-board-img'], styles['statsIcon'], gameBaseStyles['stats-icon'])}
+                    onClick={onStatisticsClick}
+                >
+                    <img src={historyBtnIcon} alt="statistics" />
+                </div>
+            </div>
+
+            {/* Content Section */}
+            <div className={styles['wrapper-sport-middle']}>
+                {/* Home Team Card */}
+                <TeamCard logo={homeTeamLogo} isHomeTeam={true} animation={TeamCardAnimation.NONE} />
+
+                {/* Result Section with Cards */}
+                <div className={styles['sport-result']}>
+                    <div className={styles['container-result']}>
+                        {/* Home Card */}
+                        <div className={`${styles['card-section']} ${showHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
+                            <div className={`${flipCardStyles['card']} ${isShowResult ? flipCardStyles['flip'] : ''}`}>
+                                <div className={flipCardStyles['rotate-card']}>
+                                    <div className={flipCardStyles.cardFace}>
+                                        <div className={flipCardStyles['card-back']}>
+                                            <CardBack />
+                                        </div>
+                                        <div className={flipCardStyles['card-front']}>
+                                            <Card result={homeCardData} customClassName={'card-baccarat'} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Score Display */}
+                        <div className={styles['result-section']}>
+                            <div className={`${styles['result']} ${isHomeHigher && showHighLight ? styles['higher-score'] : ''}`}>
+                                <span>{showHighLight ? gameData.currentResult.homeScore : ''}</span>
+                            </div>
+                            <div className={`${styles['result']} ${isAwayHigher && showHighLight ? styles['higher-score'] : ''}`}>
+                                <span>{showHighLight ? gameData.currentResult.awayScore : ''}</span>
+                            </div>
+                        </div>
+
+                        {/* Away Card */}
+                        <div className={`${styles['card-section']} ${showHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
+                            <div className={`${flipCardStyles['card']} ${isShowResult ? flipCardStyles['flip'] : ''}`}>
+                                <div className={flipCardStyles['rotate-card']}>
+                                    <div className={flipCardStyles.cardFace}>
+                                        <div className={flipCardStyles['card-back']}>
+                                            <CardBack />
+                                        </div>
+                                        <div className={flipCardStyles['card-front']}>
+                                            <Card result={awayCardData} customClassName={'card-baccarat'} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Away Team Card */}
+                <TeamCard logo={awayTeamLogo} isHomeTeam={false} animation={TeamCardAnimation.NONE} />
+
+                {/* Team Names */}
+                <div className={styles['wrapper-team-name']}>
+                    <div className={styles['name']}>{gameData.teamData.home.name}</div>
+                    <div className={styles['name']}>{gameData.teamData.away.name}</div>
+                </div>
+            </div>
+
+            {/* Footer Section */}
+            <div className={styles['wrapper-sport-bottom']}>
+                <div className={betOptionStyles['bet-options-wrapper']}>
+                    <div className={betOptionStyles['bet-options-container']}>
+                        {Object.entries(gameData.roundOdds.odds).map(([choice, odd]) => (
+                            <div
+                                key={choice}
+                                className={betOptionStyles['bets-bg']}
+                                data-choice={choice}
+                                onClick={() => onBetClick?.(choice)}
+                                style={{
+                                    cursor: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
+                                    opacity: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 1 : 0.6,
+                                }}
+                            >
+                                <div className={betOptionStyles['padding-bet']}>
+                                    <span className={betOptionStyles['bet-choice-text']}>
+                                        {choice.charAt(0).toUpperCase() + choice.slice(1)}
+                                    </span>
+                                    <span className={betOptionStyles['bet-option']}>{odd}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* Play Overlay */}
             {showPlayOverlay && (
                 <div className={styles['overlay-container']}>
@@ -193,106 +295,6 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                     </button>
                 </div>
             )}
-
-            {/* Header Section */}
-            <div className={gameBaseStyles['game-header']}>
-                <div className={gameBaseStyles['game-name']}>
-                    <div className={gameBaseStyles['game-name-text']}>
-                        {gameData.gameSettings.gameName}
-
-                        <img src={liveIcon} alt="live" className={classNames(gameBaseStyles['live-icon'], styles['liveIcon'])} />
-                    </div>
-                    <RoundId
-                        clientRoundId={gameData.currentRound.roundId}
-                        roundState={gameData.currentRound.roundState}
-                        className={gameBaseStyles['game-name-round']}
-                    />
-                </div>
-                <div className={gameBaseStyles['timer']}>
-                    <div className={countDownTimerStyles['count-down']}>
-                        <div className={`${countDownTimerStyles['timer-wrapper']} ${getCountdownStateClass()}`}>
-                            <div className={countDownTimerStyles['counting-text']}>{gameData.currentRound.countdownTimer}s</div>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    className={classNames(styles['score-board-img'], styles['statsIcon'], gameBaseStyles['stats-icon'])}
-                    onClick={onStatisticsClick}
-                >
-                    <img src={historyBtnIcon} alt="statistics" />
-                </div>
-            </div>
-
-            {/* Content Section */}
-            <div className={styles['wrapper-sport-middle']}>
-                {/* Home Team Card */}
-                <TeamCard logo={homeTeamLogo} isHomeTeam={true} animation={TeamCardAnimation.NONE} />
-
-                {/* Result Section with Cards */}
-                <div className={styles['sport-result']}>
-                    <div className={styles['container-result']}>
-                        {/* Home Card */}
-                        <div className={`${styles['card-section']} ${showHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
-                            <div className={flipCardStyles['card']}>
-                                {shouldHideCards ? <CardBack /> : <Card result={homeCardData} customClassName="card-baccarat" />}
-                            </div>
-                        </div>
-
-                        {/* Score Display */}
-                        <div className={styles['result-section']}>
-                            <div className={`${styles['result']} ${isHomeHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showHighLight ? gameData.currentResult.homeScore : ''}</span>
-                            </div>
-                            <div className={`${styles['result']} ${isAwayHigher && showHighLight ? styles['higher-score'] : ''}`}>
-                                <span>{showHighLight ? gameData.currentResult.awayScore : ''}</span>
-                            </div>
-                        </div>
-
-                        {/* Away Card */}
-                        <div className={`${styles['card-section']} ${showHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
-                            <div className={flipCardStyles['card']}>
-                                {shouldHideCards ? <CardBack /> : <Card result={awayCardData} customClassName="card-baccarat" />}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Away Team Card */}
-                <TeamCard logo={awayTeamLogo} isHomeTeam={false} animation={TeamCardAnimation.NONE} />
-
-                {/* Team Names */}
-                <div className={styles['wrapper-team-name']}>
-                    <div className={styles['name']}>{gameData.teamData.home.name}</div>
-                    <div className={styles['name']}>{gameData.teamData.away.name}</div>
-                </div>
-            </div>
-
-            {/* Footer Section */}
-            <div className={styles['wrapper-sport-bottom']}>
-                <div className={betOptionStyles['bet-options-wrapper']}>
-                    <div className={betOptionStyles['bet-options-container']}>
-                        {Object.entries(gameData.roundOdds.odds).map(([choice, odd]) => (
-                            <div
-                                key={choice}
-                                className={betOptionStyles['bets-bg']}
-                                data-choice={choice}
-                                onClick={() => onBetClick?.(choice)}
-                                style={{
-                                    cursor: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 'pointer' : 'not-allowed',
-                                    opacity: isInteractive && gameData.currentRound.roundState === 'placingBets' ? 1 : 0.6,
-                                }}
-                            >
-                                <div className={betOptionStyles['padding-bet']}>
-                                    <span className={betOptionStyles['bet-choice-text']}>
-                                        {choice.charAt(0).toUpperCase() + choice.slice(1)}
-                                    </span>
-                                    <span className={betOptionStyles['bet-option']}>{odd}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
 
             {/* Statistics Popup */}
             {showStatisticsPopup && gameData.roundHistory && (
