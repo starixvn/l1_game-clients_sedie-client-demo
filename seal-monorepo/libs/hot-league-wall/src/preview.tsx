@@ -12,10 +12,12 @@ import { SSOControlSimulator } from './_shared/components/sso-control-simulator'
 import { SSOControlSimulatorWrapper } from './_shared/components/sso-control-simulator/sso-control-simulator-wrapper';
 import { shouldShowSSOControls, logSSOControlsConfig } from './_shared/utils/sso-controls-config';
 import { useSSOSimulator } from './_shared/components/sso-control-simulator';
+import { SSOScenario } from './_shared/components/sso-control-simulator/types';
 
 const Preview = (): React.ReactElement => {
     const [token, setToken] = useState('');
     const [playButtonClickCount, setPlayButtonClickCount] = useState(0);
+    const [currentScenarioKey, setCurrentScenarioKey] = useState<string>('normal-flow');
 
     // Callback function to get token when Play button is clicked
     const handlePlayButtonTokenRequest = useCallback(async () => {
@@ -66,20 +68,67 @@ const Preview = (): React.ReactElement => {
                     token={token}
                     onPlayButtonTokenRequest={handlePlayButtonTokenRequest}
                     playButtonClickCount={playButtonClickCount}
+                    setPlayButtonClickCount={setPlayButtonClickCount}
+                    currentScenarioKey={currentScenarioKey}
+                    setCurrentScenarioKey={setCurrentScenarioKey}
                 />
             </Router>
         </PreviewProvider>
     );
 };
 
+// SSOTestingWrapper: Isolates SSO testing logic from production App
+const SSOTestingWrapper: React.FC<{
+    children: React.ReactNode;
+    failedToken?: string | null;
+    isSSOFailureMode?: boolean;
+    onSSORetry?: () => void;
+}> = ({ children, failedToken, isSSOFailureMode, onSSORetry }) => {
+    // Override TokenRequestManager behavior for testing
+    React.useEffect(() => {
+        if (failedToken && isSSOFailureMode) {
+            console.log('🔑 [SSO_TESTING] Injecting failed token into TokenRequestManager for testing');
+
+            // Override the token request to return the failed token
+            const originalExecuteTokenRequest = TokenRequestManager.getInstance().executeTokenRequest;
+            TokenRequestManager.getInstance().executeTokenRequest = async () => {
+                console.log('🔑 [SSO_TESTING] TokenRequestManager returning failed token for testing');
+                return failedToken;
+            };
+
+            // Restore original behavior on cleanup
+            return () => {
+                TokenRequestManager.getInstance().executeTokenRequest = originalExecuteTokenRequest;
+                console.log('🔑 [SSO_TESTING] Restored original TokenRequestManager behavior');
+            };
+        }
+    }, [failedToken, isSSOFailureMode]);
+
+    return <>{children}</>;
+};
+
+// ScenarioResetWrapper: Isolates scenarioKey logic from production App
+const ScenarioResetWrapper: React.FC<{
+    scenarioKey: string;
+    children: (key: string) => React.ReactNode;
+}> = ({ scenarioKey, children }) => {
+    return <>{children(scenarioKey)}</>;
+};
+
 const PreviewContext = ({
     token,
     onPlayButtonTokenRequest,
-    playButtonClickCount
+    playButtonClickCount,
+    setPlayButtonClickCount,
+    currentScenarioKey,
+    setCurrentScenarioKey
 }: {
     token: string;
     onPlayButtonTokenRequest: () => Promise<string | null>;
     playButtonClickCount: number;
+    setPlayButtonClickCount: React.Dispatch<React.SetStateAction<number>>;
+    currentScenarioKey: string;
+    setCurrentScenarioKey: React.Dispatch<React.SetStateAction<string>>;
 }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
 
@@ -138,7 +187,7 @@ const PreviewContext = ({
         // Only disable manual failure mode, preserve first click invalid token mode
         if (ssoSimulator.isFailureMode) {
             console.log('🔄 [PREVIEW] Disabling manual failure mode in SSO simulator');
-            ssoSimulator.toggleFailureMode(); // This will disable manual failure mode
+            ssoSimulator.toggleFailure(); // This will disable manual failure mode
         } else {
             console.log('🔄 [PREVIEW] Manual failure mode already disabled');
         }
@@ -146,6 +195,22 @@ const PreviewContext = ({
         // Note: We don't disable first click invalid token mode here
         // as it should persist for subsequent testing
     }, [ssoSimulator]);
+
+    // Handle scenario selection
+    const handleSelectScenario = useCallback((scenario: SSOScenario) => {
+        console.log('🎯 [PREVIEW] Scenario selected:', scenario.name);
+
+        // Reset play button click count when scenario changes
+        setPlayButtonClickCount(0);
+        console.log('🔄 [PREVIEW] Reset play button click count to 0 for new scenario');
+
+        // Update scenario key to trigger app reset
+        setCurrentScenarioKey(scenario.id);
+        console.log('🔄 [PREVIEW] Updated scenario key to:', scenario.id);
+
+        // Apply scenario settings to simulator
+        ssoSimulator.selectScenario(scenario);
+    }, [ssoSimulator, setPlayButtonClickCount, setCurrentScenarioKey]);
 
     // Determine which token to use based on simulation mode
     const getTokenForApp = () => {
@@ -175,9 +240,10 @@ const PreviewContext = ({
             {/* SSO Control Simulator - Only show when enabled */}
             {showSSOControls && (
                 <SSOControlSimulator
-                    onToggleFailure={ssoSimulator.toggleFailureMode}
-                    onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidTokenMode}
-                    onResetCount={ssoSimulator.resetFailureCount}
+                    onToggleFailure={ssoSimulator.toggleFailure}
+                    onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidToken}
+                    onResetCount={ssoSimulator.resetCount}
+                    onSelectScenario={handleSelectScenario}
                     failureCount={ssoSimulator.failureCount}
                     isFailureMode={ssoSimulator.isFailureMode}
                     isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
@@ -189,15 +255,20 @@ const PreviewContext = ({
                 <Route path="/rng-soccer-demo" element={<RngSoccerDemo />} />
                 <Route path="*" element={
                     <SSOControlSimulatorWrapper>
-                        <App
-                            appEnv={appEnv}
-                            language={language}
-                            siteId={siteId}
-                            onPlayButtonTokenRequest={onPlayButtonTokenRequest}
-                            isSSOFailureMode={shouldShowSSOFailureMode()}
-                            onSSORetry={handleSuccessfulSSORetry}
-                            FailedToken={getTokenForApp()}
-                        />
+                        <SSOTestingWrapper failedToken={getTokenForApp()} isSSOFailureMode={shouldShowSSOFailureMode()}>
+                            <ScenarioResetWrapper scenarioKey={currentScenarioKey}>
+                                {(key) => (
+                                    <App
+                                        key={key}
+                                        appEnv={appEnv}
+                                        language={language}
+                                        siteId={siteId}
+                                        onPlayButtonTokenRequest={onPlayButtonTokenRequest}
+                                        onSSORetry={handleSuccessfulSSORetry}
+                                    />
+                                )}
+                            </ScenarioResetWrapper>
+                        </SSOTestingWrapper>
                     </SSOControlSimulatorWrapper>
                 } />
             </Routes>

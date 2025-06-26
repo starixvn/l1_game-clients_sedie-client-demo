@@ -40,16 +40,22 @@ export class SSOControlSimulatorService implements ISSOSimulatorService {
     /**
      * Log when first click invalid token mode is toggled
      */
-    logFirstClickInvalidTokenToggle(isFirstClickInvalidTokenMode: boolean): void {
-        console.log(`${this.logPrefix} First click invalid token mode ${isFirstClickInvalidTokenMode ? 'ENABLED' : 'DISABLED'} at:`, new Date().toISOString());
+    logFirstClickInvalidTokenToggle(isEnabled: boolean): void {
+        console.log(`[SSO Simulator] First Click Invalid Token Mode ${isEnabled ? 'enabled' : 'disabled'}`);
+    }
 
-        if (isFirstClickInvalidTokenMode) {
-            console.log(`${this.logPrefix} 🔑 First click invalid tokens will now be simulated!`);
-            console.log(`${this.logPrefix} 🔑 Only the first play button click will return an invalid token`);
-            console.log(`${this.logPrefix} 🔑 Subsequent clicks will use real tokens from TokenRequestManager`);
-        } else {
-            console.log(`${this.logPrefix} ✅ First click invalid token simulation disabled`);
-        }
+    /**
+     * Log when scenario section is toggled
+     */
+    logScenarioToggle(isVisible: boolean): void {
+        console.log(`[SSO Simulator] Scenario section ${isVisible ? 'shown' : 'hidden'}`);
+    }
+
+    /**
+     * Log when a scenario is selected
+     */
+    logScenarioSelection(scenarioId: string): void {
+        console.log(`[SSO Simulator] Scenario selected: ${scenarioId}`);
     }
 
     /**

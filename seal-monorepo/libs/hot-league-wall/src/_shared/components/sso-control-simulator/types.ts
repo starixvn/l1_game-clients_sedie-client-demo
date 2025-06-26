@@ -3,6 +3,21 @@
  */
 
 /**
+ * Predefined SSO scenarios for easy demonstration
+ */
+export interface SSOScenario {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    settings: {
+        isFailureMode: boolean;
+        isFirstClickInvalidTokenMode: boolean;
+        failureCount?: number;
+    };
+}
+
+/**
  * Core props interface for SSO Control Simulator component
  */
 export interface SSOControlSimulatorProps {
@@ -12,6 +27,8 @@ export interface SSOControlSimulatorProps {
     onResetCount: () => void;
     /** Callback function when first click invalid token mode is toggled */
     onToggleFirstClickInvalidToken?: () => void;
+    /** Callback function when a scenario is selected */
+    onSelectScenario?: (scenario: SSOScenario) => void;
     /** Current failure count */
     failureCount?: number;
     /** Whether failure mode is currently active */
@@ -46,13 +63,17 @@ export interface SSOControlState {
  */
 export interface ISSOSimulatorService {
     /** Log when controls are toggled */
-    logControlToggle(showControls: boolean): void;
+    logControlToggle(isVisible: boolean): void;
     /** Log when failure mode is toggled */
-    logFailureToggle(isFailureMode: boolean): void;
+    logFailureToggle(isEnabled: boolean): void;
     /** Log when failure count is reset */
     logCountReset(): void;
     /** Log when first click invalid token mode is toggled */
-    logFirstClickInvalidTokenToggle(isFirstClickInvalidTokenMode: boolean): void;
+    logFirstClickInvalidTokenToggle(isEnabled: boolean): void;
+    /** Log when scenario is toggled */
+    logScenarioToggle(isVisible: boolean): void;
+    /** Log when scenario is selected */
+    logScenarioSelection(scenarioId: string): void;
 }
 
 /**

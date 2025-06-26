@@ -16,41 +16,65 @@ interface AppProps {
     language: string;
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
-    // SSO-related props (only used when SSO controls are enabled)
-    FailedToken?: string | null;
-    isSSOFailureMode?: boolean;
     onSSORetry?: () => void;
 }
 
 interface AppContentProps {
     updateBalanceCallback?: void | null;
     onPlayButtonTokenRequest?: () => Promise<string | null>;
-    // SSO-related props (only used when SSO controls are enabled)
-    FailedToken?: string | null;
-    isSSOFailureMode?: boolean;
     onSSORetry?: () => void;
 }
 
-const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest, FailedToken, isSSOFailureMode, onSSORetry }: AppProps) => {
+const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest, onSSORetry }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
             <AppContent
                 updateBalanceCallback={updateBalanceCallback}
                 onPlayButtonTokenRequest={onPlayButtonTokenRequest}
-                FailedToken={FailedToken}
-                isSSOFailureMode={isSSOFailureMode}
                 onSSORetry={onSSORetry}
             />
         </AppProvider>
     );
 };
 
-const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedToken, isSSOFailureMode, onSSORetry }: AppContentProps) => {
+const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetry }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [ssoFailure, setSsoFailure] = useState(false);
+
+    // Shared token request logic to reduce duplication
+    const executeTokenRequest = useCallback(async (context: string) => {
+        const startTime = performance.now();
+        console.log(`🔄 [${context}] Using TokenRequestManager for REAL APP...`);
+
+        try {
+            const newToken = await TokenRequestManager.getInstance().executeTokenRequest();
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+
+            if (newToken) {
+                console.log(`✅ [${context}] TokenRequestManager completed for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+                console.log(`🔄 [${context}] Updating current token for REAL APP...`);
+                setCurrentToken(newToken);
+                setHasClickedPlay(true);
+                setSsoFailure(false); // Clear any SSO failure state
+                return { success: true, token: newToken, duration };
+            } else {
+                console.log(`⚠️ [${context}] TokenRequestManager returned null for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+                setSsoFailure(true); // Set SSO failure state
+                return { success: false, token: null, duration };
+            }
+        } catch (error) {
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            console.log(`💥 [${context}] TokenRequestManager failed for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+            console.error(`[${context}] TokenRequestManager error:`, error);
+            setSsoFailure(true); // Set SSO failure state
+            return { success: false, token: null, duration };
+        }
+    }, []);
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
@@ -58,100 +82,33 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
 
         setIsLoading(true);
 
-        // Check if we have a simulated token (FailedToken prop)
-        if (FailedToken) {
-            console.log('🔑 [APP_TIMING] Using simulated token from FailedToken prop');
-            console.log(`🔑 [APP_TIMING] Simulated token: ${FailedToken.substring(0, 50)}...`);
-            console.log(`🔑 [APP_TIMING] Token length: ${FailedToken.length} characters`);
-
-            // Use the simulated token directly - this will trigger SSO failure view
-            setCurrentToken(FailedToken);
-            setHasClickedPlay(true);
-            setSsoFailure(true); // Set to true because invalid token should show reconnect page
-
-            const appEndTime = performance.now();
-            const appDuration = appEndTime - appStartTime;
-            console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed with simulated token - Total duration: ${appDuration.toFixed(2)}ms`);
-            console.log('🔑 [APP_TIMING] Invalid token detected - will show SSO failure view');
-            setIsLoading(false);
-            return;
-        }
-
-        // Always use TokenRequestManager to get a fresh token (real flow)
-        const tokenManager = TokenRequestManager.getInstance();
-        console.log('🔄 [APP_TIMING] Using TokenRequestManager for REAL APP...');
-        const tokenStartTime = performance.now();
-
-        try {
-            const newToken = await tokenManager.executeTokenRequest();
-            const tokenEndTime = performance.now();
-            const tokenDuration = tokenEndTime - tokenStartTime;
-
-            if (newToken) {
-                console.log(`✅ [APP_TIMING] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                console.log(`🔄 [APP_TIMING] Updating current token for REAL APP...`);
-                setCurrentToken(newToken);
-                setHasClickedPlay(true);
-                setSsoFailure(false); // Clear any SSO failure state
-            } else {
-                console.log(`⚠️ [APP_TIMING] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                setSsoFailure(true); // Set SSO failure state
-            }
-        } catch (error) {
-            const tokenEndTime = performance.now();
-            const tokenDuration = tokenEndTime - tokenStartTime;
-            console.log(`💥 [APP_TIMING] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-            console.error('[APP_TIMING] TokenRequestManager error:', error);
-            setSsoFailure(true); // Set SSO failure state
-        } finally {
-            setIsLoading(false);
-        }
+        const result = await executeTokenRequest('APP_TIMING');
 
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, [FailedToken]);
+
+        setIsLoading(false);
+    }, [executeTokenRequest]);
 
     const handleSSORetry = useCallback(async () => {
         console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
 
-        // Always use TokenRequestManager to get a fresh token (real flow)
-        const tokenManager = TokenRequestManager.getInstance();
-        console.log('🔄 [SSO_RETRY] Using TokenRequestManager for REAL APP...');
-        const tokenStartTime = performance.now();
+        const result = await executeTokenRequest('SSO_RETRY');
 
-        try {
-            const newToken = await tokenManager.executeTokenRequest();
-            const tokenEndTime = performance.now();
-            const tokenDuration = tokenEndTime - tokenStartTime;
+        if (result.success) {
+            console.log('🔄 [SSO_RETRY] Token request successful, transitioning to real game');
 
-            if (newToken) {
-                console.log(`✅ [SSO_RETRY] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                console.log('🔄 [SSO_RETRY] Token request successful, transitioning to real game');
-
-                // Call parent's onSSORetry callback only after successful token request (for SSO control simulator)
-                if (onSSORetry) {
-                    console.log('🔄 [SSO_RETRY] Calling parent onSSORetry callback after successful token request');
-                    onSSORetry();
-                }
-
-                setCurrentToken(newToken);
-                setHasClickedPlay(true);
-                setSsoFailure(false); // Clear SSO failure state
-            } else {
-                console.log(`⚠️ [SSO_RETRY] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                console.log('🔄 [SSO_RETRY] Token request failed, staying in SSO failure mode');
-                // Keep SSO failure state
+            // Call parent's onSSORetry callback only after successful token request (for SSO control simulator)
+            if (onSSORetry) {
+                console.log('🔄 [SSO_RETRY] Calling parent onSSORetry callback after successful token request');
+                onSSORetry();
             }
-        } catch (error) {
-            const tokenEndTime = performance.now();
-            const tokenDuration = tokenEndTime - tokenStartTime;
-            console.log(`💥 [SSO_RETRY] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-            console.error('[SSO_RETRY] TokenRequestManager error:', error);
+        } else {
             console.log('🔄 [SSO_RETRY] Token request failed, staying in SSO failure mode');
             // Keep SSO failure state
         }
-    }, [onSSORetry]);
+    }, [executeTokenRequest, onSSORetry]);
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -164,13 +121,6 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
             TokenRequestManager.getInstance().setTokenRequestCallback(onPlayButtonTokenRequest);
         }
     }, [onPlayButtonTokenRequest]);
-
-    // Handle SSO failure mode from props (when SSO controls are enabled)
-    useEffect(() => {
-        if (isSSOFailureMode !== undefined) {
-            setSsoFailure(isSSOFailureMode);
-        }
-    }, [isSSOFailureMode]);
 
     loadI18n(language);
 

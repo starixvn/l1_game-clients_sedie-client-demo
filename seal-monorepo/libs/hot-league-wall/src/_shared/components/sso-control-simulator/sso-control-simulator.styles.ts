@@ -336,6 +336,147 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
     }
 
     /**
+     * Scenario section styles
+     */
+    get scenarioSection(): React.CSSProperties {
+        return {
+            background: 'rgba(255,255,255,0.03)',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.1)',
+            marginBottom: '12px'
+        };
+    }
+
+    /**
+     * Scenario section header styles
+     */
+    get scenarioSectionHeader(): React.CSSProperties {
+        return {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginBottom: '10px',
+            fontSize: '12px',
+            fontWeight: '600',
+            color: 'rgba(255,255,255,0.9)'
+        };
+    }
+
+    /**
+     * Scenario grid styles
+     */
+    get scenarioGrid(): React.CSSProperties {
+        return {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: '8px',
+            marginBottom: '8px'
+        };
+    }
+
+    /**
+     * Scenario button styles
+     */
+    scenarioButton(isActive: boolean, isSelected: boolean): React.CSSProperties {
+        return {
+            background: isSelected
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                : isActive
+                    ? 'rgba(255,255,255,0.1)'
+                    : 'rgba(255,255,255,0.05)',
+            color: 'white',
+            border: isSelected
+                ? '1px solid rgba(255,255,255,0.3)'
+                : '1px solid rgba(255,255,255,0.1)',
+            padding: '8px 10px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '11px',
+            fontWeight: '500',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            textAlign: 'center',
+            minHeight: '60px',
+            justifyContent: 'center',
+            opacity: isActive ? 1 : 0.6
+        };
+    }
+
+    /**
+     * Scenario icon styles
+     */
+    get scenarioIcon(): React.CSSProperties {
+        return {
+            fontSize: '16px',
+            marginBottom: '2px'
+        };
+    }
+
+    /**
+     * Scenario name styles
+     */
+    get scenarioName(): React.CSSProperties {
+        return {
+            fontSize: '10px',
+            fontWeight: '600',
+            lineHeight: '1.2'
+        };
+    }
+
+    /**
+     * Current scenario indicator styles
+     */
+    get currentScenarioIndicator(): React.CSSProperties {
+        return {
+            background: 'rgba(255,255,255,0.1)',
+            padding: '8px 10px',
+            borderRadius: '6px',
+            border: '1px solid rgba(255,255,255,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '11px',
+            marginBottom: '8px'
+        };
+    }
+
+    /**
+     * Current scenario icon styles
+     */
+    get currentScenarioIcon(): React.CSSProperties {
+        return {
+            fontSize: '14px'
+        };
+    }
+
+    /**
+     * Current scenario text styles
+     */
+    get currentScenarioText(): React.CSSProperties {
+        return {
+            flex: 1,
+            fontSize: '11px',
+            fontWeight: '500'
+        };
+    }
+
+    /**
+     * Divider styles
+     */
+    get divider(): React.CSSProperties {
+        return {
+            height: '1px',
+            background: 'rgba(255,255,255,0.1)',
+            margin: '12px 0',
+            width: '100%'
+        };
+    }
+
+    /**
      * Handle button hover effects
      */
     handleButtonHover(element: HTMLElement, isHovering: boolean): void {

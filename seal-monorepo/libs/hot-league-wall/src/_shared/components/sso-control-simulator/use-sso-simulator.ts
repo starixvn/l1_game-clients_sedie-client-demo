@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { SSOControlState } from './types';
+import { SSOScenario } from './types';
 
 /**
  * Custom Hook for SSO Simulation State Management
@@ -8,7 +9,7 @@ import { SSOControlState } from './types';
  * Open/Closed: Extensible through composition
  * Interface Segregation: Provides specific state management interface
  */
-export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
+export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => {
     const [state, setState] = useState<SSOControlState>({
         showControls: false,
         failureCount: 0,
@@ -40,7 +41,7 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
     /**
      * Toggle failure mode and generate new failed token when enabled
      */
-    const toggleFailureMode = useCallback(() => {
+    const toggleFailure = useCallback(() => {
         setState(prev => {
             const newFailureMode = !prev.isFailureMode;
             return {
@@ -55,7 +56,7 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
     /**
      * Toggle first click invalid token mode and generate new token when enabled
      */
-    const toggleFirstClickInvalidTokenMode = useCallback(() => {
+    const toggleFirstClickInvalidToken = useCallback(() => {
         setState(prev => {
             const newFirstClickInvalidTokenMode = !prev.isFirstClickInvalidTokenMode;
             return {
@@ -70,7 +71,7 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
     /**
      * Reset failure count
      */
-    const resetFailureCount = useCallback(() => {
+    const resetCount = useCallback(() => {
         setState(prev => ({
             ...prev,
             failureCount: 0
@@ -147,14 +148,21 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
         return state.firstClickInvalidToken || generateFirstClickInvalidToken();
     }, [state.isFirstClickInvalidTokenMode, state.firstClickInvalidToken, generateFirstClickInvalidToken]);
 
+    const selectScenario = useCallback((scenario: SSOScenario) => {
+        setState(prev => ({
+            ...prev,
+            ...scenario.settings
+        }));
+    }, []);
+
     return {
         // State
         ...state,
 
         // Actions
-        toggleFailureMode,
-        toggleFirstClickInvalidTokenMode,
-        resetFailureCount,
+        toggleFailure,
+        toggleFirstClickInvalidToken,
+        resetCount,
         incrementFailureCount,
         toggleControls,
 
@@ -163,6 +171,9 @@ export const useSSOSimulator = (initialState?: Partial<SSOControlState>) => {
         shouldSimulateFirstClickInvalidToken,
         getNextFailureMessage,
         getFailedToken,
-        getFirstClickInvalidToken
+        getFirstClickInvalidToken,
+
+        // Additional actions
+        selectScenario
     };
 }; 

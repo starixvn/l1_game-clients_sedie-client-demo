@@ -43,7 +43,7 @@ export const FailedTokenDemo: React.FC = () => {
 
             <div style={{ marginBottom: '16px' }}>
                 <button
-                    onClick={ssoSimulator.toggleFailureMode}
+                    onClick={ssoSimulator.toggleFailure}
                     style={{
                         padding: '8px 16px',
                         marginRight: '8px',
@@ -61,8 +61,8 @@ export const FailedTokenDemo: React.FC = () => {
                     onClick={() => {
                         if (ssoSimulator.isFailureMode) {
                             // Force a new token generation
-                            ssoSimulator.toggleFailureMode();
-                            ssoSimulator.toggleFailureMode();
+                            ssoSimulator.toggleFailure();
+                            ssoSimulator.toggleFailure();
                         }
                     }}
                     style={{

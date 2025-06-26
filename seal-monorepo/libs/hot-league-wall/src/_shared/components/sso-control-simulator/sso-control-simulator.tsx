@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SSOControlSimulatorProps, SSOControlState } from './types';
 import { SSOControlSimulatorStyles } from './sso-control-simulator.styles';
 import { SSOControlSimulatorService } from './sso-control-simulator.service';
+import { SSO_SCENARIOS, getCurrentScenario } from './sso-scenarios';
 
 /**
  * SSO Control Simulator Component
@@ -16,34 +17,34 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
     onToggleFailure,
     onResetCount,
     onToggleFirstClickInvalidToken,
+    onSelectScenario,
     failureCount = 0,
     isFailureMode = false,
     isFirstClickInvalidTokenMode = false,
     service = new SSOControlSimulatorService()
 }) => {
     const [showControls, setShowControls] = useState(true); // Show controls by default for better UX
+    const [showScenarios, setShowScenarios] = useState(false); // Show scenarios section
     const styles = new SSOControlSimulatorStyles();
+
+    // Get current scenario based on state
+    const currentScenario = getCurrentScenario(isFailureMode, isFirstClickInvalidTokenMode, failureCount);
 
     const handleToggleControls = () => {
         setShowControls(!showControls);
         service.logControlToggle(!showControls);
     };
 
-    const handleToggleFailure = () => {
-        onToggleFailure();
-        service.logFailureToggle(!isFailureMode);
+    const handleToggleScenarios = () => {
+        setShowScenarios(!showScenarios);
+        service.logScenarioToggle(!showScenarios);
     };
 
-    const handleToggleFirstClickInvalidToken = () => {
-        if (onToggleFirstClickInvalidToken) {
-            onToggleFirstClickInvalidToken();
-            service.logFirstClickInvalidTokenToggle(!isFirstClickInvalidTokenMode);
+    const handleSelectScenario = (scenario: typeof SSO_SCENARIOS[0]) => {
+        if (onSelectScenario) {
+            onSelectScenario(scenario);
+            service.logScenarioSelection(scenario.id);
         }
-    };
-
-    const handleResetCount = () => {
-        onResetCount();
-        service.logCountReset();
     };
 
     return (
@@ -75,6 +76,69 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
             {/* Expandable Content */}
             {showControls && (
                 <div style={styles.content}>
+                    {/* Current Scenario Indicator */}
+                    <div style={styles.currentScenarioIndicator}>
+                        <span style={styles.currentScenarioIcon}>{currentScenario.icon}</span>
+                        <div style={styles.currentScenarioText}>
+                            <strong>Current:</strong> {currentScenario.name}
+                        </div>
+                    </div>
+
+                    {/* Scenario Selection Section */}
+                    <div style={styles.scenarioSection}>
+                        <div style={styles.scenarioSectionHeader}>
+                            <span>🎯</span>
+                            Quick Scenarios
+                            <button
+                                onClick={handleToggleScenarios}
+                                style={{
+                                    ...styles.toggleButton,
+                                    marginLeft: 'auto',
+                                    padding: '4px 8px',
+                                    fontSize: '10px'
+                                }}
+                                onMouseEnter={(e) => styles.handleButtonHover(e.currentTarget, true)}
+                                onMouseLeave={(e) => styles.handleButtonHover(e.currentTarget, false)}
+                            >
+                                {showScenarios ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
+
+                        {showScenarios && (
+                            <div style={styles.scenarioGrid}>
+                                {SSO_SCENARIOS.map((scenario) => {
+                                    const isSelected = scenario.id === currentScenario.id;
+                                    const isActive = true; // All scenarios are active
+
+                                    return (
+                                        <button
+                                            key={scenario.id}
+                                            onClick={() => handleSelectScenario(scenario)}
+                                            style={styles.scenarioButton(isActive, isSelected)}
+                                            onMouseEnter={(e) => {
+                                                if (!isSelected) {
+                                                    e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isSelected) {
+                                                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                                }
+                                            }}
+                                            title={scenario.description}
+                                        >
+                                            <span style={styles.scenarioIcon}>{scenario.icon}</span>
+                                            <span style={styles.scenarioName}>{scenario.name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Divider */}
+                    <div style={styles.divider} />
+
                     {/* Status Indicators */}
                     <div style={styles.statusGrid}>
                         <div style={styles.statusCard}>
@@ -89,44 +153,6 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                                 {failureCount}
                             </div>
                         </div>
-                    </div>
-
-                    {/* Control Buttons */}
-                    <div style={styles.buttonContainer}>
-                        <button
-                            onClick={handleToggleFailure}
-                            style={styles.primaryButton(isFailureMode)}
-                            onMouseEnter={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isFailureMode, true)}
-                            onMouseLeave={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isFailureMode, false)}
-                        >
-                            <span style={styles.buttonIcon}>
-                                {isFailureMode ? '🚫' : '✅'}
-                            </span>
-                            {isFailureMode ? 'Disable' : 'Enable'} SSO Failures
-                        </button>
-
-                        <button
-                            onClick={handleToggleFirstClickInvalidToken}
-                            style={styles.primaryButton(isFirstClickInvalidTokenMode)}
-                            onMouseEnter={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isFirstClickInvalidTokenMode, true)}
-                            onMouseLeave={(e) => styles.handlePrimaryButtonHover(e.currentTarget, isFirstClickInvalidTokenMode, false)}
-                        >
-                            <span style={styles.buttonIcon}>
-                                {isFirstClickInvalidTokenMode ? '🚫' : '✅'}
-                            </span>
-                            {isFirstClickInvalidTokenMode ? 'Disable' : 'Enable'} First Click Invalid Token
-                        </button>
-
-                        <button
-                            onClick={handleResetCount}
-                            style={styles.secondaryButton(failureCount)}
-                            onMouseEnter={(e) => styles.handleSecondaryButtonHover(e.currentTarget, failureCount, true)}
-                            onMouseLeave={(e) => styles.handleSecondaryButtonHover(e.currentTarget, failureCount, false)}
-                            disabled={failureCount === 0}
-                        >
-                            <span style={styles.buttonIcon}>🔄</span>
-                            Reset Count
-                        </button>
                     </div>
 
                     {/* Instructions */}
