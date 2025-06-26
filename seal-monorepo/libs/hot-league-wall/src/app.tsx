@@ -9,6 +9,7 @@ import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 import { GameDisconnectView } from './games/game-base/components/game-disconnect-view';
 import blurBgGame from './assets/rng-soccer/blur-bg-game.png';
+import { shouldShowSSOControls } from './_shared/utils/sso-controls-config';
 
 interface AppProps {
     appEnv: string;
@@ -44,13 +45,18 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
     const [ssoFailure, setSsoFailure] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Effect to handle FailedToken changes and trigger rerender
+    // Check if SSO controls are enabled for testing
+    const ssoControlsEnabled = shouldShowSSOControls();
+
+    // Effect to handle FailedToken changes and trigger rerender (only when SSO controls are enabled)
     useEffect(() => {
-        if (FailedToken && hasClickedPlay) {
+        if (FailedToken && hasClickedPlay && ssoControlsEnabled) {
             console.log(`🔄 [APP_TIMING] FailedToken changed, updating current token to: ${FailedToken}`);
             setCurrentToken(FailedToken);
+        } else if (FailedToken && !ssoControlsEnabled) {
+            console.log(`🚫 [APP_TIMING] FailedToken provided but SSO controls are disabled - ignoring FailedToken: ${FailedToken}`);
         }
-    }, [FailedToken, hasClickedPlay]);
+    }, [FailedToken, hasClickedPlay, ssoControlsEnabled]);
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
@@ -59,9 +65,9 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
         setIsLoading(true);
         setSsoFailure(false);
 
-        // Check if we should use a failed token for simulation
-        if (FailedToken) {
-            console.log('🔄 [APP_TIMING] Using FailedToken for SSO failure simulation...');
+        // Check if we should use a failed token for simulation (only when SSO controls are enabled)
+        if (FailedToken && ssoControlsEnabled) {
+            console.log('🔄 [APP_TIMING] Using FailedToken for SSO failure simulation (SSO controls enabled)...');
             const tokenStartTime = performance.now();
 
             // Simulate a delay to make it feel realistic
@@ -81,9 +87,11 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
             const appDuration = appEndTime - appStartTime;
             console.log(`🏁 [APP_TIMING] FailedToken simulation completed - Total duration: ${appDuration.toFixed(2)}ms`);
             return;
+        } else if (FailedToken && !ssoControlsEnabled) {
+            console.log('🚫 [APP_TIMING] FailedToken provided but SSO controls are disabled - using normal token flow instead');
         }
 
-        // Use TokenRequestManager to get a fresh token
+        // Use TokenRequestManager to get a fresh token (normal flow)
         const tokenManager = TokenRequestManager.getInstance();
         console.log('🔄 [APP_TIMING] Using TokenRequestManager for REAL APP...');
         const tokenStartTime = performance.now();
@@ -115,7 +123,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, [FailedToken]);
+    }, [FailedToken, ssoControlsEnabled]);
 
     const handleSSORetry = useCallback(async () => {
         console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');

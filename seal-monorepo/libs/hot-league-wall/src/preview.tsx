@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-demo';
 import { TokenRequestManager } from './_shared/utils/token-request-manager';
 import { SSOControlSimulator, useSSOSimulator } from './_shared/components/sso-control-simulator';
+import { shouldShowSSOControls, getSSOControlsConfig, logSSOControlsConfig, forceEnableSSOControls } from './_shared/utils/sso-controls-config';
 
 // Global flag to simulate SSO failures (for testing purposes)
 let simulateSSOFailure = false;
@@ -92,10 +93,32 @@ const PreviewContext = ({
 }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
 
-    // Use the SSO simulator hook for state management
+    // Check if SSO controls should be shown
+    const showSSOControls = shouldShowSSOControls();
+
+    // Fallback: Force enable in development if environment variables don't work
+    // Only use fallback if no SIMULATOR_CONFIG is explicitly provided
+    const fallbackShowSSOControls = !process.env.SIMULATOR_CONFIG ? forceEnableSSOControls() : false;
+
+    // Use the primary method, fallback to force enable if needed
+    const finalShowSSOControls = showSSOControls || fallbackShowSSOControls;
+
+    console.log('🔍 [PREVIEW_DEBUG] SSO Controls Status:', {
+        primary: showSSOControls,
+        fallback: fallbackShowSSOControls,
+        final: finalShowSSOControls,
+        hasSimulatorConfig: !!process.env.SIMULATOR_CONFIG
+    });
+
+    // Log SSO controls configuration for debugging
+    React.useEffect(() => {
+        logSSOControlsConfig();
+    }, [finalShowSSOControls]);
+
+    // Use the SSO simulator hook for state management (only when controls are enabled)
     const ssoSimulator = useSSOSimulator({
-        isFailureMode: simulateSSOFailure,
-        failureCount: failureCount
+        isFailureMode: finalShowSSOControls ? simulateSSOFailure : false,
+        failureCount: finalShowSSOControls ? failureCount : 0
     });
 
     const appEnv = '';
@@ -109,24 +132,37 @@ const PreviewContext = ({
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
 
-    // Update global variables when state changes
+    // Update global variables when state changes (only when controls are enabled)
     React.useEffect(() => {
-        simulateSSOFailure = ssoSimulator.isFailureMode;
-        failureCount = ssoSimulator.failureCount;
-    }, [ssoSimulator.isFailureMode, ssoSimulator.failureCount]);
+        if (finalShowSSOControls) {
+            simulateSSOFailure = ssoSimulator.isFailureMode;
+            failureCount = ssoSimulator.failureCount;
+        }
+    }, [ssoSimulator.isFailureMode, ssoSimulator.failureCount, finalShowSSOControls]);
 
-    // Get failed token from SSO simulator when in failure mode
-    const failedToken = ssoSimulator.getFailedToken();
+    // Get failed token from SSO simulator when in failure mode (only when controls are enabled)
+    const failedToken = finalShowSSOControls ? ssoSimulator.getFailedToken() : null;
+
+    // Log the token status for debugging
+    React.useEffect(() => {
+        if (finalShowSSOControls && failedToken) {
+            console.log(`🟢 [PREVIEW_DEBUG] SSO controls enabled, FailedToken will be used: ${failedToken}`);
+        } else if (!finalShowSSOControls) {
+            console.log(`🔴 [PREVIEW_DEBUG] SSO controls disabled, FailedToken will be ignored (set to null)`);
+        }
+    }, [finalShowSSOControls, failedToken]);
 
     return (
         <div data-platform={platform} data-version={process.env.TAG_VERSION} className={'seal-vg-sg-index'}>
-            {/* SSO Control Simulator */}
-            <SSOControlSimulator
-                onToggleFailure={ssoSimulator.toggleFailureMode}
-                onResetCount={ssoSimulator.resetFailureCount}
-                failureCount={ssoSimulator.failureCount}
-                isFailureMode={ssoSimulator.isFailureMode}
-            />
+            {/* SSO Control Simulator - Only show when enabled */}
+            {finalShowSSOControls && (
+                <SSOControlSimulator
+                    onToggleFailure={ssoSimulator.toggleFailureMode}
+                    onResetCount={ssoSimulator.resetFailureCount}
+                    failureCount={ssoSimulator.failureCount}
+                    isFailureMode={ssoSimulator.isFailureMode}
+                />
+            )}
 
             <ProviderSetDropDown />
             <Routes>
