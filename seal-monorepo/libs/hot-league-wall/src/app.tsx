@@ -105,8 +105,8 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
                 <GameDisconnectView
                     onReconnect={handleSSORetry}
                     isSSOFailure={true}
-                    customMessage="Login failed. Please check your connection and try again."
-                    customButtonText="Retry Login"
+                    // customMessage="Login failed. Please check your connection and try again."
+                    // customButtonText="Retry Login"
                     backgroundImage={blurBgGame}
                 />
             </div>
