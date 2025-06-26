@@ -114,6 +114,17 @@ const PreviewContext = ({
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
 
+    // Handle successful SSO retry - disable failure mode when token request succeeds
+    const handleSuccessfulSSORetry = useCallback(() => {
+        console.log('🔄 [PREVIEW] SSO retry successful - disabling failure mode');
+        if (ssoSimulator.isFailureMode) {
+            console.log('🔄 [PREVIEW] Disabling failure mode in SSO simulator');
+            ssoSimulator.toggleFailureMode(); // This will disable failure mode
+        } else {
+            console.log('🔄 [PREVIEW] Failure mode already disabled');
+        }
+    }, [ssoSimulator]);
+
     // Determine which token to use based on simulation mode
     const getTokenForApp = () => {
         if (showSSOControls) {
@@ -168,7 +179,7 @@ const PreviewContext = ({
                             siteId={siteId}
                             onPlayButtonTokenRequest={onPlayButtonTokenRequest}
                             isSSOFailureMode={showSSOControls ? ssoSimulator.isFailureMode : false}
-                            onSSORetry={showSSOControls ? ssoSimulator.toggleFailureMode : undefined}
+                            onSSORetry={handleSuccessfulSSORetry}
                             FailedToken={getTokenForApp()}
                         />
                     </SSOControlSimulatorWrapper>

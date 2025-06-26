@@ -114,12 +114,6 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
     const handleSSORetry = useCallback(async () => {
         console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
 
-        // Call parent's onSSORetry callback if provided (for SSO control simulator)
-        if (onSSORetry) {
-            console.log('🔄 [SSO_RETRY] Calling parent onSSORetry callback');
-            onSSORetry();
-        }
-
         // Always use TokenRequestManager to get a fresh token (real flow)
         const tokenManager = TokenRequestManager.getInstance();
         console.log('🔄 [SSO_RETRY] Using TokenRequestManager for REAL APP...');
@@ -133,6 +127,13 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
             if (newToken) {
                 console.log(`✅ [SSO_RETRY] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 console.log('🔄 [SSO_RETRY] Token request successful, transitioning to real game');
+
+                // Call parent's onSSORetry callback only after successful token request (for SSO control simulator)
+                if (onSSORetry) {
+                    console.log('🔄 [SSO_RETRY] Calling parent onSSORetry callback after successful token request');
+                    onSSORetry();
+                }
+
                 setCurrentToken(newToken);
                 setHasClickedPlay(true);
                 setSsoFailure(false); // Clear SSO failure state
@@ -197,7 +198,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
 
     return (
         <div data-react="true" style={{ width: '100%' }}>
-            {currentToken && <Lobby token={currentToken} language={language} />}
+            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handleSSORetry} />}
         </div>
     );
 };

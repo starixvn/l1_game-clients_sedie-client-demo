@@ -10,12 +10,13 @@ import Loading from '../_shared/components/loading';
 import { IOfferGame, ILobbyState } from './type';
 import SessionTimeout from '../_shared/components/timeout';
 import { gamePageMap } from '../_shared/utils/component-util';
+import { GameDisconnectView } from '../games/game-base/components/game-disconnect-view';
 
 @observer
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private reRenderGameTimeout?: NodeJS.Timeout;
 
-    constructor(props: { token: string }) {
+    constructor(props: { token: string; onSSORetry?: () => void }) {
         super(props);
         configSharedContainer();
         this.state = {
@@ -115,22 +116,28 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
         this.setState({ selectedGameId: gameId });
     };
 
+    handleSessionReconnect = () => {
+        console.log('🔄 [LOBBY] Session reconnect requested');
+
+        // Call parent's onSSORetry callback if provided
+        if (this.props.onSSORetry) {
+            console.log('🔄 [LOBBY] Calling parent onSSORetry callback');
+            this.props.onSSORetry();
+        }
+    };
+
     private renderGames(context) {
         const { offerGames, leagueToogle, selectedGameId, isSessionTimeout, isAuthenticated, username } = this.state;
 
         const renderGameContent = () => {
             if (isSessionTimeout) {
                 return (
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '100vh',
-                        color: 'white',
-                        fontSize: '18px'
-                    }}>
-                        Session expired. Please refresh the page to continue.
-                    </div>
+                    <GameDisconnectView
+                        onReconnect={this.handleSessionReconnect}
+                        isSSOFailure={true}
+                        customMessage="Session expired. Please reconnect to continue."
+                        customButtonText="Reconnect"
+                    />
                 );
             }
 
