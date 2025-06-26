@@ -1,5 +1,5 @@
-import { MessageType, WindowMessage, MessageEvent, MessageHandler } from '../types/message-types';
-import { MessageEncryption } from '../../utils/encryption';
+import { MessageType, WindowMessage, MessageEvent, MessageHandler, MessageData } from '../types/message-types';
+import { EncryptedMessage, MessageEncryption } from '../../utils/encryption';
 
 export interface MessageHandlerConfig {
     isLocalDevelopment: boolean;
@@ -74,10 +74,19 @@ export class MessageHandlerManager {
     }
 
     public sendMessage(message: WindowMessage): void {
+        let messageData: WindowMessage | EncryptedMessage = message;
         if (this.config.enableEncryption && this.messageEncryption) {
-            const encryptedMessage = this.messageEncryption.encrypt(message);
-            window.parent.postMessage(encryptedMessage, '*');
+            messageData = this.messageEncryption.encrypt(message);
         }
+        window.parent.postMessage(messageData, '*');
+    }
+
+    public sendMessageToSpecificIframe(message: WindowMessage, iframe: HTMLIFrameElement): void {
+        let messageData: WindowMessage | EncryptedMessage = message;
+        if (this.config.enableEncryption && this.messageEncryption) {
+            messageData = this.messageEncryption.encrypt(message);
+        }
+        iframe.contentWindow?.postMessage(messageData, '*');
     }
 
     public destroy(): void {

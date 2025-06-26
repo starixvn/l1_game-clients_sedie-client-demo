@@ -4,6 +4,7 @@ import { WindowMessage, MessageType, MessageData } from '../types/message-types'
 
 interface MessageContextType {
     sendMessage: (message: WindowMessage) => void;
+    sendMessageToSpecificIframe: (message: WindowMessage, iframe: HTMLIFrameElement | null) => void;
     messageManager: MessageHandlerManager | null;
     messageData: MessageData;
     getMessageData: <T extends MessageType>(type: T) => MessageData[T] | undefined;
@@ -104,15 +105,22 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
             manager.destroy();
             messageManagerRef.current = null;
         };
-    }, [config, options, handleMessage]);
+    }, []);
 
     const sendMessage = (message: WindowMessage) => {
         messageManagerRef.current?.sendMessage(message);
     };
 
+    const sendMessageToSpecificIframe = (message: WindowMessage, iframe: HTMLIFrameElement | null) => {
+        if (iframe) {
+            messageManagerRef.current?.sendMessageToSpecificIframe(message, iframe);
+        }
+    };
+
     return (
         <MessageContext.Provider value={{
             sendMessage,
+            sendMessageToSpecificIframe,
             messageManager: messageManagerRef.current,
             messageData,
             getMessageData,

@@ -5,9 +5,10 @@ import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
 import IframeContainer from './components/iframe-container';
-import { MessageProvider } from './_shared/contexts/message-context';
+import { MessageProvider, useMessageContext } from './_shared/contexts/message-context';
 import { createMessageHandlerConfig, MessageHandlerOptions } from './_shared/utils/message-handler-manager';
 import { appSettings } from './_shared/app-settings';
+import { MessageType } from './_shared/types/message-types';
 
 interface AppProps extends AppContentProps {
     appEnv: string;
@@ -21,6 +22,7 @@ interface AppProps extends AppContentProps {
 
 interface AppContentProps {
     token: string;
+    language: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
     encryptionKey: string;
@@ -32,6 +34,7 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
             <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
                 <AppContent
                     token={token}
+                    language={language}
                     renewToken={renewToken}
                     updateBalanceCallback={updateBalanceCallback}
                     encryptionKey={encryptionKey}
@@ -41,8 +44,7 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
     );
 };
 
-const AppContent = ({ token, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
-    const { language } = useAppContext();
+const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
 
     useEffect(() => {
         if (updateBalanceCallback) {
