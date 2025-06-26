@@ -273,6 +273,9 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                 <CountDownTimer
                     namespace={props.namespace}
                     language={props.language}
+                    simulatorMode={(props as any).simulatorMode || false}
+                    simulatorCountdownTimer={(props as any).simulatorCountdownTimer}
+                    simulatorRoundState={(props as any).simulatorRoundState}
                     onComplete={() => {
                         setState({ isAllowedBet: true } as Partial<S>);
                     }}

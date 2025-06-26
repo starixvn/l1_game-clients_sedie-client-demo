@@ -295,10 +295,24 @@ export class GameSimulatorService {
      */
     private updateGameState(): void {
         try {
+            // Log current state every second for debugging
+            if (this.countdownTimer % 1 === 0) { // Log every second
+                console.log('🎮 [GAME_SIMULATOR] === STATE UPDATE ===', {
+                    timestamp: new Date().toISOString(),
+                    countdownTimer: this.countdownTimer,
+                    roundState: this.roundState,
+                    currentRoundId: this.currentRoundId,
+                    isRunning: this.isRunning,
+                    mappedRoundState: this.mapRoundState(this.roundState)
+                });
+            }
+
             // Update countdown timer
             if (this.countdownTimer > 0) {
                 this.countdownTimer--;
+                console.log('🎮 [GAME_SIMULATOR] Timer tick:', this.countdownTimer);
             } else {
+                console.log('🎮 [GAME_SIMULATOR] Timer reached 0, transitioning to next state');
                 this.transitionToNextState();
             }
 
@@ -314,42 +328,54 @@ export class GameSimulatorService {
      * Transition to the next round state
      */
     private transitionToNextState(): void {
+        console.log('🎮 [GAME_SIMULATOR] === TRANSITION START ===', {
+            currentState: this.roundState,
+            currentTimer: this.countdownTimer
+        });
+
         switch (this.roundState) {
             case ROUND_STATE.PLACING_BET:
                 this.roundState = ROUND_STATE.LOCKING_BET;
                 this.countdownTimer = this.fakeData.gameSettings.durations.lockingBet;
-                console.log('🎮 [GAME_SIMULATOR] Transitioned to LOCKING_BET');
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to LOCKING_BET, timer set to:', this.countdownTimer);
                 break;
 
             case ROUND_STATE.LOCKING_BET:
                 this.roundState = ROUND_STATE.COUNTDOWN;
                 this.countdownTimer = this.fakeData.gameSettings.durations.startRound;
-                console.log('🎮 [GAME_SIMULATOR] Transitioned to COUNTDOWN');
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to COUNTDOWN, timer set to:', this.countdownTimer);
                 break;
 
             case ROUND_STATE.COUNTDOWN:
                 this.roundState = ROUND_STATE.RUNNING;
                 this.countdownTimer = this.fakeData.gameSettings.durations.generatingResult;
-                console.log('🎮 [GAME_SIMULATOR] Transitioned to RUNNING');
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to RUNNING, timer set to:', this.countdownTimer);
                 break;
 
             case ROUND_STATE.RUNNING:
                 this.roundState = ROUND_STATE.SETTLEMENT;
                 this.countdownTimer = this.fakeData.gameSettings.durations.showingResult;
                 this.generateRoundResult();
-                console.log('🎮 [GAME_SIMULATOR] Transitioned to SETTLEMENT');
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to SETTLEMENT, timer set to:', this.countdownTimer);
                 break;
 
             case ROUND_STATE.SETTLEMENT:
                 this.roundState = ROUND_STATE.FINISHED;
                 this.countdownTimer = 5;
-                console.log('🎮 [GAME_SIMULATOR] Transitioned to FINISHED');
+                console.log('🎮 [GAME_SIMULATOR] Transitioned to FINISHED, timer set to:', this.countdownTimer);
                 break;
 
             case ROUND_STATE.FINISHED:
+                console.log('🎮 [GAME_SIMULATOR] Starting new round');
                 this.startNewRound();
                 break;
         }
+
+        console.log('🎮 [GAME_SIMULATOR] === TRANSITION END ===', {
+            newState: this.roundState,
+            newTimer: this.countdownTimer,
+            mappedState: this.mapRoundState(this.roundState)
+        });
     }
 
     /**
@@ -402,15 +428,33 @@ export class GameSimulatorService {
      */
     private updateStores(): void {
         try {
-            // Update RoundTimeStore for countdown timer through the container
+            const mappedRoundState = this.mapRoundState(this.roundState);
+
+            // Log store updates every second for debugging
+            if (this.countdownTimer % 1 === 0) {
+                console.log('🎮 [GAME_SIMULATOR] === STORE UPDATE ===', {
+                    countdownTimer: this.countdownTimer,
+                    originalRoundState: this.roundState,
+                    mappedRoundState: mappedRoundState,
+                    currentRoundId: this.currentRoundId
+                });
+            }
+
+            // Update RoundTimeStore
             if (this.gameContainer) {
                 try {
                     const roundTimeStore = this.gameContainer.get(gc.Rounds.RoundTimeStore);
                     if (roundTimeStore) {
-                        // Update the observable properties directly
                         roundTimeStore.countdownTimer = this.countdownTimer;
-                        roundTimeStore.roundState = this.mapRoundState(this.roundState);
-                        roundTimeStore.roundTime = this.countdownTimer; // This triggers calculateRoundStatus
+                        roundTimeStore.roundState = mappedRoundState;
+                        roundTimeStore.roundTime = this.countdownTimer;
+                        roundTimeStore.remaining = this.countdownTimer;
+                        roundTimeStore.isLocking = this.roundState === ROUND_STATE.LOCKING_BET;
+                        console.log('🎮 [GAME_SIMULATOR] Updated RoundTimeStore:', {
+                            countdownTimer: roundTimeStore.countdownTimer,
+                            roundState: roundTimeStore.roundState,
+                            currentRoundId: roundTimeStore.currentRoundId
+                        });
                     }
                 } catch (error) {
                     console.warn('🎮 [GAME_SIMULATOR] Could not access RoundTimeStore:', error);
@@ -435,7 +479,7 @@ export class GameSimulatorService {
                 const globalRoundTimeStore = (window as any).__ROUND_TIME_STORE__;
                 if (globalRoundTimeStore) {
                     globalRoundTimeStore.countdownTimer = this.countdownTimer;
-                    globalRoundTimeStore.roundState = this.mapRoundState(this.roundState);
+                    globalRoundTimeStore.roundState = mappedRoundState;
                     globalRoundTimeStore.roundTime = this.countdownTimer;
                     globalRoundTimeStore.remaining = this.countdownTimer;
                 }

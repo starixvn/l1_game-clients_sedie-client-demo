@@ -77,7 +77,21 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
     }
 
     componentDidMount() {
-        console.log('🎮 [SIMULATOR] RNGSoccerSimulator: componentDidMount called');
+        console.log('🎮 [RNG_SOCCER_SIMULATOR] Component mounted, starting simulator');
+        this.startSimulator();
+    }
+
+    componentWillUnmount() {
+        console.log('🎮 [RNG_SOCCER_SIMULATOR] Component unmounting, stopping simulator');
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+        }
+        gameSimulatorService.stop();
+        if (this.simulatorDisposer) this.simulatorDisposer();
+    }
+
+    private startSimulator() {
+        console.log('🎮 [RNG_SOCCER_SIMULATOR] Starting simulator with initial state:', this.state);
 
         // Initialize and start the real simulator service
         gameSimulatorService.initialize({
@@ -85,22 +99,25 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
             gameContainer: null // For now, pass null - we'll handle store updates differently
         });
         gameSimulatorService.start();
+        console.log('🎮 [RNG_SOCCER_SIMULATOR] Game simulator service started');
 
-        // MobX autorun to sync simulator state to component state
-        this.simulatorDisposer = autorun(() => {
+        // Update state every 100ms for real-time updates
+        this.updateInterval = setInterval(() => {
             const simState = gameSimulatorService.getState();
             const mappedRoundState = this.mapRoundState(simState.roundState);
 
-            // Update the global mock store for all components to observe
-            const globalStore = (window as any).__ROUND_TIME_STORE__;
-            if (globalStore) {
-                globalStore.setCountdownTimer(simState.countdownTimer);
-                globalStore.setRoundState(mappedRoundState);
-                globalStore.setRoundTime(simState.countdownTimer);
-                globalStore.setRemaining(simState.countdownTimer);
-                globalStore.setIsLocking(simState.roundState === 'locking_bet');
+            // Log state updates every second
+            if (simState.countdownTimer % 1 === 0) {
+                console.log('🎮 [RNG_SOCCER_SIMULATOR] === STATE UPDATE ===', {
+                    countdownTimer: simState.countdownTimer,
+                    roundState: simState.roundState,
+                    mappedRoundState: mappedRoundState,
+                    currentRoundId: simState.currentRoundId,
+                    timestamp: new Date().toISOString()
+                });
             }
 
+            // Update component state with all required properties
             this.setState({
                 roundId: parseInt(simState.currentRoundId.replace('RND', '')),
                 roundState: mappedRoundState,
@@ -116,18 +133,17 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
                 simulatorMode: true,
                 simulatorCountdownTimer: simState.countdownTimer,
                 simulatorRoundState: mappedRoundState,
-                // Add more mappings as needed
-            } as any);
-        });
-    }
+            } as IRNGSoccerSimulatorState);
 
-    componentWillUnmount() {
-        // Clean up timer when component unmounts
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval);
-        }
-        gameSimulatorService.stop();
-        if (this.simulatorDisposer) this.simulatorDisposer();
+            // Update global store for countdown timer
+            if (typeof window !== 'undefined') {
+                (window as any).__ROUND_TIME_STORE__ = {
+                    countdownTimer: simState.countdownTimer,
+                    roundState: mappedRoundState,
+                    currentRoundId: simState.currentRoundId
+                };
+            }
+        }, 100);
     }
 
     private mapRoundState(simulatorState: string): string {

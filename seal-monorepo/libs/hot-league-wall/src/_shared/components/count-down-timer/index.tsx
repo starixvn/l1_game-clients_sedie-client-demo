@@ -56,6 +56,13 @@ export default class CountDownTimer extends ObserverComponent<ICountDownTimerPro
             prevProps.simulatorCountdownTimer !== this.props.simulatorCountdownTimer ||
             prevProps.simulatorRoundState !== this.props.simulatorRoundState
         )) {
+            console.log('🎮 [COUNTDOWN_TIMER] Props changed in simulator mode:', {
+                prevCountdownTimer: prevProps.simulatorCountdownTimer,
+                newCountdownTimer: this.props.simulatorCountdownTimer,
+                prevRoundState: prevProps.simulatorRoundState,
+                newRoundState: this.props.simulatorRoundState
+            });
+
             this.setState({
                 countdownTimer: this.props.simulatorCountdownTimer || 0,
                 roundState: this.props.simulatorRoundState || ROUND_STATE.NONE
@@ -77,17 +84,33 @@ export default class CountDownTimer extends ObserverComponent<ICountDownTimerPro
     }
 
     private startSimulatorUpdates() {
+        console.log('🎮 [COUNTDOWN_TIMER] Starting simulator updates');
         // Update every 100ms to get real-time simulator data for smoother updates
         this.simulatorUpdateInterval = setInterval(() => {
             if (this.props.simulatorMode) {
                 // Get the latest simulator state from the global mock store
                 const globalStore = (window as any).__ROUND_TIME_STORE__;
                 if (globalStore) {
+                    const newCountdownTimer = globalStore.countdownTimer;
+                    const newRoundState = globalStore.roundState;
+
+                    // Log updates every second
+                    if (newCountdownTimer % 1 === 0) {
+                        console.log('🎮 [COUNTDOWN_TIMER] Simulator update:', {
+                            countdownTimer: newCountdownTimer,
+                            roundState: newRoundState,
+                            currentState: this.state,
+                            props: this.props
+                        });
+                    }
+
                     this.setState({
-                        countdownTimer: globalStore.countdownTimer,
-                        roundState: globalStore.roundState
+                        countdownTimer: newCountdownTimer,
+                        roundState: newRoundState
                     });
-                    this.props.onCountdownTimerChange?.(globalStore.countdownTimer);
+                    this.props.onCountdownTimerChange?.(newCountdownTimer);
+                } else {
+                    console.warn('🎮 [COUNTDOWN_TIMER] Global store not found');
                 }
             }
         }, 100);
