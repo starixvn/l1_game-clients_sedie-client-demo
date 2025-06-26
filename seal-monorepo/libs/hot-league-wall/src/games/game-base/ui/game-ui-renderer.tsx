@@ -105,10 +105,19 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
 
     renderCountDownTimer(props: P, setState: (state: Partial<S>) => void) {
         console.log('🔴 GameUIRenderer: renderCountDownTimer called');
+
+        // Check if we're in simulator mode by looking for simulator-specific props
+        const isSimulatorMode = (props as any).simulatorMode || false;
+        const simulatorCountdownTimer = (props as any).simulatorCountdownTimer;
+        const simulatorRoundState = (props as any).simulatorRoundState;
+
         return (
             <CountDownTimer
                 namespace={props.namespace}
                 language={props.language}
+                simulatorMode={isSimulatorMode}
+                simulatorCountdownTimer={simulatorCountdownTimer}
+                simulatorRoundState={simulatorRoundState}
                 onComplete={() => {
                     console.log('🔴 GameUIRenderer: CountDownTimer onComplete triggered');
                     setState({ isAllowedBet: true } as Partial<S>);

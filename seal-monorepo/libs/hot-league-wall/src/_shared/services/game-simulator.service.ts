@@ -1,4 +1,5 @@
 import { makeAutoObservable } from 'mobx';
+import * as gc from '@sg/sg-game-client';
 
 // Constants for round states
 const ROUND_STATE = {
@@ -18,6 +19,51 @@ const GAME_TYPE = {
     RNG_BASKETBALL: 'rng-basketball',
     RNG_TENNIS: 'rng-tennis'
 } as const;
+
+// Create a mock RoundTimeStore for simulator mode
+class MockRoundTimeStore {
+    countdownTimer = 0;
+    roundState = 'none';
+    roundTime = 0;
+    remaining = 0;
+    isLocking = false;
+
+    constructor() {
+        makeAutoObservable(this);
+        // Make it globally accessible
+        (window as any).__ROUND_TIME_STORE__ = this;
+        console.log('🎮 [GAME_SIMULATOR] Mock RoundTimeStore created and made globally accessible');
+    }
+
+    setCountdownTimer(value: number) {
+        this.countdownTimer = value;
+    }
+
+    setRoundState(value: string) {
+        this.roundState = value;
+    }
+
+    setRoundTime(value: number) {
+        this.roundTime = value;
+    }
+
+    setRemaining(value: number) {
+        this.remaining = value;
+    }
+
+    setIsLocking(value: boolean) {
+        this.isLocking = value;
+    }
+
+    // Add methods that components expect
+    calculateRoundStatus() {
+        // Simulate the real store's calculateRoundStatus method
+        console.log('🎮 [GAME_SIMULATOR] Mock calculateRoundStatus called');
+    }
+}
+
+// Global mock store instance
+export const mockRoundTimeStore = new MockRoundTimeStore();
 
 /**
  * Game Simulator Service
@@ -43,6 +89,7 @@ export class GameSimulatorService {
     private errorSimulation: boolean = false;
     private gameConfig: any = null;
     private maxFailures: number = 3;
+    private gameContainer: any = null;
 
     // Fake data
     private fakeData = {
@@ -104,6 +151,7 @@ export class GameSimulatorService {
             this.isSimulationMode = true;
             this.errorSimulation = config.enableErrorSimulation || false;
             this.gameConfig = config;
+            this.gameContainer = config.gameContainer;
 
             // Generate initial round ID
             this.currentRoundId = this.generateRoundId();
@@ -234,12 +282,12 @@ export class GameSimulatorService {
      * Start the simulation loop
      */
     private startSimulationLoop(): void {
-        // Update every second
+        // Update every 100ms for smoother real-time updates
         this.intervalId = setInterval(() => {
             if (!this.isRunning) return;
 
             this.updateGameState();
-        }, 1000);
+        }, 100);
     }
 
     /**
@@ -350,13 +398,53 @@ export class GameSimulatorService {
     }
 
     /**
-     * Update stores with current state (simplified)
+     * Update stores with current state
      */
     private updateStores(): void {
         try {
-            // In a real implementation, this would update the actual MobX stores
-            // For now, we'll just log the current state
-            console.log('🎮 [GAME_SIMULATOR] Updating stores:', {
+            // Update RoundTimeStore for countdown timer through the container
+            if (this.gameContainer) {
+                try {
+                    const roundTimeStore = this.gameContainer.get(gc.Rounds.RoundTimeStore);
+                    if (roundTimeStore) {
+                        // Update the observable properties directly
+                        roundTimeStore.countdownTimer = this.countdownTimer;
+                        roundTimeStore.roundState = this.mapRoundState(this.roundState);
+                        roundTimeStore.roundTime = this.countdownTimer; // This triggers calculateRoundStatus
+                    }
+                } catch (error) {
+                    console.warn('🎮 [GAME_SIMULATOR] Could not access RoundTimeStore:', error);
+                }
+            } else {
+                // If no container, update the mock store for simulator mode
+                mockRoundTimeStore.setCountdownTimer(this.countdownTimer);
+                mockRoundTimeStore.setRoundState(this.mapRoundState(this.roundState));
+                mockRoundTimeStore.setRoundTime(this.countdownTimer);
+                mockRoundTimeStore.setRemaining(this.countdownTimer);
+                mockRoundTimeStore.setIsLocking(this.roundState === ROUND_STATE.LOCKING_BET);
+                console.log('🎮 [GAME_SIMULATOR] Updated mock RoundTimeStore:', {
+                    countdownTimer: this.countdownTimer,
+                    roundState: this.mapRoundState(this.roundState),
+                    isLocking: this.roundState === ROUND_STATE.LOCKING_BET
+                });
+            }
+
+            // Try to update the real RoundTimeStore globally if available
+            try {
+                // Access the global RoundTimeStore instance if it exists
+                const globalRoundTimeStore = (window as any).__ROUND_TIME_STORE__;
+                if (globalRoundTimeStore) {
+                    globalRoundTimeStore.countdownTimer = this.countdownTimer;
+                    globalRoundTimeStore.roundState = this.mapRoundState(this.roundState);
+                    globalRoundTimeStore.roundTime = this.countdownTimer;
+                    globalRoundTimeStore.remaining = this.countdownTimer;
+                }
+            } catch (error) {
+                console.warn('🎮 [GAME_SIMULATOR] Could not update global RoundTimeStore:', error);
+            }
+
+            // Update other stores as needed
+            console.log('🎮 [GAME_SIMULATOR] Updated stores:', {
                 roundId: this.currentRoundId,
                 roundState: this.roundState,
                 countdownTimer: this.countdownTimer,
@@ -367,6 +455,28 @@ export class GameSimulatorService {
 
         } catch (error) {
             console.error('🎮 [GAME_SIMULATOR] Error updating stores:', error);
+        }
+    }
+
+    /**
+     * Map simulator round states to game client round states
+     */
+    private mapRoundState(simulatorState: RoundStateType): string {
+        switch (simulatorState) {
+            case ROUND_STATE.PLACING_BET:
+                return gc.Rounds.ROUND_STATE.PLACING_BET;
+            case ROUND_STATE.LOCKING_BET:
+                return gc.Rounds.ROUND_STATE.LOCKING_BET;
+            case ROUND_STATE.COUNTDOWN:
+                return gc.Rounds.ROUND_STATE.STARTING_ROUND;
+            case ROUND_STATE.RUNNING:
+                return gc.Rounds.ROUND_STATE.SHOW_ANIMATION_RESULT;
+            case ROUND_STATE.SETTLEMENT:
+                return gc.Rounds.ROUND_STATE.SHOW_RESULT;
+            case ROUND_STATE.FINISHED:
+                return gc.Rounds.ROUND_STATE.STOP_GAME_LOOP;
+            default:
+                return gc.Rounds.ROUND_STATE.PLACING_BET;
         }
     }
 

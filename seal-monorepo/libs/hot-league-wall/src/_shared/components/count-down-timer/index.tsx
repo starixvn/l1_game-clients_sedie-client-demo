@@ -5,7 +5,6 @@ import Styles from "./count-down-timer.module.scss";
 import { IPropsObserver, IStateObserver, ObserverComponent } from "../observer-component/observer-component";
 import { formatSecondsToTime } from "../../utils/count-down-format";
 
-
 export interface ICountDownTimerProps extends IPropsObserver {
     onComplete?: () => void;
     onCountdownTimerChange?: (countdownTimer: number) => void;
@@ -15,6 +14,10 @@ export interface ICountDownTimerProps extends IPropsObserver {
         timer?: string;
         text?: string;
     };
+    // Add simulator mode props
+    simulatorMode?: boolean;
+    simulatorCountdownTimer?: number;
+    simulatorRoundState?: string;
 }
 
 export interface ICountDownTimerState extends IStateObserver {
@@ -23,6 +26,8 @@ export interface ICountDownTimerState extends IStateObserver {
 }
 
 export default class CountDownTimer extends ObserverComponent<ICountDownTimerProps, ICountDownTimerState> {
+    private simulatorUpdateInterval: NodeJS.Timeout | null = null;
+
     constructor(props: ICountDownTimerProps) {
         super(props);
         this.state = { dispose: null, countdownTimer: 0, roundState: ROUND_STATE.NONE };
@@ -30,13 +35,62 @@ export default class CountDownTimer extends ObserverComponent<ICountDownTimerPro
 
     @render(RoundTimeStore, (store) => store.countdownTimer)
     private renderCountDownTimer(countdownTimer: number): void {
-        this.setState({ countdownTimer });
-        this.props.onCountdownTimerChange?.(countdownTimer);
+        // Only update if not in simulator mode
+        if (!this.props.simulatorMode) {
+            this.setState({ countdownTimer });
+            this.props.onCountdownTimerChange?.(countdownTimer);
+        }
     }
 
     @render(RoundTimeStore, (store) => store.roundState, { fireImmediately: false })
     private renderCountDownTimerState(roundState: string): void {
-        this.setState({ roundState });
+        // Only update if not in simulator mode
+        if (!this.props.simulatorMode) {
+            this.setState({ roundState });
+        }
+    }
+
+    // Update state when simulator props change
+    componentDidUpdate(prevProps: ICountDownTimerProps) {
+        if (this.props.simulatorMode && (
+            prevProps.simulatorCountdownTimer !== this.props.simulatorCountdownTimer ||
+            prevProps.simulatorRoundState !== this.props.simulatorRoundState
+        )) {
+            this.setState({
+                countdownTimer: this.props.simulatorCountdownTimer || 0,
+                roundState: this.props.simulatorRoundState || ROUND_STATE.NONE
+            });
+        }
+    }
+
+    // Start simulator update interval when in simulator mode
+    componentDidMount() {
+        if (this.props.simulatorMode) {
+            this.startSimulatorUpdates();
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.simulatorUpdateInterval) {
+            clearInterval(this.simulatorUpdateInterval);
+        }
+    }
+
+    private startSimulatorUpdates() {
+        // Update every 100ms to get real-time simulator data for smoother updates
+        this.simulatorUpdateInterval = setInterval(() => {
+            if (this.props.simulatorMode) {
+                // Get the latest simulator state from the global mock store
+                const globalStore = (window as any).__ROUND_TIME_STORE__;
+                if (globalStore) {
+                    this.setState({
+                        countdownTimer: globalStore.countdownTimer,
+                        roundState: globalStore.roundState
+                    });
+                    this.props.onCountdownTimerChange?.(globalStore.countdownTimer);
+                }
+            }
+        }, 100);
     }
 
     protected getTimerContentConfig(roundState: string) {

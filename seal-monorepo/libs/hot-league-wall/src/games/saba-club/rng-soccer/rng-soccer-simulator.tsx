@@ -22,6 +22,10 @@ import { autorun } from 'mobx';
 interface IRNGSoccerSimulatorState extends IGatewayGameBaseState {
     isTimerActive: boolean;
     isPopupVisible: boolean;
+    // Simulator props for countdown timer
+    simulatorMode?: boolean;
+    simulatorCountdownTimer?: number;
+    simulatorRoundState?: string;
 }
 
 /**
@@ -76,15 +80,30 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
         console.log('🎮 [SIMULATOR] RNGSoccerSimulator: componentDidMount called');
 
         // Initialize and start the real simulator service
-        gameSimulatorService.initialize({ gameType: 'rng-soccer' });
+        gameSimulatorService.initialize({
+            gameType: 'rng-soccer',
+            gameContainer: null // For now, pass null - we'll handle store updates differently
+        });
         gameSimulatorService.start();
 
         // MobX autorun to sync simulator state to component state
         this.simulatorDisposer = autorun(() => {
             const simState = gameSimulatorService.getState();
+            const mappedRoundState = this.mapRoundState(simState.roundState);
+
+            // Update the global mock store for all components to observe
+            const globalStore = (window as any).__ROUND_TIME_STORE__;
+            if (globalStore) {
+                globalStore.setCountdownTimer(simState.countdownTimer);
+                globalStore.setRoundState(mappedRoundState);
+                globalStore.setRoundTime(simState.countdownTimer);
+                globalStore.setRemaining(simState.countdownTimer);
+                globalStore.setIsLocking(simState.roundState === 'locking_bet');
+            }
+
             this.setState({
                 roundId: parseInt(simState.currentRoundId.replace('RND', '')),
-                roundState: this.mapRoundState(simState.roundState),
+                roundState: mappedRoundState,
                 isAllowedBet: simState.roundState === 'placing_bet',
                 isTimerActive: simState.isRunning,
                 placingBetStartTime: simState.countdownTimer,
@@ -93,8 +112,12 @@ export default class RNGSoccerSimulator extends GatewayGameSimulator<GameBasePro
                 isSignedIn: simState.isSignedIn,
                 isAuthorized: simState.isAuthorized,
                 initialized: simState.isInitialized,
+                // Simulator props for countdown timer
+                simulatorMode: true,
+                simulatorCountdownTimer: simState.countdownTimer,
+                simulatorRoundState: mappedRoundState,
                 // Add more mappings as needed
-            } as Pick<IRNGSoccerSimulatorState, keyof IRNGSoccerSimulatorState>);
+            } as any);
         });
     }
 
