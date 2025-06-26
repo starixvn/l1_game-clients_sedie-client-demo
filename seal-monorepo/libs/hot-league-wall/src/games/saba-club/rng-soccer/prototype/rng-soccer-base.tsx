@@ -315,58 +315,6 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                     </button>
                 </div>
             )}
-
-            {/* Statistics Popup */}
-            {showStatisticsPopup && gameData.roundHistory && (
-                <div className={`${styles['wrapper-popup']} ${styles['active']}`}>
-                    <div className={styles['close-popup']} onClick={onCloseStatistics}>
-                        <span>×</span>
-                    </div>
-                    <div className={styles['block-wrapper']}>
-                        <h3 style={{ color: 'white', margin: '0 0 1rem 0' }}>Round History</h3>
-                        <div className={styles['info-block']}>
-                            {gameData.roundHistory.slice(0, 10).map((round) => (
-                                <div
-                                    key={round.roundId}
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        padding: '0.5rem',
-                                        borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                        color: 'white',
-                                    }}
-                                >
-                                    <span>Round #{round.roundId}</span>
-                                    <span>{round.settlementResult.home ? 'Home' : round.settlementResult.away ? 'Away' : 'Draw'}</span>
-                                    <span>
-                                        {round.result.homeScore}-{round.result.awayScore}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Next Round Message */}
-            {gameData.uiState?.isShowNextRoundMessage && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        background: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        padding: '1rem',
-                        borderRadius: '8px',
-                        zIndex: 1000,
-                        textAlign: 'center',
-                    }}
-                >
-                    Bet placed successfully! Next round starting soon...
-                </div>
-            )}
         </div>
     );
 };
