@@ -23,7 +23,7 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
     isFirstClickInvalidTokenMode = false,
     service = new SSOControlSimulatorService()
 }) => {
-    const [showControls, setShowControls] = useState(false);
+    const [showControls, setShowControls] = useState(true); // Show controls by default for better UX
     const styles = new SSOControlSimulatorStyles();
 
     const handleToggleControls = () => {
