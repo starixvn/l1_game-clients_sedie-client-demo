@@ -15,10 +15,14 @@ import { shouldShowSSOControls, getSSOControlsConfig, logSSOControlsConfig, forc
 let simulateSSOFailure = false;
 let failureCount = 0;
 
+// Expose globally for app component access
+(window as any).simulateSSOFailure = simulateSSOFailure;
+
 // Function to toggle SSO failure simulation
 export const toggleSSOFailure = () => {
     simulateSSOFailure = !simulateSSOFailure;
     failureCount = 0;
+    (window as any).simulateSSOFailure = simulateSSOFailure;
     console.log(`🔄 [SSO_SIMULATION] SSO failure simulation ${simulateSSOFailure ? 'ENABLED' : 'DISABLED'}`);
 };
 
@@ -121,6 +125,14 @@ const PreviewContext = ({
         failureCount: finalShowSSOControls ? failureCount : 0
     });
 
+    // Callback to reset SSO failure mode when retry is clicked
+    const handleSSORetry = useCallback(() => {
+        if (finalShowSSOControls) {
+            console.log('🔄 [PREVIEW_SSO_RETRY] Resetting SSO failure mode to false');
+            ssoSimulator.toggleFailureMode(); // This will disable failure mode if it's currently enabled
+        }
+    }, [finalShowSSOControls, ssoSimulator]);
+
     const appEnv = '';
     const siteId = VIVA88_SITE_ID;
     const platformType = PLATFORM_TYPE_NUMBER.DESKTOP;
@@ -137,6 +149,7 @@ const PreviewContext = ({
         if (finalShowSSOControls) {
             simulateSSOFailure = ssoSimulator.isFailureMode;
             failureCount = ssoSimulator.failureCount;
+            (window as any).simulateSSOFailure = simulateSSOFailure;
         }
     }, [ssoSimulator.isFailureMode, ssoSimulator.failureCount, finalShowSSOControls]);
 
@@ -175,6 +188,7 @@ const PreviewContext = ({
                         onPlayButtonTokenRequest={onPlayButtonTokenRequest}
                         FailedToken={failedToken}
                         isSSOFailureMode={finalShowSSOControls ? ssoSimulator.isFailureMode : false}
+                        onSSORetry={handleSSORetry}
                     />
                 } />
             </Routes>

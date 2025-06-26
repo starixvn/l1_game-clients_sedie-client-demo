@@ -19,6 +19,7 @@ interface AppProps {
     onPlayButtonTokenRequest?: () => Promise<string | null>;
     FailedToken?: string | null;
     isSSOFailureMode?: boolean;
+    onSSORetry?: () => void;
 }
 
 interface AppContentProps {
@@ -26,9 +27,10 @@ interface AppContentProps {
     onPlayButtonTokenRequest?: () => Promise<string | null>;
     FailedToken?: string | null;
     isSSOFailureMode?: boolean;
+    onSSORetry?: () => void;
 }
 
-const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest, FailedToken, isSSOFailureMode }: AppProps) => {
+const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest, FailedToken, isSSOFailureMode, onSSORetry }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
             <AppContent
@@ -36,12 +38,13 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonToke
                 onPlayButtonTokenRequest={onPlayButtonTokenRequest}
                 FailedToken={FailedToken}
                 isSSOFailureMode={isSSOFailureMode}
+                onSSORetry={onSSORetry}
             />
         </AppProvider>
     );
 };
 
-const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedToken, isSSOFailureMode }: AppContentProps) => {
+const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedToken, isSSOFailureMode, onSSORetry }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
@@ -113,8 +116,42 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, FailedTok
 
     const handleSSORetry = useCallback(async () => {
         console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
-        await handlePlayButtonClick();
-    }, [handlePlayButtonClick]);
+
+        // Reset SSO failure mode to false when retry is clicked
+        if (ssoControlsEnabled && onSSORetry) {
+            console.log('🔄 [SSO_RETRY] Calling onSSORetry callback to reset SSO failure mode');
+            onSSORetry();
+        }
+
+        // Always use TokenRequestManager to get a fresh token (real flow)
+        const tokenManager = TokenRequestManager.getInstance();
+        console.log('🔄 [SSO_RETRY] Using TokenRequestManager for REAL APP...');
+        const tokenStartTime = performance.now();
+
+        try {
+            const newToken = await tokenManager.executeTokenRequest();
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
+
+            if (newToken) {
+                console.log(`✅ [SSO_RETRY] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
+                console.log('🔄 [SSO_RETRY] Token request successful, transitioning to real game');
+                setCurrentToken(newToken);
+                setHasClickedPlay(true);
+            } else {
+                console.log(`⚠️ [SSO_RETRY] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
+                console.log('🔄 [SSO_RETRY] Token request failed, staying in SSO failure mode');
+                // Stay in SSO failure mode - the ssoFailure state will remain true
+            }
+        } catch (error) {
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
+            console.log(`💥 [SSO_RETRY] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
+            console.error('[SSO_RETRY] TokenRequestManager error:', error);
+            console.log('🔄 [SSO_RETRY] Token request failed, staying in SSO failure mode');
+            // Stay in SSO failure mode - the ssoFailure state will remain true
+        }
+    }, [ssoControlsEnabled, onSSORetry]);
 
     useEffect(() => {
         if (updateBalanceCallback) {
