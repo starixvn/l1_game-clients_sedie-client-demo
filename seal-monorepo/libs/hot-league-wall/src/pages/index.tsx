@@ -1,10 +1,11 @@
 import React from 'react';
 import RNGSoccer from '../games/saba-club/rng-soccer';
+import SimulatorTestPage from './simulator-test';
 
 const MainPage = () => {
     return (
         <div>
-            <RNGSoccer namespace="RNGSoccer" language="en" />
+            <SimulatorTestPage />
         </div>
     );
 };

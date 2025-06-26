@@ -9,6 +9,8 @@ import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 import { GameDisconnectView } from './games/game-base/components/game-disconnect-view';
 import blurBgGame from './assets/rng-soccer/blur-bg-game.png';
+import SimulatorTestPage from './pages/simulator-test';
+import RNGSoccerSimulator from './games/saba-club/rng-soccer/rng-soccer-simulator';
 
 interface AppProps {
     appEnv: string;
@@ -37,6 +39,10 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [ssoFailure, setSsoFailure] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Check URL parameters for page routing
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
 
     const handlePlayButtonClick = useCallback(async () => {
         const appStartTime = performance.now();
@@ -99,6 +105,69 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
 
     loadI18n(language);
 
+    // Show simulator test page if requested
+    if (pageParam === 'simulator') {
+        return (
+            <div data-react="true" style={{ width: '100%' }}>
+                <SimulatorTestPage />
+            </div>
+        );
+    }
+
+    // Show RNG Soccer simulator if requested
+    if (pageParam === 'rng-soccer-simulator') {
+        return (
+            <div data-react="true" style={{ width: '100%' }}>
+                {/* Development Navigation Bar */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        background: '#333',
+                        color: 'white',
+                        padding: '10px',
+                        zIndex: 9999,
+                        display: 'flex',
+                        gap: '20px',
+                        alignItems: 'center'
+                    }}>
+                        <span style={{ fontWeight: 'bold' }}>🎮 RNG Soccer Simulator</span>
+                        <a
+                            href="/"
+                            style={{
+                                color: 'white',
+                                textDecoration: 'none',
+                                padding: '5px 10px',
+                                background: '#28a745',
+                                borderRadius: '4px'
+                            }}
+                        >
+                            ← Back to Main App
+                        </a>
+                        <a
+                            href="/?page=simulator"
+                            style={{
+                                color: 'white',
+                                textDecoration: 'none',
+                                padding: '5px 10px',
+                                background: '#007bff',
+                                borderRadius: '4px'
+                            }}
+                        >
+                            Simulator Test
+                        </a>
+                    </div>
+                )}
+                <RNGSoccerSimulator
+                    namespace="rng-soccer-simulator"
+                    language={language}
+                />
+            </div>
+        );
+    }
+
     // Show SSO failure view if token request failed
     if (ssoFailure) {
         return (
@@ -118,6 +187,60 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest }: AppCont
     if (!hasClickedPlay) {
         return (
             <div data-react="true" style={{ width: '100%' }}>
+                {/* Development Navigation Bar */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        background: '#333',
+                        color: 'white',
+                        padding: '10px',
+                        zIndex: 9999,
+                        display: 'flex',
+                        gap: '20px',
+                        alignItems: 'center'
+                    }}>
+                        <span style={{ fontWeight: 'bold' }}>🎮 Development Mode</span>
+                        <a
+                            href="/?page=simulator"
+                            style={{
+                                color: 'white',
+                                textDecoration: 'none',
+                                padding: '5px 10px',
+                                background: '#007bff',
+                                borderRadius: '4px'
+                            }}
+                        >
+                            Simulator Test
+                        </a>
+                        <a
+                            href="/?page=rng-soccer-simulator"
+                            style={{
+                                color: 'white',
+                                textDecoration: 'none',
+                                padding: '5px 10px',
+                                background: '#ff6b35',
+                                borderRadius: '4px'
+                            }}
+                        >
+                            RNG Soccer Simulator
+                        </a>
+                        <a
+                            href="/"
+                            style={{
+                                color: 'white',
+                                textDecoration: 'none',
+                                padding: '5px 10px',
+                                background: '#28a745',
+                                borderRadius: '4px'
+                            }}
+                        >
+                            Main App
+                        </a>
+                    </div>
+                )}
                 <RNGSoccerStaticPrototype onPlayButtonClick={handlePlayButtonClick} isLoading={isLoading} />
             </div>
         );

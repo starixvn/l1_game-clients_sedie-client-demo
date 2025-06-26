@@ -8,7 +8,8 @@
     ],
     "scripts": {
         "start-saba-games": "cd seal-monorepo && nx serve saba-games",
-        "start-hot-league": "cd seal-monorepo && nx serve hot-league-wall",
+        "start-hot-league": "cd seal-monorepo && cross-env NODE_ENV=development SIMULATOR_CONFIG='{\"simulationMode\":{\"enabled\":true}}' nx serve hot-league-wall",
+        "start-rng-soccer-simulator": "cd seal-monorepo && cross-env NODE_ENV=development SIMULATOR_CONFIG='{\"simulationMode\":{\"enabled\":true},\"simulatorConfigs\":{\"enabled\":true,\"defaultGameType\":\"rng-soccer\"}}' nx serve hot-league-wall",
         "test-saba-games": "cd seal-monorepo && nx test saba-games",
         "test-hot-league-wall": "cd seal-monorepo && nx test hot-league-wall",
         "test-coverage:saba": "cd seal-monorepo && nx test saba-games --coverage",
