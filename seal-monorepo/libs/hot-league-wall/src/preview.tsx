@@ -63,44 +63,57 @@ const PreviewContext: React.FC<PreviewContextProps> = ({
             data-version={process.env.TAG_VERSION}
             className="seal-vg-sg-index"
         >
-            {showSSOControls && (
-                <SSOControlSimulator
-                    onToggleFailure={ssoSimulator.toggleFailure}
-                    onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidToken}
-                    onSelectScenario={handleSelectScenario}
-                    isFailureMode={ssoSimulator.isFailureMode}
-                    isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
-                    failCount={ssoSimulator.failCount}
-                    setFailCount={ssoSimulator.setFailCount}
-                />
-            )}
-
-            <SSOFailureModeLogic
-                showSSOControls={showSSOControls}
-                ssoSimulator={ssoSimulator}
-                playButtonClickCount={playButtonClickCount}
-            />
-
             <ProviderSetDropDown />
 
             <Routes>
                 <Route path="/rng-soccer-demo" element={<RngSoccerDemo />} />
                 <Route
+                    path="/sso-control"
+                    element={
+                        <>
+                            {showSSOControls && (
+                                <SSOControlSimulator
+                                    onToggleFailure={ssoSimulator.toggleFailure}
+                                    onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidToken}
+                                    onSelectScenario={handleSelectScenario}
+                                    isFailureMode={ssoSimulator.isFailureMode}
+                                    isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
+                                    failCount={ssoSimulator.failCount}
+                                    setFailCount={ssoSimulator.setFailCount}
+                                />
+                            )}
+
+                            <SSOFailureModeLogic
+                                showSSOControls={showSSOControls}
+                                ssoSimulator={ssoSimulator}
+                                playButtonClickCount={playButtonClickCount}
+                            />
+
+                            <SSOControlSimulatorWrapper>
+                                <ScenarioResetWrapper scenarioKey={currentScenarioKey}>
+                                    {(key) => (
+                                        <App
+                                            key={key}
+                                            appEnv={appEnv}
+                                            language={language}
+                                            siteId={siteId}
+                                            onRequestSSOToken={onRequestSSOToken}
+                                        />
+                                    )}
+                                </ScenarioResetWrapper>
+                            </SSOControlSimulatorWrapper>
+                        </>
+                    }
+                />
+                <Route
                     path="*"
                     element={
-                        <SSOControlSimulatorWrapper>
-                            <ScenarioResetWrapper scenarioKey={currentScenarioKey}>
-                                {(key) => (
-                                    <App
-                                        key={key}
-                                        appEnv={appEnv}
-                                        language={language}
-                                        siteId={siteId}
-                                        onRequestSSOToken={onRequestSSOToken}
-                                    />
-                                )}
-                            </ScenarioResetWrapper>
-                        </SSOControlSimulatorWrapper>
+                        <App
+                            appEnv={appEnv}
+                            language={language}
+                            siteId={siteId}
+                            onRequestSSOToken={onRequestSSOToken}
+                        />
                     }
                 />
             </Routes>
