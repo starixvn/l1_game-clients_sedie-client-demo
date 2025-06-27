@@ -2,7 +2,7 @@ import { ISSOSimulatorService } from './types';
 
 /**
  * SSO Simulator Service Implementation
- * 
+ *
  * Single Responsibility: Handles logging and side effects for SSO simulator
  * Dependency Inversion: Implements ISSOSimulatorService interface
  * Open/Closed: Extensible through interface implementation
@@ -42,4 +42,18 @@ export class SSOSimulatorService implements ISSOSimulatorService {
     logFirstClickInvalidTokenToggle(isFirstClickInvalidTokenMode: boolean): void {
         console.log(`🔧 [SSO_SIMULATOR] First click invalid token mode ${isFirstClickInvalidTokenMode ? 'enabled' : 'disabled'}`);
     }
-} 
+
+    /**
+     * Log when scenario is toggled
+     */
+    logScenarioToggle(isVisible: boolean): void {
+        console.log(`🔧 [SSO_SIMULATOR] Scenario ${isVisible ? 'shown' : 'hidden'}`);
+    }
+
+    /**
+     * Log when scenario is selected
+     */
+    logScenarioSelection(scenarioId: string): void {
+        console.log(`🔧 [SSO_SIMULATOR] Scenario selected: ${scenarioId}`);
+    }
+}
