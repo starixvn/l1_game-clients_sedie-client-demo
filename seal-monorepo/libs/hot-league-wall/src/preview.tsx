@@ -179,22 +179,6 @@ const PreviewContext = ({
         return false;
     };
 
-    // Handle successful SSO retry - disable failure mode when token request succeeds
-    const handleSuccessfulSSORetry = useCallback(() => {
-        console.log('🔄 [PREVIEW] SSO retry successful - checking which modes to disable');
-
-        // Only disable manual failure mode, preserve first click invalid token mode
-        if (ssoSimulator.isFailureMode) {
-            console.log('🔄 [PREVIEW] Disabling manual failure mode in SSO simulator');
-            ssoSimulator.toggleFailure(); // This will disable manual failure mode
-        } else {
-            console.log('🔄 [PREVIEW] Manual failure mode already disabled');
-        }
-
-        // Note: We don't disable first click invalid token mode here
-        // as it should persist for subsequent testing
-    }, [ssoSimulator]);
-
     // Handle scenario selection
     const handleSelectScenario = useCallback((scenario: SSOScenario) => {
         console.log('🎯 [PREVIEW] Scenario selected:', scenario.name);
@@ -261,7 +245,7 @@ const PreviewContext = ({
                                         language={language}
                                         siteId={siteId}
                                         onPlayButtonTokenRequest={onPlayButtonTokenRequest}
-                                        onSSORetry={handleSuccessfulSSORetry}
+                                        onSSORetry={onPlayButtonTokenRequest}
                                     />
                                 )}
                             </ScenarioResetWrapper>
