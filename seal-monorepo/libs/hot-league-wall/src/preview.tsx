@@ -7,7 +7,7 @@ import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-demo';
-import { TokenRequestManager } from './_shared/utils/token-request-manager';
+import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
 import { SSOControlSimulator } from './_shared/components/sso-control-simulator';
 import { SSOControlSimulatorWrapper } from './_shared/components/sso-control-simulator/sso-control-simulator-wrapper';
 import { shouldShowSSOControls, logSSOControlsConfig } from './_shared/utils/sso-controls-config';

@@ -8,7 +8,7 @@ import GameBase from '../core/game-base.core';
 import GameUIRenderer, { UIExtensionOptions } from '../ui/game-ui-renderer';
 import { IGatewayGameBaseState } from '../interfaces/gateway-types';
 import { GameBaseProps } from '../type';
-import { SyncMemberSiteBalance } from '../../../_shared/utils/sync-member-site-balance';
+import { SyncMemberSiteBalance } from '../../../_shared/utils/callback-singleton/sync-member-site-balance';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 import { Settlements } from '@sg/sg-game-client';
 import { FunctionUtils } from '../../../_shared/utils/funtion-utils';

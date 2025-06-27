@@ -1,9 +1,8 @@
-export class TokenRequestManager {
-    private static instance: TokenRequestManager;
-    private tokenRequestCallback: (() => Promise<string | null>) | null = null;
+import { CallbackSingleton } from './callback-singleton';
 
+export class TokenRequestManager extends CallbackSingleton<() => Promise<string | null>> {
     private constructor() {
-        // Private constructor to prevent direct construction calls with the `new` operator
+        super();
     }
 
     public static getInstance(): TokenRequestManager {
@@ -14,16 +13,16 @@ export class TokenRequestManager {
     }
 
     public setTokenRequestCallback(callback: () => Promise<string | null>): void {
-        this.tokenRequestCallback = callback;
+        this.setCallback(callback);
     }
 
     public getTokenRequestCallback(): (() => Promise<string | null>) | null {
-        return this.tokenRequestCallback;
+        return this.getCallback();
     }
 
     public async executeTokenRequest(): Promise<string | null> {
-        if (this.tokenRequestCallback) {
-            return await this.tokenRequestCallback();
+        if (this.hasCallback()) {
+            return await this.callback!();
         }
         return null;
     }

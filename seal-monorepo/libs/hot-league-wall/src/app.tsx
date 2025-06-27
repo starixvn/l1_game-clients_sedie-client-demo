@@ -3,8 +3,8 @@ import './_shared/utils/string-helper';
 import { loadI18n } from './i18n';
 import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
-import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
-import { TokenRequestManager } from './_shared/utils/token-request-manager';
+import { SyncMemberSiteBalance } from './_shared/utils/callback-singleton/sync-member-site-balance';
+import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
 import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 
