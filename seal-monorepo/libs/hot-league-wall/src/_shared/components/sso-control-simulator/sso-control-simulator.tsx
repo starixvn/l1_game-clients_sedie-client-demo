@@ -15,29 +15,21 @@ import { SSO_SCENARIOS, getCurrentScenario } from './sso-scenarios';
  */
 export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
     onToggleFailure,
-    onResetCount,
     onToggleFirstClickInvalidToken,
     onSelectScenario,
-    failureCount = 0,
     isFailureMode = false,
     isFirstClickInvalidTokenMode = false,
     service = new SSOControlSimulatorService()
 }) => {
     const [showControls, setShowControls] = useState(true); // Show controls by default for better UX
-    const [showScenarios, setShowScenarios] = useState(false); // Show scenarios section
     const styles = new SSOControlSimulatorStyles();
 
     // Get current scenario based on state
-    const currentScenario = getCurrentScenario(isFailureMode, isFirstClickInvalidTokenMode, failureCount);
+    const currentScenario = getCurrentScenario(isFailureMode, isFirstClickInvalidTokenMode);
 
     const handleToggleControls = () => {
         setShowControls(!showControls);
         service.logControlToggle(!showControls);
-    };
-
-    const handleToggleScenarios = () => {
-        setShowScenarios(!showScenarios);
-        service.logScenarioToggle(!showScenarios);
     };
 
     const handleSelectScenario = (scenario: typeof SSO_SCENARIOS[0]) => {
@@ -88,70 +80,36 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                     <div style={styles.scenarioSection}>
                         <div style={styles.scenarioSectionHeader}>
                             <span>🎯</span>
-                            Quick Scenarios
-                            <button
-                                onClick={handleToggleScenarios}
-                                style={{
-                                    ...styles.toggleButton,
-                                    marginLeft: 'auto',
-                                    padding: '4px 8px',
-                                    fontSize: '10px'
-                                }}
-                                onMouseEnter={(e) => styles.handleButtonHover(e.currentTarget, true)}
-                                onMouseLeave={(e) => styles.handleButtonHover(e.currentTarget, false)}
-                            >
-                                {showScenarios ? 'Hide' : 'Show'}
-                            </button>
+                            Test Scenarios
                         </div>
 
-                        {showScenarios && (
-                            <div style={styles.scenarioGrid}>
-                                {SSO_SCENARIOS.map((scenario) => {
-                                    const isSelected = scenario.id === currentScenario.id;
-                                    const isActive = true; // All scenarios are active
+                        <div style={styles.scenarioGrid}>
+                            {SSO_SCENARIOS.map((scenario) => {
+                                const isSelected = scenario.id === currentScenario.id;
+                                const isActive = true; // All scenarios are active
 
-                                    return (
-                                        <button
-                                            key={scenario.id}
-                                            onClick={() => handleSelectScenario(scenario)}
-                                            style={styles.scenarioButton(isActive, isSelected)}
-                                            onMouseEnter={(e) => {
-                                                if (!isSelected) {
-                                                    e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (!isSelected) {
-                                                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                                }
-                                            }}
-                                            title={scenario.description}
-                                        >
-                                            <span style={styles.scenarioIcon}>{scenario.icon}</span>
-                                            <span style={styles.scenarioName}>{scenario.name}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Divider */}
-                    <div style={styles.divider} />
-
-                    {/* Status Indicators */}
-                    <div style={styles.statusGrid}>
-                        <div style={styles.statusCard}>
-                            <div style={styles.statusLabel}>Status</div>
-                            <div style={styles.statusValue(isFailureMode || isFirstClickInvalidTokenMode)}>
-                                {isFailureMode ? '🔴 FAILURE MODE' : isFirstClickInvalidTokenMode ? '🚫 FIRST CLICK INVALID' : '🟢 NORMAL'}
-                            </div>
-                        </div>
-                        <div style={styles.statusCard}>
-                            <div style={styles.statusLabel}>Failures</div>
-                            <div style={styles.failureCount(failureCount)}>
-                                {failureCount}
-                            </div>
+                                return (
+                                    <button
+                                        key={scenario.id}
+                                        onClick={() => handleSelectScenario(scenario)}
+                                        style={styles.scenarioButton(isActive, isSelected)}
+                                        onMouseEnter={(e) => {
+                                            if (!isSelected) {
+                                                e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!isSelected) {
+                                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                            }
+                                        }}
+                                        title={scenario.description}
+                                    >
+                                        <span style={styles.scenarioIcon}>{scenario.icon}</span>
+                                        <span style={styles.scenarioName}>{scenario.name}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 

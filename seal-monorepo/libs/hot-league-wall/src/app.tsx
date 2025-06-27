@@ -7,8 +7,6 @@ import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance'
 import { TokenRequestManager } from './_shared/utils/token-request-manager';
 import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
-import { GameDisconnectView } from './games/game-base/components/game-disconnect-view';
-import blurBgGame from './assets/rng-soccer/blur-bg-game.png';
 
 interface AppProps {
     appEnv: string;
@@ -42,7 +40,6 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [ssoFailure, setSsoFailure] = useState(false);
 
     // Shared token request logic
     const executeTokenRequest = useCallback(async (context: 'APP_TIMING' | 'SSO_RETRY', setLoading = false) => {
@@ -58,11 +55,9 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
                 console.log(`✅ [${context}] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 setCurrentToken(newToken);
                 setHasClickedPlay(true);
-                setSsoFailure(false); // Clear SSO failure state
                 return { success: true, token: newToken, duration: tokenDuration };
             } else {
                 console.log(`⚠️ [${context}] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-                setSsoFailure(true); // Set SSO failure state
                 return { success: false, token: null, duration: tokenDuration };
             }
         } catch (error) {
@@ -70,7 +65,6 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
             const tokenDuration = tokenEndTime - tokenStartTime;
             console.log(`💥 [${context}] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
             console.error(`[${context}] TokenRequestManager error:`, error);
-            setSsoFailure(true); // Set SSO failure state
             return { success: false, token: null, duration: tokenDuration, error };
         }
     }, []);
@@ -83,30 +77,19 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
 
         const result = await executeTokenRequest('APP_TIMING');
 
+        if (result.success) {
+            // Call parent's onSSORetry callback if provided (for SSO control simulator)
+            if (onSSORetry) {
+                console.log('🔄 [APP_TIMING] Calling parent onSSORetry callback after successful token request');
+                onSSORetry();
+            }
+        }
+
         setIsLoading(false);
 
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, [executeTokenRequest]);
-
-    const handleSSORetry = useCallback(async () => {
-        console.log('🔄 [SSO_RETRY] User clicked retry button for SSO');
-
-        const result = await executeTokenRequest('SSO_RETRY');
-
-        if (result.success) {
-            console.log('🔄 [SSO_RETRY] Token request successful, transitioning to real game');
-
-            // Call parent's onSSORetry callback only after successful token request (for SSO control simulator)
-            if (onSSORetry) {
-                console.log('🔄 [SSO_RETRY] Calling parent onSSORetry callback after successful token request');
-                onSSORetry();
-            }
-        } else {
-            console.log('🔄 [SSO_RETRY] Token request failed, staying in SSO failure mode');
-            // Keep SSO failure state
-        }
     }, [executeTokenRequest, onSSORetry]);
 
     useEffect(() => {
@@ -134,7 +117,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
 
     return (
         <div data-react="true" style={{ width: '100%' }}>
-            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handleSSORetry} />}
+            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handlePlayButtonClick} />}
         </div>
     );
 };

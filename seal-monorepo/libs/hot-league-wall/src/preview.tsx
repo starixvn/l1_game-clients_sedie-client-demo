@@ -138,8 +138,7 @@ const PreviewContext = ({
     // Use the SSO simulator hook for state management (only when controls are enabled)
     const ssoSimulator = useSSOSimulator({
         isFailureMode: false,
-        isFirstClickInvalidTokenMode: false,
-        failureCount: 0
+        isFirstClickInvalidTokenMode: false
     });
 
     console.log('🔍 [PREVIEW_DEBUG] SSO Controls Status:', {
@@ -242,9 +241,7 @@ const PreviewContext = ({
                 <SSOControlSimulator
                     onToggleFailure={ssoSimulator.toggleFailure}
                     onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidToken}
-                    onResetCount={ssoSimulator.resetCount}
                     onSelectScenario={handleSelectScenario}
-                    failureCount={ssoSimulator.failureCount}
                     isFailureMode={ssoSimulator.isFailureMode}
                     isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
                 />

@@ -31,13 +31,6 @@ export class SSOControlSimulatorService implements ISSOSimulatorService {
     }
 
     /**
-     * Log when failure count is reset
-     */
-    logCountReset(): void {
-        console.log(`${this.logPrefix} Failure count RESET to 0 at:`, new Date().toISOString());
-    }
-
-    /**
      * Log when first click invalid token mode is toggled
      */
     logFirstClickInvalidTokenToggle(isEnabled: boolean): void {

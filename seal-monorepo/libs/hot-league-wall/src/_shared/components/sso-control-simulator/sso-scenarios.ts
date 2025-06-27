@@ -12,74 +12,17 @@ export const SSO_SCENARIOS: SSOScenario[] = [
         icon: '🟢',
         settings: {
             isFailureMode: false,
-            isFirstClickInvalidTokenMode: false,
-            failureCount: 0
-        }
-    },
-    {
-        id: 'first-click-invalid',
-        name: 'First Click Invalid Token',
-        description: 'First play button click returns invalid token, subsequent clicks work normally',
-        icon: '🚫',
-        settings: {
-            isFailureMode: false,
-            isFirstClickInvalidTokenMode: true,
-            failureCount: 0
+            isFirstClickInvalidTokenMode: false
         }
     },
     {
         id: 'persistent-failure',
-        name: 'Persistent SSO Failure',
-        description: 'All SSO requests fail with different error messages',
+        name: 'Invalid Token',
+        description: 'First click will return invalid token, then use real tokens!',
         icon: '🔴',
         settings: {
             isFailureMode: true,
-            isFirstClickInvalidTokenMode: false,
-            failureCount: 0
-        }
-    },
-    {
-        id: 'network-timeout',
-        name: 'Network Timeout',
-        description: 'Simulates network timeout on first SSO request',
-        icon: '⏰',
-        settings: {
-            isFailureMode: true,
-            isFirstClickInvalidTokenMode: false,
-            failureCount: 1
-        }
-    },
-    {
-        id: 'auth-failed',
-        name: 'Authentication Failed',
-        description: 'Simulates authentication failure with invalid credentials',
-        icon: '🔐',
-        settings: {
-            isFailureMode: true,
-            isFirstClickInvalidTokenMode: false,
-            failureCount: 2
-        }
-    },
-    {
-        id: 'server-error',
-        name: 'Server Error',
-        description: 'Simulates server error after multiple failed attempts',
-        icon: '💥',
-        settings: {
-            isFailureMode: true,
-            isFirstClickInvalidTokenMode: false,
-            failureCount: 3
-        }
-    },
-    {
-        id: 'mixed-scenario',
-        name: 'Mixed Scenario',
-        description: 'Combines first click invalid token with persistent failures',
-        icon: '🎭',
-        settings: {
-            isFailureMode: true,
-            isFirstClickInvalidTokenMode: true,
-            failureCount: 1
+            isFirstClickInvalidTokenMode: false
         }
     }
 ];
@@ -96,12 +39,10 @@ export const getScenarioById = (id: string): SSOScenario | undefined => {
  */
 export const getCurrentScenario = (
     isFailureMode: boolean,
-    isFirstClickInvalidTokenMode: boolean,
-    failureCount: number
+    isFirstClickInvalidTokenMode: boolean
 ): SSOScenario => {
     return SSO_SCENARIOS.find(scenario =>
         scenario.settings.isFailureMode === isFailureMode &&
-        scenario.settings.isFirstClickInvalidTokenMode === isFirstClickInvalidTokenMode &&
-        scenario.settings.failureCount === failureCount
+        scenario.settings.isFirstClickInvalidTokenMode === isFirstClickInvalidTokenMode
     ) || SSO_SCENARIOS[0]; // Default to normal flow
 }; 

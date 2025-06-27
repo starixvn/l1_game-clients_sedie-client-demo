@@ -195,18 +195,6 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
     }
 
     /**
-     * Failure count styles based on count value
-     */
-    failureCount(failureCount: number): React.CSSProperties {
-        return {
-            fontSize: '13px',
-            fontWeight: '600',
-            color: failureCount > 0 ? '#ffa726' : 'rgba(255,255,255,0.8)',
-            animation: failureCount > 0 ? 'pulse 3s infinite' : 'none'
-        };
-    }
-
-    /**
      * Button container styles
      */
     get buttonContainer(): React.CSSProperties {
@@ -240,29 +228,6 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
             boxShadow: isFailureMode
                 ? '0 4px 12px rgba(220, 53, 69, 0.3)'
                 : '0 4px 12px rgba(40, 167, 69, 0.3)'
-        };
-    }
-
-    /**
-     * Secondary button styles based on failure count
-     */
-    secondaryButton(failureCount: number): React.CSSProperties {
-        return {
-            background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '12px',
-            fontWeight: '500',
-            transition: 'all 0.2s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            opacity: failureCount > 0 ? 1 : 0.6,
-            boxShadow: '0 4px 12px rgba(108, 117, 125, 0.3)'
         };
     }
 
@@ -503,19 +468,6 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
             element.style.boxShadow = isFailureMode
                 ? '0 4px 12px rgba(220, 53, 69, 0.3)'
                 : '0 4px 12px rgba(40, 167, 69, 0.3)';
-        }
-    }
-
-    /**
-     * Handle secondary button hover effects
-     */
-    handleSecondaryButtonHover(element: HTMLElement, failureCount: number, isHovering: boolean): void {
-        if (isHovering && failureCount > 0) {
-            element.style.transform = 'translateY(-2px)';
-            element.style.boxShadow = '0 6px 16px rgba(108, 117, 125, 0.4)';
-        } else {
-            element.style.transform = 'translateY(0)';
-            element.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.3)';
         }
     }
 } 

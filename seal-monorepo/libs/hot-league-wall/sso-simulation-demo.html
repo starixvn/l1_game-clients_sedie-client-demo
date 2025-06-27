@@ -64,7 +64,6 @@
             <ul>
                 <li>Click <strong>"Enable SSO Failures"</strong> (button turns green)</li>
                 <li>You'll see: <strong>SSO Failure Simulation: 🟢 ON</strong></li>
-                <li>Failure Count will start at 0</li>
             </ul>
         </div>
 
@@ -72,9 +71,9 @@
             <h3>4. Test Different Failure Scenarios</h3>
             <p>Now click the <strong>"Play Now"</strong> button in the game:</p>
             <ul>
-                <li><strong>1st click:</strong> "Network timeout - Please check your connection"</li>
-                <li><strong>2nd click:</strong> "Authentication failed - Invalid credentials"</li>
-                <li><strong>3rd+ clicks:</strong> "Server error - Please try again later"</li>
+                <li><strong>Persistent Failure Mode:</strong> All SSO requests will fail continuously</li>
+                <li><strong>First Click Invalid Token:</strong> First click returns invalid token, subsequent clicks work normally</li>
+                <li><strong>Mixed Scenarios:</strong> Combine different failure types using the scenario selector</li>
             </ul>
         </div>
 
@@ -83,8 +82,8 @@
             <p>You'll see the improved error handling:</p>
             <ul>
                 <li>✅ <strong>Loading state:</strong> "Loading..." on Play button</li>
-                <li>✅ <strong>Error message:</strong> User-friendly error display</li>
-                <li>✅ <strong>Retry button:</strong> "Retry Login" option</li>
+                <li>✅ <strong>Token handling:</strong> Invalid tokens are handled by the main app logic</li>
+                <li>✅ <strong>Real flow testing:</strong> Always uses real token request flow</li>
                 <li>✅ <strong>No page refresh:</strong> Smooth error recovery</li>
             </ul>
         </div>
@@ -93,9 +92,9 @@
             <h3>6. Test Retry Functionality</h3>
             <p>After seeing the error:</p>
             <ul>
-                <li>Click <strong>"Retry Login"</strong> to try again</li>
-                <li>Watch the failure count increase</li>
-                <li>See different error messages for each attempt</li>
+                <li>The app handles token failures internally</li>
+                <li>SSO retry logic is managed by the main application</li>
+                <li>Test different scenarios using the scenario selector</li>
             </ul>
         </div>
 
@@ -104,7 +103,7 @@
             <p>To test successful login:</p>
             <ul>
                 <li>Click <strong>"Disable SSO Failures"</strong> (button turns red)</li>
-                <li>Click <strong>"Reset Count"</strong> to clear the counter</li>
+                <li>Select <strong>"Normal Flow"</strong> scenario for standard behavior</li>
                 <li>Click <strong>"Play Now"</strong> - should work normally</li>
             </ul>
         </div>

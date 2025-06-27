@@ -13,7 +13,6 @@ export interface SSOScenario {
     settings: {
         isFailureMode: boolean;
         isFirstClickInvalidTokenMode: boolean;
-        failureCount?: number;
     };
 }
 
@@ -23,14 +22,10 @@ export interface SSOScenario {
 export interface SSOControlSimulatorProps {
     /** Callback function when failure mode is toggled */
     onToggleFailure: () => void;
-    /** Callback function when failure count is reset */
-    onResetCount: () => void;
     /** Callback function when first click invalid token mode is toggled */
     onToggleFirstClickInvalidToken?: () => void;
     /** Callback function when a scenario is selected */
     onSelectScenario?: (scenario: SSOScenario) => void;
-    /** Current failure count */
-    failureCount?: number;
     /** Whether failure mode is currently active */
     isFailureMode?: boolean;
     /** Whether first click invalid token mode is currently active */
@@ -45,8 +40,6 @@ export interface SSOControlSimulatorProps {
 export interface SSOControlState {
     /** Whether controls are currently visible */
     showControls: boolean;
-    /** Current failure count */
-    failureCount: number;
     /** Whether failure mode is active */
     isFailureMode: boolean;
     /** Whether first click invalid token mode is active */
@@ -66,8 +59,6 @@ export interface ISSOSimulatorService {
     logControlToggle(isVisible: boolean): void;
     /** Log when failure mode is toggled */
     logFailureToggle(isEnabled: boolean): void;
-    /** Log when failure count is reset */
-    logCountReset(): void;
     /** Log when first click invalid token mode is toggled */
     logFirstClickInvalidTokenToggle(isEnabled: boolean): void;
     /** Log when scenario is toggled */

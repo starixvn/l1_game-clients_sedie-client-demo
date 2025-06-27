@@ -12,7 +12,6 @@ import { SSOScenario } from './types';
 export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => {
     const [state, setState] = useState<SSOControlState>({
         showControls: false,
-        failureCount: 0,
         isFailureMode: false,
         isFirstClickInvalidTokenMode: false,
         ...initialState
@@ -69,26 +68,6 @@ export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => 
     }, [generateFirstClickInvalidToken]);
 
     /**
-     * Reset failure count
-     */
-    const resetCount = useCallback(() => {
-        setState(prev => ({
-            ...prev,
-            failureCount: 0
-        }));
-    }, []);
-
-    /**
-     * Increment failure count
-     */
-    const incrementFailureCount = useCallback(() => {
-        setState(prev => ({
-            ...prev,
-            failureCount: prev.failureCount + 1
-        }));
-    }, []);
-
-    /**
      * Toggle controls visibility
      */
     const toggleControls = useCallback(() => {
@@ -111,22 +90,6 @@ export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => 
     const shouldSimulateFirstClickInvalidToken = useCallback(() => {
         return state.isFirstClickInvalidTokenMode;
     }, [state.isFirstClickInvalidTokenMode]);
-
-    /**
-     * Get next failure message based on count
-     */
-    const getNextFailureMessage = useCallback(() => {
-        const failureNumber = state.failureCount + 1;
-
-        switch (failureNumber) {
-            case 1:
-                return 'Network timeout - Please check your connection';
-            case 2:
-                return 'Authentication failed - Invalid credentials';
-            default:
-                return 'Server error - Please try again later';
-        }
-    }, [state.failureCount]);
 
     /**
      * Get current failed token or generate new one if in failure mode
@@ -162,14 +125,11 @@ export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => 
         // Actions
         toggleFailure,
         toggleFirstClickInvalidToken,
-        resetCount,
-        incrementFailureCount,
         toggleControls,
 
         // Computed values
         shouldSimulateFailure,
         shouldSimulateFirstClickInvalidToken,
-        getNextFailureMessage,
         getFailedToken,
         getFirstClickInvalidToken,
 
