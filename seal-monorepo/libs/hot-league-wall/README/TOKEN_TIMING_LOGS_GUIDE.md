@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to use the comprehensive timing logs that track the exact time it takes to get a token when the user clicks the "Play" button in the **RNG Soccer Prototype** page, which then transitions to the **Real App**.
+This guide explains how to use the comprehensive timing logs that track the exact time it takes to get a token when the user clicks the "Play" button in the **RNG Soccer Prototype** page, which then transitions to the **Real App**. The system now includes SSO Control Simulator capabilities for testing different authentication scenarios.
 
 ## Application Flow
 
@@ -16,7 +16,8 @@ This guide explains how to use the comprehensive timing logs that track the exac
 
 2. **User Clicks "Play Now"**
 
-    - Token request is initiated
+    - Token request is initiated via `TokenRequestManager`
+    - SSO simulator can intercept and modify token requests
     - Timing logs track the entire process
 
 3. **Real App** (Final State)
@@ -24,16 +25,30 @@ This guide explains how to use the comprehensive timing logs that track the exac
     - Full application functionality is available
     - This is the **production/real** application
 
+## Architecture Components
+
+### **Core Components**
+
+-   **Preview Component**: Main entry point with routing and SSO simulator integration
+-   **App Component**: Handles Prototype → Real App transition
+-   **TokenRequestManager**: Singleton for managing token requests
+-   **SSO Control Simulator**: Testing framework for authentication scenarios
+
+### **Simulator Modes**
+
+-   **Real App Mode** (`/` route): Direct token requests without simulation
+-   **SSO Simulator Mode** (`/sso-control` route): Interactive testing with failure simulation
+
 ## What Gets Logged
 
 When a user clicks the "Play Now" button in the **Prototype**, the following timing information is automatically logged:
 
 ### 1. **Component-Level Timing**
 
--   **BASE**: RNG Soccer Prototype base component timing
--   **PROTOTYPE**: RNG Soccer Prototype static prototype timing
+-   **PREVIEW**: Preview component scenario management
 -   **APP**: App component timing (handles Prototype → Real App transition)
 -   **TOKEN**: Token request timing (for Real App authentication)
+-   **SIMULATION**: SSO simulator behavior and failure simulation
 
 ### 2. **Detailed Timing Information**
 
@@ -44,32 +59,48 @@ When a user clicks the "Play Now" button in the **Prototype**, the following tim
 -   **Component**: Which component performed the action
 -   **Action**: What action was performed
 -   **Context**: Whether action is in Prototype or Real App
+-   **Simulation State**: Current SSO simulator configuration
 
 ## Console Log Output
 
 When you click the "Play Now" button in the **Prototype**, you'll see logs like this:
 
+### **Normal Flow (Real App Mode)**
+
 ```
-🎮 [BASE_TIMING] Play button clicked in RNG SOCCER PROTOTYPE BASE at: 2024-01-15T10:30:45.123Z
-🔄 [BASE_TIMING] Calling onPlayClick callback to transition from PROTOTYPE to REAL APP...
-🎯 [PROTOTYPE_TIMING] Play button clicked in RNG SOCCER PROTOTYPE at: 2024-01-15T10:30:45.125Z
-👁️ [PROTOTYPE_TIMING] Hiding play button overlay in PROTOTYPE...
-🔄 [PROTOTYPE_TIMING] Calling onPlayButtonClick callback to transition to REAL APP...
-🎮 [APP_TIMING] Play button clicked in PROTOTYPE - App component handling at: 2024-01-15T10:30:45.127Z
-🔄 [APP_TIMING] Calling token request callback for REAL APP...
+🎯 [PREVIEW] Scenario selected: Normal Flow
+🔄 [PREVIEW] Reset play button click count to 0 for new scenario
+🔄 [PREVIEW] Updated scenario key to: normal-flow
+🔄 [FIRST_SSO] Using TokenRequestManager for REAL APP...
 🕐 [TOKEN_TIMING] Play button clicked in PROTOTYPE - Starting token request at: 2024-01-15T10:30:45.129Z
-✅ [TOKEN_TIMING] Token request SUCCESS for REAL APP - Duration: 245.67ms
-📊 [TOKEN_TIMING] Token received for REAL APP at: 2024-01-15T10:30:45.375Z
-🔑 [TOKEN_TIMING] Token length: 128 characters
 🎯 [TOKEN_TIMING] Transitioning from PROTOTYPE to REAL APP...
-✅ [APP_TIMING] Token callback completed for REAL APP - Duration: 248.12ms
-🔄 [APP_TIMING] Updating current token for REAL APP...
-🎯 [APP_TIMING] Setting hasClickedPlay to true - Transitioning from PROTOTYPE to REAL APP...
-🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: 250.45ms
-✅ [PROTOTYPE_TIMING] onPlayButtonClick callback completed - PROTOTYPE to REAL APP transition - Duration: 248.67ms
-🏁 [PROTOTYPE_TIMING] RNG SOCCER PROTOTYPE handling completed - Total duration: 250.89ms
-✅ [BASE_TIMING] onPlayClick callback completed - PROTOTYPE to REAL APP transition - Duration: 250.12ms
-🏁 [BASE_TIMING] RNG SOCCER PROTOTYPE BASE handling completed - Total duration: 252.34ms
+🔑 [TOKEN_TIMING] First click detected - checking for invalid token simulation
+🔑 [TOKEN_TIMING] Proceeding with normal token request flow
+✅ [TOKEN_TIMING] Token request SUCCESS for REAL APP - Duration: 245.67ms
+🔑 [TOKEN_TIMING] Click count: 1
+✅ [FIRST_SSO] TokenRequestManager completed for REAL APP - Duration: 248.12ms
+🏁 [FIRST_SSO] PROTOTYPE to REAL APP transition completed - Total duration: 250.45ms
+```
+
+### **Simulator Mode with Failure**
+
+```
+🎯 [PREVIEW] Scenario selected: Invalid Token
+🔄 [PREVIEW] Reset play button click count to 0 for new scenario
+🔄 [PREVIEW] Updated scenario key to: persistent-failure
+🧪 [SIMULATION] Returning fake token for click #1: INVALID_TOKEN_1705311045123_abc123def456
+🔄 [FIRST_SSO] Using TokenRequestManager for REAL APP...
+⚠️ [FIRST_SSO] TokenRequestManager returned null for REAL APP - Duration: 2.34ms
+```
+
+### **Session Reconnect**
+
+```
+🔄 [SESSION_RECONNECT] Starting session reconnect...
+🔄 [SSO_RETRY] Using TokenRequestManager for REAL APP...
+✅ [SSO_RETRY] TokenRequestManager completed for REAL APP - Duration: 156.78ms
+🔄 [SESSION_RECONNECT] New token obtained, Lobby should reconnect automatically
+🔄 [SESSION_RECONNECT] Session reconnect completed
 ```
 
 ## How to Analyze Token Request Times
@@ -83,26 +114,37 @@ Open your browser's Developer Tools (F12) and go to the Console tab. When you cl
 To focus on specific aspects, filter the console by:
 
 -   `[TOKEN_TIMING]` - For token request timing only (Real App authentication)
--   `[PROTOTYPE_TIMING]` - For Prototype component timing
+-   `[PREVIEW]` - For Preview component scenario management
 -   `[APP_TIMING]` - For App component timing (Prototype → Real App transition)
--   `[BASE_TIMING]` - For Prototype base component timing
+-   `[FIRST_SSO]` - For first-time SSO requests
+-   `[SSO_RETRY]` - For session reconnect requests
+-   `[SIMULATION]` - For SSO simulator behavior
 -   `Duration:` - For all duration measurements
 -   `SUCCESS` - For successful token requests
 -   `ERROR` - For failed token requests
 -   `PROTOTYPE` - For Prototype-related actions
 -   `REAL APP` - For Real App-related actions
 
-### 3. **Using the Token Timing Analyzer**
+### 3. **Using the SSO Simulator**
 
-The system includes a built-in analyzer that provides comprehensive insights:
+Access the SSO Control Simulator at `/sso-control` route to test different scenarios:
 
-```javascript
-// Access the analyzer in browser console
-window.tokenTimingAnalyzer.analyzeTokenFlow();
+```typescript
+// Available scenarios
+const scenarios = [
+    { id: 'normal-flow', name: 'Normal Flow', description: 'Standard authentication' },
+    { id: 'persistent-failure', name: 'Invalid Token', description: 'Persistent failure simulation' },
+];
 
-// Export timing data
-const timingData = window.tokenTimingAnalyzer.exportTimingData();
-console.log(timingData);
+// Simulator controls
+const simulator = useSSOSimulator({
+    isFailureMode: false,
+    isFirstClickInvalidTokenMode: false,
+});
+
+// Enable failure simulation
+simulator.toggleFailure();
+simulator.setFailCount(3);
 ```
 
 ### 4. **Manual Analysis**
@@ -115,10 +157,11 @@ Look for lines containing `[TOKEN_TIMING] Token request SUCCESS for REAL APP - D
 
 #### **Component Breakdown**
 
--   `[BASE_TIMING]` - RNG Soccer Prototype base component timing
--   `[PROTOTYPE_TIMING]` - RNG Soccer Prototype logic timing
--   `[APP_TIMING]` - App component timing (Prototype → Real App transition)
+-   `[PREVIEW]` - Preview component scenario management
+-   `[FIRST_SSO]` - First-time token requests
+-   `[SSO_RETRY]` - Session reconnect requests
 -   `[TOKEN_TIMING]` - Actual token request timing (for Real App authentication)
+-   `[SIMULATION]` - SSO simulator behavior
 
 #### **Transition Analysis**
 
@@ -136,9 +179,10 @@ Look for lines containing `[TOKEN_TIMING] Token request ERROR for REAL APP` for 
 
 1. **Token Request Time**: The actual time taken by `requestSSO()` for Real App authentication
 2. **Prototype → Real App Transition Time**: From button click to app transition completion
-3. **Component Overhead**: Time spent in each Prototype component
+3. **Component Overhead**: Time spent in each component
 4. **Success Rate**: Percentage of successful Prototype → Real App transitions
 5. **Error Patterns**: Types and frequency of transition errors
+6. **Simulation Impact**: Performance impact of SSO simulator
 
 ### **Performance Benchmarks**
 
@@ -147,6 +191,7 @@ Look for lines containing `[TOKEN_TIMING] Token request ERROR for REAL APP` for 
 | Token Request Time (Real App)   | < 200ms | 200-500ms  | > 500ms |
 | Prototype → Real App Transition | < 300ms | 300-800ms  | > 800ms |
 | Success Rate                    | > 99%   | 95-99%     | < 95%   |
+| Simulator Overhead              | < 10ms  | 10-50ms    | > 50ms  |
 
 ## Debugging Token Issues
 
@@ -163,12 +208,14 @@ Look for lines containing `[TOKEN_TIMING] Token request ERROR for REAL APP` for 
 -   Network latency
 -   Server overload
 -   Large token payload
+-   SSO simulator overhead
 
 **Solutions:**
 
 -   Check network connectivity
 -   Monitor server performance
 -   Optimize token size
+-   Disable SSO simulator in production
 
 #### 2. **Failed Token Requests**
 
@@ -181,30 +228,32 @@ Look for lines containing `[TOKEN_TIMING] Token request ERROR for REAL APP` for 
 -   Network errors
 -   Authentication issues
 -   Server errors
+-   SSO simulator interference
 
 **Solutions:**
 
 -   Check network status
 -   Verify authentication credentials
 -   Review server logs
+-   Check SSO simulator configuration
 
-#### 3. **Prototype → Real App Transition Failures**
+#### 3. **Simulation Issues**
 
 **Symptoms:**
 
--   `[PROTOTYPE_TIMING] onPlayButtonClick callback failed - PROTOTYPE transition error`
+-   `🧪 [SIMULATION] Returning fake token for click #1`
 
 **Possible Causes:**
 
--   Token request failures
--   Component rendering issues
--   State management problems
+-   SSO simulator enabled in production
+-   Incorrect simulator configuration
+-   Unintended failure mode activation
 
 **Solutions:**
 
--   Check token request logs
--   Verify component state
--   Review transition logic
+-   Ensure SSO simulator is disabled in production
+-   Check simulator configuration
+-   Verify scenario settings
 
 #### 4. **Component Delays**
 
@@ -217,48 +266,72 @@ Look for lines containing `[TOKEN_TIMING] Token request ERROR for REAL APP` for 
 -   Heavy component rendering
 -   JavaScript execution delays
 -   Memory issues
+-   Simulator overhead
 
 **Solutions:**
 
 -   Optimize component performance
 -   Reduce bundle size
 -   Monitor memory usage
+-   Minimize simulator overhead
 
 ## Advanced Analysis
 
-### **Using the Timing Analyzer API**
+### **Using the TokenRequestManager API**
 
 ```javascript
-// Get all timing logs
-const logs = window.tokenTimingAnalyzer.getTimingLogs();
+// Access TokenRequestManager
+const tokenManager = TokenRequestManager.getInstance();
 
-// Filter by component
-const tokenLogs = logs.filter((log) => log.component === 'TOKEN');
+// Check if callback is set
+const hasCallback = tokenManager.hasCallback();
 
-// Filter by action
-const successLogs = logs.filter((log) => log.action === 'Token request' && log.status === 'success');
+// Get current callback
+const callback = tokenManager.getTokenRequestCallback();
 
-// Calculate average token request time
-const avgTime = successLogs.reduce((sum, log) => sum + (log.duration || 0), 0) / successLogs.length;
-console.log(`Average token request time: ${avgTime.toFixed(2)}ms`);
+// Execute token request
+const token = await tokenManager.executeTokenRequest();
+```
 
-// Filter Prototype vs Real App actions
-const prototypeLogs = logs.filter((log) => log.message.includes('PROTOTYPE'));
-const realAppLogs = logs.filter((log) => log.message.includes('REAL APP'));
+### **SSO Simulator Analysis**
+
+```javascript
+// Access simulator state
+const simulator = useSSOSimulator(DEFAULT_SSO_CONFIG);
+
+// Check simulation state
+console.log('Failure Mode:', simulator.isFailureMode);
+console.log('Fail Count:', simulator.failCount);
+console.log('First Click Invalid:', simulator.isFirstClickInvalidTokenMode);
+
+// Analyze simulation impact
+const simulationOverhead = endTime - startTime - actualTokenTime;
+console.log('Simulation Overhead:', simulationOverhead + 'ms');
 ```
 
 ### **Exporting Data for External Analysis**
 
 ```javascript
-// Export timing data as JSON
-const exportData = window.tokenTimingAnalyzer.exportTimingData();
+// Collect timing data
+const timingData = {
+    timestamp: new Date().toISOString(),
+    component: 'TOKEN',
+    action: 'Token Request',
+    duration: tokenDuration,
+    success: true,
+    simulation: {
+        isFailureMode: simulator.isFailureMode,
+        failCount: simulator.failCount,
+        clickCount: playButtonClickCount,
+    },
+};
 
 // Save to file (in browser console)
-const blob = new Blob([exportData], { type: 'application/json' });
+const blob = new Blob([JSON.stringify(timingData, null, 2)], { type: 'application/json' });
 const url = URL.createObjectURL(blob);
 const a = document.createElement('a');
 a.href = url;
-a.download = 'prototype-to-realapp-timing-data.json';
+a.download = 'token-timing-data.json';
 a.click();
 ```
 
@@ -286,9 +359,9 @@ const sendToAnalytics = (log) => {
 ```javascript
 // Store in localStorage for persistence
 const storeLog = (log) => {
-    const logs = JSON.parse(localStorage.getItem('prototypeTimingLogs') || '[]');
+    const logs = JSON.parse(localStorage.getItem('tokenTimingLogs') || '[]');
     logs.push(log);
-    localStorage.setItem('prototypeTimingLogs', JSON.stringify(logs));
+    localStorage.setItem('tokenTimingLogs', JSON.stringify(logs));
 };
 ```
 
@@ -311,24 +384,28 @@ const checkPerformance = (duration) => {
 -   Check Prototype → Real App transition times daily
 -   Monitor for performance degradation
 -   Track transition success rates
+-   Monitor SSO simulator usage
 
 ### **2. Performance Optimization**
 
 -   Optimize network requests for token acquisition
 -   Implement caching where appropriate
 -   Monitor bundle sizes
+-   Minimize simulator overhead in production
 
 ### **3. Error Handling**
 
 -   Log all errors with context (Prototype vs Real App)
 -   Implement retry mechanisms
 -   Provide user feedback
+-   Handle simulator errors gracefully
 
 ### **4. Data Analysis**
 
 -   Export timing data regularly
 -   Analyze trends over time
 -   Set up performance alerts
+-   Monitor simulation patterns
 
 ## Troubleshooting
 
@@ -336,33 +413,38 @@ const checkPerformance = (duration) => {
 
 1. Check browser console is open
 2. Verify no console filters are active
-3. Ensure timing analyzer is initialized
+3. Ensure TokenRequestManager is initialized
+4. Check SSO simulator configuration
 
 ### **Incorrect Timing**
 
 1. Check system clock accuracy
 2. Verify performance.now() availability
 3. Check for browser performance issues
+4. Account for simulator overhead
 
 ### **Missing Data**
 
 1. Clear browser cache
 2. Check for JavaScript errors
 3. Verify component rendering
+4. Check simulator state
 
-### **Prototype vs Real App Confusion**
+### **Simulation Issues**
 
-1. Look for `PROTOTYPE` and `REAL APP` keywords in logs
-2. Check component names in timing logs
-3. Verify transition flow is working correctly
+1. Verify simulator is enabled only in test mode
+2. Check scenario configuration
+3. Monitor simulation state changes
+4. Ensure proper cleanup
 
 ## Conclusion
 
-The token timing logs provide comprehensive visibility into the **Prototype → Real App transition process**. By monitoring these logs, you can:
+The token timing logs provide comprehensive visibility into the **Prototype → Real App transition process** with enhanced SSO simulator capabilities. By monitoring these logs, you can:
 
 -   **Identify performance bottlenecks** in the transition flow
 -   **Track user experience metrics** from Prototype to Real App
 -   **Debug authentication issues** for Real App access
 -   **Optimize application performance** for smooth transitions
+-   **Test different authentication scenarios** using the SSO simulator
 
-Use this guide to effectively monitor and analyze the timing of token requests and Prototype → Real App transitions in your application.
+Use this guide to effectively monitor and analyze the timing of token requests and Prototype → Real App transitions in your application, including the new SSO simulator functionality.

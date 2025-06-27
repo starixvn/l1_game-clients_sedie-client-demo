@@ -8,7 +8,6 @@ import styles from './lobby.module.scss';
 import { AppContextConsumer } from '../appProvider';
 import Loading from '../_shared/components/loading';
 import { IOfferGame, ILobbyState } from './type';
-import SessionTimeout from '../_shared/components/timeout';
 import { gamePageMap } from '../_shared/utils/component-util';
 import { GameDisconnectView } from '../games/game-base/components/game-disconnect-view';
 import blurBgGame from '../assets/rng-soccer/blur-bg-game.png';
@@ -133,7 +132,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     };
 
     private renderGames(context) {
-        const { offerGames, leagueToogle, selectedGameId, isSessionTimeout, isAuthenticated, username } = this.state;
+        const { offerGames, selectedGameId, isSessionTimeout, isAuthenticated } = this.state;
 
         const renderGameContent = () => {
             if (isSessionTimeout) {
