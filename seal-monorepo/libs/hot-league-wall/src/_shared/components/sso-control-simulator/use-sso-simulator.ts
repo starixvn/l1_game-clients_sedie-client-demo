@@ -14,6 +14,7 @@ export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => 
         showControls: false,
         isFailureMode: false,
         isFirstClickInvalidTokenMode: false,
+        failCount: 1,
         ...initialState
     });
 
@@ -118,6 +119,14 @@ export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => 
         }));
     }, []);
 
+    // Set fail count
+    const setFailCount = useCallback((count: number) => {
+        setState(prev => ({
+            ...prev,
+            failCount: count
+        }));
+    }, []);
+
     return {
         // State
         ...state,
@@ -126,6 +135,7 @@ export const useSSOSimulator = (initialState: Partial<SSOControlState> = {}) => 
         toggleFailure,
         toggleFirstClickInvalidToken,
         toggleControls,
+        setFailCount,
 
         // Computed values
         shouldSimulateFailure,

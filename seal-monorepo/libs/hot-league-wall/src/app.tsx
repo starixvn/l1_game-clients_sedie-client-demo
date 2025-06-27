@@ -13,48 +13,49 @@ interface AppProps {
     siteId: string;
     language: string;
     updateBalanceCallback?: void | null;
-    onPlayButtonTokenRequest?: () => Promise<string | null>;
-    onSSORetry?: () => void;
+    onRequestSSOToken?: (context: 'FIRST_SSO' | 'SSO_RETRY') => Promise<string | null>;
 }
 
 interface AppContentProps {
     updateBalanceCallback?: void | null;
-    onPlayButtonTokenRequest?: () => Promise<string | null>;
-    onSSORetry?: () => void;
+    onRequestSSOToken?: (context: 'FIRST_SSO' | 'SSO_RETRY') => Promise<string | null>;
 }
 
-const App = ({ appEnv, language, siteId, updateBalanceCallback, onPlayButtonTokenRequest, onSSORetry }: AppProps) => {
+const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
             <AppContent
                 updateBalanceCallback={updateBalanceCallback}
-                onPlayButtonTokenRequest={onPlayButtonTokenRequest}
-                onSSORetry={onSSORetry}
+                onRequestSSOToken={onRequestSSOToken}
             />
         </AppProvider>
     );
 };
 
-const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetry }: AppContentProps) => {
+const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     // Shared token request logic
-    const executeTokenRequest = useCallback(async (context: 'APP_TIMING' | 'SSO_RETRY', setLoading = false) => {
+    const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
         console.log(`🔄 [${context}] Using TokenRequestManager for REAL APP...`);
         const tokenStartTime = performance.now();
 
         try {
-            const newToken = await TokenRequestManager.getInstance().executeTokenRequest();
+            let newToken: string | null = null;
+            if (onRequestSSOToken) {
+                newToken = await onRequestSSOToken(context);
+            } else {
+                newToken = await TokenRequestManager.getInstance().executeTokenRequest();
+            }
             const tokenEndTime = performance.now();
             const tokenDuration = tokenEndTime - tokenStartTime;
 
             if (newToken) {
                 console.log(`✅ [${context}] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 setCurrentToken(newToken);
-                setHasClickedPlay(true);
                 return { success: true, token: newToken, duration: tokenDuration };
             } else {
                 console.log(`⚠️ [${context}] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
@@ -67,30 +68,53 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
             console.error(`[${context}] TokenRequestManager error:`, error);
             return { success: false, token: null, duration: tokenDuration, error };
         }
-    }, []);
+    }, [onRequestSSOToken]);
 
-    const handlePlayButtonClick = useCallback(async () => {
-        const appStartTime = performance.now();
-        console.log('🎮 [APP_TIMING] Play button clicked in PROTOTYPE - App component handling at:', new Date().toISOString());
-
-        setIsLoading(true);
-
-        const result = await executeTokenRequest('APP_TIMING');
-
-        if (result.success) {
-            // Call parent's onSSORetry callback if provided (for SSO control simulator)
-            if (onSSORetry) {
-                console.log('🔄 [APP_TIMING] Calling parent onSSORetry callback after successful token request');
-                onSSORetry();
+    // Unified token request handler
+    const performTokenRequest = useCallback(
+        async ({
+            context,
+            showLoading = false,
+            triggerPlayTransition = false,
+        }: {
+            context: 'FIRST_SSO' | 'SSO_RETRY';
+            showLoading?: boolean;
+            triggerPlayTransition?: boolean;
+        }) => {
+            if (showLoading) setIsLoading(true);
+            const startTime = performance.now();
+            const result = await executeTokenRequest(context);
+            if (showLoading) setIsLoading(false);
+            if (triggerPlayTransition && result.success) setHasClickedPlay(true);
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            if (context === 'FIRST_SSO') {
+                console.log(`🏁 [FIRST_SSO] PROTOTYPE to REAL APP transition completed - Total duration: ${duration.toFixed(2)}ms`);
+            } else if (context === 'SSO_RETRY') {
+                if (result.success) {
+                    console.log('🔄 [SESSION_RECONNECT] New token obtained, Lobby should reconnect automatically');
+                } else {
+                    console.log('🔄 [SESSION_RECONNECT] Failed to get new token');
+                }
             }
-        }
+            return result;
+        },
+        [executeTokenRequest]
+    );
 
-        setIsLoading(false);
+    const handlePlayButtonClick = useCallback(
+        async () => {
+            await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
+        },
+        [performTokenRequest]
+    );
 
-        const appEndTime = performance.now();
-        const appDuration = appEndTime - appStartTime;
-        console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-    }, [executeTokenRequest, onSSORetry]);
+    const handleSessionReconnect = useCallback(
+        async () => {
+            await performTokenRequest({ context: 'SSO_RETRY' });
+        },
+        [performTokenRequest]
+    );
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -99,10 +123,10 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
     }, [updateBalanceCallback]);
 
     useEffect(() => {
-        if (onPlayButtonTokenRequest) {
-            TokenRequestManager.getInstance().setTokenRequestCallback(onPlayButtonTokenRequest);
+        if (onRequestSSOToken) {
+            TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken('FIRST_SSO'));
         }
-    }, [onPlayButtonTokenRequest]);
+    }, [onRequestSSOToken]);
 
     loadI18n(language);
 
@@ -117,7 +141,7 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
 
     return (
         <div data-react="true" style={{ width: '100%' }}>
-            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handlePlayButtonClick} />}
+            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handleSessionReconnect} />}
         </div>
     );
 };

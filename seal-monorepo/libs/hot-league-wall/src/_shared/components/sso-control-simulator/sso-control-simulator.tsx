@@ -19,6 +19,8 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
     onSelectScenario,
     isFailureMode = false,
     isFirstClickInvalidTokenMode = false,
+    failCount = 1,
+    setFailCount,
     service = new SSOControlSimulatorService()
 }) => {
     const [showControls, setShowControls] = useState(true); // Show controls by default for better UX
@@ -111,6 +113,24 @@ export const SSOControlSimulator: React.FC<SSOControlSimulatorProps> = ({
                                 );
                             })}
                         </div>
+
+                        {/* Fail count input */}
+                        {isFailureMode && setFailCount && (
+                            <div style={{ marginTop: 12 }}>
+                                <label htmlFor="fail-count-input" style={{ fontSize: 12, marginRight: 8 }}>
+                                    Fail first
+                                </label>
+                                <input
+                                    id="fail-count-input"
+                                    type="number"
+                                    min={1}
+                                    value={failCount}
+                                    onChange={e => setFailCount(Number(e.target.value))}
+                                    style={{ width: 48, fontSize: 12, padding: 2, marginRight: 4 }}
+                                />
+                                <span style={{ fontSize: 12 }}>Play(s) before success</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Instructions */}

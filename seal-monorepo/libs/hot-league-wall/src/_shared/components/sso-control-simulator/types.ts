@@ -32,6 +32,10 @@ export interface SSOControlSimulatorProps {
     isFirstClickInvalidTokenMode?: boolean;
     /** Optional service instance for logging and side effects */
     service?: ISSOSimulatorService;
+    /** Number of failures to simulate before returning a real token */
+    failCount?: number;
+    /** Set the number of failures to simulate */
+    setFailCount?: (count: number) => void;
 }
 
 /**
@@ -48,6 +52,8 @@ export interface SSOControlState {
     failedToken?: string | null;
     /** Generated first click invalid token for simulation */
     firstClickInvalidToken?: string | null;
+    /** Number of failures to simulate before returning a real token */
+    failCount: number;
 }
 
 /**

@@ -17,7 +17,7 @@ import blurBgGame from '../assets/rng-soccer/blur-bg-game.png';
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private reRenderGameTimeout?: NodeJS.Timeout;
 
-    constructor(props: { token: string; onSSORetry?: () => void }) {
+    constructor(props: { token: string; onSSORetry?: () => Promise<void> }) {
         super(props);
         configSharedContainer();
         this.state = {
@@ -72,7 +72,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
-    connectLiveGateway() {}
+    connectLiveGateway() { }
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
@@ -117,13 +117,18 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
         this.setState({ selectedGameId: gameId });
     };
 
-    handleSessionReconnect = () => {
+    handleSessionReconnect = async () => {
         console.log('🔄 [LOBBY] Session reconnect requested');
 
         // Call parent's onSSORetry callback if provided
         if (this.props.onSSORetry) {
             console.log('🔄 [LOBBY] Calling parent onSSORetry callback');
-            this.props.onSSORetry();
+            try {
+                await this.props.onSSORetry();
+                console.log('🔄 [LOBBY] Session reconnect completed successfully');
+            } catch (error) {
+                console.error('🔄 [LOBBY] Session reconnect failed:', error);
+            }
         }
     };
 
@@ -136,8 +141,8 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                     <GameDisconnectView
                         onReconnect={this.handleSessionReconnect}
                         isSSOFailure={true}
-                        customMessage="Session expired. Please reconnect to continue."
-                        customButtonText="Reconnect"
+                        // customMessage="Session expired. Please reconnect to continue."
+                        // customButtonText="Reconnect"
                         backgroundImage={blurBgGame}
                     />
                 );
