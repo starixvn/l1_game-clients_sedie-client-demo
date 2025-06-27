@@ -142,7 +142,6 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     const awayTeamLogo = getTeamLogo(gameData.teamData.away.name);
 
     return (
-        // <Loading />
         <div className={demoAnimationStyles['game-container']}>
             {/* Main content with slide animation */}
             <div className={classNames(styles['sport-item'], { [demoAnimationStyles['slide-left']]: isSlidingLeft })}>

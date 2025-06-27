@@ -11,6 +11,7 @@ import { IOfferGame, ILobbyState } from './type';
 import SessionTimeout from '../_shared/components/timeout';
 import { gamePageMap } from '../_shared/utils/component-util';
 import { GameDisconnectView } from '../games/game-base/components/game-disconnect-view';
+import blurBgGame from '../assets/rng-soccer/blur-bg-game.png';
 
 @observer
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
@@ -71,7 +72,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
-    connectLiveGateway() { }
+    connectLiveGateway() {}
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
@@ -137,6 +138,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                         isSSOFailure={true}
                         customMessage="Session expired. Please reconnect to continue."
                         customButtonText="Reconnect"
+                        backgroundImage={blurBgGame}
                     />
                 );
             }
@@ -153,13 +155,9 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
             return (
                 <>
-                    <div className='c-match c-in-play'>
+                    <div className="c-match c-in-play">
                         <AppContextConsumer>
-                            {({ language }) =>
-                                GamePageComponent && (
-                                    <GamePageComponent namespace={namespace} language={language} />
-                                )
-                            }
+                            {({ language }) => GamePageComponent && <GamePageComponent namespace={namespace} language={language} />}
                         </AppContextConsumer>
                     </div>
                 </>
@@ -168,11 +166,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
         const content = renderGameContent();
 
-        return (
-            <>
-                {content}
-            </>
-        );
+        return <>{content}</>;
     }
 
     render() {

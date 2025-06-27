@@ -5,7 +5,7 @@ export const Loading: React.FC = () => {
     return (
         <div className={Styles['reconnecting-container']}>
             <img src={blurBgGame} alt="Blurred background" />
-            <div className={Styles['dot-elastic']}></div>
+            <div className={Styles['spinner']}></div>
         </div>
     );
 };
