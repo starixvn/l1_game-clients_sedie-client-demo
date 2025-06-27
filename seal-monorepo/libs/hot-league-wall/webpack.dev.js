@@ -50,7 +50,10 @@ module.exports = {
         // Define environment variables for client-side access
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-            'process.env.SIMULATOR_CONFIG': JSON.stringify(process.env.SIMULATOR_CONFIG),
+            'process.env.SIMULATOR_CONFIG': JSON.stringify(
+                process.env.SIMULATOR_CONFIG ||
+                    '{"simulationMode":{"enabled":true},"simulatorConfigs":{"enabled":true,"defaultGameType":"rng-soccer"}}',
+            ),
         }),
     ],
 };

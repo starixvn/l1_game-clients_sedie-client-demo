@@ -8,6 +8,10 @@ WORKDIR /app
 ARG PORT=5000
 ENV PORT=$PORT
 
+# Set SSO control environment variables for deployment
+ENV NODE_ENV=development
+ENV SIMULATOR_CONFIG='{"simulationMode":{"enabled":true},"simulatorConfigs":{"enabled":true,"defaultGameType":"rng-soccer"}}'
+
 # Copy package files from seal-monorepo directory
 COPY seal-monorepo/package*.json ./
 
@@ -22,7 +26,7 @@ COPY . .
 WORKDIR /app/seal-monorepo
 RUN npm install && \
     nx reset && \
-    cross-env NODE_ENV=development nx build hot-league-wall --configuration=development
+    cross-env NODE_ENV=development SIMULATOR_CONFIG='{"simulationMode":{"enabled":true},"simulatorConfigs":{"enabled":true,"defaultGameType":"rng-soccer"}}' nx build hot-league-wall --configuration=development
 
 # Production stage
 FROM hub.lumigame.com/base/nginx:stable-alpine-slim
