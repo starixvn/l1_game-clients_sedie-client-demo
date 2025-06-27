@@ -86,10 +86,6 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
                 handleMessage(data, MessageType.TOGGLE_STATISTIC);
                 options.onToggleStatistic?.(data);
             },
-            onGetHeight: () => {
-                handleMessage(undefined, MessageType.GET_HEIGHT);
-                options.onGetHeight?.();
-            },
             onSetHeight: (data) => {
                 handleMessage(data, MessageType.SET_HEIGHT);
                 options.onSetHeight?.(data);

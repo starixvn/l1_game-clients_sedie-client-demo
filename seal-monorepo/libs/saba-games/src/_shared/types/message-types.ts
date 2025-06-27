@@ -70,6 +70,14 @@ interface HandleInputChangeMessage {
     value: string;
 }
 
+interface GetHeightMessage {
+    type: MessageType.GET_HEIGHT;
+}
+
+interface SetHeightMessage {
+    type: MessageType.SET_HEIGHT;
+    height: number;
+}
 export interface MessageData {
     [MessageType.UPDATE_SETTINGS]?: UpdateSettingsMessage;
     [MessageType.BETTING_BLOCK_STATE]?: BettingBlockStateMessage;
@@ -78,8 +86,8 @@ export interface MessageData {
     [MessageType.HANDLE_INPUT_CHANGE]?: HandleInputChangeMessage;
     [MessageType.TOGGLE_STATISTIC]?: ToggleStatisticMessage;
     [MessageType.HIDE_ALL_BET_PANELS]?: any;
-    [MessageType.GET_HEIGHT]?: any;
-    [MessageType.SET_HEIGHT]?: any;
+    [MessageType.GET_HEIGHT]?: GetHeightMessage;
+    [MessageType.SET_HEIGHT]?: SetHeightMessage;
     [MessageType.HANDLE_CLEAR]?: any;
 }
 
@@ -91,6 +99,8 @@ export type WindowMessage =
     | BetPanelStateMessage
     | HandleBetMessage
     | HandleInputChangeMessage
+    | GetHeightMessage
+    | SetHeightMessage
     | { type: MessageType.HIDE_ALL_BET_PANELS | MessageType.HANDLE_CLEAR };
 
 // Message event type

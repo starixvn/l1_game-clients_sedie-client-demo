@@ -45,7 +45,6 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
 };
 
 const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
-
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);

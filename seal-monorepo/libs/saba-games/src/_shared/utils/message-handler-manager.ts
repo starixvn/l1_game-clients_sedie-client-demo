@@ -86,6 +86,7 @@ export class MessageHandlerManager {
         if (this.config.enableEncryption && this.messageEncryption) {
             messageData = this.messageEncryption.encrypt(message);
         }
+
         iframe.contentWindow?.postMessage(messageData, '*');
     }
 

@@ -5,6 +5,9 @@ import { BettingPanelPortal } from './bet-panel/betting-panel-portal';
 import { ConfirmBetPortal } from './confirm-bet/confirm-bet-portal';
 import { ConfirmBetState } from './confirm-bet';
 import { MessageEncryption, EncryptedMessage } from '../utils/encryption';
+import { useStatisticData } from '../hooks/use-message-data';
+import { useMessageContext } from '../_shared/contexts/message-context';
+import { MessageType } from '../_shared/types/message-types';
 
 interface IframeContainerProps {
     src: string;
@@ -41,7 +44,8 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     encryptionKey
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const { iframeHeight, requestIframeHeight, handleHeightMessage } = useIframeHeight();
+    const isScoreBoardOpen = useStatisticData();
+    const { iframeHeight, requestIframeHeight } = useIframeHeight();
     const { betPanelState, handleBettingMessage } = useBettingPanel();
     const [confirmBetState, setConfirmBetState] = useState<ConfirmBetState>({
         isVisible: false,
@@ -95,9 +99,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
             const data = messageEncryption.decrypt(encryptedMessage);
 
-            // Handle height update message
-            handleHeightMessage(data);
-
             // Handle betting related messages
             handleBettingMessage(data);
 
@@ -112,13 +113,12 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
-    }, [handleHeightMessage, handleBettingMessage, handleConfirmBetMessage, messageEncryption]);
+    }, [handleBettingMessage, handleConfirmBetMessage, messageEncryption]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
         console.log('Iframe loaded from src:', src);
 
-        // Send initial configuration to iframe
         sendEncryptedMessage({
             type: 'INIT_CONFIG',
             payload: {
@@ -127,9 +127,8 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
             }
         });
 
-        // Request initial height
-        setTimeout(() => requestIframeHeight(iframeRef.current), 500);
-    }, [requestIframeHeight, src, token, language, sendEncryptedMessage]);
+        setTimeout(() => requestIframeHeight(iframeRef.current), 300);
+    }, [src, token, language, sendEncryptedMessage, requestIframeHeight]);
 
     // Add effect to check iframe origin on mount and src change
     useEffect(() => {
@@ -155,6 +154,11 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
             window.removeEventListener('message', handleMessage);
         };
     }, [handleMessage]);
+
+    // Request height when scoreboard state changes
+    useEffect(() => {
+        setTimeout(() => requestIframeHeight(iframeRef.current), 300);
+    }, [isScoreBoardOpen, requestIframeHeight]);
 
     return (
         <CustomContainer className="mt-3" fluid="xl">
