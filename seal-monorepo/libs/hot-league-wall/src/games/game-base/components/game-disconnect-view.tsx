@@ -73,13 +73,9 @@ export const GameDisconnectView: React.FC<{
     }
 
     // Use custom text for SSO failures, fallback to default for connection failures
-    const messageText = customMessage || (isSSOFailure
-        ? gc.Translator.t('Common.message_session_expired') || 'Your session has expired. Please reload the page.'
-        : gc.Translator.t('Common.connect_failed'));
+    const messageText = customMessage || gc.Translator.t('Common.connect_failed');
 
-    const buttonText = customButtonText || (isSSOFailure
-        ? gc.Translator.t('Common.reconnect') || 'Reconnect'
-        : gc.Translator.translate('Common.reconnect'));
+    const buttonText = customButtonText || gc.Translator.t('Common.reconnect');
 
     return (
         <div className={`${Styles['disconnect-container']} ${backgroundImage ? Styles['has-background'] : ''}`}
