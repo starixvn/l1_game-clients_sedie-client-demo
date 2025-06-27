@@ -62,6 +62,12 @@ const PreviewContext: React.FC<PreviewContextProps> = ({
             data-platform={platform}
             data-version={process.env.TAG_VERSION}
             className="seal-vg-sg-index"
+            style={{
+                width: '100%',
+                height: '100vh',
+                overflow: 'hidden',
+                paddingLeft: '100px'
+            }}
         >
             <ProviderSetDropDown />
 
@@ -70,50 +76,114 @@ const PreviewContext: React.FC<PreviewContextProps> = ({
                 <Route
                     path="/sso-control"
                     element={
-                        <>
-                            {showSSOControls && (
-                                <SSOControlSimulator
-                                    onToggleFailure={ssoSimulator.toggleFailure}
-                                    onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidToken}
-                                    onSelectScenario={handleSelectScenario}
-                                    isFailureMode={ssoSimulator.isFailureMode}
-                                    isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
-                                    failCount={ssoSimulator.failCount}
-                                    setFailCount={ssoSimulator.setFailCount}
+                        <div style={{
+                            display: 'flex',
+                            width: '800px',
+                            height: '100vh',
+                            overflow: 'hidden',
+                            gap: '50px'
+                        }}>
+                            {/* Left side - App */}
+                            <div style={{
+                                flex: '1',
+                                minWidth: '0',
+                                position: 'relative'
+                            }}>
+                                <SSOFailureModeLogic
+                                    showSSOControls={showSSOControls}
+                                    ssoSimulator={ssoSimulator}
+                                    playButtonClickCount={playButtonClickCount}
                                 />
+
+                                <SSOControlSimulatorWrapper>
+                                    <ScenarioResetWrapper scenarioKey={currentScenarioKey}>
+                                        {(key) => (
+                                            <App
+                                                key={key}
+                                                appEnv={appEnv}
+                                                language={language}
+                                                siteId={siteId}
+                                                onRequestSSOToken={onRequestSSOToken}
+                                            />
+                                        )}
+                                    </ScenarioResetWrapper>
+                                </SSOControlSimulatorWrapper>
+                            </div>
+
+                            {/* Right side - SSO Controls */}
+                            {showSSOControls && (
+                                <div style={{
+                                    width: '320px',
+                                    minWidth: '320px',
+                                    height: '500px',
+                                    background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(20,20,20,0.95) 100%)',
+                                    borderLeft: '1px solid rgba(255,255,255,0.1)',
+                                    overflowY: 'auto',
+                                    padding: '20px',
+                                    boxSizing: 'border-box'
+                                }}>
+                                    <SSOControlSimulator
+                                        onToggleFailure={ssoSimulator.toggleFailure}
+                                        onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidToken}
+                                        onSelectScenario={handleSelectScenario}
+                                        isFailureMode={ssoSimulator.isFailureMode}
+                                        isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
+                                        failCount={ssoSimulator.failCount}
+                                        setFailCount={ssoSimulator.setFailCount}
+                                    />
+                                </div>
                             )}
-
-                            <SSOFailureModeLogic
-                                showSSOControls={showSSOControls}
-                                ssoSimulator={ssoSimulator}
-                                playButtonClickCount={playButtonClickCount}
-                            />
-
-                            <SSOControlSimulatorWrapper>
-                                <ScenarioResetWrapper scenarioKey={currentScenarioKey}>
-                                    {(key) => (
-                                        <App
-                                            key={key}
-                                            appEnv={appEnv}
-                                            language={language}
-                                            siteId={siteId}
-                                            onRequestSSOToken={onRequestSSOToken}
-                                        />
-                                    )}
-                                </ScenarioResetWrapper>
-                            </SSOControlSimulatorWrapper>
-                        </>
+                        </div>
                     }
                 />
                 <Route
                     path="*"
                     element={
-                        <App
-                            appEnv={appEnv}
-                            language={language}
-                            siteId={siteId}
-                            onRequestSSOToken={onRequestSSOToken}
-                        />
+                        <div style={{
+                            display: 'flex',
+                            width: '100%',
+                            height: '100vh',
+                            overflow: 'hidden',
+                            gap: '50px'
+                        }}>
+                            {/* Left side - App */}
+                            <div style={{
+                                flex: '1',
+                                minWidth: '0',
+                                position: 'relative'
+                            }}>
+                                <App
+                                    appEnv={appEnv}
+                                    language={language}
+                                    siteId={siteId}
+                                    onRequestSSOToken={onRequestSSOToken}
+                                />
+                            </div>
+
+                            {/* Right side - SSO Controls */}
+                            {showSSOControls && (
+                                <div style={{
+                                    width: '320px',
+                                    minWidth: '320px',
+                                    height: '100%',
+                                    background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(20,20,20,0.95) 100%)',
+                                    borderLeft: '1px solid rgba(255,255,255,0.1)',
+                                    overflowY: 'auto',
+                                    padding: '20px',
+                                    boxSizing: 'border-box'
+                                }}>
+                                    <SSOControlSimulator
+                                        onToggleFailure={ssoSimulator.toggleFailure}
+                                        onToggleFirstClickInvalidToken={ssoSimulator.toggleFirstClickInvalidToken}
+                                        onSelectScenario={handleSelectScenario}
+                                        isFailureMode={ssoSimulator.isFailureMode}
+                                        isFirstClickInvalidTokenMode={ssoSimulator.isFirstClickInvalidTokenMode}
+                                        failCount={ssoSimulator.failCount}
+                                        setFailCount={ssoSimulator.setFailCount}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     }
                 />
             </Routes>

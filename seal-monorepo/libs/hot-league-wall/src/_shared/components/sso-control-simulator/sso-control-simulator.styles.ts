@@ -44,23 +44,15 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
      */
     get container(): React.CSSProperties {
         return {
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            zIndex: 9999,
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(20,20,20,0.95) 100%)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '12px',
-            padding: '16px',
+            position: 'relative',
+            background: 'transparent',
             color: 'white',
             fontSize: '13px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            minWidth: '280px',
-            transition: 'all 0.3s ease',
-            transform: 'translateY(0)',
-            opacity: 1
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column'
         };
     }
 
@@ -71,8 +63,10 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
         return {
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '16px'
+            justifyContent: 'center',
+            marginBottom: '20px',
+            paddingBottom: '16px',
+            borderBottom: '1px solid rgba(255,255,255,0.1)'
         };
     }
 
@@ -135,8 +129,10 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
         return {
             display: 'flex',
             flexDirection: 'column',
-            gap: '12px',
-            animation: 'slideDown 0.3s ease'
+            gap: '16px',
+            flex: '1',
+            overflowY: 'auto',
+            paddingRight: '8px'
         };
     }
 
@@ -286,7 +282,7 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
             lineHeight: '1.4',
             wordBreak: 'break-word',
             whiteSpace: 'normal',
-            width: '200px'
+            width: '100%'
         };
     }
 
@@ -334,7 +330,7 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
     get scenarioGrid(): React.CSSProperties {
         return {
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gridTemplateColumns: '1fr',
             gap: '8px',
             marginBottom: '8px'
         };
@@ -354,20 +350,21 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
             border: isSelected
                 ? '1px solid rgba(255,255,255,0.3)'
                 : '1px solid rgba(255,255,255,0.1)',
-            padding: '8px 10px',
+            padding: '10px 12px',
             borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '11px',
+            fontSize: '12px',
             fontWeight: '500',
             transition: 'all 0.2s ease',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             alignItems: 'center',
-            gap: '4px',
-            textAlign: 'center',
-            minHeight: '60px',
-            justifyContent: 'center',
-            opacity: isActive ? 1 : 0.6
+            gap: '8px',
+            textAlign: 'left',
+            minHeight: 'auto',
+            justifyContent: 'flex-start',
+            opacity: isActive ? 1 : 0.6,
+            width: '100%'
         };
     }
 
@@ -377,7 +374,7 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
     get scenarioIcon(): React.CSSProperties {
         return {
             fontSize: '16px',
-            marginBottom: '2px'
+            flexShrink: 0
         };
     }
 
@@ -386,9 +383,10 @@ export class SSOControlSimulatorStyles implements ISSOSimulatorStyles {
      */
     get scenarioName(): React.CSSProperties {
         return {
-            fontSize: '10px',
-            fontWeight: '600',
-            lineHeight: '1.2'
+            fontSize: '12px',
+            fontWeight: '500',
+            lineHeight: '1.3',
+            flex: 1
         };
     }
 
