@@ -17,7 +17,7 @@ import blurBgGame from '../assets/rng-soccer/blur-bg-game.png';
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private reRenderGameTimeout?: NodeJS.Timeout;
 
-    constructor(props: { token: string; onSSORetry?: () => Promise<void> }) {
+    constructor(props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean }) {
         super(props);
         configSharedContainer();
         this.state = {
@@ -141,8 +141,8 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                     <GameDisconnectView
                         onReconnect={this.handleSessionReconnect}
                         isSSOFailure={true}
-                        // customMessage="Session expired. Please reconnect to continue."
-                        // customButtonText="Reconnect"
+                        isLoading={this.props.isReconnecting}
+                        language={context.language}
                         backgroundImage={blurBgGame}
                     />
                 );

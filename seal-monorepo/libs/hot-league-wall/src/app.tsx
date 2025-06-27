@@ -37,6 +37,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isReconnecting, setIsReconnecting] = useState(false);
 
     // Shared token request logic
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
@@ -76,15 +77,19 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
             context,
             showLoading = false,
             triggerPlayTransition = false,
+            showReconnectLoading = false,
         }: {
             context: 'FIRST_SSO' | 'SSO_RETRY';
             showLoading?: boolean;
             triggerPlayTransition?: boolean;
+            showReconnectLoading?: boolean;
         }) => {
             if (showLoading) setIsLoading(true);
+            if (showReconnectLoading) setIsReconnecting(true);
             const startTime = performance.now();
             const result = await executeTokenRequest(context);
             if (showLoading) setIsLoading(false);
+            if (showReconnectLoading) setIsReconnecting(false);
             if (triggerPlayTransition && result.success) setHasClickedPlay(true);
             const endTime = performance.now();
             const duration = endTime - startTime;
@@ -111,10 +116,17 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     const handleSessionReconnect = useCallback(
         async () => {
-            await performTokenRequest({ context: 'SSO_RETRY' });
+            console.log('🔄 [SESSION_RECONNECT] Starting session reconnect...');
+            await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
+            console.log('🔄 [SESSION_RECONNECT] Session reconnect completed');
         },
         [performTokenRequest]
     );
+
+    // Debug logging for reconnecting state changes
+    useEffect(() => {
+        console.log('🔄 [DEBUG] isReconnecting state changed:', isReconnecting);
+    }, [isReconnecting]);
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -141,7 +153,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     return (
         <div data-react="true" style={{ width: '100%' }}>
-            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handleSessionReconnect} />}
+            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handleSessionReconnect} isReconnecting={isReconnecting} />}
         </div>
     );
 };

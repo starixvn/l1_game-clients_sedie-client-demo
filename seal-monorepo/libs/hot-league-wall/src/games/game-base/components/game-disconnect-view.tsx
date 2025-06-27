@@ -1,5 +1,5 @@
 import * as gc from '@sg/sg-game-client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Loading from '../../../_shared/components/loading';
 import Styles from '../game-base.module.scss';
 
@@ -20,20 +20,65 @@ export const GameDisconnectView: React.FC<{
     isSSOFailure?: boolean;
     customMessage?: string;
     customButtonText?: string;
-}> = ({ onReconnect, backgroundImage, isSSOFailure = false, customMessage, customButtonText }) => {
+    isLoading?: boolean;
+    language?: string;
+}> = ({ onReconnect, backgroundImage, isSSOFailure = false, customMessage, customButtonText, isLoading = false, language = 'en' }) => {
+    // Add minimum loading duration to prevent flashing
+    const [stableLoading, setStableLoading] = useState(false);
+    const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
+    const MIN_LOADING_DURATION = 1000; // 1 second minimum
+
+    useEffect(() => {
+        if (isLoading && !stableLoading) {
+            // Start loading
+            setStableLoading(true);
+            setLoadingStartTime(Date.now());
+        } else if (!isLoading && stableLoading) {
+            // Check if minimum duration has passed
+            const elapsed = Date.now() - (loadingStartTime || 0);
+            if (elapsed >= MIN_LOADING_DURATION) {
+                setStableLoading(false);
+                setLoadingStartTime(null);
+            } else {
+                // Wait for remaining time
+                const remainingTime = MIN_LOADING_DURATION - elapsed;
+                setTimeout(() => {
+                    setStableLoading(false);
+                    setLoadingStartTime(null);
+                }, remainingTime);
+            }
+        }
+    }, [isLoading, stableLoading, loadingStartTime]);
+
     console.log('🔴 GameDisconnectView: Component rendered with props:', {
         backgroundImage: !!backgroundImage,
         isSSOFailure,
-        customMessage: !!customMessage
+        customMessage: !!customMessage,
+        isLoading,
+        stableLoading,
+        language
     });
+
+    // Debug translation keys
+    console.log('🔴 GameDisconnectView: Translation debug:', {
+        language,
+        sessionExpiredKey: gc.Translator.t('Common.message_session_expired'),
+        connectFailedKey: gc.Translator.t('Common.connect_failed'),
+        reconnectKey: gc.Translator.t('Common.reconnect')
+    });
+
+    // Show loading view when requesting new token
+    if (stableLoading) {
+        return <GameLoadingView />;
+    }
 
     // Use custom text for SSO failures, fallback to default for connection failures
     const messageText = customMessage || (isSSOFailure
-        ? 'Login failed. Please try again.'
+        ? gc.Translator.t('Common.message_session_expired') || 'Your session has expired. Please reload the page.'
         : gc.Translator.t('Common.connect_failed'));
 
     const buttonText = customButtonText || (isSSOFailure
-        ? 'Retry Login'
+        ? gc.Translator.t('Common.reconnect') || 'Reconnect'
         : gc.Translator.translate('Common.reconnect'));
 
     return (
@@ -45,7 +90,8 @@ export const GameDisconnectView: React.FC<{
                     <p className={Styles['reconnect-text']}>{messageText}</p>
                     <button
                         className={`${'c-btn'} ${'c-btn--bet'} ${Styles['reconnect-btn']}`}
-                        data-disabled={false}
+                        data-disabled={isLoading}
+                        disabled={isLoading}
                         onClick={() => {
                             console.log('🔴 GameDisconnectView: Reconnect/Retry button clicked', { isSSOFailure });
                             onReconnect();
