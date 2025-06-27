@@ -44,35 +44,34 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
     const [isLoading, setIsLoading] = useState(false);
     const [ssoFailure, setSsoFailure] = useState(false);
 
-    // Shared token request logic to reduce duplication
-    const executeTokenRequest = useCallback(async (context: string) => {
-        const startTime = performance.now();
+    // Shared token request logic
+    const executeTokenRequest = useCallback(async (context: 'APP_TIMING' | 'SSO_RETRY', setLoading = false) => {
         console.log(`🔄 [${context}] Using TokenRequestManager for REAL APP...`);
+        const tokenStartTime = performance.now();
 
         try {
             const newToken = await TokenRequestManager.getInstance().executeTokenRequest();
-            const endTime = performance.now();
-            const duration = endTime - startTime;
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
 
             if (newToken) {
-                console.log(`✅ [${context}] TokenRequestManager completed for REAL APP - Duration: ${duration.toFixed(2)}ms`);
-                console.log(`🔄 [${context}] Updating current token for REAL APP...`);
+                console.log(`✅ [${context}] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 setCurrentToken(newToken);
                 setHasClickedPlay(true);
-                setSsoFailure(false); // Clear any SSO failure state
-                return { success: true, token: newToken, duration };
+                setSsoFailure(false); // Clear SSO failure state
+                return { success: true, token: newToken, duration: tokenDuration };
             } else {
-                console.log(`⚠️ [${context}] TokenRequestManager returned null for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+                console.log(`⚠️ [${context}] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 setSsoFailure(true); // Set SSO failure state
-                return { success: false, token: null, duration };
+                return { success: false, token: null, duration: tokenDuration };
             }
         } catch (error) {
-            const endTime = performance.now();
-            const duration = endTime - startTime;
-            console.log(`💥 [${context}] TokenRequestManager failed for REAL APP - Duration: ${duration.toFixed(2)}ms`);
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
+            console.log(`💥 [${context}] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
             console.error(`[${context}] TokenRequestManager error:`, error);
             setSsoFailure(true); // Set SSO failure state
-            return { success: false, token: null, duration };
+            return { success: false, token: null, duration: tokenDuration, error };
         }
     }, []);
 
@@ -84,11 +83,11 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
 
         const result = await executeTokenRequest('APP_TIMING');
 
+        setIsLoading(false);
+
         const appEndTime = performance.now();
         const appDuration = appEndTime - appStartTime;
         console.log(`🏁 [APP_TIMING] PROTOTYPE to REAL APP transition completed - Total duration: ${appDuration.toFixed(2)}ms`);
-
-        setIsLoading(false);
     }, [executeTokenRequest]);
 
     const handleSSORetry = useCallback(async () => {
@@ -123,20 +122,6 @@ const AppContent = ({ updateBalanceCallback, onPlayButtonTokenRequest, onSSORetr
     }, [onPlayButtonTokenRequest]);
 
     loadI18n(language);
-
-    // Show SSO failure view if ssoFailure is true
-    if (ssoFailure) {
-        console.log('🔄 [APP_TIMING] Showing SSO failure view - ssoFailure is true');
-        return (
-            <div data-react="true" style={{ width: '100%' }}>
-                <GameDisconnectView
-                    onReconnect={handleSSORetry}
-                    isSSOFailure={true}
-                    backgroundImage={blurBgGame}
-                />
-            </div>
-        );
-    }
 
     // Show RNG Soccer prototype first, then main app after play button click
     if (!hasClickedPlay) {
