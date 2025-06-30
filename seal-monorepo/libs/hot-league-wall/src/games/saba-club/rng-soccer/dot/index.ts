@@ -1,0 +1,1 @@
+export { RNGSoccerRoundDot } from './dot';

@@ -1,0 +1,79 @@
+:root {
+    --soccer-home-bg: linear-gradient(180deg, #1875e2 6.04%, #0158be 100%);
+    --soccer-home-border: linear-gradient(180deg, #67adff 6.04%, #00428f 100%);
+    --soccer-away-bg: linear-gradient(180deg, #f31a29 6.04%, #cc0110 100%);
+    --soccer-away-border: linear-gradient(180deg, #ff8e95 6.04%, #a80915 100%);
+    --soccer-draw-bg: linear-gradient(180deg, #0dd009 6.04%, #04a801 100%);
+    --soccer-draw-border: linear-gradient(180deg, #1cfb25 6.04%, #008b0e 100%);
+    --soccer-text-light: #ffffff;
+    --soccer-text-dark: #2c3e50;
+
+    --dot-next-bg: linear-gradient(180deg, #cdcdcd 0%, #939393 100%);
+    --dot-next-border: linear-gradient(180deg, #fff 0%, #616161 100%);
+}
+
+%dot {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    z-index: 1;
+    font-weight: 600;
+
+    &:before {
+        content: '';
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        bottom: 1px;
+        right: 1px;
+        border-radius: 100%;
+        z-index: -1;
+    }
+}
+
+.round-dot {
+    @extend %dot;
+
+    &.dot-home {
+        background: var(--soccer-home-border);
+
+        &:before {
+            background: var(--soccer-home-bg);
+        }
+    }
+
+    &.dot-away {
+        background: var(--soccer-away-border);
+
+        &:before {
+            background: var(--soccer-away-bg);
+        }
+    }
+
+    &.dot-draw {
+        background: var(--soccer-draw-border);
+        color: var(--soccer-text-dark);
+
+        &:before {
+            background: var(--soccer-draw-bg);
+        }
+    }
+}
+
+.dot-next {
+    @extend %dot;
+    background: var(--dot-next-border);
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+    color: var(--dot-even-text-color);
+
+    &:before {
+        background: var(--dot-next-bg) !important;
+        height: calc(100% - 2px);
+        width: calc(100% - 2px);
+        position: absolute;
+    }
+}

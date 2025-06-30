@@ -38,6 +38,7 @@ export interface UIExtensionOptions {
         customBetting?: (props: any, state: any) => JSX.Element;
         customResult?: (props: any, state: any) => JSX.Element;
         customStatistic?: (props: any, state: any) => JSX.Element;
+        customRoundHistory?: (props: any, state: any) => JSX.Element;
     };
     config?: {
         enableHeaderSection?: boolean;
@@ -72,23 +73,14 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     }
 
     // Helper method to resolve JSX elements, handling null/undefined values
-    protected resolveCustomSection(
-        customSection: JSX.Element | null | undefined,
-        defaultRenderer: () => JSX.Element
-    ): JSX.Element {
+    protected resolveCustomSection(customSection: JSX.Element | null | undefined, defaultRenderer: () => JSX.Element): JSX.Element {
         console.log('🔴 GameUIRenderer: resolveCustomSection called with customSection:', !!customSection);
         return customSection || defaultRenderer();
     }
 
     renderNotice(props: P, state: S): JSX.Element {
         console.log('🔴 GameUIRenderer: renderNotice called');
-        return (
-            <Notice
-                namespace={props.namespace}
-                isDisableGame={state.showDisabledPopup}
-                language={props.language}
-            />
-        );
+        return <Notice namespace={props.namespace} isDisableGame={state.showDisabledPopup} language={props.language} />;
     }
 
     renderWarning(props: P): JSX.Element {
@@ -101,7 +93,6 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         console.log('🔴 GameUIRenderer: renderRoundIdSection called with:', { roundId, roundState });
         return <RoundId clientRoundId={roundId} roundState={roundState} />;
     }
-
 
     renderCountDownTimer(props: P, setState: (state: Partial<S>) => void) {
         console.log('🔴 GameUIRenderer: renderCountDownTimer called');
@@ -141,15 +132,21 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         console.log('🔴 GameUIRenderer: renderWaitingForNextRound called');
         const message = getGameMessage(state, gc.Translator);
         if (!message) return null;
-        return (
-            <WarningDialog key="warning-bet" message={message} duration={1000} />
-        );
+        return <WarningDialog key="warning-bet" message={message} duration={1000} />;
     }
 
     renderBettingBlock(props?: P, state?: S): JSX.Element {
         console.log('🔴 GameUIRenderer: renderBettingBlock called');
         if (this.extensionOptions.components?.customBetting && props && state) {
             return this.extensionOptions.components.customBetting(props, state);
+        }
+        return <></>;
+    }
+
+    renderRoundHistory(props?: P, state?: S): JSX.Element {
+        console.log('🔴 GameUIRenderer: renderRoundHistory called');
+        if (this.extensionOptions.components?.customRoundHistory && props && state) {
+            return this.extensionOptions.components.customRoundHistory(props, state);
         }
         return <></>;
     }
@@ -179,11 +176,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
             return <></>;
         }
 
-        const headerClass = classNames(
-            Styles['game-header'],
-            this.getExtensionClass('header'),
-            overrideClasses?.header
-        );
+        const headerClass = classNames(Styles['game-header'], this.getExtensionClass('header'), overrideClasses?.header);
 
         if (this.extensionOptions.config?.liveIconUrl || this.extensionOptions.config?.statsIconUrl) {
             return this.renderStandardGameHeader(props, state, setState, overrideClasses);
@@ -202,31 +195,15 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
 
     renderStandardGameHeader(props: P, state: S, setState: (state: Partial<S>) => void, overrideClasses?: any): JSX.Element {
         console.log('🔴 GameUIRenderer: renderStandardGameHeader called');
-        const headerClass = classNames(
-            Styles['game-header'],
-            this.getExtensionClass('header'),
-            overrideClasses?.header
-        );
+        const headerClass = classNames(Styles['game-header'], this.getExtensionClass('header'), overrideClasses?.header);
 
-        const gameNameTextClass = classNames(
-            Styles['game-name-text'],
-            this.getExtensionClass('gameNameText')
-        );
+        const gameNameTextClass = classNames(Styles['game-name-text'], this.getExtensionClass('gameNameText'));
 
-        const gameNameRoundClass = classNames(
-            Styles['game-name-round'],
-            this.getExtensionClass('gameNameRound')
-        );
+        const gameNameRoundClass = classNames(Styles['game-name-round'], this.getExtensionClass('gameNameRound'));
 
-        const timerClass = classNames(
-            Styles['timer'],
-            this.getExtensionClass('timer')
-        );
+        const timerClass = classNames(Styles['timer'], this.getExtensionClass('timer'));
 
-        const statsIconClass = classNames(
-            Styles['stats-icon'],
-            this.getExtensionClass('statsIcon')
-        );
+        const statsIconClass = classNames(Styles['stats-icon'], this.getExtensionClass('statsIcon'));
 
         const gameName = gc.Translator.translate(`${this.extensionOptions.config?.gameName}.game_name`) || state.gameId;
         const liveIconUrl = this.extensionOptions.config?.liveIconUrl;
@@ -248,18 +225,11 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                             <img
                                 src={liveIconUrl}
                                 alt="live"
-                                className={classNames(
-                                    Styles['live-icon'],
-                                    this.getExtensionClass('liveIcon')
-                                )}
+                                className={classNames(Styles['live-icon'], this.getExtensionClass('liveIcon'))}
                             />
                         )}
                     </div>
-                    <RoundId
-                        clientRoundId={state.roundId}
-                        roundState={state.roundState}
-                        className={gameNameRoundClass}
-                    />
+                    <RoundId clientRoundId={state.roundId} roundState={state.roundState} className={gameNameRoundClass} />
                 </div>
                 <CountDownTimer
                     namespace={props.namespace}
@@ -271,7 +241,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                         setState({ countdownTimer } as Partial<S>);
                     }}
                     customStyles={{
-                        wrapper: timerClass
+                        wrapper: timerClass,
                     }}
                 />
                 {statsIconUrl && (
@@ -279,10 +249,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                         <img src={statsIconUrl} alt="statistics" />
                     </div>
                 )}
-                <StartRoundCountDownTimer
-                    namespace={props.namespace}
-                    language={props.language}
-                />
+                <StartRoundCountDownTimer namespace={props.namespace} language={props.language} />
             </div>
         );
     }
@@ -296,17 +263,9 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
             return <></>;
         }
 
-        const contentClass = classNames(
-            Styles['game-content'],
-            this.getExtensionClass('content'),
-            overrideClasses?.content
-        );
+        const contentClass = classNames(Styles['game-content'], this.getExtensionClass('content'), overrideClasses?.content);
 
-        return (
-            <div className={contentClass}>
-                {this.renderResultBlock(props, state)}
-            </div>
-        );
+        return <div className={contentClass}>{this.renderResultBlock(props, state)}</div>;
     }
 
     renderGameFooterSection(props: P, state: S, overrideClasses?: any): JSX.Element {
@@ -314,11 +273,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
             return <></>;
         }
 
-        const footerClass = classNames(
-            Styles['game-footer'],
-            this.getExtensionClass('footer'),
-            overrideClasses?.footer
-        );
+        const footerClass = classNames(Styles['game-footer'], this.getExtensionClass('footer'), overrideClasses?.footer);
 
         const betOptionsClass = classNames(
             Styles['bet-options'],
@@ -326,7 +281,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                 [Styles['disabled']]: !state.isAllowedBet,
             },
             this.getExtensionClass('betOptions'),
-            overrideClasses?.betOptions
+            overrideClasses?.betOptions,
         );
 
         const customFooter = this.extensionOptions?.components?.customFooter?.(props, state);
@@ -336,11 +291,9 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                     {customFooter ? customFooter : this.renderBettingBlock(props, state)}
                     <ConfirmBet namespace={props.namespace} />
                 </div>
-                <div className={Styles['animation-balance']}>
-                    {this.renderAnimationBalance(state)}
-                </div>
+                <div className={Styles['animation-balance']}>{this.renderAnimationBalance(state)}</div>
             </div>
-        )
+        );
     }
 
     renderGameHistorySection(props: P, state: S, overrideClasses?: any): JSX.Element {
@@ -352,17 +305,9 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
             return <></>;
         }
 
-        const popupClass = classNames(
-            Styles['game-popup'],
-            this.getExtensionClass('popup'),
-            overrideClasses?.popup
-        );
+        const popupClass = classNames(Styles['game-popup'], this.getExtensionClass('popup'), overrideClasses?.popup);
 
-        return (
-            <div className={popupClass}>
-                {this.renderStatistic(props, state)}
-            </div>
-        );
+        return <div className={popupClass}>{this.renderStatistic(props, state)}</div>;
     }
 
     applyBaseStyles(): React.CSSProperties {
@@ -375,7 +320,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
             width: '100%',
             height: '100%',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
         };
     }
 
@@ -389,14 +334,11 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         return {
             ...baseStyles,
             background: `url(${customBackgroundImage}) no-repeat center`,
-            backgroundSize: 'cover'
+            backgroundSize: 'cover',
         };
     }
 
-    renderGameMessages(
-        props: P,
-        state: S
-    ): JSX.Element {
+    renderGameMessages(props: P, state: S): JSX.Element {
         return (
             <div className={Styles['game-messages']}>
                 {this.renderNotice(props, state)}
@@ -415,37 +357,26 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         customHeaderSection?: JSX.Element | null,
         customContentSection?: JSX.Element | null,
         customFooterSection?: JSX.Element | null,
-        customHistorySection?: JSX.Element | null
+        customHistorySection?: JSX.Element | null,
+        customRoundHistorySection?: JSX.Element | null,
     ): JSX.Element {
         const containerStyle = this.renderGameBackground(customBackgroundImage);
 
         const containerClass = classNames(
             Styles['game-container'],
             this.getExtensionClass('gameContainer'),
-            overrideClasses?.gameContainer
+            overrideClasses?.gameContainer,
         );
 
         return (
-            <div
-                className={containerClass}
-                style={containerStyle}
-            >
-                {this.resolveCustomSection(
-                    customHeaderSection,
-                    () => this.renderGameHeaderSection(props, state, setStateCallback, overrideClasses)
+            <div className={containerClass} style={containerStyle}>
+                {this.resolveCustomSection(customHeaderSection, () =>
+                    this.renderGameHeaderSection(props, state, setStateCallback, overrideClasses),
                 )}
-                {this.resolveCustomSection(
-                    customContentSection,
-                    () => this.renderGameContentSection(props, state, overrideClasses)
-                )}
-                {this.resolveCustomSection(
-                    customFooterSection,
-                    () => this.renderGameFooterSection(props, state, overrideClasses)
-                )}
-                {this.resolveCustomSection(
-                    customHistorySection,
-                    () => this.renderGameHistorySection(props, state, overrideClasses)
-                )}
+                {this.resolveCustomSection(customContentSection, () => this.renderGameContentSection(props, state, overrideClasses))}
+                {this.resolveCustomSection(customFooterSection, () => this.renderGameFooterSection(props, state, overrideClasses))}
+                {this.resolveCustomSection(customRoundHistorySection, () => this.renderRoundHistory(props, state))}
+                {this.resolveCustomSection(customHistorySection, () => this.renderGameHistorySection(props, state, overrideClasses))}
                 {this.renderGameMessages(props, state)}
             </div>
         );

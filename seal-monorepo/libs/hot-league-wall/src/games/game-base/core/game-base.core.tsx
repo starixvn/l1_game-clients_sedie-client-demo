@@ -74,23 +74,21 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         return null;
     }
 
-
-
     // -------------------------------------------------------------------------
     // EVENT HANDLERS
     // -------------------------------------------------------------------------
 
-    onVisibilityChange = () => { };
+    onVisibilityChange = () => {};
 
     // -------------------------------------------------------------------------
     // CONNECTION HANDLERS
     // -------------------------------------------------------------------------
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler, (handler) => handler.handle())
-    connectToServiceGateway() { }
+    connectToServiceGateway() {}
 
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handle())
-    terminateConnection() { }
+    terminateConnection() {}
 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler)
     inGame() {
@@ -167,10 +165,7 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         const { isConnected, isConnectFailed, initialized: isGameConfigInitialized, showDisabledPopup } = this.state;
 
         if (isConnectFailed) {
-            return <GameDisconnectView
-                onReconnect={this.handleReconnect} 
-                backgroundImage={this.getDisconnectViewBackground()}
-            />;
+            return <GameDisconnectView onReconnect={this.handleReconnect} backgroundImage={this.getDisconnectViewBackground()} />;
         }
 
         const isFirstInit = !isGameConfigInitialized && !showDisabledPopup;
@@ -211,6 +206,10 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         return null;
     }
 
+    protected getGameRoundHistorySection(): JSX.Element | null {
+        return null;
+    }
+
     protected getGameHistorySection(): JSX.Element | null {
         return null;
     }
@@ -233,7 +232,7 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
 
     toggleStatistic = () => {
         this.setState({ isOpenStatistic: !this.state.isOpenStatistic });
-    }
+    };
 }
 
-export default GameBase; 
+export default GameBase;

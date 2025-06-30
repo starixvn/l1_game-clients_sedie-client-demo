@@ -16,6 +16,7 @@ import bgGame from '../../../assets/rng-soccer/bg-game.webp';
 import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
 import RNGSoccerSettlementResult from './settlement-result/rng-soccer-settlement-result';
 import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
+import { RNGSoccerRoundHistory } from './round-history';
 
 interface IRNGSoccerPageState extends IGatewayGameBaseState {
     isTimerActive: boolean;
@@ -55,9 +56,9 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
     togglePopup = () => {
         console.log('🔵 RNGSoccerPage: togglePopup called, current isPopupVisible:', this.state.isPopupVisible);
         this.setState({
-            isPopupVisible: !this.state.isPopupVisible
+            isPopupVisible: !this.state.isPopupVisible,
         });
-    }
+    };
 
     setShowBetPanel = (show: boolean) => {
         console.log('🔵 RNGSoccerPage: setShowBetPanel called with:', show);
@@ -80,6 +81,14 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
         return bgGame;
     }
 
+    override getGameRoundHistorySection(): JSX.Element {
+        return (
+            <Suspense fallback={<div>Loading...</div>}>
+                <RNGSoccerRoundHistory namespace={setting.mainObserverNamespace} language={this.props.language} />
+            </Suspense>
+        );
+    }
+
     override getDisconnectViewBackground(): string {
         console.log('🔵 RNGSoccerPage: getDisconnectViewBackground called, returning:', blurBgGame);
         return blurBgGame;
@@ -92,27 +101,26 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
             classes: {
                 gameContainer: styles['sport-item'],
                 header: styles['wrapper-sport-top'],
-                content: styles['wrapper-sport-content'],
                 footer: styles['wrapper-sport-bottom'],
                 popup: styles['statistic-popup'],
                 gameNameText: styles['game-name-text'],
                 gameNameRound: styles['game-name-round'],
                 liveIcon: styles['live-icon'],
                 timer: styles['timer'],
-                statsIcon: styles['score-board-img']
+                statsIcon: styles['score-board-img'],
             },
             components: {
                 customContent: () => this.renderCustomContent(),
                 customFooter: () => this.renderCustomFooter(),
                 customHistory: (props, state) => this.renderCustomHistory(state as IRNGSoccerPageState),
-                customBetting: () => this.renderCustomBetting()
+                customBetting: () => this.renderCustomBetting(),
             },
             config: {
                 gameName: 'RNGSoccer',
                 liveIconUrl: liveIcon,
                 statsIconUrl: historyBtnIcon,
-                onStatsIconClick: this.togglePopup
-            }
+                onStatsIconClick: this.togglePopup,
+            },
         };
     }
 
@@ -120,21 +128,14 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
         console.log('🔵 RNGSoccerPage: renderCustomContent called');
         return (
             <Suspense fallback={<div>Loading...</div>}>
-                <RNGSoccerSettlementResult
-                    namespace={setting.mainObserverNamespace}
-                    language={this.props.language}
-                />
+                <RNGSoccerSettlementResult namespace={setting.mainObserverNamespace} language={this.props.language} />
             </Suspense>
         );
     }
 
     renderCustomFooter(): JSX.Element {
         console.log('🔵 RNGSoccerPage: renderCustomFooter called');
-        return (
-            <div className={styles['wrapper-sport-bottom']}>
-                {this.renderCustomBetting()}
-            </div>
-        );
+        return <div className={styles['wrapper-sport-bottom']}>{this.renderCustomBetting()}</div>;
     }
 
     renderCustomBetting(): JSX.Element {
