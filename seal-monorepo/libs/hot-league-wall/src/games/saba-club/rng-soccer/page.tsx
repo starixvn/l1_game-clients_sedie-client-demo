@@ -84,7 +84,11 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
     override getGameRoundHistorySection(): JSX.Element {
         return (
             <Suspense fallback={<div>Loading...</div>}>
-                <RNGSoccerRoundHistory namespace={setting.mainObserverNamespace} language={this.props.language} />
+                <RNGSoccerRoundHistory
+                    namespace={setting.mainObserverNamespace}
+                    language={this.props.language}
+                    togglePopup={this.togglePopup}
+                />
             </Suspense>
         );
     }
@@ -118,8 +122,6 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
             config: {
                 gameName: 'RNGSoccer',
                 liveIconUrl: liveIcon,
-                statsIconUrl: historyBtnIcon,
-                onStatsIconClick: this.togglePopup,
             },
         };
     }

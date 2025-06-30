@@ -20,6 +20,7 @@
 
 // Game header section
 .game-header {
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -50,12 +51,6 @@
             font-weight: $font-weight-medium;
             color: $color-light-gray;
         }
-    }
-
-    .stats-icon {
-        display: flex;
-        align-self: flex-start;
-        cursor: pointer;
     }
 
     .timer {
@@ -90,7 +85,7 @@
     .animation-balance {
         position: absolute;
         width: 100%;
-        top:-200%;
+        top: -200%;
         left: 50%;
         transform: translate(-50%, -100%);
         z-index: 2;
@@ -173,7 +168,7 @@
     border-top: 1px solid $color-border;
 
     // Statistics button
-    &>.statistic-btn {
+    & > .statistic-btn {
         flex: 1;
         width: 100%;
         max-width: 15rem;
@@ -214,7 +209,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: rgba(54, 118, 255, 0.40);
+    background-color: rgba(54, 118, 255, 0.4);
 
     &.has-background {
         background-image: url('../../assets/rng-soccer/blur-bg-game.png');

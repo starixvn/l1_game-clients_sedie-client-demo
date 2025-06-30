@@ -178,7 +178,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
 
         const headerClass = classNames(Styles['game-header'], this.getExtensionClass('header'), overrideClasses?.header);
 
-        if (this.extensionOptions.config?.liveIconUrl || this.extensionOptions.config?.statsIconUrl) {
+        if (this.extensionOptions.config?.liveIconUrl) {
             return this.renderStandardGameHeader(props, state, setState, overrideClasses);
         }
 
@@ -203,11 +203,8 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
 
         const timerClass = classNames(Styles['timer'], this.getExtensionClass('timer'));
 
-        const statsIconClass = classNames(Styles['stats-icon'], this.getExtensionClass('statsIcon'));
-
         const gameName = gc.Translator.translate(`${this.extensionOptions.config?.gameName}.game_name`) || state.gameId;
         const liveIconUrl = this.extensionOptions.config?.liveIconUrl;
-        const statsIconUrl = this.extensionOptions.config?.statsIconUrl;
 
         const toggleStatistic = () => {
             console.log('🔴 GameUIRenderer: toggleStatistic called');
@@ -244,11 +241,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                         wrapper: timerClass,
                     }}
                 />
-                {statsIconUrl && (
-                    <div className={statsIconClass} onClick={toggleStatistic}>
-                        <img src={statsIconUrl} alt="statistics" />
-                    </div>
-                )}
+
                 <StartRoundCountDownTimer namespace={props.namespace} language={props.language} />
             </div>
         );

@@ -4,9 +4,11 @@ import { IPropsObserver, IStateObserver, ObserverComponent } from '../../../../_
 import { RNGSoccerRoundDot } from '../dot';
 import { RNGSoccerChoices, RNGSoccerSettlementItemResult, RNGSoccerResult } from '../type';
 import Styles from './rng-soccer-round-history.module.scss';
+import historyBtnIcon from '../../../../assets/rng-soccer/history-btn.svg';
 
 export interface IRNGSoccerRoundHistoryProps extends IPropsObserver {
     language: string;
+    togglePopup: () => void;
 }
 
 export interface IRNGSoccerRoundHistoryState extends IStateObserver {
@@ -38,6 +40,9 @@ export default class RNGSoccerRoundHistory extends ObserverComponent<IRNGSoccerR
                         return this.RoundHistoryItem(roundHistory);
                     })}
                     <RNGSoccerRoundDot highlight={true} value="?" choice="next" />
+                </div>
+                <div className={Styles['btn-stats']} onClick={this.props.togglePopup}>
+                    <img src={historyBtnIcon} alt="statistics" />
                 </div>
             </div>
         );

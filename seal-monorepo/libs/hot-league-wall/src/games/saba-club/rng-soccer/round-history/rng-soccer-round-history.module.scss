@@ -1,7 +1,8 @@
 .round-history {
     display: flex;
     align-items: center;
-    padding: 5px 2px;
+    justify-content: space-between;
+    padding: 5px 2px 0;
 }
 
 .hstack-round {
@@ -20,5 +21,23 @@
     &:hover .tooltip {
         opacity: 1;
         visibility: visible;
+    }
+}
+
+.btn-stats {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(135, 135, 135, 0.3) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    align-self: flex-end;
+
+    &:hover {
+        cursor: pointer;
     }
 }
