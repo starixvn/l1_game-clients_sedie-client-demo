@@ -2,6 +2,42 @@
 
 ## 🚀 Quick Start
 
+### 3rd Party Integration
+
+**Simplified Interface**: The `onRequestSSOToken` callback is designed for easy 3rd party integration:
+
+```typescript
+// Simple callback signature for 3rd party integration
+interface AppProps {
+    onRequestSSOToken?: () => Promise<string | null>;
+}
+
+// Usage example
+const MyApp = () => {
+    const handleTokenRequest = async (): Promise<string | null> => {
+        // Your token request logic here
+        const token = await yourSSOService.getToken();
+        return token;
+    };
+
+    return (
+        <App
+            appEnv="production"
+            siteId="your-site-id"
+            language="en"
+            onRequestSSOToken={handleTokenRequest}
+        />
+    );
+};
+```
+
+**Key Benefits:**
+
+-   ✅ No context parameter needed
+-   ✅ Focus on token retrieval only
+-   ✅ Internal context management handled by App
+-   ✅ Clean separation of concerns
+
 ### SSO Control Simulator Mode
 
 **Route:** `/sso-control`
@@ -33,14 +69,15 @@ const token = await TokenRequestManager.getInstance().executeTokenRequest();
 
 ## 📊 Comparison Table
 
-| Feature            | Simulator Mode  | Real App Mode   |
-| ------------------ | --------------- | --------------- |
-| **Route**          | `/sso-control`  | `/`             |
-| **Controls**       | ✅ Interactive  | ❌ None         |
-| **Token Requests** | 🔄 Simulated    | 🎯 Real         |
-| **Scenarios**      | 📋 Configurable | 🔒 Fixed        |
-| **Performance**    | 📈 Monitored    | 📊 Real metrics |
-| **Use Case**       | 🧪 Testing      | 🚀 Production   |
+| Feature              | Simulator Mode  | Real App Mode   | 3rd Party Integration |
+| -------------------- | --------------- | --------------- | --------------------- |
+| **Route**            | `/sso-control`  | `/`             | Custom                |
+| **Controls**         | ✅ Interactive  | ❌ None         | ❌ None               |
+| **Token Requests**   | 🔄 Simulated    | 🎯 Real         | 🎯 Real               |
+| **Scenarios**        | 📋 Configurable | 🔒 Fixed        | 🔒 Fixed              |
+| **Performance**      | 📈 Monitored    | 📊 Real metrics | 📊 Real metrics       |
+| **Use Case**         | 🧪 Testing      | 🚀 Production   | 🔌 Integration        |
+| **Context Handling** | 🔧 Internal     | 🔧 Internal     | 🔧 Internal           |
 
 ## 🎮 Available Scenarios
 
@@ -85,7 +122,34 @@ ssoSimulator.selectScenario({
 
 ## 📝 Common Usage Patterns
 
-### 1. Test Normal Flow
+### 1. 3rd Party Integration
+
+```typescript
+// Simple integration example
+const MyGameClient = () => {
+    const getToken = async (): Promise<string | null> => {
+        try {
+            const response = await fetch('/api/sso/token');
+            const data = await response.json();
+            return data.token;
+        } catch (error) {
+            console.error('Token request failed:', error);
+            return null;
+        }
+    };
+
+    return (
+        <App
+            appEnv="production"
+            siteId="my-site"
+            language="en"
+            onRequestSSOToken={getToken}
+        />
+    );
+};
+```
+
+### 2. Test Normal Flow
 
 ```typescript
 // Default behavior - no failures
@@ -95,7 +159,7 @@ const ssoSimulator = useSSOSimulator({
 });
 ```
 
-### 2. Test Persistent Failures
+### 3. Test Persistent Failures
 
 ```typescript
 // Simulate 3 failures then success
@@ -106,7 +170,7 @@ const ssoSimulator = useSSOSimulator({
 ssoSimulator.setFailCount(3);
 ```
 
-### 3. Test First Click Failure
+### 4. Test First Click Failure
 
 ```typescript
 // First request fails, subsequent succeed
@@ -169,6 +233,25 @@ console.log('Failure Mode:', ssoSimulator.isFailureMode);
 console.log('Fail Count:', ssoSimulator.failCount);
 ```
 
+### 3rd Party Integration Issues
+
+```typescript
+// Ensure callback returns Promise<string | null>
+const handleTokenRequest = async (): Promise<string | null> => {
+    // Your implementation
+    return token || null; // Must return string or null
+};
+
+// Check for proper error handling
+try {
+    const token = await yourSSOService.getToken();
+    return token;
+} catch (error) {
+    console.error('Token request failed:', error);
+    return null; // Return null on failure
+}
+```
+
 ## 🎯 Best Practices
 
 ### Development
@@ -191,6 +274,14 @@ console.log('Fail Count:', ssoSimulator.failCount);
 2. **Test with various network conditions**
 3. **Validate integration with other components**
 4. **Ensure regression testing**
+
+### 3rd Party Integration
+
+1. **Keep token requests simple and focused**
+2. **Implement proper error handling**
+3. **Return null on failures (not throw errors)**
+4. **Test with real SSO services**
+5. **Monitor token request performance**
 
 ## 📚 Related Files
 

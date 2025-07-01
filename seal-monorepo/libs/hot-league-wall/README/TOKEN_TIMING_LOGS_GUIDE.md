@@ -30,14 +30,15 @@ This guide explains how to use the comprehensive timing logs that track the exac
 ### **Core Components**
 
 -   **Preview Component**: Main entry point with routing and SSO simulator integration
--   **App Component**: Handles Prototype → Real App transition
--   **TokenRequestManager**: Singleton for managing token requests
+-   **App Component**: Handles Prototype → Real App transition with internal context management
+-   **TokenRequestManager**: Singleton for managing token requests with simplified callback interface
 -   **SSO Control Simulator**: Testing framework for authentication scenarios
 
 ### **Simulator Modes**
 
 -   **Real App Mode** (`/` route): Direct token requests without simulation
 -   **SSO Simulator Mode** (`/sso-control` route): Interactive testing with failure simulation
+-   **3rd Party Integration Mode**: Production integration with simplified callback interface
 
 ## What Gets Logged
 
@@ -58,7 +59,7 @@ When a user clicks the "Play Now" button in the **Prototype**, the following tim
 -   **Status**: Success, error, or info
 -   **Component**: Which component performed the action
 -   **Action**: What action was performed
--   **Context**: Whether action is in Prototype or Real App
+-   **Context**: Whether action is in Prototype or Real App (handled internally)
 -   **Simulation State**: Current SSO simulator configuration
 
 ## Console Log Output
@@ -78,6 +79,17 @@ When you click the "Play Now" button in the **Prototype**, you'll see logs like 
 🔑 [TOKEN_TIMING] Proceeding with normal token request flow
 ✅ [TOKEN_TIMING] Token request SUCCESS for REAL APP - Duration: 245.67ms
 🔑 [TOKEN_TIMING] Click count: 1
+✅ [FIRST_SSO] TokenRequestManager completed for REAL APP - Duration: 248.12ms
+🏁 [FIRST_SSO] PROTOTYPE to REAL APP transition completed - Total duration: 250.45ms
+```
+
+### **3rd Party Integration Mode**
+
+```
+🔄 [FIRST_SSO] Using TokenRequestManager for REAL APP...
+🕐 [TOKEN_TIMING] Play button clicked in PROTOTYPE - Starting token request at: 2024-01-15T10:30:45.129Z
+🎯 [TOKEN_TIMING] Transitioning from PROTOTYPE to REAL APP...
+✅ [TOKEN_TIMING] Token request SUCCESS for REAL APP - Duration: 245.67ms
 ✅ [FIRST_SSO] TokenRequestManager completed for REAL APP - Duration: 248.12ms
 🏁 [FIRST_SSO] PROTOTYPE to REAL APP transition completed - Total duration: 250.45ms
 ```
@@ -116,8 +128,8 @@ To focus on specific aspects, filter the console by:
 -   `[TOKEN_TIMING]` - For token request timing only (Real App authentication)
 -   `[PREVIEW]` - For Preview component scenario management
 -   `[APP_TIMING]` - For App component timing (Prototype → Real App transition)
--   `[FIRST_SSO]` - For first-time SSO requests
--   `[SSO_RETRY]` - For session reconnect requests
+-   `[FIRST_SSO]` - For first-time SSO requests (context handled internally)
+-   `[SSO_RETRY]` - For session reconnect requests (context handled internally)
 -   `[SIMULATION]` - For SSO simulator behavior
 -   `Duration:` - For all duration measurements
 -   `SUCCESS` - For successful token requests
@@ -147,7 +159,49 @@ simulator.toggleFailure();
 simulator.setFailCount(3);
 ```
 
-### 4. **Manual Analysis**
+### 4. **3rd Party Integration Testing**
+
+For 3rd party integration testing, you can monitor the simplified callback interface:
+
+```typescript
+// Example 3rd party integration with timing
+const MyGameClient = () => {
+    const handleTokenRequest = async (): Promise<string | null> => {
+        const startTime = performance.now();
+
+        try {
+            const response = await fetch('/api/sso/token');
+            const data = await response.json();
+
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+
+            console.log(`🔗 [3RD_PARTY] Token request completed - Duration: ${duration.toFixed(2)}ms`);
+
+            return data.token;
+        } catch (error) {
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+
+            console.log(`💥 [3RD_PARTY] Token request failed - Duration: ${duration.toFixed(2)}ms`);
+            console.error('[3RD_PARTY] Error details:', error);
+
+            return null;
+        }
+    };
+
+    return (
+        <App
+            appEnv="production"
+            siteId="your-site-id"
+            language="en"
+            onRequestSSOToken={handleTokenRequest}
+        />
+    );
+};
+```
+
+### 5. **Manual Analysis**
 
 You can manually analyze the logs by looking for these key patterns:
 
@@ -158,10 +212,11 @@ Look for lines containing `[TOKEN_TIMING] Token request SUCCESS for REAL APP - D
 #### **Component Breakdown**
 
 -   `[PREVIEW]` - Preview component scenario management
--   `[FIRST_SSO]` - First-time token requests
--   `[SSO_RETRY]` - Session reconnect requests
+-   `[FIRST_SSO]` - First-time token requests (context handled internally)
+-   `[SSO_RETRY]` - Session reconnect requests (context handled internally)
 -   `[TOKEN_TIMING]` - Actual token request timing (for Real App authentication)
 -   `[SIMULATION]` - SSO simulator behavior
+-   `[3RD_PARTY]` - 3rd party integration timing (if implemented)
 
 #### **Transition Analysis**
 

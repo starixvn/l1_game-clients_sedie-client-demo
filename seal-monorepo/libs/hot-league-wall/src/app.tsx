@@ -13,12 +13,12 @@ interface AppProps {
     siteId: string;
     language: string;
     updateBalanceCallback?: void | null;
-    onRequestSSOToken?: (context: 'FIRST_SSO' | 'SSO_RETRY') => Promise<string | null>;
+    onRequestSSOToken?: () => Promise<string | null>;
 }
 
 interface AppContentProps {
     updateBalanceCallback?: void | null;
-    onRequestSSOToken?: (context: 'FIRST_SSO' | 'SSO_RETRY') => Promise<string | null>;
+    onRequestSSOToken?: () => Promise<string | null>;
 }
 
 const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
@@ -47,7 +47,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         try {
             let newToken: string | null = null;
             if (onRequestSSOToken) {
-                newToken = await onRequestSSOToken(context);
+                newToken = await onRequestSSOToken();
             } else {
                 newToken = await TokenRequestManager.getInstance().executeTokenRequest();
             }
@@ -136,7 +136,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     useEffect(() => {
         if (onRequestSSOToken) {
-            TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken('FIRST_SSO'));
+            TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken());
         }
     }, [onRequestSSOToken]);
 

@@ -4,6 +4,8 @@
 
 This implementation defines a callback function to get a fresh token **only when the user clicks the "Play" button** in the RNG Soccer prototype page. The token is then passed to the App component for authentication. The system now includes SSO Control Simulator capabilities for testing different authentication scenarios and a TokenRequestManager for centralized token management.
 
+**Key Design Principle**: The `onRequestSSOToken` callback is designed for 3rd party integration and focuses solely on getting a token. Context handling (`'FIRST_SSO'` | `'SSO_RETRY'`) is managed internally within the App component.
+
 ## Flow Diagram
 
 ```
@@ -23,7 +25,7 @@ Lobby Component (receives fresh token)
 ### **Core Components**
 
 -   **Preview Component**: Main entry point with routing and SSO simulator integration
--   **App Component**: Handles Prototype → Real App transition
+-   **App Component**: Handles Prototype → Real App transition with internal context management
 -   **TokenRequestManager**: Singleton for managing token requests
 -   **SSO Control Simulator**: Testing framework for authentication scenarios
 -   **useTokenRequest Hook**: Custom hook for token request logic
@@ -43,6 +45,7 @@ Lobby Component (receives fresh token)
 -   **TokenRequestManager Setup**: Configures token request callbacks
 -   **Scenario Management**: Handles different testing scenarios
 -   **No Initial Token Loading**: Only requests tokens on user interaction
+-   **Context Wrapper**: Handles internal context management for simulator
 
 **Token Request Setup:**
 
@@ -61,6 +64,11 @@ const Preview: React.FC = (): React.ReactElement => {
         isFailureMode: ssoSimulator.isFailureMode
     });
 
+    // Create a wrapper function that handles context internally
+    const handleTokenRequest = useCallback(async (): Promise<string | null> => {
+        return await onRequestSSOToken('FIRST_SSO');
+    }, [onRequestSSOToken]);
+
     useEffect(() => {
         TokenRequestManager.getInstance().setTokenRequestCallback(
             () => onRequestSSOToken('FIRST_SSO')
@@ -71,7 +79,7 @@ const Preview: React.FC = (): React.ReactElement => {
         <PreviewProvider>
             <Router>
                 <PreviewContext
-                    onRequestSSOToken={onRequestSSOToken}
+                    onRequestSSOToken={handleTokenRequest}
                     playButtonClickCount={prototypeState.playButtonClickCount}
                     setPlayButtonClickCount={prototypeState.setPlayButtonClickCount}
                     currentScenarioKey={currentScenarioKey}
@@ -92,6 +100,7 @@ const Preview: React.FC = (): React.ReactElement => {
 -   **Performance Monitoring**: Comprehensive timing logs
 -   **Error Handling**: Graceful failure handling
 -   **Click Count Tracking**: Monitors user interactions
+-   **Context Support**: Handles internal context for simulator scenarios
 
 ```typescript
 export const useTokenRequest = ({ playButtonClickCount, setPlayButtonClickCount, failCount, isFailureMode }: TokenRequestHookParams) => {
@@ -144,10 +153,19 @@ export const useTokenRequest = ({ playButtonClickCount, setPlayButtonClickCount,
 -   **Session Reconnect Support**: Handles token refresh during app usage
 -   **Loading States**: Provides user feedback during token requests
 -   **Error Handling**: Graceful failure handling
+-   **Internal Context Management**: Handles 'FIRST_SSO' and 'SSO_RETRY' contexts internally
 
 **Token Request Handling:**
 
 ```typescript
+interface AppProps {
+    appEnv: string;
+    siteId: string;
+    language: string;
+    updateBalanceCallback?: void | null;
+    onRequestSSOToken?: () => Promise<string | null>; // Simplified for 3rd party integration
+}
+
 const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProps) => {
     const { language } = useAppContext();
     const [hasClickedPlay, setHasClickedPlay] = useState(false);
@@ -155,7 +173,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     const [isLoading, setIsLoading] = useState(false);
     const [isReconnecting, setIsReconnecting] = useState(false);
 
-    // Shared token request logic
+    // Shared token request logic with internal context management
     const executeTokenRequest = useCallback(
         async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
             console.log(`🔄 [${context}] Using TokenRequestManager for REAL APP...`);
@@ -164,7 +182,8 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
             try {
                 let newToken: string | null = null;
                 if (onRequestSSOToken) {
-                    newToken = await onRequestSSOToken(context);
+                    // Simplified callback - no context parameter needed
+                    newToken = await onRequestSSOToken();
                 } else {
                     newToken = await TokenRequestManager.getInstance().executeTokenRequest();
                 }
@@ -199,6 +218,23 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
         console.log('🔄 [SESSION_RECONNECT] Session reconnect completed');
     }, [performTokenRequest]);
+
+    // Debug logging for reconnecting state changes
+    useEffect(() => {
+        console.log('🔄 [DEBUG] isReconnecting state changed:', isReconnecting);
+    }, [isReconnecting]);
+
+    useEffect(() => {
+        if (updateBalanceCallback) {
+            SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
+        }
+    }, [updateBalanceCallback]);
+
+    useEffect(() => {
+        if (onRequestSSOToken) {
+            TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken());
+        }
+    }, [onRequestSSOToken]);
 };
 ```
 
@@ -210,6 +246,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 -   **Callback Registration**: Allows dynamic token request callbacks
 -   **Error Handling**: Graceful failure handling
 -   **Type Safety**: Strong TypeScript typing
+-   **Simplified Interface**: No context parameter required for callbacks
 
 ```typescript
 export class TokenRequestManager extends CallbackSingleton<() => Promise<string | null>> {
@@ -436,3 +473,57 @@ The implementation includes comprehensive tests covering:
     - Vulnerability simulation
 
 The implementation now provides a robust, testable, and maintainable token request system with comprehensive SSO simulator capabilities for testing different authentication scenarios.
+
+## 3rd Party Integration
+
+### **Simplified Interface Design**
+
+The `onRequestSSOToken` callback is designed for easy 3rd party integration:
+
+```typescript
+// Simple integration example
+const MyGameClient = () => {
+    const handleTokenRequest = async (): Promise<string | null> => {
+        try {
+            // Your SSO service call
+            const response = await fetch('/api/sso/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    siteId: 'your-site-id',
+                    timestamp: Date.now(),
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.token || null;
+        } catch (error) {
+            console.error('Token request failed:', error);
+            return null; // Return null on failure
+        }
+    };
+
+    return (
+        <App
+            appEnv="production"
+            siteId="your-site-id"
+            language="en"
+            onRequestSSOToken={handleTokenRequest}
+        />
+    );
+};
+```
+
+### **Key Benefits for 3rd Party Integration**
+
+-   **No Context Parameter**: The callback doesn't need to handle `'FIRST_SSO'` or `'SSO_RETRY'` contexts
+-   **Focus on Token Retrieval**: The callback only needs to return a token or null
+-   **Internal Context Management**: The App component handles all context logic internally
+-   **Clean Separation**: 3rd parties don't need to understand internal context management
+-   **Error Handling**: Simple return null on failure pattern

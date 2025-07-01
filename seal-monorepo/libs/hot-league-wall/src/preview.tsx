@@ -205,6 +205,11 @@ const Preview: React.FC = (): React.ReactElement => {
         isFailureMode: ssoSimulator.isFailureMode
     });
 
+    // Create a wrapper function that handles context internally
+    const handleTokenRequest = useCallback(async (): Promise<string | null> => {
+        return await onRequestSSOToken('FIRST_SSO');
+    }, [onRequestSSOToken]);
+
     useEffect(() => {
         TokenRequestManager.getInstance().setTokenRequestCallback(
             () => onRequestSSOToken('FIRST_SSO')
@@ -215,7 +220,7 @@ const Preview: React.FC = (): React.ReactElement => {
         <PreviewProvider>
             <Router>
                 <PreviewContext
-                    onRequestSSOToken={onRequestSSOToken}
+                    onRequestSSOToken={handleTokenRequest}
                     playButtonClickCount={prototypeState.playButtonClickCount}
                     setPlayButtonClickCount={prototypeState.setPlayButtonClickCount}
                     currentScenarioKey={currentScenarioKey}

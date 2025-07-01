@@ -8,7 +8,7 @@ export interface PrototypeState {
 }
 
 export interface PreviewContextProps {
-    onRequestSSOToken: (context: TokenRequestContext) => Promise<string | null>;
+    onRequestSSOToken: () => Promise<string | null>;
     playButtonClickCount: number;
     setPlayButtonClickCount: React.Dispatch<React.SetStateAction<number>>;
     currentScenarioKey: string;

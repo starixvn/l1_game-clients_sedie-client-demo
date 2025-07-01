@@ -2,22 +2,32 @@
 
 ## Overview
 
-This guide explains how to use the SSO (Single Sign-On) Control Simulator for testing different authentication scenarios and how the real app behaves without the simulator.
+This guide explains how to use the SSO (Single Sign-On) Control Simulator for testing different authentication scenarios and how the real app behaves without the simulator. The system is designed with a simplified interface for 3rd party integration.
 
 ## Table of Contents
 
 1. [Architecture Overview](#architecture-overview)
-2. [SSO Control Simulator Mode](#sso-control-simulator-mode)
-3. [Real App Mode](#real-app-mode)
-4. [Configuration Options](#configuration-options)
-5. [Testing Scenarios](#testing-scenarios)
-6. [Troubleshooting](#troubleshooting)
+2. [3rd Party Integration](#3rd-party-integration)
+3. [SSO Control Simulator Mode](#sso-control-simulator-mode)
+4. [Real App Mode](#real-app-mode)
+5. [Configuration Options](#configuration-options)
+6. [Testing Scenarios](#testing-scenarios)
+7. [Troubleshooting](#troubleshooting)
 
 ## Architecture Overview
 
-The application supports two main modes:
+The application supports three main modes:
 
-### 1. SSO Control Simulator Mode (`/sso-control` route)
+### 1. 3rd Party Integration Mode
+
+-   **Purpose**: Production integration with external SSO services
+-   **Features**:
+    -   Simplified `onRequestSSOToken` callback interface
+    -   Internal context management (`'FIRST_SSO'` | `'SSO_RETRY'`)
+    -   Clean separation of concerns
+    -   Focus on token retrieval only
+
+### 2. SSO Control Simulator Mode (`/sso-control` route)
 
 -   **Purpose**: Testing and debugging SSO authentication scenarios
 -   **Features**:
@@ -26,13 +36,86 @@ The application supports two main modes:
     -   Real-time state management
     -   Performance monitoring
 
-### 2. Real App Mode (default route)
+### 3. Real App Mode (default route)
 
 -   **Purpose**: Production-like behavior without simulation
 -   **Features**:
     -   Direct SSO token requests
     -   Real authentication flow
     -   No simulation controls
+
+## 3rd Party Integration
+
+### Simplified Interface Design
+
+The `onRequestSSOToken` callback is designed for easy 3rd party integration:
+
+```typescript
+interface AppProps {
+    appEnv: string;
+    siteId: string;
+    language: string;
+    updateBalanceCallback?: void | null;
+    onRequestSSOToken?: () => Promise<string | null>; // Simplified interface
+}
+```
+
+### Key Benefits
+
+-   **No Context Parameter**: The callback doesn't need to handle `'FIRST_SSO'` or `'SSO_RETRY'` contexts
+-   **Focus on Token Retrieval**: The callback only needs to return a token or null
+-   **Internal Context Management**: The App component handles all context logic internally
+-   **Clean Separation**: 3rd parties don't need to understand internal context management
+
+### Integration Example
+
+```typescript
+// Simple 3rd party integration
+const MyGameClient = () => {
+    const handleTokenRequest = async (): Promise<string | null> => {
+        try {
+            // Your SSO service call
+            const response = await fetch('/api/sso/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    siteId: 'your-site-id',
+                    timestamp: Date.now(),
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.token || null;
+        } catch (error) {
+            console.error('Token request failed:', error);
+            return null; // Return null on failure
+        }
+    };
+
+    return (
+        <App
+            appEnv="production"
+            siteId="your-site-id"
+            language="en"
+            onRequestSSOToken={handleTokenRequest}
+        />
+    );
+};
+```
+
+### Best Practices for 3rd Party Integration
+
+1. **Error Handling**: Always return `null` on failure, don't throw errors
+2. **Timeout Management**: Implement appropriate timeouts for token requests
+3. **Retry Logic**: Handle retries at the integration level if needed
+4. **Logging**: Log token request attempts and failures for debugging
+5. **Security**: Ensure secure token transmission and storage
 
 ## SSO Control Simulator Mode
 
@@ -152,12 +235,14 @@ When not using the simulator, the app operates in real mode:
 #### Token Request Flow
 
 ```typescript
-// Real token request implementation
+// Real token request implementation with internal context management
 const executeTokenRequest = async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
     const tokenStartTime = performance.now();
 
     try {
-        const newToken = await TokenRequestManager.getInstance().executeTokenRequest();
+        // Simplified callback call - no context parameter needed
+        const newToken = (await onRequestSSOToken?.()) || (await TokenRequestManager.getInstance().executeTokenRequest());
+
         const tokenEndTime = performance.now();
         const tokenDuration = tokenEndTime - tokenStartTime;
 
@@ -180,19 +265,20 @@ const executeTokenRequest = async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
 #### App Flow
 
 1. **Initial State**: Shows RNG Soccer prototype
-2. **Play Button Click**: Triggers first SSO token request
+2. **Play Button Click**: Triggers first SSO token request (context: 'FIRST_SSO')
 3. **Token Success**: Transitions to main lobby with real token
-4. **Session Reconnect**: Handles token refresh on session expiry
+4. **Session Reconnect**: Handles token refresh on session expiry (context: 'SSO_RETRY')
 
 ### Key Differences from Simulator Mode
 
-| Aspect         | Real App Mode       | Simulator Mode           |
-| -------------- | ------------------- | ------------------------ |
-| Token Requests | Real authentication | Simulated responses      |
-| Controls       | None                | Interactive SSO controls |
-| Scenarios      | Fixed behavior      | Configurable scenarios   |
-| Performance    | Real metrics        | Simulated metrics        |
-| Error Handling | Real errors         | Controlled failures      |
+| Aspect             | Real App Mode       | Simulator Mode           | 3rd Party Integration |
+| ------------------ | ------------------- | ------------------------ | --------------------- |
+| Token Requests     | Real authentication | Simulated responses      | Real authentication   |
+| Controls           | None                | Interactive SSO controls | None                  |
+| Scenarios          | Fixed behavior      | Configurable scenarios   | Fixed behavior        |
+| Performance        | Real metrics        | Simulated metrics        | Real metrics          |
+| Error Handling     | Real errors         | Controlled failures      | Real errors           |
+| Context Management | Internal            | Internal                 | Internal              |
 
 ## Configuration Options
 
