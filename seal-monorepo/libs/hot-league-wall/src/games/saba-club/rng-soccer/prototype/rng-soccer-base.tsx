@@ -97,6 +97,8 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     // Animation states for Play Now transition
     const [isSlidingLeft, setIsSlidingLeft] = useState(false);
     const [showBlurBg, setShowBlurBg] = useState(false);
+    // Highlight animation state for Play Now button
+    const [isHighlightedButton, setIsHighlightedButton] = useState(false);
 
     useEffect(() => {
         if (gameData.currentRound.roundState === 'showingResult') {
@@ -109,6 +111,21 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
             setIsShowHighLight(false);
         }
     }, [gameData.currentRound.roundState]);
+
+    // Effect for Play Now button highlight animation every 2 seconds
+    useEffect(() => {
+        if (!showPlayOverlay || isSlidingLeft) return;
+
+        const interval = setInterval(() => {
+            setIsHighlightedButton(true);
+            // Remove highlight after animation duration (0.3s)
+            setTimeout(() => {
+                setIsHighlightedButton(false);
+            }, 2000);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [showPlayOverlay, isSlidingLeft]);
 
     // Show loading component if isLoading is true
     if (isLoading) {
@@ -326,7 +343,9 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                 {showPlayOverlay && !isSlidingLeft && (
                     <div className={demoAnimationStyles['overlay-container']}>
                         <button
-                            className={demoAnimationStyles['btn-play-now']}
+                            className={classNames(demoAnimationStyles['btn-play-now'], {
+                                [demoAnimationStyles['highlight']]: isHighlightedButton,
+                            })}
                             onClick={async () => {
                                 const baseStartTime = performance.now();
                                 console.log(
