@@ -7,6 +7,7 @@ import betOptionStyles from '../bet-option/rng-soccer-bet-options.module.scss';
 import commonBetOptionStyles from '../../../../_shared/components/bet-option/bet-option.module.scss';
 import flipCardStyles from '../../../../_shared/components/card/flip-card/flip-card.module.scss';
 import demoAnimationStyles from './demo-animation.module.scss';
+import roundHistoryStyles from '../round-history/rng-soccer-round-history.module.scss';
 import Card from '../../../../_shared/components/card';
 import CardBack from '../../../../_shared/components/card/card-back';
 import { CardResult } from '../../../../_shared/components/card/type';
@@ -18,6 +19,8 @@ import historyBtnIcon from '../../../../assets/rng-soccer/history-btn.svg';
 import Loading from '../../../../_shared/components/loading';
 import classNames from 'classnames';
 import blurBgGame from '../../../../assets/rng-soccer/blur-bg-game.png';
+import { RNGSoccerRoundDot } from '../dot';
+import { RNGSoccerChoices, RNGSoccerSettlementItemResult } from '../type';
 
 // Shared types for the base component
 export interface RNGSoccerGameData {
@@ -140,6 +143,28 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     // Get team logo URLs using TeamUtils
     const homeTeamLogo = getTeamLogo(gameData.teamData.home.name);
     const awayTeamLogo = getTeamLogo(gameData.teamData.away.name);
+
+    // Helper function to get winner from settlement result
+    const getWinnerFromSettlement = (settlementResult: RNGSoccerSettlementItemResult): RNGSoccerChoices => {
+        if (settlementResult.home) return RNGSoccerChoices.home;
+        if (settlementResult.away) return RNGSoccerChoices.away;
+        if (settlementResult.draw) return RNGSoccerChoices.draw;
+        return RNGSoccerChoices.home; // fallback
+    };
+
+    // Helper function to get display value for round history
+    const getRoundHistoryValue = (choice: RNGSoccerChoices): string => {
+        switch (choice) {
+            case RNGSoccerChoices.home:
+                return 'H';
+            case RNGSoccerChoices.away:
+                return 'A';
+            case RNGSoccerChoices.draw:
+                return 'D';
+            default:
+                return '';
+        }
+    };
 
     return (
         <div className={demoAnimationStyles['game-container']}>
@@ -271,6 +296,33 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                         </div>
                     </div>
                 </div>
+
+                {/* Round History Section */}
+                {gameData.roundHistory && gameData.roundHistory.length > 0 && (
+                    <div className={roundHistoryStyles['round-history']}>
+                        <div className={roundHistoryStyles['hstack-round']}>
+                            {gameData.roundHistory
+                                .slice(0, 16)
+                                .reverse()
+                                .map((round) => {
+                                    const winner = getWinnerFromSettlement(round.settlementResult);
+                                    const value = getRoundHistoryValue(winner);
+                                    return (
+                                        <div key={round.roundId} className={styles['history-item']}>
+                                            <RNGSoccerRoundDot choice={winner} value={value} highlight={false} />
+                                        </div>
+                                    );
+                                })}
+                            <div className={roundHistoryStyles['history-item']}>
+                                <RNGSoccerRoundDot choice="next" value="?" highlight={true} />
+                            </div>
+
+                            <div className={roundHistoryStyles['btn-stats']} onClick={onStatisticsClick}>
+                                <img src={historyBtnIcon} alt="statistics" />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Play Overlay */}
                 {showPlayOverlay && !isSlidingLeft && (

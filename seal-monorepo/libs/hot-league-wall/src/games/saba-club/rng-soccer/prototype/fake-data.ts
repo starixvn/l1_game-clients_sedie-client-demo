@@ -143,6 +143,36 @@ export const FAKE_RNG_SOCCER_DATA = {
             settlementResult: { home: false, away: false, draw: true },
             result: { homeScore: 0, awayScore: 0, home: { rank: 4, suit: 2 }, away: { rank: 4, suit: 1 } },
         },
+        {
+            roundId: 12334,
+            settlementResult: { home: true, away: false, draw: false },
+            result: { homeScore: 3, awayScore: 0, home: { rank: 1, suit: 3 }, away: { rank: 2, suit: 1 } },
+        },
+        {
+            roundId: 12333,
+            settlementResult: { home: false, away: true, draw: false },
+            result: { homeScore: 1, awayScore: 2, home: { rank: 3, suit: 4 }, away: { rank: 1, suit: 2 } },
+        },
+        {
+            roundId: 12332,
+            settlementResult: { home: true, away: false, draw: false },
+            result: { homeScore: 2, awayScore: 1, home: { rank: 1, suit: 1 }, away: { rank: 4, suit: 3 } },
+        },
+        {
+            roundId: 12331,
+            settlementResult: { home: false, away: false, draw: true },
+            result: { homeScore: 1, awayScore: 1, home: { rank: 2, suit: 2 }, away: { rank: 2, suit: 4 } },
+        },
+        {
+            roundId: 12330,
+            settlementResult: { home: false, away: true, draw: false },
+            result: { homeScore: 0, awayScore: 3, home: { rank: 4, suit: 1 }, away: { rank: 1, suit: 3 } },
+        },
+        {
+            roundId: 12329,
+            settlementResult: { home: true, away: false, draw: false },
+            result: { homeScore: 2, awayScore: 0, home: { rank: 1, suit: 4 }, away: { rank: 3, suit: 2 } },
+        },
     ] as RNGSoccerRoundHistory[],
 
     // UI state
