@@ -169,7 +169,11 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     return (
         <div className={demoAnimationStyles['game-container']}>
             {/* Main content with slide animation */}
-            <div className={classNames(styles['sport-item'], { [demoAnimationStyles['slide-left']]: isSlidingLeft })}>
+            <div
+                className={classNames(styles['sport-item'], gameBaseStyles['game-container'], {
+                    [demoAnimationStyles['slide-left']]: isSlidingLeft,
+                })}
+            >
                 {/* Header Section */}
                 <div className={gameBaseStyles['game-header']}>
                     <div className={gameBaseStyles['game-name']}>
@@ -194,12 +198,6 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div
-                        className={classNames(styles['score-board-img'], styles['statsIcon'], gameBaseStyles['stats-icon'])}
-                        onClick={onStatisticsClick}
-                    >
-                        <img src={historyBtnIcon} alt="statistics" />
                     </div>
                 </div>
 
@@ -266,7 +264,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                 </div>
 
                 {/* Footer Section */}
-                <div className={styles['wrapper-sport-bottom']}>
+                <div className={`${styles['wrapper-sport-bottom']} ${gameBaseStyles['game-footer']}`}>
                     <div className={betOptionStyles['bet-options-wrapper']}>
                         <div className={betOptionStyles['bet-options-container']}>
                             {Object.entries(gameData.roundOdds.odds).map(([choice, odd]) => (
@@ -282,13 +280,13 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                     }}
                                 >
                                     <div
-                                        className={`${isShowHighLight && choice === getHighlightedChoice() ? commonBetOptionStyles['highlight-static-bet-choice'] : ''}`}
+                                        className={`${commonBetOptionStyles['betting-block']} ${isShowHighLight && choice === getHighlightedChoice() ? commonBetOptionStyles['highlight-static-bet-choice'] : ''}`}
                                     >
                                         <div className={betOptionStyles['padding-bet']}>
                                             <span className={betOptionStyles['bet-choice-text']}>
                                                 {choice.charAt(0).toUpperCase() + choice.slice(1)}
                                             </span>
-                                            <span className={betOptionStyles['bet-option']}>{odd}</span>
+                                            <span className={commonBetOptionStyles['odd']}>{odd}</span>
                                         </div>
                                     </div>
                                 </div>

@@ -22,7 +22,7 @@
     background: url('../../../assets/rng-soccer/bg-game.webp') no-repeat center;
     background-size: cover;
     border-radius: $border-radius-md;
-    padding: 2px 4px;
+    padding: 4px;
     @include flex-column;
     position: relative;
     z-index: 11;
