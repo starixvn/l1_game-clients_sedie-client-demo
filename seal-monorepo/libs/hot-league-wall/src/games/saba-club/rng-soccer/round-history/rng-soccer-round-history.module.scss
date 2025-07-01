@@ -1,4 +1,5 @@
 .round-history {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -8,14 +9,13 @@
 .hstack-round {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
 }
 
 .history-item {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 4px;
     cursor: pointer;
 
     &:hover .tooltip {
@@ -25,7 +25,9 @@
 }
 
 .btn-stats {
-    position: relative;
+    position: absolute;
+    right: 4px;
+    top: 1px;
     display: flex;
     align-items: center;
     justify-content: center;

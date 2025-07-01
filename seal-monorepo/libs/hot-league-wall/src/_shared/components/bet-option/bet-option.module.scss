@@ -47,17 +47,12 @@
     cursor: pointer;
     position: relative;
     --highlight-result-delay: 2s;
-    border-radius: var(--c-av-border-radius);
+    border-radius: 6px;
     border: 1px solid var(--c-av-odds-button-border);
 }
 
-.betting-block:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-    background-image: var(--c-av-odds-in-play-hover-img);
-}
-
 .open-panel-background-color {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 .flash-and-keep-background-color {
@@ -65,12 +60,12 @@
     animation-fill-mode: forwards;
     animation-delay: 0;
     border: 1px solid transparent;
-    border-radius: 3px;
+    border-radius: 6px;
 }
 
 .highlight-static-bet-choice {
     border: 1px solid transparent;
-    border-radius: 3px;
+    border-radius: 6px;
     box-shadow: inset 0 0 8px #ffae00;
     border-color: #e0e023;
 }

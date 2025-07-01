@@ -25,21 +25,21 @@
     @include transition-default;
     box-sizing: border-box;
 
-    &[data-choice="home"] {
+    &[data-choice='home'] {
         background-color: rgba(54, 118, 255, 0.4);
         &:hover {
             background-color: rgba(54, 118, 255, 0.6);
         }
     }
 
-    &[data-choice="draw"] {
+    &[data-choice='draw'] {
         background-color: rgba(35, 202, 25, 0.4);
         &:hover {
             background-color: rgba(35, 202, 25, 0.6);
         }
     }
 
-    &[data-choice="away"] {
+    &[data-choice='away'] {
         background-color: rgba(255, 42, 42, 0.5);
         &:hover {
             background-color: rgba(255, 42, 42, 0.6);
@@ -51,7 +51,7 @@
 .padding-bet {
     @include flex-row-between;
     @include fullsize-container;
-    padding: 10px 6px;
+    padding: 8px 6px;
     cursor: pointer;
     border-radius: $border-radius-md;
     box-sizing: border-box;
