@@ -198,6 +198,7 @@
         "glossary_draw": "平",
         "home": "主队",
         "away": "客队",
-        "draw": "平"
+        "draw": "平",
+        "button_play_now": "现在玩"
     }
 }

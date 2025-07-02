@@ -21,6 +21,7 @@ import classNames from 'classnames';
 import blurBgGame from '../../../../assets/rng-soccer/blur-bg-game.png';
 import { RNGSoccerRoundDot } from '../dot';
 import { RNGSoccerChoices, RNGSoccerSettlementItemResult } from '../type';
+import * as gc from '@sg/sg-game-client';
 
 // Shared types for the base component
 export interface RNGSoccerGameData {
@@ -301,7 +302,10 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                     >
                                         <div className={betOptionStyles['padding-bet']}>
                                             <span className={betOptionStyles['bet-choice-text']}>
-                                                {choice.charAt(0).toUpperCase() + choice.slice(1)}
+                                                {gc.Translator.translate(`RNGSoccer.glossary_${choice}`, {
+                                                    languageId: gc.Translator.getCurrentLanguageId(),
+                                                })}
+                                                {/* {choice.charAt(0).toUpperCase() + choice.slice(1)} */}
                                             </span>
                                             <span className={commonBetOptionStyles['odd']}>{odd}</span>
                                         </div>
@@ -374,7 +378,9 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                 e.currentTarget.style.filter = 'none';
                             }}
                         >
-                            Play Now
+                            {gc.Translator.translate('RNGSoccer.button_play_now', {
+                                languageId: gc.Translator.getCurrentLanguageId(),
+                            })}
                         </button>
                     </div>
                 )}
