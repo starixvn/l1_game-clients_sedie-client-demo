@@ -211,7 +211,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
             {/* Main content with slide animation */}
             <div
                 className={classNames(styles['sport-item'], gameBaseStyles['game-container'], {
-                    [demoAnimationStyles['slide-left']]: isSlidingLeft,
+                    [rngSoccerStyles['slide-left']]: isSlidingLeft,
                 })}
             >
                 {/* Header Section */}
@@ -269,10 +269,14 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
                             {/* Score Display */}
                             <div className={styles['result-section']}>
-                                <div className={`${styles['result']} ${isHomeHigher && isShowHomeScore ? styles['higher-score'] : ''}`}>
+                                <div
+                                    className={`${styles['result']} ${isHomeHigher && isShowBetOptionHighlight ? styles['higher-score'] : ''}`}
+                                >
                                     <span>{isShowHomeScore ? gameData.currentResult.homeScore : ''}</span>
                                 </div>
-                                <div className={`${styles['result']} ${isAwayHigher && isShowAwayScore ? styles['higher-score'] : ''}`}>
+                                <div
+                                    className={`${styles['result']} ${isAwayHigher && isShowBetOptionHighlight ? styles['higher-score'] : ''}`}
+                                >
                                     <span>{isShowAwayScore ? gameData.currentResult.awayScore : ''}</span>
                                 </div>
                             </div>
@@ -413,7 +417,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
             {/* Blur background overlay with animation */}
             {showBlurBg && (
-                <div className={demoAnimationStyles['blur-bg-animated']}>
+                <div className={rngSoccerStyles['blur-bg-animated']}>
                     <img src={blurBgGame} alt="Blurred background" />
                 </div>
             )}
