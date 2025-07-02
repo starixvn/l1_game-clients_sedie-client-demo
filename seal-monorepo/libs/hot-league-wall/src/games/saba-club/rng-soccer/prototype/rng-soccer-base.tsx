@@ -93,8 +93,13 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
     onCloseStatistics,
     isLoading = false,
 }) => {
-    const [isShowResult, setIsShowResult] = useState(false);
-    const [isShowHighLight, setIsShowHighLight] = useState(false);
+    // Separate highlight states for different elements
+    const [isShowHomeCardHighlight, setIsShowHomeCardHighlight] = useState(false);
+    const [isShowAwayCardHighlight, setIsShowAwayCardHighlight] = useState(false);
+    const [isShowBetOptionHighlight, setIsShowBetOptionHighlight] = useState(false);
+    // Score display states
+    const [isShowHomeScore, setIsShowHomeScore] = useState(false);
+    const [isShowAwayScore, setIsShowAwayScore] = useState(false);
     // Animation states for Play Now transition
     const [isSlidingLeft, setIsSlidingLeft] = useState(false);
     const [showBlurBg, setShowBlurBg] = useState(false);
@@ -103,13 +108,30 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
     useEffect(() => {
         if (gameData.currentRound.roundState === 'showingResult') {
-            setIsShowResult(true);
+            // Home card highlight immediately
+            setIsShowHomeCardHighlight(true);
+            // Home score display after 0.2s from home card highlight
             setTimeout(() => {
-                setIsShowHighLight(true);
-            }, 800);
+                setIsShowHomeScore(true);
+            }, 700);
+            // Away card highlight after 1 second
+            setTimeout(() => {
+                setIsShowAwayCardHighlight(true);
+            }, 1000);
+            // Away score display after 0.2s from away card highlight
+            setTimeout(() => {
+                setIsShowAwayScore(true);
+            }, 1700);
+            // Bet option highlight after 0.5 seconds
+            setTimeout(() => {
+                setIsShowBetOptionHighlight(true);
+            }, 1800);
         } else {
-            setIsShowResult(false);
-            setIsShowHighLight(false);
+            setIsShowHomeCardHighlight(false);
+            setIsShowAwayCardHighlight(false);
+            setIsShowBetOptionHighlight(false);
+            setIsShowHomeScore(false);
+            setIsShowAwayScore(false);
         }
     }, [gameData.currentRound.roundState]);
 
@@ -228,8 +250,10 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                     <div className={styles['sport-result']}>
                         <div className={styles['container-result']}>
                             {/* Home Card */}
-                            <div className={`${styles['card-section']} ${isShowHighLight && isHomeHigher ? styles['winning-card'] : ''}`}>
-                                <div className={`${flipCardStyles['card']} ${isShowResult ? flipCardStyles['flip'] : ''}`}>
+                            <div
+                                className={`${styles['card-section']} ${isShowBetOptionHighlight && isHomeHigher ? styles['winning-card'] : ''}`}
+                            >
+                                <div className={`${flipCardStyles['card']} ${isShowHomeCardHighlight ? flipCardStyles['flip'] : ''}`}>
                                     <div className={flipCardStyles['rotate-card']}>
                                         <div className={flipCardStyles.cardFace}>
                                             <div className={flipCardStyles['card-back']}>
@@ -245,17 +269,19 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
                             {/* Score Display */}
                             <div className={styles['result-section']}>
-                                <div className={`${styles['result']} ${isHomeHigher && isShowHighLight ? styles['higher-score'] : ''}`}>
-                                    <span>{isShowHighLight ? gameData.currentResult.homeScore : ''}</span>
+                                <div className={`${styles['result']} ${isHomeHigher && isShowHomeScore ? styles['higher-score'] : ''}`}>
+                                    <span>{isShowHomeScore ? gameData.currentResult.homeScore : ''}</span>
                                 </div>
-                                <div className={`${styles['result']} ${isAwayHigher && isShowHighLight ? styles['higher-score'] : ''}`}>
-                                    <span>{isShowHighLight ? gameData.currentResult.awayScore : ''}</span>
+                                <div className={`${styles['result']} ${isAwayHigher && isShowAwayScore ? styles['higher-score'] : ''}`}>
+                                    <span>{isShowAwayScore ? gameData.currentResult.awayScore : ''}</span>
                                 </div>
                             </div>
 
                             {/* Away Card */}
-                            <div className={`${styles['card-section']} ${isShowHighLight && isAwayHigher ? styles['winning-card'] : ''}`}>
-                                <div className={`${flipCardStyles['card']} ${isShowResult ? flipCardStyles['flip'] : ''}`}>
+                            <div
+                                className={`${styles['card-section']} ${isShowBetOptionHighlight && isAwayHigher ? styles['winning-card'] : ''}`}
+                            >
+                                <div className={`${flipCardStyles['card']} ${isShowAwayCardHighlight ? flipCardStyles['flip'] : ''}`}>
                                     <div className={flipCardStyles['rotate-card']}>
                                         <div className={flipCardStyles.cardFace}>
                                             <div className={flipCardStyles['card-back']}>
@@ -298,14 +324,13 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                     }}
                                 >
                                     <div
-                                        className={`${commonBetOptionStyles['betting-block']} ${isShowHighLight && choice === getHighlightedChoice() ? commonBetOptionStyles['highlight-static-bet-choice'] : ''}`}
+                                        className={`${commonBetOptionStyles['betting-block']} ${isShowBetOptionHighlight && choice === getHighlightedChoice() ? commonBetOptionStyles['highlight-static-bet-choice'] : ''}`}
                                     >
                                         <div className={betOptionStyles['padding-bet']}>
                                             <span className={betOptionStyles['bet-choice-text']}>
                                                 {gc.Translator.translate(`RNGSoccer.glossary_${choice}`, {
                                                     languageId: gc.Translator.getCurrentLanguageId(),
                                                 })}
-                                                {/* {choice.charAt(0).toUpperCase() + choice.slice(1)} */}
                                             </span>
                                             <span className={commonBetOptionStyles['odd']}>{odd}</span>
                                         </div>
