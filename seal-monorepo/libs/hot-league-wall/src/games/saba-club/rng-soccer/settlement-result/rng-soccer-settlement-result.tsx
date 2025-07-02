@@ -1,16 +1,16 @@
-import * as gc from "@sg/sg-game-client";
-import { RoundHistoryStore } from "@sg/sg-game-client/dist/game/round-histories";
-import { ROUND_STATE, RoundTimeStore } from "@sg/sg-game-client/dist/game/rounds";
-import { SettlementStore } from "@sg/sg-game-client/dist/game/settlements";
-import { observer, render } from "@sg/sg-observer";
-import { ObserverComponent } from "../../../../_shared/components/observer-component/observer-component";
-import { setting } from "../game-settings";
-import { ErrorBoundary } from "./components";
-import { gameStateService } from "./services/game-state.service";
+import * as gc from '@sg/sg-game-client';
+import { RoundHistoryStore } from '@sg/sg-game-client/dist/game/round-histories';
+import { ROUND_STATE, RoundTimeStore } from '@sg/sg-game-client/dist/game/rounds';
+import { SettlementStore } from '@sg/sg-game-client/dist/game/settlements';
+import { observer, render } from '@sg/sg-observer';
+import { ObserverComponent } from '../../../../_shared/components/observer-component/observer-component';
+import { setting } from '../game-settings';
+import { ErrorBoundary } from './components';
+import { gameStateService } from './services/game-state.service';
 
 // Import new components and utilities
-import { GameDisplay } from "./components";
-import { GameResult, TeamsData } from "./models";
+import { GameDisplay } from './components';
+import { GameResult, TeamsData } from './models';
 
 import type { RNGSoccerResult } from '../type';
 import type { IPropsObserver, IStateObserver } from '../../../../_shared/components/observer-component/observer-component';
@@ -41,7 +41,7 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
             error: undefined,
             isFinish: false,
             isFinishShowResult: false,
-            teamData: GameResult.getDefaultTeamData()
+            teamData: GameResult.getDefaultTeamData(),
         };
     }
 
@@ -51,12 +51,12 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
     }
 
     @render(gc.Rounds.RoundTimeStore, (store) => ({ teamData: store.teamData, roundState: store.roundState }))
-    renderTeamDataState(data: { teamData: any, roundState: string }) {
+    renderTeamDataState(data: { teamData: any; roundState: string }) {
         if (data.roundState === ROUND_STATE.PLACING_BET) {
             const { home, away } = data.teamData;
             const teamData = GameResult.updateTeamData({
                 home: home,
-                away: away
+                away: away,
             });
 
             this.setState({ teamData: teamData });
@@ -68,7 +68,8 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
         try {
             if (
                 roundState === ROUND_STATE.PLACING_BET ||
-                roundState === ROUND_STATE.LOCKING_BET
+                roundState === ROUND_STATE.LOCKING_BET ||
+                roundState === ROUND_STATE.STARTING_ROUND
             ) {
                 this.setState({ isFinish: false });
             }
@@ -99,7 +100,7 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
                 }, 2000);
             } else {
                 this.setState({
-                    isLoading: false
+                    isLoading: false,
                 });
             }
         } catch (error) {
@@ -111,7 +112,7 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
     private handleJoinGameAndShowResult(firstJoinGameHistory: gc.RoundHistories.IFirstJoinGameHistory): void {
         const { roundState } = this.state;
 
-        if (roundState === ROUND_STATE.PLACING_BET || roundState === ROUND_STATE.LOCKING_BET) {
+        if (roundState === ROUND_STATE.PLACING_BET || roundState === ROUND_STATE.LOCKING_BET || roundState === ROUND_STATE.STARTING_ROUND) {
             return;
         }
 
@@ -123,11 +124,11 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
                     result,
                     isLoading: false,
                     isFinish: true,
-                    isFinishShowResult: true
+                    isFinishShowResult: true,
                 });
             } else {
                 this.setState({
-                    isLoading: false
+                    isLoading: false,
                 });
             }
         } catch (error) {
@@ -136,21 +137,14 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
     }
 
     render(): JSX.Element {
-        const {
-            result,
-            teamData,
-            roundState,
-            isFinish,
-            isAnimationResult,
-            isFinishShowResult,
-            isLoading,
-            error,
-        } = this.state;
+        const { result, teamData, roundState, isFinish, isAnimationResult, isFinishShowResult, isLoading, error } = this.state;
 
         return (
             <ErrorBoundary>
                 {error ? (
-                    (() => { throw error; })()
+                    (() => {
+                        throw error;
+                    })()
                 ) : (
                     <GameDisplay
                         result={result}
@@ -165,4 +159,4 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
             </ErrorBoundary>
         );
     }
-} 
+}

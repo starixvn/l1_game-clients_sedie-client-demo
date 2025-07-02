@@ -210,6 +210,10 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         return null;
     }
 
+    protected getBlurGameBg(): JSX.Element | null {
+        return null;
+    }
+
     protected getGameHistorySection(): JSX.Element | null {
         return null;
     }

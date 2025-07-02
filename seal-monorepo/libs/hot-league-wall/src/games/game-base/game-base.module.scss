@@ -5,11 +5,16 @@
 @import './styles/variables';
 @import './styles/mixins';
 
+.game-container-wrapper {
+    position: relative;
+    max-width: 344px;
+    min-height: 154px;
+    overflow: hidden;
+}
+
 // Main container
 .game-container {
     width: 100%;
-    max-width: 344px;
-    min-height: 154px;
     border-radius: $border-radius-md;
     padding: $spacing-xs;
     display: flex;

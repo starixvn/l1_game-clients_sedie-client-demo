@@ -72,7 +72,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Auth.AuthHandlers.Authorize, (handler) => handler.handleAutoGenerateName())
-    protected autoCreateNickname(): void { }
+    protected autoCreateNickname(): void {}
 
     // CONNECTION METHODS
     @render(gc.GatewayConnection.GatewayConnectionStore, (store) => store.isConnected)
@@ -81,7 +81,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => handler.handleGateway())
-    override connectLiveGateway(): void { }
+    override connectLiveGateway(): void {}
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
     handleJoinGame(isConnected: boolean): void {
@@ -94,17 +94,17 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Connection.ConnectionHandlers.SignInHandler)
-    signIn(): void { }
+    signIn(): void {}
 
     override handleConnected(signedIn: boolean): void {
         if (signedIn) this.inGameLiveGateway();
     }
 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler, (handler) => handler.handleGateway())
-    inGameLiveGateway(): void { }
+    inGameLiveGateway(): void {}
 
     // ABSTRACT METHOD IMPLEMENTATIONS
-    override closeConnect(): void { }
+    override closeConnect(): void {}
 
     override showResult(
         hasAnimation: boolean,
@@ -199,6 +199,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         const customFooterSection = this.getGameFooterSection();
         const customRoundHistorySection = this.getGameRoundHistorySection();
         const customHistorySection = this.getGameHistorySection();
+        const customBlurBg = this.getBlurGameBg();
         const backgroundImage = this.getGameBackgroundImage();
 
         return this.uiRenderer.renderGameLayout(
@@ -212,6 +213,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
             customFooterSection,
             customHistorySection,
             customRoundHistorySection,
+            customBlurBg,
         );
     }
 }

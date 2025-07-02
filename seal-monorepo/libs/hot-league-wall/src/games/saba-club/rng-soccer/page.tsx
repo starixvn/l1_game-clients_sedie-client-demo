@@ -11,12 +11,12 @@ import styles from './rng-soccer.module.scss';
 import { containerOptions, setting } from './game-settings';
 import RNGSoccerBetOptions from './bet-option/rng-soccer-bet-options';
 import liveIcon from '../../../assets/rng-soccer/live-icon.svg';
-import historyBtnIcon from '../../../assets/rng-soccer/history-btn.svg';
 import bgGame from '../../../assets/rng-soccer/bg-game.webp';
 import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
 import RNGSoccerSettlementResult from './settlement-result/rng-soccer-settlement-result';
 import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
 import { RNGSoccerRoundHistory } from './round-history';
+import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 
 interface IRNGSoccerPageState extends IGatewayGameBaseState {
     isTimerActive: boolean;
@@ -64,8 +64,7 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
 
     // Game lifecycle and event handlers
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
-    override closeConnect() {
-    }
+    override closeConnect() {}
 
     override getGameBackgroundImage(): string {
         return bgGame;
@@ -106,6 +105,7 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
                 customFooter: () => this.renderCustomFooter(),
                 customHistory: (props, state) => this.renderCustomHistory(state as IRNGSoccerPageState),
                 customBetting: () => this.renderCustomBetting(),
+                customNewRoundBg: (props, state) => this.renderNewRoundBg(state as IRNGSoccerPageState),
             },
             config: {
                 gameName: 'RNGSoccer',
@@ -162,6 +162,18 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
                     togglePopup={this.togglePopup}
                 />
             </Suspense>
+        );
+    }
+
+    renderNewRoundBg(state: IRNGSoccerPageState): JSX.Element {
+        if (state.roundState !== ROUND_STATE.STARTING_ROUND) {
+            return <></>;
+        }
+
+        return (
+            <div className={styles['blur-bg-animated']}>
+                <img src={bgGame} alt="Blurred background" />
+            </div>
         );
     }
 }

@@ -9,10 +9,12 @@ import WarningDialog from '../../../_shared/components/notices/warning-dialog';
 import { RoundId } from '../../../_shared/components/round-id';
 import CountDownTimer from '../../../_shared/components/count-down-timer';
 import Styles from '../game-base.module.scss';
+import rngSoccerStyles from '../../saba-club/rng-soccer/rng-soccer.module.scss';
 import { IGameBaseState } from '../interfaces';
 import { GameBaseProps } from '../type';
 import StartRoundCountDownTimer from '../../../_shared/components/start-round-count-down-timer';
 import { getMessage as getGameMessage } from '../game-logic/message-logic';
+import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 
 export interface UIExtensionOptions {
     classes?: {
@@ -39,6 +41,7 @@ export interface UIExtensionOptions {
         customResult?: (props: any, state: any) => JSX.Element;
         customStatistic?: (props: any, state: any) => JSX.Element;
         customRoundHistory?: (props: any, state: any) => JSX.Element;
+        customNewRoundBg?: (props: any, state: any) => JSX.Element;
     };
     config?: {
         enableHeaderSection?: boolean;
@@ -132,6 +135,13 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
     renderRoundHistory(props?: P, state?: S): JSX.Element {
         if (this.extensionOptions.components?.customRoundHistory && props && state) {
             return this.extensionOptions.components.customRoundHistory(props, state);
+        }
+        return <></>;
+    }
+
+    renderNewRoundBg(props?: P, state?: S): JSX.Element {
+        if (this.extensionOptions.components?.customNewRoundBg && props && state) {
+            return this.extensionOptions.components.customNewRoundBg(props, state);
         }
         return <></>;
     }
@@ -333,6 +343,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         customFooterSection?: JSX.Element | null,
         customHistorySection?: JSX.Element | null,
         customRoundHistorySection?: JSX.Element | null,
+        customNewRoundBg?: JSX.Element | null,
     ): JSX.Element {
         const containerStyle = this.renderGameBackground(customBackgroundImage);
 
@@ -340,18 +351,22 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
             Styles['game-container'],
             this.getExtensionClass('gameContainer'),
             overrideClasses?.gameContainer,
+            { [rngSoccerStyles['slide-left']]: state.roundState === ROUND_STATE.STARTING_ROUND },
         );
 
         return (
-            <div className={containerClass} style={containerStyle}>
-                {this.resolveCustomSection(customHeaderSection, () =>
-                    this.renderGameHeaderSection(props, state, setStateCallback, overrideClasses),
-                )}
-                {this.resolveCustomSection(customContentSection, () => this.renderGameContentSection(props, state, overrideClasses))}
-                {this.resolveCustomSection(customFooterSection, () => this.renderGameFooterSection(props, state, overrideClasses))}
-                {this.resolveCustomSection(customRoundHistorySection, () => this.renderRoundHistory(props, state))}
-                {this.resolveCustomSection(customHistorySection, () => this.renderGameHistorySection(props, state, overrideClasses))}
-                {this.renderGameMessages(props, state)}
+            <div className={Styles['game-container-wrapper']}>
+                <div className={containerClass} style={containerStyle}>
+                    {this.resolveCustomSection(customHeaderSection, () =>
+                        this.renderGameHeaderSection(props, state, setStateCallback, overrideClasses),
+                    )}
+                    {this.resolveCustomSection(customContentSection, () => this.renderGameContentSection(props, state, overrideClasses))}
+                    {this.resolveCustomSection(customFooterSection, () => this.renderGameFooterSection(props, state, overrideClasses))}
+                    {this.resolveCustomSection(customRoundHistorySection, () => this.renderRoundHistory(props, state))}
+                    {this.resolveCustomSection(customHistorySection, () => this.renderGameHistorySection(props, state, overrideClasses))}
+                    {this.renderGameMessages(props, state)}
+                </div>
+                {this.resolveCustomSection(customNewRoundBg, () => this.renderNewRoundBg(props, state))}
             </div>
         );
     }
