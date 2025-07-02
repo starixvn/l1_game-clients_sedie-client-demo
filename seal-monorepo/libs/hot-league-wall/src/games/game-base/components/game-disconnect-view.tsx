@@ -5,7 +5,6 @@ import Styles from '../game-base.module.scss';
 
 // Rendering components for different game states
 export const GameLoadingView: React.FC = () => {
-    console.log('🔴 GameLoadingView: Component rendered');
     return (
         <div className="col-md-1 mx-auto mt-5">
             <Loading />
@@ -50,23 +49,6 @@ export const GameDisconnectView: React.FC<{
         }
     }, [isLoading, stableLoading, loadingStartTime]);
 
-    console.log('🔴 GameDisconnectView: Component rendered with props:', {
-        backgroundImage: !!backgroundImage,
-        isSSOFailure,
-        customMessage: !!customMessage,
-        isLoading,
-        stableLoading,
-        language
-    });
-
-    // Debug translation keys
-    console.log('🔴 GameDisconnectView: Translation debug:', {
-        language,
-        sessionExpiredKey: gc.Translator.t('Common.message_session_expired'),
-        connectFailedKey: gc.Translator.t('Common.connect_failed'),
-        reconnectKey: gc.Translator.t('Common.reconnect')
-    });
-
     // Show loading view when requesting new token
     if (stableLoading) {
         return <GameLoadingView />;
@@ -89,7 +71,6 @@ export const GameDisconnectView: React.FC<{
                         data-disabled={isLoading}
                         disabled={isLoading}
                         onClick={() => {
-                            console.log('🔴 GameDisconnectView: Reconnect/Retry button clicked', { isSSOFailure });
                             onReconnect();
                         }}
                     >

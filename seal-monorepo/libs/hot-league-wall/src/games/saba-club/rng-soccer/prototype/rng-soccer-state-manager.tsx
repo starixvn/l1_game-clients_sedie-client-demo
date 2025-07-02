@@ -12,45 +12,35 @@ export class RNGSoccerStateManager {
     private state: IRNGSoccerPageState;
 
     constructor(props: GameBaseProps) {
-        console.log('🔵 RNGSoccerStateManager: Constructor called with props:', props);
-
-        const { placingBet } = setting.durations;
         this.state = {
             gameId: setting.id,
             isTimerActive: true,
             isPopupVisible: false,
             roundId: 0,
-            placingBetStartTime: placingBet,
+            placingBetStartTime: setting.durations.placingBet,
         } as IRNGSoccerPageState;
-
-        console.log('🔵 RNGSoccerStateManager: Initial state set:', this.state);
 
         try {
             configGameContainer(setting.name, containerOptions);
-            console.log('🔵 RNGSoccerStateManager: Game container configured successfully');
         } catch (error) {
-            console.error('🔵 RNGSoccerStateManager: Error configuring game container:', error);
             // Silent fail on initialization error
         }
     }
 
     // State management methods
     togglePopup = (setState: (state: Partial<IRNGSoccerPageState>) => void) => {
-        console.log('🔵 RNGSoccerStateManager: togglePopup called, current isPopupVisible:', this.state.isPopupVisible);
         const newState = { isPopupVisible: !this.state.isPopupVisible };
         this.state = { ...this.state, ...newState };
         setState(newState);
     }
 
     setShowBetPanel = (show: boolean, setState: (state: Partial<IRNGSoccerPageState>) => void) => {
-        console.log('🔵 RNGSoccerStateManager: setShowBetPanel called with:', show);
         const newState = { showBetPanel: show };
         this.state = { ...this.state, ...newState };
         setState(newState);
     };
 
     setPanelId = (id: string, setState: (state: Partial<IRNGSoccerPageState>) => void) => {
-        console.log('🔵 RNGSoccerStateManager: setPanelId called with:', id);
         const newState = { activePanelId: id };
         this.state = { ...this.state, ...newState };
         setState(newState);
@@ -63,7 +53,6 @@ export class RNGSoccerStateManager {
     };
 
     handleBetCallback = (setState: (state: Partial<IRNGSoccerPageState>) => void) => {
-        console.log('🔵 RNGSoccerStateManager: onBet callback triggered');
         this.resetBettingPanel(setState);
         const newState = { isShowNextRoundMessage: true };
         this.state = { ...this.state, ...newState };

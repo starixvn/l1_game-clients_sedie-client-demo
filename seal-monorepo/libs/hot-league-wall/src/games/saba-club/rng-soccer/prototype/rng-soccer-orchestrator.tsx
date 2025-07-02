@@ -11,8 +11,6 @@ export default class RNGSoccerOrchestrator {
     private props: GameBaseProps;
 
     constructor(props: GameBaseProps) {
-        console.log('🔵 RNGSoccerOrchestrator: Constructor called with props:', props);
-
         this.props = props;
 
         // Initialize state manager
@@ -39,8 +37,6 @@ export default class RNGSoccerOrchestrator {
             this.renderers.renderCustomHistory.bind(this.renderers),
             this.renderers.renderCustomBetting.bind(this.renderers)
         );
-
-        console.log('🔵 RNGSoccerOrchestrator: Initial state set:', this.state);
     }
 
     // State management methods - delegate to state manager

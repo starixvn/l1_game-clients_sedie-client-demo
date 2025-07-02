@@ -41,7 +41,6 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     // Shared token request logic
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
-        console.log(`🔄 [${context}] Using TokenRequestManager for REAL APP...`);
         const tokenStartTime = performance.now();
 
         try {
@@ -55,18 +54,14 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
             const tokenDuration = tokenEndTime - tokenStartTime;
 
             if (newToken) {
-                console.log(`✅ [${context}] TokenRequestManager completed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 setCurrentToken(newToken);
                 return { success: true, token: newToken, duration: tokenDuration };
             } else {
-                console.log(`⚠️ [${context}] TokenRequestManager returned null for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
                 return { success: false, token: null, duration: tokenDuration };
             }
         } catch (error) {
             const tokenEndTime = performance.now();
             const tokenDuration = tokenEndTime - tokenStartTime;
-            console.log(`💥 [${context}] TokenRequestManager failed for REAL APP - Duration: ${tokenDuration.toFixed(2)}ms`);
-            console.error(`[${context}] TokenRequestManager error:`, error);
             return { success: false, token: null, duration: tokenDuration, error };
         }
     }, [onRequestSSOToken]);
@@ -93,15 +88,6 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
             if (triggerPlayTransition && result.success) setHasClickedPlay(true);
             const endTime = performance.now();
             const duration = endTime - startTime;
-            if (context === 'FIRST_SSO') {
-                console.log(`🏁 [FIRST_SSO] PROTOTYPE to REAL APP transition completed - Total duration: ${duration.toFixed(2)}ms`);
-            } else if (context === 'SSO_RETRY') {
-                if (result.success) {
-                    console.log('🔄 [SESSION_RECONNECT] New token obtained, Lobby should reconnect automatically');
-                } else {
-                    console.log('🔄 [SESSION_RECONNECT] Failed to get new token');
-                }
-            }
             return result;
         },
         [executeTokenRequest]
@@ -116,17 +102,10 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     const handleSessionReconnect = useCallback(
         async () => {
-            console.log('🔄 [SESSION_RECONNECT] Starting session reconnect...');
             await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
-            console.log('🔄 [SESSION_RECONNECT] Session reconnect completed');
         },
         [performTokenRequest]
     );
-
-    // Debug logging for reconnecting state changes
-    useEffect(() => {
-        console.log('🔄 [DEBUG] isReconnecting state changed:', isReconnecting);
-    }, [isReconnecting]);
 
     useEffect(() => {
         if (updateBalanceCallback) {

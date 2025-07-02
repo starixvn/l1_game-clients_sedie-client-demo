@@ -10,12 +10,9 @@ interface RNGSoccerStatisticProps {
 }
 
 export default function RNGSoccerStatistic({ namespace, language, isPopupVisible, togglePopup }: RNGSoccerStatisticProps) {
-    console.log('🟢 RNGSoccerStatistic: Component rendered with props:', { namespace, language, isPopupVisible });
-
     return (
         <div className={`${styles['wrapper-popup']} ${isPopupVisible ? styles['active'] : ''}`}>
             <div className={styles['close-popup']} onClick={() => {
-                console.log('🟢 RNGSoccerStatistic: Close button clicked');
                 togglePopup();
             }}>
                 <img src={closeIcon} alt="close" className={styles['close-icon']} />

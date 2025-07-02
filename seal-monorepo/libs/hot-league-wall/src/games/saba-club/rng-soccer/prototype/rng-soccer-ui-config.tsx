@@ -28,12 +28,10 @@ export class RNGSoccerUIConfig {
     }
 
     getGameBackgroundImage(): string {
-        console.log('🔵 RNGSoccerUIConfig: getGameBackgroundImage called, returning:', bgGame);
         return bgGame;
     }
 
     getDisconnectViewBackground(): string {
-        console.log('🔵 RNGSoccerUIConfig: getDisconnectViewBackground called, returning:', blurBgGame);
         return blurBgGame;
     }
 }

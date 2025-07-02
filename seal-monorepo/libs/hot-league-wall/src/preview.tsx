@@ -46,13 +46,9 @@ const PreviewContext: React.FC<PreviewContextProps> = ({
     } = useAppConfiguration();
 
     const handleSelectScenario = useCallback((scenario: SSOScenario) => {
-        console.log('🎯 [PREVIEW] Scenario selected:', scenario.name);
-
         setPlayButtonClickCount(0);
-        console.log('🔄 [PREVIEW] Reset play button click count to 0 for new scenario');
 
         setCurrentScenarioKey(scenario.id);
-        console.log('🔄 [PREVIEW] Updated scenario key to:', scenario.id);
 
         ssoSimulator.selectScenario(scenario);
     }, [ssoSimulator, setPlayButtonClickCount, setCurrentScenarioKey]);

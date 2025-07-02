@@ -117,16 +117,11 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     };
 
     handleSessionReconnect = async () => {
-        console.log('🔄 [LOBBY] Session reconnect requested');
-
         // Call parent's onSSORetry callback if provided
         if (this.props.onSSORetry) {
-            console.log('🔄 [LOBBY] Calling parent onSSORetry callback');
             try {
                 await this.props.onSSORetry();
-                console.log('🔄 [LOBBY] Session reconnect completed successfully');
             } catch (error) {
-                console.error('🔄 [LOBBY] Session reconnect failed:', error);
             }
         }
     };

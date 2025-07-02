@@ -14,8 +14,6 @@ export function getMessage(
     state: GameState,
     translator: Translator
 ): string | null {
-    console.log('🔴 getMessage: Called with state:', state);
-
     let message: string | null = null;
 
     switch (state.roundState) {
@@ -34,6 +32,5 @@ export function getMessage(
             break;
     }
 
-    console.log('🔴 getMessage: Returning message:', message);
     return message;
 } 

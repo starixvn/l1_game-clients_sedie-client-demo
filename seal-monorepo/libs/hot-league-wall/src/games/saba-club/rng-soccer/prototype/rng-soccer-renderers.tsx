@@ -36,7 +36,6 @@ export class RNGSoccerRenderers {
     }
 
     renderCustomContent(): JSX.Element {
-        console.log('🔵 RNGSoccerRenderers: renderCustomContent called');
         return (
             <Suspense fallback={<div>Loading...</div>}>
                 <RNGSoccerSettlementResult
@@ -48,7 +47,6 @@ export class RNGSoccerRenderers {
     }
 
     renderCustomFooter(): JSX.Element {
-        console.log('🔵 RNGSoccerRenderers: renderCustomFooter called');
         return (
             <div className={styles['wrapper-sport-bottom']}>
                 {this.renderCustomBetting()}
@@ -57,7 +55,6 @@ export class RNGSoccerRenderers {
     }
 
     renderCustomBetting(): JSX.Element {
-        console.log('🔵 RNGSoccerRenderers: renderCustomBetting called');
         return (
             <GameBettingOptionsContext.Provider
                 value={{
@@ -72,7 +69,6 @@ export class RNGSoccerRenderers {
                     namespace={setting.mainObserverNamespace}
                     language={this.props.language}
                     onBet={() => {
-                        console.log('🔵 RNGSoccerRenderers: onBet callback triggered');
                         this.resetBettingPanel();
                         this.setState({ isShowNextRoundMessage: true } as Pick<IRNGSoccerPageState, keyof IRNGSoccerPageState>);
                         setTimeout(() => {
@@ -85,7 +81,6 @@ export class RNGSoccerRenderers {
     }
 
     renderCustomHistory(state: IRNGSoccerPageState): JSX.Element {
-        console.log('🔵 RNGSoccerRenderers: renderCustomHistory called with state:', state);
         return (
             <Suspense fallback={<div>Loading...</div>}>
                 <RNGSoccerStatistic

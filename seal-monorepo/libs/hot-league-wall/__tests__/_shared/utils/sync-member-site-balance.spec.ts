@@ -45,7 +45,7 @@ describe('SyncMemberSiteBalance', () => {
         it('should set the sync balance callback', () => {
             // Arrange
             const callback = (totalStake?: number, winBet?: number) => {
-                console.log('Balance synced:', totalStake, winBet);
+                // console.log('Balance synced:', totalStake, winBet);
             };
 
             // Act
@@ -58,10 +58,10 @@ describe('SyncMemberSiteBalance', () => {
         it('should overwrite existing callback when set again', () => {
             // Arrange
             const callback1 = (totalStake?: number, winBet?: number) => {
-                console.log('First callback:', totalStake, winBet);
+                // console.log('First callback:', totalStake, winBet);
             };
             const callback2 = (totalStake?: number, winBet?: number) => {
-                console.log('Second callback:', totalStake, winBet);
+                // console.log('Second callback:', totalStake, winBet);
             };
 
             // Act
@@ -86,7 +86,7 @@ describe('SyncMemberSiteBalance', () => {
         it('should return the set callback function', () => {
             // Arrange
             const callback = (totalStake?: number, winBet?: number) => {
-                console.log('Test callback:', totalStake, winBet);
+                // console.log('Test callback:', totalStake, winBet);
             };
             manager.setSyncBalanceCallback(callback);
 
@@ -164,7 +164,7 @@ describe('SyncMemberSiteBalance', () => {
         it('should use CallbackSingleton base functionality', () => {
             // Arrange
             const callback = (totalStake?: number, winBet?: number) => {
-                console.log('Test:', totalStake, winBet);
+                // console.log('Test:', totalStake, winBet);
             };
 
             // Act

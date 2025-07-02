@@ -26,7 +26,6 @@ interface IRNGSoccerPageState extends IGatewayGameBaseState {
 @observer(setting.mainObserverNamespace)
 export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSoccerPageState> {
     constructor(props: GameBaseProps) {
-        console.log('🔵 RNGSoccerPage: Constructor called with props:', props);
         super(props);
 
         const { placingBet } = setting.durations;
@@ -39,45 +38,36 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
             placingBetStartTime: placingBet,
         } as IRNGSoccerPageState;
 
-        console.log('🔵 RNGSoccerPage: Initial state set:', this.state);
-
         this.uiRenderer.setExtensionOptions(this.getUIExtensionOptions());
 
         try {
             configGameContainer(setting.name, containerOptions);
-            console.log('🔵 RNGSoccerPage: Game container configured successfully');
         } catch (error) {
-            console.error('🔵 RNGSoccerPage: Error configuring game container:', error);
             // Silent fail on initialization error
         }
     }
 
     // State management methods
     togglePopup = () => {
-        console.log('🔵 RNGSoccerPage: togglePopup called, current isPopupVisible:', this.state.isPopupVisible);
         this.setState({
             isPopupVisible: !this.state.isPopupVisible,
         });
     };
 
     setShowBetPanel = (show: boolean) => {
-        console.log('🔵 RNGSoccerPage: setShowBetPanel called with:', show);
         this.setState({ showBetPanel: show });
     };
 
     setPanelId = (id: string) => {
-        console.log('🔵 RNGSoccerPage: setPanelId called with:', id);
         this.setState({ activePanelId: id });
     };
 
     // Game lifecycle and event handlers
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
     override closeConnect() {
-        console.log('🔵 RNGSoccerPage: closeConnect called');
     }
 
     override getGameBackgroundImage(): string {
-        console.log('🔵 RNGSoccerPage: getGameBackgroundImage called, returning:', bgGame);
         return bgGame;
     }
 
@@ -94,13 +84,11 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
     }
 
     override getDisconnectViewBackground(): string {
-        console.log('🔵 RNGSoccerPage: getDisconnectViewBackground called, returning:', blurBgGame);
         return blurBgGame;
     }
 
     // UI configuration and rendering methods
     getUIExtensionOptions(): UIExtensionOptions {
-        console.log('🔵 RNGSoccerPage: getUIExtensionOptions called');
         return {
             classes: {
                 gameContainer: styles['sport-item'],
@@ -127,7 +115,6 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
     }
 
     renderCustomContent(): JSX.Element {
-        console.log('🔵 RNGSoccerPage: renderCustomContent called');
         return (
             <Suspense fallback={<div>Loading...</div>}>
                 <RNGSoccerSettlementResult namespace={setting.mainObserverNamespace} language={this.props.language} />
@@ -136,12 +123,10 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
     }
 
     renderCustomFooter(): JSX.Element {
-        console.log('🔵 RNGSoccerPage: renderCustomFooter called');
         return <div className={styles['wrapper-sport-bottom']}>{this.renderCustomBetting()}</div>;
     }
 
     renderCustomBetting(): JSX.Element {
-        console.log('🔵 RNGSoccerPage: renderCustomBetting called');
         return (
             <GameBettingOptionsContext.Provider
                 value={{
@@ -156,7 +141,6 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
                     namespace={setting.mainObserverNamespace}
                     language={this.props.language}
                     onBet={() => {
-                        console.log('🔵 RNGSoccerPage: onBet callback triggered');
                         this.resetBettingPanel();
                         this.setState({ isShowNextRoundMessage: true } as Pick<IRNGSoccerPageState, keyof IRNGSoccerPageState>);
                         setTimeout(() => {
@@ -169,7 +153,6 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
     }
 
     renderCustomHistory(state: IRNGSoccerPageState): JSX.Element {
-        console.log('🔵 RNGSoccerPage: renderCustomHistory called with state:', state);
         return (
             <Suspense fallback={<div>Loading...</div>}>
                 <RNGSoccerStatistic
