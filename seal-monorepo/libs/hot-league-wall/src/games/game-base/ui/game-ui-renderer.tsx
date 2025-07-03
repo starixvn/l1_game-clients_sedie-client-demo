@@ -354,8 +354,12 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
             { [rngSoccerStyles['slide-left']]: state.roundState === ROUND_STATE.STARTING_ROUND },
         );
 
+        const gameContainerWrapperClass = classNames(Styles['game-container-wrapper'], {
+            [Styles['overflow-hidden']]: state.roundState === ROUND_STATE.STARTING_ROUND,
+        });
+
         return (
-            <div className={Styles['game-container-wrapper']}>
+            <div className={gameContainerWrapperClass}>
                 <div className={containerClass} style={containerStyle}>
                     {this.resolveCustomSection(customHeaderSection, () =>
                         this.renderGameHeaderSection(props, state, setStateCallback, overrideClasses),

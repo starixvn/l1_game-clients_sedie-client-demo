@@ -9,7 +9,10 @@
     position: relative;
     max-width: 344px;
     min-height: 154px;
-    overflow: hidden;
+
+    &.overflow-hidden {
+        overflow: hidden;
+    }
 }
 
 // Main container
