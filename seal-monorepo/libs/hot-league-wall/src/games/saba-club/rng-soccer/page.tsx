@@ -105,7 +105,6 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
                 customFooter: () => this.renderCustomFooter(),
                 customHistory: (props, state) => this.renderCustomHistory(state as IRNGSoccerPageState),
                 customBetting: () => this.renderCustomBetting(),
-                customNewRoundBg: (props, state) => this.renderNewRoundBg(state as IRNGSoccerPageState),
             },
             config: {
                 gameName: 'RNGSoccer',
@@ -162,18 +161,6 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
                     togglePopup={this.togglePopup}
                 />
             </Suspense>
-        );
-    }
-
-    renderNewRoundBg(state: IRNGSoccerPageState): JSX.Element {
-        if (state.roundState !== ROUND_STATE.STARTING_ROUND) {
-            return <></>;
-        }
-
-        return (
-            <div className={styles['blur-bg-animated']}>
-                <img src={bgGame} alt="Blurred background" />
-            </div>
         );
     }
 }

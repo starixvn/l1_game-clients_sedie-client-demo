@@ -199,7 +199,6 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         const customFooterSection = this.getGameFooterSection();
         const customRoundHistorySection = this.getGameRoundHistorySection();
         const customHistorySection = this.getGameHistorySection();
-        const customBlurBg = this.getBlurGameBg();
         const backgroundImage = this.getGameBackgroundImage();
 
         return this.uiRenderer.renderGameLayout(
@@ -213,7 +212,6 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
             customFooterSection,
             customHistorySection,
             customRoundHistorySection,
-            customBlurBg,
         );
     }
 }
