@@ -105,7 +105,7 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         this.connectToServiceGateway();
     }
 
-    @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler, (handler) => handler.disconnect())
+    @handle(gc.GatewayConnection.GatewayConnectionStore, (store) => store.connection?.disconnect())
     terminateGatewayConnection() {
         console.log('terminate Gateway Connection');
     }
