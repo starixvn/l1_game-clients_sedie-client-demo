@@ -35,6 +35,11 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         this.uiRenderer = new GameUIRenderer<P, S>();
     }
 
+    componentWillUnmount() {
+        super.componentWillUnmount();
+        this.terminateGatewayConnection();
+    }
+
     protected configureUIRenderer(): UIExtensionOptions {
         return {};
     }
@@ -72,7 +77,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Auth.AuthHandlers.Authorize, (handler) => handler.handleAutoGenerateName())
-    protected autoCreateNickname(): void {}
+    protected autoCreateNickname(): void { }
 
     // CONNECTION METHODS
     @render(gc.GatewayConnection.GatewayConnectionStore, (store) => store.isConnected)
@@ -80,8 +85,13 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         if (isConnected) this.connectLiveGateway();
     }
 
+    @handle(gc.GatewayConnection.GatewayConnectionStore, (store) => store.connection?.disconnect())
+    terminateGatewayConnection() {
+        console.log('terminate Gateway Connection');
+    }
+
     @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => handler.handleGateway())
-    override connectLiveGateway(): void {}
+    override connectLiveGateway(): void { }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
     handleJoinGame(isConnected: boolean): void {
@@ -94,17 +104,17 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Connection.ConnectionHandlers.SignInHandler)
-    signIn(): void {}
+    signIn(): void { }
 
     override handleConnected(signedIn: boolean): void {
         if (signedIn) this.inGameLiveGateway();
     }
 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler, (handler) => handler.handleGateway())
-    inGameLiveGateway(): void {}
+    inGameLiveGateway(): void { }
 
     // ABSTRACT METHOD IMPLEMENTATIONS
-    override closeConnect(): void {}
+    override closeConnect(): void { }
 
     override showResult(
         hasAnimation: boolean,
