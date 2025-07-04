@@ -78,17 +78,17 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     // EVENT HANDLERS
     // -------------------------------------------------------------------------
 
-    onVisibilityChange = () => { };
+    onVisibilityChange = () => {};
 
     // -------------------------------------------------------------------------
     // CONNECTION HANDLERS
     // -------------------------------------------------------------------------
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler, (handler) => handler.handle())
-    connectToServiceGateway() { }
+    connectToServiceGateway() {}
 
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handle())
-    terminateConnection() { }
+    terminateConnection() {}
 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler)
     inGame() {
@@ -105,13 +105,7 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         this.connectToServiceGateway();
     }
 
-    @handle(gc.GatewayConnection.GatewayConnectionStore, (store) => store.connection?.disconnect())
-    terminateGatewayConnection() {
-        console.log('terminate Gateway Connection');
-    }
-
     handleReconnect = () => {
-        this.terminateGatewayConnection();
         GameConnectionService.handleReconnect(this);
     };
 

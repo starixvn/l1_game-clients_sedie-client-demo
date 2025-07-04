@@ -35,17 +35,6 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         this.uiRenderer = new GameUIRenderer<P, S>();
     }
 
-    componentWillUnmount() {
-        super.componentWillUnmount();
-        this.terminateGatewayConnection();
-    }
-
-    override onVisibilityChange = () => {
-        if (document.hidden) {
-            this.terminateGatewayConnection();
-        }
-    }
-
     protected configureUIRenderer(): UIExtensionOptions {
         return {};
     }
@@ -83,20 +72,16 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Auth.AuthHandlers.Authorize, (handler) => handler.handleAutoGenerateName())
-    protected autoCreateNickname(): void { }
+    protected autoCreateNickname(): void {}
 
     // CONNECTION METHODS
     @render(gc.GatewayConnection.GatewayConnectionStore, (store) => store.isConnected)
     handleConnectLiveGatewayForGame(isConnected: boolean): void {
-        // this.terminateConnection();
         if (isConnected) this.connectLiveGateway();
     }
 
-    @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => {
-        console.log('connectLiveGateway');
-        handler.handleGateway();
-    })
-    override connectLiveGateway(): void { }
+    @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => handler.handleGateway())
+    override connectLiveGateway(): void {}
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
     handleJoinGame(isConnected: boolean): void {
@@ -109,17 +94,17 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Connection.ConnectionHandlers.SignInHandler)
-    signIn(): void { }
+    signIn(): void {}
 
     override handleConnected(signedIn: boolean): void {
         if (signedIn) this.inGameLiveGateway();
     }
 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler, (handler) => handler.handleGateway())
-    inGameLiveGateway(): void { }
+    inGameLiveGateway(): void {}
 
     // ABSTRACT METHOD IMPLEMENTATIONS
-    override closeConnect(): void { }
+    override closeConnect(): void {}
 
     override showResult(
         hasAnimation: boolean,
