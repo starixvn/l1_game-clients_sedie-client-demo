@@ -11,4 +11,7 @@ export interface IGatewayGameBaseState extends IGameBaseState {
     isAllowedBet: boolean;
     activePanelId: any;
     showBetPanel: boolean;
+
+    // Observer cleanup function
+    dispose?: () => void;
 } 

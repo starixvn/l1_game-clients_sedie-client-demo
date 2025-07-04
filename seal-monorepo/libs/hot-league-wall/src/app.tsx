@@ -66,6 +66,30 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         }
     }, [onRequestSSOToken]);
 
+    // Effect to handle tab visibility changes and reset game state
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                // Only reset game state if we're not currently in a game session
+                // This prevents unmounting the game component when switching tabs
+                if (!currentToken) {
+                    // Tab became visible, reset game state to show prototype again
+                    setHasClickedPlay(false);
+                    setCurrentToken(null);
+                    setIsLoading(false);
+                    setIsReconnecting(false);
+                }
+                // If we have a current token, keep the game session active
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [currentToken]);
+
     // Unified token request handler
     const performTokenRequest = useCallback(
         async ({
@@ -121,16 +145,16 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         }
     }, [onRequestSSOToken]);
 
-    // Cleanup effect to reset state when component unmounts
-    useEffect(() => {
-        return () => {
-            setHasClickedPlay(false);
-            setCurrentToken(null);
-            setIsLoading(false);
-            setIsReconnecting(false);
-            console.log('AppContent component unmounted');
-        };
-    }, []);
+    // // Cleanup effect to reset state when component unmounts
+    // useEffect(() => {
+    //     return () => {
+    //         setHasClickedPlay(false);
+    //         setCurrentToken(null);
+    //         setIsLoading(false);
+    //         setIsReconnecting(false);
+    //         console.log('AppContent component unmounted');
+    //     };
+    // }, []);
 
     loadI18n(language);
 

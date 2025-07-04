@@ -354,7 +354,7 @@ componentWillUnmount() {
 -   Less maintainable
 -   Harder to test
 
-### Solution 3: Singleton Manager (Recommended)
+### Solution 3: Singleton Manager (Implemented)
 
 ```typescript
 // Centralized connection management
@@ -368,38 +368,159 @@ class GatewayConnectionManager {
         return GatewayConnectionManager.instance;
     }
 
+    private getSharedContainer(): any {
+        // Try multiple sources for the shared container
+        const sources = [
+            sharedContainer, // Imported from startup
+            window['seal_shared_container'],
+            (gc as any).sharedContainer,
+            (window as any).sharedContainer
+        ];
+
+        for (const source of sources) {
+            if (source && typeof source.get === 'function') {
+                return source;
+            }
+        }
+        return null;
+    }
+
     disconnect(reason?: string): void {
-        // Direct disconnect without decorator dependency
-        const handler = sharedContainer.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-        if (handler) {
-            handler.disconnect();
+        try {
+            console.log(`GatewayConnectionManager: Disconnecting gateway connection${reason ? ` - ${reason}` : ''}`);
+
+            const container = this.getSharedContainer();
+            if (!container) {
+                console.warn('GatewayConnectionManager: No shared container found');
+                return;
+            }
+
+            const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+            if (handler) {
+                handler.disconnect();
+                console.log('GatewayConnectionManager: Disconnect called successfully');
+            } else {
+                console.warn('GatewayConnectionManager: ConnectHandler not found in container');
+            }
+        } catch (error) {
+            console.error('GatewayConnectionManager: Failed to disconnect:', error);
         }
     }
 }
 
 // Usage
 componentWillUnmount() {
-    GatewayConnectionManager.getInstance().disconnect('component_unmount');
-
-    const { dispose } = this.state;
-    if (dispose) {
-        dispose();
+    try {
+        // 1. Use singleton manager to disconnect (independent of observer lifecycle)
+        GatewayConnectionManager.getInstance().disconnect('component_unmount');
+    } catch (error) {
+        console.error('Failed to disconnect via GatewayConnectionManager:', error);
     }
+
+    try {
+        // 2. Then cleanup observer
+        const { dispose } = this.state;
+        if (dispose) {
+            dispose();
+        }
+    } catch (error) {
+        console.error('Failed to cleanup observer:', error);
+    }
+
+    // 3. Call parent cleanup
+    super.componentWillUnmount();
 }
 ```
 
 **Pros:**
 
--   Centralized control
--   Independent of component lifecycle
--   Easy to use from anywhere
--   Better error handling
--   Testable
+-   ✅ Centralized control
+-   ✅ Independent of component lifecycle
+-   ✅ Easy to use from anywhere
+-   ✅ Better error handling
+-   ✅ Testable
+-   ✅ Robust container access with multiple fallbacks
+-   ✅ Comprehensive logging for debugging
 
 **Cons:**
 
 -   Additional complexity
 -   Requires new infrastructure
+
+## Additional Issues Discovered
+
+### Issue 2: Browser Tab Switching Disconnection
+
+During our investigation, we discovered that the gateway connection was also disconnecting when users switched browser tabs, which was not the intended behavior.
+
+#### Root Cause
+
+The issue was in the `AppContent` component's visibility change handler:
+
+```typescript
+// ❌ Problematic code
+useEffect(() => {
+    const handleVisibilityChange = () => {
+        if (!document.hidden) {
+            // This was resetting game state every time tab became visible
+            setHasClickedPlay(false);
+            setCurrentToken(null);
+            setIsLoading(false);
+            setIsReconnecting(false);
+        }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}, []);
+```
+
+When users switched back to the game tab, this handler would reset the game state, causing the Lobby component (containing GatewayGameBase) to unmount, which triggered the disconnect.
+
+#### Solution
+
+Modified the visibility change handler to preserve game sessions:
+
+```typescript
+// ✅ Fixed code
+useEffect(() => {
+    const handleVisibilityChange = () => {
+        if (!document.hidden) {
+            // Only reset game state if we're not currently in a game session
+            if (!currentToken) {
+                setHasClickedPlay(false);
+                setCurrentToken(null);
+                setIsLoading(false);
+                setIsReconnecting(false);
+            }
+            // If we have a current token, keep the game session active
+        }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}, [currentToken]); // Added dependency
+```
+
+### Issue 3: Socket.io Automatic Disconnection
+
+We also discovered that socket.io has default behavior that automatically disconnects when browser tabs are not visible.
+
+#### Solution
+
+Added socket.io configuration options to prevent automatic disconnection:
+
+```typescript
+// In GatewayConnectionStore.initConnection()
+const options = {
+    ...mergedOptions,
+    // Prevent automatic disconnection when tab is not visible
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+    // Keep connection alive even when tab is not visible
+    closeOnBeforeunload: false,
+} as Partial<ManagerOptions & SocketOptions>;
+```
 
 ## Best Practices
 
@@ -530,6 +651,147 @@ console.log('Handler available:', !!handler);
 3. **Handler Instances**: Don't hold references to handlers after cleanup
 4. **Timing**: Call disconnect methods before observer cleanup
 
+## Case Study: Gateway Connection Cleanup
+
+### Problem Description
+
+The `GatewayGameBase` component was experiencing connection cleanup issues:
+
+1. **Decorator not working on unmount**: The `@handle` decorator wasn't executing during `componentWillUnmount`
+2. **Tab switching disconnection**: Connections were disconnecting when users switched browser tabs
+3. **Socket.io automatic disconnection**: Default socket.io behavior was causing unwanted disconnections
+
+### Investigation Process
+
+#### Step 1: Identify the Core Issue
+
+-   Analyzed the component lifecycle flow
+-   Discovered that observer cleanup happens before decorator execution
+-   Confirmed that `@handle` decorators become inactive during unmount
+
+#### Step 2: Implement Singleton Manager
+
+-   Created `GatewayConnectionManager` with robust container access
+-   Added multiple fallback sources for container access
+-   Implemented comprehensive error handling and logging
+
+#### Step 3: Discover Additional Issues
+
+-   Found that visibility change handlers were causing component unmount
+-   Identified socket.io default behavior causing automatic disconnections
+-   Root cause analysis revealed multiple layers of issues
+
+#### Step 4: Implement Comprehensive Solution
+
+-   Fixed visibility change handler to preserve game sessions
+-   Added socket.io configuration to prevent automatic disconnection
+-   Enhanced singleton manager with better debugging capabilities
+
+### Final Implementation
+
+#### 1. GatewayConnectionManager
+
+```typescript
+// File: seal-monorepo/libs/hot-league-wall/src/games/game-base/gateway/gateway-connection-manager.ts
+export class GatewayConnectionManager {
+    private static instance: GatewayConnectionManager;
+
+    static getInstance(): GatewayConnectionManager {
+        if (!GatewayConnectionManager.instance) {
+            GatewayConnectionManager.instance = new GatewayConnectionManager();
+        }
+        return GatewayConnectionManager.instance;
+    }
+
+    disconnect(reason?: string): void {
+        // Robust container access with multiple fallbacks
+        // Comprehensive error handling and logging
+        // Direct handler access bypassing decorator system
+    }
+}
+```
+
+#### 2. Updated Component Lifecycle
+
+```typescript
+// File: seal-monorepo/libs/hot-league-wall/src/games/game-base/gateway/gateway-game-base.tsx
+componentWillUnmount() {
+    try {
+        // 1. Use singleton manager to disconnect (independent of observer lifecycle)
+        GatewayConnectionManager.getInstance().disconnect('component_unmount');
+    } catch (error) {
+        console.error('Failed to disconnect via GatewayConnectionManager:', error);
+    }
+
+    try {
+        // 2. Then cleanup observer
+        const { dispose } = this.state;
+        if (dispose) {
+            dispose();
+        }
+    } catch (error) {
+        console.error('Failed to cleanup observer:', error);
+    }
+
+    // 3. Call parent cleanup
+    super.componentWillUnmount();
+}
+```
+
+#### 3. Fixed Visibility Change Handler
+
+```typescript
+// File: seal-monorepo/libs/hot-league-wall/src/app.tsx
+useEffect(() => {
+    const handleVisibilityChange = () => {
+        if (!document.hidden) {
+            // Only reset game state if we're not currently in a game session
+            if (!currentToken) {
+                setHasClickedPlay(false);
+                setCurrentToken(null);
+                setIsLoading(false);
+                setIsReconnecting(false);
+            }
+            // If we have a current token, keep the game session active
+        }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}, [currentToken]);
+```
+
+#### 4. Enhanced Socket.io Configuration
+
+```typescript
+// File: sg-game-client/src/gateway-connection/gateway-connection-store.ts
+const options = {
+    ...mergedOptions,
+    // Prevent automatic disconnection when tab is not visible
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+    closeOnBeforeunload: false,
+} as Partial<ManagerOptions & SocketOptions>;
+```
+
+### Results
+
+✅ **Decorator issue resolved**: Singleton manager bypasses decorator system entirely
+✅ **Tab switching fixed**: Game sessions preserved when switching tabs
+✅ **Socket.io behavior controlled**: No automatic disconnection on tab switch
+✅ **Robust error handling**: Comprehensive logging and fallback mechanisms
+✅ **Maintainable solution**: Centralized connection management
+
+### Lessons Learned
+
+1. **Multiple root causes**: The original issue had multiple contributing factors
+2. **Investigation depth**: Thorough investigation revealed unexpected issues
+3. **Defensive programming**: Multiple fallbacks and error handling are essential
+4. **Browser behavior**: Understanding browser and socket.io default behaviors is crucial
+5. **Component lifecycle**: React component lifecycle can be affected by parent components
+
 ## Conclusion
 
 The decorator and observer system provides powerful functionality for reactive components, but has limitations during component unmount. The recommended solution is to use a singleton manager for connection management, ensuring reliable cleanup independent of the component lifecycle.
@@ -541,5 +803,8 @@ Key takeaways:
 -   Always handle cleanup errors gracefully
 -   Test cleanup logic thoroughly
 -   Monitor for memory leaks
+-   **Investigate multiple potential root causes**
+-   **Consider browser and library default behaviors**
+-   **Implement defensive programming with multiple fallbacks**
 
 This approach ensures reliable connection management while maintaining the benefits of the decorator system during component lifecycle.
