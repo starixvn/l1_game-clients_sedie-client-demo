@@ -95,7 +95,9 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     const handlePlayButtonClick = useCallback(
         async () => {
-            await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
+            console.log('Play button clicked - starting token request and connection flow');
+            const result = await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
+            console.log('Token request completed:', { success: result.success, hasToken: !!result.token });
         },
         [performTokenRequest]
     );
@@ -118,6 +120,17 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
             TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken());
         }
     }, [onRequestSSOToken]);
+
+    // Cleanup effect to reset state when component unmounts
+    useEffect(() => {
+        return () => {
+            setHasClickedPlay(false);
+            setCurrentToken(null);
+            setIsLoading(false);
+            setIsReconnecting(false);
+            console.log('AppContent component unmounted');
+        };
+    }, []);
 
     loadI18n(language);
 

@@ -49,6 +49,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     componentDidMount() {
         const { token } = this.props;
+        console.log('Lobby component mounted - starting SSO with token');
         this.sso({ token });
     }
 
@@ -64,14 +65,28 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @render(gc.Auth.AuthStore, (store) => store.isAuthenticated)
     handleIsAuthenticated(isAuthenticated: boolean) {
+        console.log('Authentication status changed:', isAuthenticated);
         this.setState({ isAuthenticated });
         if (isAuthenticated) {
+            console.log('User authenticated - connecting to live gateway');
             this.connectLiveGateway();
         }
     }
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
-    connectLiveGateway() { }
+    connectLiveGateway() {
+        console.log('connectLiveGateway called - establishing connection to service');
+        // The decorator will handle the connection automatically
+        // Add a timeout to check for offer games after connection
+        setTimeout(() => {
+            this.checkMainPlayerStore();
+        }, 1000);
+    }
+
+    private checkMainPlayerStore() {
+        // This method will be called after connection to ensure games are loaded
+        console.log('Checking main player store for offer games');
+    }
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {

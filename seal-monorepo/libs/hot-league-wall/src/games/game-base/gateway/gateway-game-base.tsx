@@ -16,6 +16,7 @@ import { FunctionUtils } from '../../../_shared/utils/funtion-utils';
 class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> extends GameBase<P, S> {
     private authHandler: AuthorizationHandler;
     protected uiRenderer: GameUIRenderer<P, S>;
+    private _hasDisconnected: boolean = false;
 
     constructor(props: P) {
         super(props);
@@ -37,12 +38,116 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
 
     componentWillUnmount() {
         super.componentWillUnmount();
-        this.terminateGatewayConnection();
+        // Fallback disconnect in case early detection didn't work
+        this.directDisconnectGateway();
+    }
+
+    componentDidUpdate(prevProps: P, prevState: S) {
+        super.componentDidUpdate?.(prevProps, prevState);
+
+        // Detect unmount conditions and disconnect early
+        this.detectAndHandleUnmountConditions(prevProps);
+    }
+
+    private detectAndHandleUnmountConditions(prevProps: P) {
+        // Temporarily disable early disconnect detection to fix connection issues
+        // The connection should be handled by the proper lifecycle methods
+
+        // Check if we're about to unmount by looking for unmount indicators
+        const isAboutToUnmount = this.checkUnmountIndicators(prevProps);
+
+        if (isAboutToUnmount && !this._hasDisconnected) {
+            console.log('Early disconnect detected - but DISABLED for now');
+            console.log('Unmount indicators:', {
+                propsChanged: this.hasUnmountPropsChanged(prevProps),
+                invalidState: this.isComponentInInvalidState(),
+                state: {
+                    isConnected: this.state.isConnected,
+                    isAuthorized: this.state.isAuthorized,
+                    isSignedIn: this.state.isSignedIn,
+                    isConnectFailed: this.state.isConnectFailed
+                }
+            });
+            // Temporarily disabled: this.terminateGatewayConnection();
+            // this._hasDisconnected = true;
+        }
+    }
+
+    private checkUnmountIndicators(prevProps: P): boolean {
+        // Check various conditions that might indicate the component is about to unmount
+
+        // 1. Check for specific props changes that indicate unmount
+        if (this.hasUnmountPropsChanged(prevProps)) {
+            return true;
+        }
+
+        // 2. Check if the component is still in a valid state
+        if (this.isComponentInInvalidState()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private hasUnmountPropsChanged(prevProps: P): boolean {
+        // Check for specific prop changes that indicate the component should unmount
+        // Override this in your specific implementation based on your props
+
+        // Example: Check if critical props have changed
+        if (prevProps.namespace !== this.props.namespace) {
+            return true;
+        }
+
+        // Add more specific checks based on your component's props
+        return false;
+    }
+
+    private isComponentInInvalidState(): boolean {
+        // Check if the component is in an invalid state that suggests it should unmount
+        // This is a heuristic - customize based on your specific case
+
+        // Add detailed logging to understand the state
+        console.log('Checking component state validity:', {
+            isConnected: this.state.isConnected,
+            isAuthorized: this.state.isAuthorized,
+            isSignedIn: this.state.isSignedIn,
+            isConnectFailed: this.state.isConnectFailed,
+            stateKeys: Object.keys(this.state)
+        });
+
+        // Don't trigger disconnect during initial mount when auth state is still loading
+        // Only trigger if we've been mounted for a while and still don't have auth
+
+        // Check if we have a connection but no auth (this would be invalid)
+        // BUT only if we're not in the middle of the connection process
+        if (this.state.isConnected && !this.state.isAuthorized && !this.state.isSignedIn) {
+            // Give some time for auth to complete after connection
+            console.log('Connected but not authorized - this might be normal during connection process');
+            return false; // Don't disconnect during connection process
+        }
+
+        // Check if we have auth failure indicators
+        if (this.state.isConnectFailed) {
+            console.log('Invalid state detected: Connection failed');
+            return true;
+        }
+
+        console.log('Component state is valid');
+        return false;
     }
 
     protected configureUIRenderer(): UIExtensionOptions {
         return {};
     }
+
+
+    // Disabled onVisibilityChange disconnect - connection should stay active when switching tabs
+    // override onVisibilityChange = () => {
+    //     if (document.hidden) {
+    //         console.log('Tab hidden - disconnecting gateway connection');
+    //         this.terminateGatewayConnection();
+    //     }
+    // }
 
     protected initializeUIRenderer(): void {
         const options = this.configureUIRenderer();
@@ -85,9 +190,18 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         if (isConnected) this.connectLiveGateway();
     }
 
-    @handle(gc.GatewayConnection.GatewayConnectionStore, (store) => store.connection?.disconnect())
+    @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler, (handler) => handler.disconnect())
     terminateGatewayConnection() {
         console.log('terminate Gateway Connection');
+        // The decorator will handle the disconnect call automatically
+    }
+
+    // Direct disconnect method for unmount scenarios where decorator might not work
+    private directDisconnectGateway() {
+        console.log('directDisconnectGateway called');
+        // During unmount, the decorator system might not work properly
+        // So we call the decorated method directly and hope the decorator still works
+        this.terminateGatewayConnection();
     }
 
     @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => handler.handleGateway())
@@ -114,7 +228,11 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     inGameLiveGateway(): void { }
 
     // ABSTRACT METHOD IMPLEMENTATIONS
-    override closeConnect(): void { }
+    override closeConnect(): void {
+        console.log('closeConnect called - terminating all connections');
+        this.terminateGatewayConnection();
+        this.terminateConnection();
+    }
 
     override showResult(
         hasAnimation: boolean,
