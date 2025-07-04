@@ -39,6 +39,25 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     const [isLoading, setIsLoading] = useState(false);
     const [isReconnecting, setIsReconnecting] = useState(false);
 
+    // Effect to handle tab visibility changes and reset game state
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                // Tab became visible, reset game state to show prototype again
+                setHasClickedPlay(false);
+                setCurrentToken(null);
+                setIsLoading(false);
+                setIsReconnecting(false);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
+
     // Shared token request logic
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
         const tokenStartTime = performance.now();
