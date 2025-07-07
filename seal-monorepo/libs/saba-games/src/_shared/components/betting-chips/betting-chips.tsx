@@ -33,16 +33,16 @@ const BettingChips: React.FC<BettingChipsProps> = ({
             onClick: () => onAmountChange(min)
         },
         {
-            value: min * 5,
-            label: `+${formatNumber(min * 5)}`,
-            onClick: () => onAmountChange(currentAmount + (min * 5)),
-            disabled: currentAmount + (min * 5) > max
-        },
-        {
             value: min * 10,
             label: `+${formatNumber(min * 10)}`,
             onClick: () => onAmountChange(currentAmount + (min * 10)),
             disabled: currentAmount + (min * 10) > max
+        },
+        {
+            value: min * 50,
+            label: `+${formatNumber(min * 50)}`,
+            onClick: () => onAmountChange(currentAmount + (min * 50)),
+            disabled: currentAmount + (min * 50) > max
         },
         {
             value: max,

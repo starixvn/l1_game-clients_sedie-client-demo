@@ -5,13 +5,12 @@ const getFilteredGames = (
         gameId: number;
     }[],
 ) => {
-    const filteredGames = getGameSettingIds()
+    return getGameSettingIds()
         .filter((gameId) => offerGames.find((offerGame) => offerGame.gameId === gameId))
         .map((gameId) => {
             return { gameId };
         });
-
-    return filteredGames;
 };
+
 
 export { getFilteredGames };

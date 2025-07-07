@@ -47,11 +47,10 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
     }
     const gameSettings = gameSettingsMap[siteId];
 
-    const result = {
+    return {
         ...environmentsConfig,
         gameSettings
     };
-    return result;
 }
 
 // TODO refactor
@@ -66,11 +65,6 @@ export const appSettings = getEnvironmentConfig({
 
 export const getSiteConfig = (gameId: number) => {
     const gameSetting = appSettings.gameSettings[gameId];
-
-    if (!gameSetting) {
-        console.warn('[getSiteConfig] No game setting found for gameId:', gameId);
-    }
-
     const config: gc.Configs.SiteConfigs = {
         isDev: false,
         systemType: appSettings.systemType,
@@ -94,7 +88,6 @@ export const getGameSetting = (gameId: number) => {
     const settings = appSettings.gameSettings[gameId];
 
     if (!settings) {
-        console.warn('[getGameSetting] No settings found for gameId:', gameId);
         return null;
     }
 
@@ -121,10 +114,8 @@ export const getVisibleGameSettings = () => {
         return appSettings.gameSettings[value];
     });
 
-    const result = gameSettings
+    return gameSettings
         .filter(setting => setting.isVisible)
         .sort((a, b) => a.order - b.order);
-
-    return result;
 };
 
