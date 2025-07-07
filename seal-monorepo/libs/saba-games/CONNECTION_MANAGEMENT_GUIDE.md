@@ -5,6 +5,7 @@
 The issue with `handler.connection?.close()` not properly closing or destroying connections can be attributed to several common problems:
 
 ### 1. **Asynchronous Nature**
+
 ```typescript
 // ❌ Problem: Not waiting for close to complete
 handler.connection?.close();
@@ -14,6 +15,7 @@ await handler.connection?.close();
 ```
 
 ### 2. **Connection State Issues**
+
 ```typescript
 // ❌ Problem: Connection might be in wrong state
 handler.connection?.close();
@@ -25,6 +27,7 @@ if (handler.connection && handler.connection.readyState === WebSocket.OPEN) {
 ```
 
 ### 3. **Event Listeners Not Cleaned Up**
+
 ```typescript
 // ❌ Problem: Event listeners remain attached
 handler.connection?.close();
@@ -38,6 +41,7 @@ if (handler.connection) {
 ```
 
 ### 4. **Multiple Connection References**
+
 ```typescript
 // ❌ Problem: Multiple references to same connection
 handler.connection?.close();
@@ -50,6 +54,7 @@ this.connection = null;
 ```
 
 ### 5. **Auto-Reconnection Logic**
+
 ```typescript
 // ❌ Problem: Auto-reconnection kicks in
 handler.connection?.close();
@@ -108,20 +113,23 @@ class MyGame extends GameBase {
 ### ConnectionManager Methods
 
 #### Core Methods
-- `disconnect(reason?)`: Disconnects using handler and closes connection
-- `closeConnection(connection, reason?)`: Closes a specific connection with cleanup
-- `closeAllConnections(reason?)`: Closes all tracked connections
-- `reset()`: Resets connection state and clears tracking
+
+-   `disconnect(reason?)`: Disconnects using handler and closes connection
+-   `closeConnection(connection, reason?)`: Closes a specific connection with cleanup
+-   `closeAllConnections(reason?)`: Closes all tracked connections
+-   `reset()`: Resets connection state and clears tracking
 
 #### Tracking Methods
-- `registerConnection(connection)`: Register a connection for tracking
-- `unregisterConnection(connection)`: Unregister a connection from tracking
-- `hasActiveConnections()`: Check if any connections are active
-- `getActiveConnectionCount()`: Get number of active connections
+
+-   `registerConnection(connection)`: Register a connection for tracking
+-   `unregisterConnection(connection)`: Unregister a connection from tracking
+-   `hasActiveConnections()`: Check if any connections are active
+-   `getActiveConnectionCount()`: Get number of active connections
 
 #### Status Methods
-- `isShutdownInProgress()`: Check if shutdown is in progress
-- `isHandlerAvailable()`: Check if handler is available
+
+-   `isShutdownInProgress()`: Check if shutdown is in progress
+-   `isHandlerAvailable()`: Check if handler is available
 
 ### Best Practices
 
@@ -141,6 +149,7 @@ class MyGame extends GameBase {
 To migrate from direct `handler.connection?.close()` calls:
 
 #### Before (Problematic)
+
 ```typescript
 componentWillUnmount() {
     handler.connection?.close();
@@ -149,6 +158,7 @@ componentWillUnmount() {
 ```
 
 #### After (Proper)
+
 ```typescript
 componentWillUnmount() {
     this.connectionManager.disconnect('component_unmount');
@@ -159,12 +169,13 @@ componentWillUnmount() {
 ### Testing
 
 The ConnectionManager includes comprehensive tests covering:
-- Happy path scenarios
-- Edge cases (null/undefined connections)
-- Error handling
-- Async operations
-- State management
-- Multiple connection scenarios
+
+-   Happy path scenarios
+-   Edge cases (null/undefined connections)
+-   Error handling
+-   Async operations
+-   State management
+-   Multiple connection scenarios
 
 ### Benefits
 
@@ -195,4 +206,4 @@ export default class MyGame extends GatewayGameBase {
 }
 ```
 
-This approach ensures that all connections are properly managed and cleaned up, preventing the issues that arise from simple `handler.connection?.close()` calls. 
+This approach ensures that all connections are properly managed and cleaned up, preventing the issues that arise from simple `handler.connection?.close()` calls.
