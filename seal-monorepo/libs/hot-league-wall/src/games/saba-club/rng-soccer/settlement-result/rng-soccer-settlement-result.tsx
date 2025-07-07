@@ -110,9 +110,15 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
 
     @render(RoundHistoryStore, (store) => store.firstJoinGameHistory)
     private handleJoinGameAndShowResult(firstJoinGameHistory: gc.RoundHistories.IFirstJoinGameHistory): void {
-        const { roundState } = this.state;
+        const { roundState, isAnimationResult } = this.state;
 
-        if (roundState === ROUND_STATE.PLACING_BET || roundState === ROUND_STATE.LOCKING_BET || roundState === ROUND_STATE.STARTING_ROUND) {
+        if (
+            !firstJoinGameHistory ||
+            isAnimationResult ||
+            roundState === ROUND_STATE.PLACING_BET ||
+            roundState === ROUND_STATE.LOCKING_BET ||
+            roundState === ROUND_STATE.STARTING_ROUND
+        ) {
             return;
         }
 

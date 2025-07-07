@@ -1,6 +1,6 @@
-import * as gc from "@sg/sg-game-client";
-import { ROUND_STATE } from "@sg/sg-game-client/dist/game/rounds";
-import type { RNGSoccerResult } from "../../type";
+import * as gc from '@sg/sg-game-client';
+import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds';
+import type { RNGSoccerResult } from '../../type';
 
 class GameStateService {
     private currentRoundState: string = '';
@@ -23,14 +23,14 @@ class GameStateService {
 
                 // Map card values from the incoming format
                 home: {
-                    rank: currentFinish.result.home.rank || 0,  // Card value (1-13)
-                    suit: currentFinish.result.home.suit % 2    // Even suits (0,2) are black, odd suits (1,3) are red
+                    rank: currentFinish.result.home.rank || 0, // Card value (1-13)
+                    suit: currentFinish.result.home.suit % 2, // Even suits (0,2) are black, odd suits (1,3) are red
                 },
 
                 away: {
                     rank: currentFinish.result.away.rank || 0,
-                    suit: currentFinish.result.away.suit % 2
-                }
+                    suit: currentFinish.result.away.suit % 2,
+                },
             };
 
             return result;
@@ -47,12 +47,10 @@ class GameStateService {
 
         try {
             // Parse the history result
-            const historyData = typeof history.roundHistory.result === 'string'
-                ? JSON.parse(history.roundHistory.result)
-                : history.roundHistory.result;
+            const historyData = typeof history.roundHistory === 'string' ? JSON.parse(history.roundHistory) : history.roundHistory;
 
             // Check if we have the new format directly in the result
-            if (historyData.result && historyData.settlementResult) {
+            if (historyData && historyData.settlementResult) {
                 return this.handleSettlement(historyData);
             }
 
@@ -79,10 +77,7 @@ class GameStateService {
         );
     }
 
-    async showResult(hasAnimation: boolean,
-        result?: RNGSoccerResult,
-        settlementResult?: gc.GameServiceMessage.TSettlementResult,
-    ) {
+    async showResult(hasAnimation: boolean, result?: RNGSoccerResult, settlementResult?: gc.GameServiceMessage.TSettlementResult) {
         if (!result) return;
 
         // Update the previous winning bet based on the settlement result
@@ -94,4 +89,4 @@ class GameStateService {
     }
 }
 
-export const gameStateService = new GameStateService(); 
+export const gameStateService = new GameStateService();
