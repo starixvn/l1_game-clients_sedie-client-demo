@@ -18,7 +18,7 @@ export const useIframeHeight = ({
     maxRequests = 10,
     resetInterval = 5000
 }: UseIframeHeightProps = {}) => {
-    const appHeight = useHeightData()?.height;
+    const heightData = useHeightData();
     const [iframeHeight, setIframeHeight] = useState<number>(initialHeight);
     const lastRequestTimeRef = useRef<number>(0);
     const updateCountRef = useRef<number>(0);
@@ -45,10 +45,10 @@ export const useIframeHeight = ({
     }, [requestInterval, maxRequests, sendMessageToSpecificIframe]);
 
     useEffect(() => {
-        if (appHeight) {
-            setIframeHeight(appHeight);
+        if (heightData && heightData.height) {
+            setIframeHeight(heightData.height);
         }
-    }, [appHeight]);
+    }, [heightData]);
 
     // Reset update count periodically
     useEffect(() => {

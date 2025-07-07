@@ -12,83 +12,107 @@ export enum MessageType {
     SET_HEIGHT = 'SET_HEIGHT',
 }
 
-// Message interfaces
+// toggle statistic data
+interface ToggleStatisticData {
+    isOpen: boolean;
+}
+
 interface ToggleStatisticMessage {
     type: MessageType.TOGGLE_STATISTIC;
-    isOpen: boolean;
+    data: ToggleStatisticData;
+}
+
+// update settings data
+interface UpdateSettingsData {
+    theme: string;
+    isDarkMode: boolean;
+    language: string;
 }
 
 interface UpdateSettingsMessage {
     type: MessageType.UPDATE_SETTINGS;
-    settings: {
-        theme: string;
-        isDarkMode: boolean;
-        language: string;
-    };
+    data: UpdateSettingsData;
+}
+
+// betting block state data
+interface BettingBlockStateData {
+    isShowBetSlip: boolean;
+    betChoice: string;
+    odd: number;
 }
 
 interface BettingBlockStateMessage {
     type: MessageType.BETTING_BLOCK_STATE;
-    state: {
-        isShowBetSlip: boolean;
-        betChoice: string;
-        odd: number;
-    };
+    data: BettingBlockStateData;
 }
 
+// bet panel state data
+interface BetPanelStateData {
+    top: number;
+    left: number;
+    betChoice: string;
+    odd: number;
+    amount: number;
+    currency: string;
+    min: number;
+    max: number;
+    payout: string;
+    gameName: string;
+    namespace: string;
+    clientRoundId: number;
+    isSpecialChoice: boolean;
+    warnMsg: string;
+}
 interface BetPanelStateMessage {
     type: MessageType.BET_PANEL_STATE;
-    state: {
-        top: number;
-        left: number;
-        betChoice: string;
-        odd: number;
-        amount: number;
-        currency: string;
-        min: number;
-        max: number;
-        payout: string;
-        gameName: string;
-        namespace: string;
-        clientRoundId: number;
-        isSpecialChoice: boolean;
-        warnMsg: string;
-    };
+    data: BetPanelStateData;
+}
+
+// handle bet data
+interface HandleBetData {
+    amount: number;
+    betChoice: string;
+    clientSeed: string;
 }
 
 interface HandleBetMessage {
     type: MessageType.HANDLE_BET;
-    data: {
-        amount: number;
-        betChoice: string;
-        clientSeed: string;
-    }
+    data: HandleBetData;
 }
 
+// handle input change data
+interface HandleInputChangeData {
+    value: string;
+}
 interface HandleInputChangeMessage {
     type: MessageType.HANDLE_INPUT_CHANGE;
-    value: string;
+    data: HandleInputChangeData;
+}
+
+// set height data
+interface SetHeightData {
+    height: number;
+}
+interface SetHeightMessage {
+    type: MessageType.SET_HEIGHT;
+    data: SetHeightData;
 }
 
 interface GetHeightMessage {
     type: MessageType.GET_HEIGHT;
 }
 
-interface SetHeightMessage {
-    type: MessageType.SET_HEIGHT;
-    height: number;
-}
 export interface MessageData {
-    [MessageType.UPDATE_SETTINGS]?: UpdateSettingsMessage;
-    [MessageType.BETTING_BLOCK_STATE]?: BettingBlockStateMessage;
-    [MessageType.BET_PANEL_STATE]?: BetPanelStateMessage;
-    [MessageType.HANDLE_BET]?: HandleBetMessage;
-    [MessageType.HANDLE_INPUT_CHANGE]?: HandleInputChangeMessage;
-    [MessageType.TOGGLE_STATISTIC]?: ToggleStatisticMessage;
-    [MessageType.HIDE_ALL_BET_PANELS]?: any;
-    [MessageType.GET_HEIGHT]?: GetHeightMessage;
-    [MessageType.SET_HEIGHT]?: SetHeightMessage;
-    [MessageType.HANDLE_CLEAR]?: any;
+    [MessageType.UPDATE_SETTINGS]: UpdateSettingsData;
+    [MessageType.BETTING_BLOCK_STATE]: BettingBlockStateData;
+    [MessageType.BET_PANEL_STATE]: BetPanelStateData;
+    [MessageType.HANDLE_BET]: HandleBetData;
+    [MessageType.HANDLE_INPUT_CHANGE]: HandleInputChangeData;
+    [MessageType.TOGGLE_STATISTIC]: ToggleStatisticData;
+    [MessageType.SET_HEIGHT]: SetHeightData;
+    [MessageType.HIDE_ALL_BET_PANELS]: any;
+    [MessageType.GET_HEIGHT]: any;
+    [MessageType.HANDLE_CLEAR]: any;
 }
 
 

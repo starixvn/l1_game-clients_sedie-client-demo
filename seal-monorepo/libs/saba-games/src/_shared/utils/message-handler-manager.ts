@@ -9,9 +9,9 @@ export interface MessageHandlerConfig {
 }
 
 export interface MessageHandlerOptions {
-    onUpdateSettings?: (settings: any) => void;
-    onBettingBlockState?: (state: any) => void;
-    onBetPanelState?: (state: any) => void;
+    onUpdateSettings?: (data: any) => void;
+    onBettingBlockState?: (data: any) => void;
+    onBetPanelState?: (data: any) => void;
     onHandleBet?: (data: any) => void;
     onHandleInputChange?: (value: string) => void;
     onHandleClear?: () => void;
@@ -109,7 +109,7 @@ export class MessageHandlerManager {
                 return;
             }
 
-            const { type, ...data } = event.data;
+            const { type, data } = event.data;
             const handler = handlers[type as MessageType];
 
             if (handler) {

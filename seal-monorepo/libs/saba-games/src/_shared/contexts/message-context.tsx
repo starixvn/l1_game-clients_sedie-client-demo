@@ -26,7 +26,7 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
     options
 }) => {
     const messageManagerRef = useRef<MessageHandlerManager | null>(null);
-    const [messageData, setMessageData] = useState<MessageData>({});
+    const [messageData, setMessageData] = useState<MessageData>({} as MessageData);
 
     const handleMessage = useCallback((data: any, type: MessageType) => {
         setMessageData(prev => ({
@@ -48,7 +48,7 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
     }, []);
 
     const clearAllMessageData = useCallback(() => {
-        setMessageData({});
+        setMessageData({} as MessageData);
     }, []);
 
     useEffect(() => {
