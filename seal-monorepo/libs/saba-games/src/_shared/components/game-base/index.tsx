@@ -20,7 +20,6 @@ import WarningDialog from '../notices/warning-dialog';
 import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import classNames from 'classnames';
 import { SyncMemberSiteBalance } from '../../utils/sync-member-site-balance';
-import { ConnectionManager } from './connection-manager';
 
 export interface IGameBaseState {
     isConnected: boolean;
@@ -44,7 +43,6 @@ interface GameStyleOverrides {
 
 abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> extends React.PureComponent<P, S> {
     protected overrideClasses?: GameStyleOverrides;
-    protected connectionManager: ConnectionManager;
 
     constructor(props: P) {
         super(props);
@@ -59,9 +57,6 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
             isAllowedBet: false,
         } as S;
         this.toggleStatistic = this.toggleStatistic.bind(this);
-
-        // Initialize connection manager
-        this.connectionManager = ConnectionManager.getInstance();
     }
 
     componentDidMount() {
@@ -74,44 +69,7 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
     }
 
     onDestroy() {
-        this.cleanupConnections();
         this.closeConnect();
-    }
-
-    /**
-     * Clean up all connections properly
-     */
-    private async cleanupConnections() {
-        try {
-            console.log('GameBase: Starting connection cleanup');
-
-            // Close all remaining connections as a safety measure
-            await this.connectionManager.closeAllConnections('component_unmount');
-
-            console.log('GameBase: Connection cleanup completed');
-        } catch (error) {
-            console.error('GameBase: Error during connection cleanup:', error);
-        }
-    }
-
-    /**
-     * Register a connection when it's created
-     */
-    protected registerConnection(connection: any): void {
-        if (connection) {
-            this.connectionManager.registerConnection(connection);
-            console.log('GameBase: Connection registered for tracking');
-        }
-    }
-
-    /**
-     * Unregister a connection when it's closed
-     */
-    protected unregisterConnection(connection: any): void {
-        if (connection) {
-            this.connectionManager.unregisterConnection(connection);
-            console.log('GameBase: Connection unregistered from tracking');
-        }
     }
 
     abstract closeConnect(): void;
@@ -441,4 +399,3 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
 }
 
 export default GameBase;
-export { ConnectionManager } from './connection-manager';

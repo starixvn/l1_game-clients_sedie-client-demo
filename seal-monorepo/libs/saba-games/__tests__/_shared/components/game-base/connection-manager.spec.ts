@@ -1,18 +1,12 @@
 import { ConnectionManager } from '../../../../src/_shared/components/game-base/connection-manager';
 import * as gc from '@sg/sg-game-client';
 
-// Mock the startup module
-jest.mock('../../../../src/_shared/components/game-base/startup', () => ({
-    sharedContainer: {
-        get: jest.fn(),
-    },
-}));
-
 // Mock the sg-game-client
 jest.mock('@sg/sg-game-client', () => ({
+    getContainer: jest.fn(),
     GatewayConnection: {
         GatewayConnectionHandlers: {
-            ConnectHandler: 'ConnectHandler',
+            ConnectHandler: 'CONNECT_HANDLER',
         },
     },
 }));
@@ -50,9 +44,8 @@ describe('ConnectionManager', () => {
             get: jest.fn().mockReturnValue(mockHandler),
         };
 
-        // Mock the startup module
-        const { sharedContainer } = require('../../../../src/_shared/components/game-base/startup');
-        sharedContainer.get = mockContainer.get;
+        // Mock the getContainer function
+        (gc.getContainer as jest.Mock).mockReturnValue(mockContainer);
     });
 
     afterEach(() => {
@@ -83,75 +76,75 @@ describe('ConnectionManager', () => {
         });
     });
 
-    describe('registerConnection', () => {
-        it('should register a new connection', () => {
+    describe('registerGatewayConnection', () => {
+        it('should register a new gateway connection', () => {
             // Arrange
-            const connection = { id: 'test-connection' };
+            const connection = { id: 'test-gateway-connection' };
 
             // Act
-            manager.registerConnection(connection);
+            manager.registerGatewayConnection(connection);
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(1);
-            expect(manager.hasActiveConnections()).toBe(true);
+            expect(manager.getActiveGatewayConnectionCount()).toBe(1);
+            expect(manager.hasActiveGatewayConnections()).toBe(true);
         });
 
-        it('should not register duplicate connections', () => {
+        it('should not register duplicate gateway connections', () => {
             // Arrange
-            const connection = { id: 'test-connection' };
+            const connection = { id: 'test-gateway-connection' };
 
             // Act
-            manager.registerConnection(connection);
-            manager.registerConnection(connection);
+            manager.registerGatewayConnection(connection);
+            manager.registerGatewayConnection(connection);
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(1);
+            expect(manager.getActiveGatewayConnectionCount()).toBe(1);
         });
 
-        it('should handle null/undefined connections gracefully', () => {
+        it('should handle null/undefined gateway connections gracefully', () => {
             // Act
-            manager.registerConnection(null);
-            manager.registerConnection(undefined);
+            manager.registerGatewayConnection(null);
+            manager.registerGatewayConnection(undefined);
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
+            expect(manager.getActiveGatewayConnectionCount()).toBe(0);
         });
     });
 
-    describe('unregisterConnection', () => {
-        it('should unregister an existing connection', () => {
+    describe('unregisterGatewayConnection', () => {
+        it('should unregister an existing gateway connection', () => {
             // Arrange
-            const connection = { id: 'test-connection' };
-            manager.registerConnection(connection);
+            const connection = { id: 'test-gateway-connection' };
+            manager.registerGatewayConnection(connection);
 
             // Act
-            manager.unregisterConnection(connection);
+            manager.unregisterGatewayConnection(connection);
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
-            expect(manager.hasActiveConnections()).toBe(false);
+            expect(manager.getActiveGatewayConnectionCount()).toBe(0);
+            expect(manager.hasActiveGatewayConnections()).toBe(false);
         });
 
-        it('should handle unregistering non-existent connections gracefully', () => {
+        it('should handle unregistering non-existent gateway connections gracefully', () => {
             // Arrange
-            const connection = { id: 'test-connection' };
+            const connection = { id: 'test-gateway-connection' };
 
             // Act
-            manager.unregisterConnection(connection);
+            manager.unregisterGatewayConnection(connection);
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
+            expect(manager.getActiveGatewayConnectionCount()).toBe(0);
         });
     });
 
-    describe('closeConnection', () => {
-        it('should successfully close a connection with proper cleanup', async () => {
+    describe('closeGatewayConnection', () => {
+        it('should successfully close a gateway connection with proper WebSocket cleanup', async () => {
             // Arrange
             const connection = {
                 ...mockConnection,
                 readyState: WebSocket.OPEN,
             };
-            manager.registerConnection(connection);
+            manager.registerGatewayConnection(connection);
 
             // Mock close event
             let closeCallback: (() => void) | null = null;
@@ -162,7 +155,7 @@ describe('ConnectionManager', () => {
             });
 
             // Act
-            const result = manager.closeConnection(connection, 'test_close');
+            const result = manager.closeGatewayConnection(connection, 'test_close');
 
             // Simulate close event
             setTimeout(() => {
@@ -175,10 +168,10 @@ describe('ConnectionManager', () => {
             expect(result).resolves.toBe(true);
             expect(connection.removeEventListener).toHaveBeenCalled();
             expect(connection.close).toHaveBeenCalled();
-            expect(manager.getActiveConnectionCount()).toBe(0);
+            expect(manager.getActiveGatewayConnectionCount()).toBe(0);
         });
 
-        it('should handle connection already closed', async () => {
+        it('should handle gateway connection already closed', async () => {
             // Arrange
             const connection = {
                 ...mockConnection,
@@ -186,22 +179,22 @@ describe('ConnectionManager', () => {
             };
 
             // Act
-            const result = await manager.closeConnection(connection);
+            const result = await manager.closeGatewayConnection(connection);
 
             // Assert
             expect(result).toBe(true);
             expect(connection.close).not.toHaveBeenCalled();
         });
 
-        it('should handle null connection gracefully', async () => {
+        it('should handle null gateway connection gracefully', async () => {
             // Act
-            const result = await manager.closeConnection(null);
+            const result = await manager.closeGatewayConnection(null);
 
             // Assert
             expect(result).toBe(false);
         });
 
-        it('should handle connection close errors', async () => {
+        it('should handle gateway connection close errors', async () => {
             // Arrange
             const connection = {
                 ...mockConnection,
@@ -213,7 +206,7 @@ describe('ConnectionManager', () => {
             });
 
             // Act
-            const result = await manager.closeConnection(connection);
+            const result = await manager.closeGatewayConnection(connection);
 
             // Assert
             expect(result).toBe(false);
@@ -225,10 +218,10 @@ describe('ConnectionManager', () => {
                 ...mockConnection,
                 readyState: WebSocket.OPEN,
             };
-            manager.registerConnection(connection);
+            manager.registerGatewayConnection(connection);
 
             // Act
-            const result = await manager.closeConnection(connection);
+            const result = await manager.closeGatewayConnection(connection);
 
             // Assert
             expect(result).toBe(true);
@@ -236,14 +229,126 @@ describe('ConnectionManager', () => {
         });
     });
 
-    describe('closeAllConnections', () => {
-        it('should close all registered connections', async () => {
+    describe('disconnect', () => {
+        it('should successfully disconnect using gateway handler and close connection', async () => {
             // Arrange
-            const connection1 = { ...mockConnection, id: 'conn1' };
-            const connection2 = { ...mockConnection, id: 'conn2' };
+            const reason = 'test_disconnect';
+            mockHandler.disconnect.mockResolvedValue(undefined);
 
-            manager.registerConnection(connection1);
-            manager.registerConnection(connection2);
+            // Mock close event for handler connection
+            let closeCallback: (() => void) | null = null;
+            mockConnection.addEventListener.mockImplementation((event, callback) => {
+                if (event === 'close') {
+                    closeCallback = callback;
+                }
+            });
+
+            // Act
+            const disconnectPromise = manager.disconnect(reason);
+
+            // Simulate close event
+            setTimeout(() => {
+                if (closeCallback) closeCallback();
+            }, 10);
+
+            await disconnectPromise;
+
+            // Assert
+            expect(mockContainer.get).toHaveBeenCalledWith(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+            expect(mockHandler.disconnect).toHaveBeenCalled();
+            expect(mockConnection.close).toHaveBeenCalled();
+        });
+
+        it('should handle disconnect without reason', async () => {
+            // Arrange
+            mockHandler.disconnect.mockResolvedValue(undefined);
+
+            // Act
+            await manager.disconnect();
+
+            // Assert
+            expect(mockHandler.disconnect).toHaveBeenCalled();
+        });
+
+        it('should handle missing gateway handler gracefully', async () => {
+            // Arrange
+            mockContainer.get.mockReturnValue(null);
+            const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+            // Act
+            await manager.disconnect('test');
+
+            // Assert
+            expect(consoleWarnSpy).toHaveBeenCalledWith('ConnectionManager: Gateway ConnectHandler not found or missing disconnect method');
+        });
+
+        it('should handle handler without disconnect method', async () => {
+            // Arrange
+            const handlerWithoutDisconnect = { someOtherMethod: jest.fn() };
+            mockContainer.get.mockReturnValue(handlerWithoutDisconnect);
+            const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+            // Act
+            await manager.disconnect('test');
+
+            // Assert
+            expect(consoleWarnSpy).toHaveBeenCalledWith('ConnectionManager: Gateway ConnectHandler not found or missing disconnect method');
+        });
+
+        it('should handle handler without connection property', async () => {
+            // Arrange
+            const handlerWithoutConnection = { disconnect: jest.fn() };
+            mockContainer.get.mockReturnValue(handlerWithoutConnection);
+
+            // Act
+            await manager.disconnect('test');
+
+            // Assert
+            expect(handlerWithoutConnection.disconnect).toHaveBeenCalled();
+        });
+
+        it('should handle disconnect errors gracefully', async () => {
+            // Arrange
+            const error = new Error('Disconnect failed');
+            mockHandler.disconnect.mockRejectedValue(error);
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+            // Act
+            await manager.disconnect('test');
+
+            // Assert
+            expect(consoleErrorSpy).toHaveBeenCalledWith('ConnectionManager: Error during gateway disconnect:', error);
+        });
+
+        it('should prevent multiple simultaneous disconnects', async () => {
+            // Arrange
+            mockHandler.disconnect.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+
+            // Act
+            const disconnect1 = manager.disconnect('test1');
+            const disconnect2 = manager.disconnect('test2');
+
+            await Promise.all([disconnect1, disconnect2]);
+
+            // Assert
+            expect(consoleLogSpy).toHaveBeenCalledWith('ConnectionManager: Gateway shutdown already in progress, skipping disconnect');
+        });
+    });
+
+    describe('closeAllGatewayConnections', () => {
+        it('should close all registered gateway connections with WebSocket close frames', async () => {
+            // Arrange
+            const connection1 = {
+                ...mockConnection,
+                readyState: WebSocket.OPEN,
+            };
+            const connection2 = {
+                ...mockConnection,
+                readyState: WebSocket.OPEN,
+            };
+            manager.registerGatewayConnection(connection1);
+            manager.registerGatewayConnection(connection2);
 
             // Mock close events
             let closeCallbacks: (() => void)[] = [];
@@ -254,278 +359,225 @@ describe('ConnectionManager', () => {
             });
 
             // Act
-            const promise = manager.closeAllConnections('bulk_close');
+            const closePromise = manager.closeAllGatewayConnections('test_close_all');
 
             // Simulate close events
             setTimeout(() => {
                 closeCallbacks.forEach(callback => callback());
             }, 10);
 
-            await promise;
+            await closePromise;
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
-            expect(manager.hasActiveConnections()).toBe(false);
+            expect(connection1.close).toHaveBeenCalled();
+            expect(connection2.close).toHaveBeenCalled();
+            expect(manager.getActiveGatewayConnectionCount()).toBe(0);
         });
 
-        it('should handle multiple close attempts gracefully', async () => {
+        it('should handle empty gateway connections gracefully', async () => {
             // Arrange
-            const connection = { ...mockConnection };
-            manager.registerConnection(connection);
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
 
             // Act
-            const promise1 = manager.closeAllConnections('first_attempt');
-            const promise2 = manager.closeAllConnections('second_attempt');
-
-            // Simulate close event
-            setTimeout(() => {
-                const closeCallback = mockConnection.addEventListener.mock.calls.find(
-                    call => call[0] === 'close'
-                )?.[1];
-                if (closeCallback) closeCallback();
-            }, 10);
-
-            await Promise.all([promise1, promise2]);
+            await manager.closeAllGatewayConnections('test');
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
+            expect(consoleLogSpy).toHaveBeenCalledWith('ConnectionManager: No gateway connections to close');
         });
 
-        it('should handle errors during bulk close', async () => {
+        it('should handle connection close errors gracefully', async () => {
             // Arrange
-            const connection = { ...mockConnection };
-            manager.registerConnection(connection);
-
-            const error = new Error('Bulk close failed');
-            mockConnection.close.mockImplementation(() => {
-                throw error;
-            });
+            const connection = {
+                ...mockConnection,
+                readyState: WebSocket.OPEN,
+                close: jest.fn().mockImplementation(() => {
+                    throw new Error('Close failed');
+                })
+            };
+            manager.registerGatewayConnection(connection);
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
             // Act
-            await manager.closeAllConnections('error_test');
+            await manager.closeAllGatewayConnections('test');
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('ConnectionManager: Failed to close gateway connection:', expect.any(Error));
         });
     });
 
-    describe('disconnect', () => {
-        it('should call handler disconnect and close connection', async () => {
+    describe('reset', () => {
+        it('should reset gateway connections and state', async () => {
             // Arrange
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const connection = {
+                ...mockConnection,
+                readyState: WebSocket.OPEN,
+            };
+            manager.registerGatewayConnection(connection);
+            mockHandler.reset = jest.fn().mockResolvedValue(undefined);
 
             // Mock close event
             let closeCallback: (() => void) | null = null;
-            mockConnection.addEventListener.mockImplementation((event, callback) => {
+            connection.addEventListener.mockImplementation((event, callback) => {
                 if (event === 'close') {
                     closeCallback = callback;
                 }
             });
 
             // Act
-            const promise = manager.disconnect('test_disconnect');
+            const resetPromise = manager.reset();
 
             // Simulate close event
             setTimeout(() => {
                 if (closeCallback) closeCallback();
             }, 10);
 
-            await promise;
+            await resetPromise;
 
             // Assert
-            expect(mockHandler.disconnect).toHaveBeenCalled();
-            expect(mockConnection.close).toHaveBeenCalled();
-            expect(consoleSpy).toHaveBeenCalledWith('ConnectionManager: Disconnect completed successfully');
+            expect(connection.close).toHaveBeenCalled();
+            expect(manager.getActiveGatewayConnectionCount()).toBe(0);
+            expect(manager.isGatewayShutdownInProgress()).toBe(false);
         });
 
-        it('should handle missing handler gracefully', async () => {
-            // Arrange
-            const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-            mockContainer.get.mockReturnValue(null);
-
-            // Act
-            await manager.disconnect();
-
-            // Assert
-            expect(consoleWarnSpy).toHaveBeenCalledWith('ConnectionManager: ConnectHandler not found');
-        });
-
-        it('should handle handler without disconnect method', async () => {
-            // Arrange
-            const handlerWithoutDisconnect = { connection: mockConnection };
-            mockContainer.get.mockReturnValue(handlerWithoutDisconnect);
-
-            // Act
-            await manager.disconnect();
-
-            // Assert
-            expect(mockConnection.close).toHaveBeenCalled();
-        });
-
-        it('should handle disconnect errors', async () => {
-            // Arrange
-            const error = new Error('Disconnect failed');
-            mockHandler.disconnect.mockRejectedValue(error);
-
-            // Act
-            await manager.disconnect();
-
-            // Assert
-            expect(mockConnection.close).toHaveBeenCalled();
-        });
-    });
-
-    describe('reset', () => {
-        it('should reset handler and clear connections', async () => {
-            // Arrange
-            const connection = { ...mockConnection };
-            manager.registerConnection(connection);
-
-            // Act
-            await manager.reset();
-
-            // Assert
-            expect(mockHandler.reset).toHaveBeenCalled();
-            expect(manager.getActiveConnectionCount()).toBe(0);
-            expect(manager.isShutdownInProgress()).toBe(false);
-        });
-
-        it('should handle handler without reset method', async () => {
-            // Arrange
-            const handlerWithoutReset = { connection: mockConnection };
-            mockContainer.get.mockReturnValue(handlerWithoutReset);
-
-            // Act
-            await manager.reset();
-
-            // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
-        });
-
-        it('should handle reset errors', async () => {
-            // Arrange
-            const error = new Error('Reset failed');
-            mockHandler.reset.mockRejectedValue(error);
-
-            // Act
-            await manager.reset();
-
-            // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
-        });
-    });
-
-    describe('getSharedContainer', () => {
-        it('should try multiple container sources when primary fails', () => {
-            // Arrange
-            const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-            // Mock different container sources
-            const mockWindowContainer = { get: jest.fn() };
-
-            const originalWindow = global.window;
-            global.window = {
-                ...originalWindow,
-                seal_shared_container: null,
-                sharedContainer: mockWindowContainer,
-            } as any;
-
-            // Mock startup container to return null
-            const { sharedContainer } = require('../../../../src/_shared/components/game-base/startup');
-            sharedContainer.get = null;
-
-            // Act
-            manager.disconnect();
-
-            // Assert
-            expect(consoleWarnSpy).toHaveBeenCalledWith('ConnectionManager: No container sources found');
-
-            // Restore window
-            global.window = originalWindow;
-        });
-
-        it('should use first available container source', async () => {
-            // Arrange
-            const mockWindowContainer = {
-                get: jest.fn().mockReturnValue(mockHandler)
-            };
-
-            const originalWindow = global.window;
-            global.window = {
-                ...originalWindow,
-                seal_shared_container: mockWindowContainer,
-            } as any;
-
-            // Mock startup container to return null
-            const { sharedContainer } = require('../../../../src/_shared/components/game-base/startup');
-            sharedContainer.get = null;
-
-            // Act
-            await manager.disconnect();
-
-            // Assert
-            expect(mockWindowContainer.get).toHaveBeenCalledWith(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-            expect(mockHandler.disconnect).toHaveBeenCalled();
-
-            // Restore window
-            global.window = originalWindow;
-        });
-    });
-
-    describe('Edge Cases and Error Handling', () => {
-        it('should handle connection with missing methods gracefully', async () => {
-            // Arrange
-            const incompleteConnection = { readyState: WebSocket.OPEN };
-
-            // Act
-            const result = await manager.closeConnection(incompleteConnection);
-
-            // Assert
-            expect(result).toBe(true);
-        });
-
-        it('should handle connection close with error event', async () => {
+        it('should handle reset errors gracefully', async () => {
             // Arrange
             const connection = {
                 ...mockConnection,
                 readyState: WebSocket.OPEN,
+                close: jest.fn().mockImplementation(() => {
+                    throw new Error('Reset failed');
+                })
             };
-            const error = new Error('Connection error');
-
-            // Mock error event
-            let errorCallback: ((error: any) => void) | null = null;
-            connection.addEventListener.mockImplementation((event, callback) => {
-                if (event === 'error') {
-                    errorCallback = callback;
-                }
-            });
+            manager.registerGatewayConnection(connection);
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
             // Act
-            const result = manager.closeConnection(connection);
-
-            // Simulate error event
-            setTimeout(() => {
-                if (errorCallback) errorCallback(error);
-            }, 10);
-
-            await result;
+            await manager.reset();
 
             // Assert
-            expect(result).resolves.toBe(false);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('ConnectionManager: Error during gateway reset:', expect.any(Error));
+        });
+    });
+
+    describe('utility methods', () => {
+        it('should return correct gateway connection count', () => {
+            // Arrange
+            const connection1 = { id: 'conn1' };
+            const connection2 = { id: 'conn2' };
+
+            // Act
+            manager.registerGatewayConnection(connection1);
+            manager.registerGatewayConnection(connection2);
+
+            // Assert
+            expect(manager.getActiveGatewayConnectionCount()).toBe(2);
         });
 
-        it('should handle rapid connection registration and unregistration', () => {
+        it('should check gateway shutdown status correctly', () => {
+            // Assert
+            expect(manager.isGatewayShutdownInProgress()).toBe(false);
+        });
+
+        it('should check active gateway connections correctly', () => {
             // Arrange
             const connection = { id: 'test' };
 
+            // Act & Assert
+            expect(manager.hasActiveGatewayConnections()).toBe(false);
+            manager.registerGatewayConnection(connection);
+            expect(manager.hasActiveGatewayConnections()).toBe(true);
+        });
+
+        it('should return all gateway connections', () => {
+            // Arrange
+            const connection1 = { id: 'conn1' };
+            const connection2 = { id: 'conn2' };
+            manager.registerGatewayConnection(connection1);
+            manager.registerGatewayConnection(connection2);
+
             // Act
-            for (let i = 0; i < 100; i++) {
-                manager.registerConnection(connection);
-                manager.unregisterConnection(connection);
-            }
+            const connections = manager.getGatewayConnections();
 
             // Assert
-            expect(manager.getActiveConnectionCount()).toBe(0);
+            expect(connections).toHaveLength(2);
+            expect(connections).toContain(connection1);
+            expect(connections).toContain(connection2);
+        });
+
+        it('should clear all gateway connections', () => {
+            // Arrange
+            const connection = { id: 'test' };
+            manager.registerGatewayConnection(connection);
+
+            // Act
+            manager.clearGatewayConnections();
+
+            // Assert
+            expect(manager.getActiveGatewayConnectionCount()).toBe(0);
+        });
+
+        it('should check gateway handler availability', () => {
+            // Act
+            const isAvailable = manager.isGatewayHandlerAvailable();
+
+            // Assert
+            expect(isAvailable).toBe(true);
+            expect(mockContainer.get).toHaveBeenCalledWith(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+        });
+
+        it('should return false when gateway handler is not available', () => {
+            // Arrange
+            mockContainer.get.mockReturnValue(null);
+
+            // Act
+            const isAvailable = manager.isGatewayHandlerAvailable();
+
+            // Assert
+            expect(isAvailable).toBe(false);
+        });
+
+        it('should return false when gateway handler has no disconnect method', () => {
+            // Arrange
+            const handlerWithoutDisconnect = { someOtherMethod: jest.fn() };
+            mockContainer.get.mockReturnValue(handlerWithoutDisconnect);
+
+            // Act
+            const isAvailable = manager.isGatewayHandlerAvailable();
+
+            // Assert
+            expect(isAvailable).toBe(false);
+        });
+    });
+
+    describe('error handling', () => {
+        it('should handle container get errors gracefully', () => {
+            // Arrange
+            mockContainer.get.mockImplementation(() => {
+                throw new Error('Container error');
+            });
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+            // Act
+            const isAvailable = manager.isGatewayHandlerAvailable();
+
+            // Assert
+            expect(isAvailable).toBe(false);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('ConnectionManager: Failed to get gateway connect handler:', expect.any(Error));
+        });
+
+        it('should handle getContainer errors gracefully', () => {
+            // Arrange
+            (gc.getContainer as jest.Mock).mockImplementation(() => {
+                throw new Error('getContainer error');
+            });
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+            // Act
+            const isAvailable = manager.isGatewayHandlerAvailable();
+
+            // Assert
+            expect(isAvailable).toBe(false);
+            expect(consoleErrorSpy).toHaveBeenCalledWith('ConnectionManager: Failed to get shared container:', expect.any(Error));
         });
     });
 }); 

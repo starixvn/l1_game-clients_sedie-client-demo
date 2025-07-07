@@ -12,12 +12,10 @@ import { SyncMemberSiteBalance } from '../../../_shared/utils/callback-singleton
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 import { Settlements } from '@sg/sg-game-client';
 import { FunctionUtils } from '../../../_shared/utils/funtion-utils';
-import { GatewayConnectionManager } from './gateway-connection-manager';
 
 class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> extends GameBase<P, S> {
     private authHandler: AuthorizationHandler;
     protected uiRenderer: GameUIRenderer<P, S>;
-    protected connectionManager: GatewayConnectionManager;
 
     constructor(props: P) {
         super(props);
@@ -35,20 +33,11 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         );
 
         this.uiRenderer = new GameUIRenderer<P, S>();
-        this.connectionManager = GatewayConnectionManager.getInstance();
     }
 
     componentWillUnmount() {
         try {
-            // 1. Use enhanced connection manager for proper cleanup
-            console.log('GatewayGameBase: Starting connection cleanup');
-            this.cleanupConnections();
-        } catch (error) {
-            console.error('GatewayGameBase: Failed to cleanup connections:', error);
-        }
-
-        try {
-            // 2. Then cleanup observer
+            // Cleanup observer
             const { dispose } = this.state;
             console.log('GatewayGameBase: Cleanup observer');
             if (dispose) {
@@ -58,93 +47,22 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
             console.error('GatewayGameBase: Failed to cleanup observer:', error);
         }
 
-        // 3. Call parent cleanup
+        // Call parent cleanup
         super.componentWillUnmount();
     }
 
     /**
-     * Clean up all connections properly
-     */
-    private async cleanupConnections() {
-        try {
-            // Disconnect using the manager (handles both handler.disconnect() and connection.close())
-            await this.connectionManager.disconnect('component_unmount');
-
-            // Close all remaining connections as a safety measure
-            await this.connectionManager.closeAllConnections('component_unmount');
-
-            console.log('GatewayGameBase: Connection cleanup completed');
-        } catch (error) {
-            console.error('GatewayGameBase: Error during connection cleanup:', error);
-        }
-    }
-
-    /**
-     * Register a connection when it's created
-     */
-    protected registerConnection(connection: any): void {
-        if (connection) {
-            this.connectionManager.registerConnection(connection);
-            console.log('GatewayGameBase: Connection registered for tracking');
-        }
-    }
-
-    /**
-     * Unregister a connection when it's closed
-     */
-    protected unregisterConnection(connection: any): void {
-        if (connection) {
-            this.connectionManager.unregisterConnection(connection);
-            console.log('GatewayGameBase: Connection unregistered from tracking');
-        }
-    }
-
-    /**
-     * Get connection handler and register its connection
+     * Get connection handler (connection management now handled at lobby level)
      */
     protected getConnectionHandler(): any {
         try {
-            const container = this.connectionManager['getSharedContainer']();
-            if (!container) {
-                return null;
-            }
-
-            const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-
-            // Register the connection if it exists
-            if (handler && handler.connection) {
-                this.registerConnection(handler.connection);
-            }
-
-            return handler;
+            // Connection management is now handled at the lobby level
+            // This method is kept for backward compatibility but doesn't manage connections
+            return null;
         } catch (error) {
             console.error('GatewayGameBase: Failed to get connection handler:', error);
             return null;
         }
-    }
-
-    /**
-     * Enhanced visibility change handling
-     */
-    onVisibilityChange = async () => {
-        if (document.hidden) {
-            console.log('GatewayGameBase: Page hidden, disconnecting connections');
-            await this.connectionManager.disconnect('visibility_change');
-        } else {
-            console.log('GatewayGameBase: Page visible, reconnecting if needed');
-            this.connectLiveGateway();
-        }
-    };
-
-    /**
-     * Get connection status information
-     */
-    getConnectionInfo() {
-        return {
-            activeConnections: this.connectionManager.getActiveConnectionCount(),
-            isShuttingDown: this.connectionManager.isShutdownInProgress(),
-            hasActiveConnections: this.connectionManager.hasActiveConnections(),
-        };
     }
 
     protected configureUIRenderer(): UIExtensionOptions {
@@ -197,11 +115,8 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         handler.handleGateway();
     })
     override connectLiveGateway(): void {
-        // Register the connection when it's established
-        const handler = this.getConnectionHandler();
-        if (handler && handler.connection) {
-            this.registerConnection(handler.connection);
-        }
+        // Connection management is now handled at the lobby level
+        console.log('GatewayGameBase: connectLiveGateway called (connection managed by lobby)');
     }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
@@ -225,12 +140,12 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     inGameLiveGateway(): void { }
 
     /**
-     * Enhanced closeConnect method using ConnectionManager
+     * Close connect method (connection management now handled at lobby level)
      */
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
     override closeConnect(): void {
-        // Use ConnectionManager for proper cleanup
-        this.connectionManager.disconnect('close_connect_handler');
+        // Connection management is now handled at the lobby level
+        console.log('GatewayGameBase: closeConnect called (connection managed by lobby)');
     }
 
     // ABSTRACT METHOD IMPLEMENTATIONS

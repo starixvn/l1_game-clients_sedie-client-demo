@@ -11,10 +11,12 @@ import { IOfferGame, ILobbyState } from './type';
 import { gamePageMap } from '../_shared/utils/component-util';
 import { GameDisconnectView } from '../games/game-base/components/game-disconnect-view';
 import blurBgGame from '../assets/rng-soccer/blur-bg-game.png';
+import { GatewayConnectionManager } from '../games/game-base/gateway/gateway-connection-manager';
 
 @observer
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private reRenderGameTimeout?: NodeJS.Timeout;
+    private connectionManager: GatewayConnectionManager;
 
     constructor(props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean }) {
         super(props);
@@ -29,6 +31,9 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
             isAuthenticated: false,
             username: '',
         };
+
+        // Initialize connection manager at lobby level
+        this.connectionManager = GatewayConnectionManager.getInstance();
     }
     clearReRenderGameTimeout = () => {
         if (!this.reRenderGameTimeout) {
@@ -39,18 +44,47 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     componentWillUnmount() {
         this.clearReRenderGameTimeout();
+
+        // Remove visibility change listener
+        document.removeEventListener('visibilitychange', this.onVisibilityChange);
+
+        // Cleanup connections at lobby level
+        this.cleanupConnections();
     }
 
-    componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<ILobbyState>, snapshot?: any): void {
-        if (prevProps.token !== this.props.token) {
-            this.sso({ token: this.props.token });
+    /**
+     * Clean up all connections properly when lobby unmounts
+     */
+    private async cleanupConnections() {
+        try {
+            console.log('Lobby: Starting connection cleanup');
+
+            // Disconnect using the manager (handles both handler.disconnect() and connection.close())
+            await this.connectionManager.disconnect('lobby_unmount');
+
+            // Close all remaining connections as a safety measure
+            await this.connectionManager.closeAllConnections('lobby_unmount');
+
+            console.log('Lobby: Connection cleanup completed');
+        } catch (error) {
+            console.error('Lobby: Error during connection cleanup:', error);
         }
     }
 
     componentDidMount() {
         const { token } = this.props;
         console.log('Lobby component mounted - starting SSO with token');
+
+        // Set up visibility change listener
+        document.addEventListener('visibilitychange', this.onVisibilityChange);
+
         this.sso({ token });
+    }
+
+    componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<ILobbyState>, snapshot?: any): void {
+        if (prevProps.token !== this.props.token) {
+            this.sso({ token: this.props.token });
+        }
     }
 
     @handle(gc.Auth.AuthHandlers.SSO)
@@ -76,12 +110,60 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
     connectLiveGateway() {
         console.log('connectLiveGateway called - establishing connection to service');
+
+        // Register the connection when it's established
+        const handler = this.getConnectionHandler();
+        if (handler && handler.connection) {
+            this.registerConnection(handler.connection);
+        }
+
         // The decorator will handle the connection automatically
         // Add a timeout to check for offer games after connection
         setTimeout(() => {
             this.checkMainPlayerStore();
         }, 1000);
     }
+
+    /**
+     * Get connection handler and register its connection
+     */
+    private getConnectionHandler(): any {
+        try {
+            const container = this.connectionManager['getSharedContainer']();
+            if (!container) {
+                return null;
+            }
+
+            const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+            return handler;
+        } catch (error) {
+            console.error('Lobby: Failed to get connection handler:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Register a connection when it's created
+     */
+    private registerConnection(connection: any): void {
+        if (connection) {
+            this.connectionManager.registerConnection(connection);
+            console.log('Lobby: Connection registered for tracking');
+        }
+    }
+
+    /**
+     * Enhanced visibility change handling
+     */
+    onVisibilityChange = async () => {
+        if (document.hidden) {
+            console.log('Lobby: Page hidden, disconnecting connections');
+            await this.connectionManager.disconnect('visibility_change');
+        } else {
+            console.log('Lobby: Page visible, reconnecting if needed');
+            this.connectLiveGateway();
+        }
+    };
 
     private checkMainPlayerStore() {
         // This method will be called after connection to ensure games are loaded
