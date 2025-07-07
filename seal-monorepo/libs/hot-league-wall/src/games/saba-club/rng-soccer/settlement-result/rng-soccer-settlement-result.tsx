@@ -71,7 +71,7 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
                 roundState === ROUND_STATE.LOCKING_BET ||
                 roundState === ROUND_STATE.STARTING_ROUND
             ) {
-                this.setState({ isFinish: false });
+                this.setState({ isFinish: false, isFinishShowResult: false });
             }
             gameStateService.handleRoundState(roundState);
             this.setState({ roundState, isLoading: false });
@@ -93,6 +93,7 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
                     isAnimationResult: true,
                     isLoading: false,
                     isFinish: true,
+                    isFinishShowResult: false,
                 });
 
                 setTimeout(() => {
@@ -115,6 +116,7 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
         if (
             !firstJoinGameHistory ||
             isAnimationResult ||
+            !roundState ||
             roundState === ROUND_STATE.PLACING_BET ||
             roundState === ROUND_STATE.LOCKING_BET ||
             roundState === ROUND_STATE.STARTING_ROUND
