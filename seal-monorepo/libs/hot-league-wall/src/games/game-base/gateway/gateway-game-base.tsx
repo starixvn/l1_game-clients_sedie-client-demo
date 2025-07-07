@@ -40,7 +40,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         try {
             // 1. Use singleton manager to disconnect (independent of observer lifecycle)
             console.log('Using GatewayConnectionManager to disconnect');
-            GatewayConnectionManager.getInstance().disconnect('component_unmount');
+            GatewayConnectionManager.getInstance().close();
         } catch (error) {
             console.error('Failed to disconnect via GatewayConnectionManager:', error);
         }

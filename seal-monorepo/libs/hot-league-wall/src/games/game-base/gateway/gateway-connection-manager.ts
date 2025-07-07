@@ -77,6 +77,21 @@ export class GatewayConnectionManager {
         }
     }
 
+    close(): void {
+        try {
+            console.log('GatewayConnectionManager: Closing gateway connection');
+            const handler = this.getConnectHandler();
+            if (handler) {
+                handler.connection?.close();
+                console.log('GatewayConnectionManager: Close called successfully');
+            } else {
+                console.warn('GatewayConnectionManager: ConnectHandler not found');
+            }
+        } catch (error) {
+            console.error('GatewayConnectionManager: Failed to close:', error);
+        }
+    }
+
     /**
      * Reset gateway connection state
      */

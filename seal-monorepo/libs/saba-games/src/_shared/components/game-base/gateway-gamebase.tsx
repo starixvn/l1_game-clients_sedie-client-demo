@@ -6,6 +6,7 @@ import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import { StorageManager, localStorageKeys } from '../../utils/storage-manager';
 import { ILatestBetRecord } from '../bet-panel/bet-panel';
 import AuthorizationHandler from '../../handlers/authorization-handler';
+import { ConnectionManager } from './connection-manager';
 
 export interface IGatewayGameBaseState extends IGameBaseState {
     isAuthorized: boolean;
@@ -29,6 +30,12 @@ export default abstract class GatewayGameBase<P extends GameBaseProps, S extends
             () => this.signIn(),
             () => this.autoCreateNickname(),
         );
+    }
+
+    componentWillUnmount() {
+        ConnectionManager.getInstance().disconnect();
+        super.componentWillUnmount();
+
     }
 
     private isRoundIdMatching(currentRoundId: number): boolean {

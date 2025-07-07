@@ -399,3 +399,4 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
 }
 
 export default GameBase;
+export { ConnectionManager } from './connection-manager';
