@@ -2765,10 +2765,10 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@sg/sg-game-client@1.0.9-beta.3":
-  version "1.0.9-beta.3"
-  resolved "http://npm.lumigame.com/@sg/sg-game-client/-/sg-game-client-1.0.9-beta.3.tgz#c778226b392d2128ce2be13742e51a04d27c3ce4"
-  integrity sha512-u1n3dhRAsgNmgxffujbqask3pw0d6G9xG9yMR3Z/0NxV0nw8JVkcAZ/j0GlmPgN2U8OxuuYaon1xzKGFkSXuuQ==
+"@sg/sg-game-client@1.0.10-beta.1":
+  version "1.0.10-beta.1"
+  resolved "http://npm.lumigame.com/@sg/sg-game-client/-/sg-game-client-1.0.10-beta.1.tgz#98510e3dc319fc93e1e5c7c6b736674cab51719c"
+  integrity sha512-YXGf/HGcsWo5LWZt58MK5wfbAHD/lhM0kqiBs6TDXOjItySA0gsKeCBbQHufmQ0PoLdWPsi8ukAA8oPMTd+tAg==
   dependencies:
     "@sg/sg-user-service-client" "1.8.5"
     base64-string "^1.1.2"
