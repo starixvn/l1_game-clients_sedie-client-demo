@@ -49,10 +49,7 @@ export default class ColorGamePage extends GatewayGameBase<IColorGamePageProps, 
     }
 
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
-    closeConnect() {
-        // Use ConnectionManager for proper connection cleanup
-        this.connectionManager.disconnect('close_connect_handler');
-    }
+    closeConnect() { }
 
     @render(gc.Rounds.RoundTimeStore, (store) => store.roundState)
     handleRoundStateChange(roundState: string) {

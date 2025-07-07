@@ -1,18 +1,20 @@
 import * as gc from '@sg/sg-game-client';
-import { sharedContainer } from './startup';
 
 /**
- * Comprehensive connection management for saba-games
- * Handles proper connection cleanup and state management
+ * Manages WebSocket connections for game components
+ * Provides centralized connection tracking and cleanup
  */
 export class ConnectionManager {
     private static instance: ConnectionManager;
-    private activeConnections: Set<any> = new Set();
-    private isShuttingDown = false;
+    private connections: Set<any> = new Set();
+    private shutdownInProgress = false;
+    private sharedContainer: any = null;
 
-    private constructor() { }
+    private constructor() {
+        // Private constructor for singleton pattern
+    }
 
-    static getInstance(): ConnectionManager {
+    public static getInstance(): ConnectionManager {
         if (!ConnectionManager.instance) {
             ConnectionManager.instance = new ConnectionManager();
         }
@@ -20,271 +22,150 @@ export class ConnectionManager {
     }
 
     /**
-     * Get the shared container from various possible sources
+     * Get the shared container for dependency injection
      */
     private getSharedContainer(): any {
-        const sources = [
-            sharedContainer,
-            window['seal_shared_container'],
-            (gc as any).sharedContainer,
-            (window as any).sharedContainer
-        ];
-
-        for (const source of sources) {
-            if (source && typeof source.get === 'function') {
-                return source;
+        if (!this.sharedContainer) {
+            try {
+                this.sharedContainer = gc.getContainer();
+            } catch (error) {
+                console.error('ConnectionManager: Failed to get shared container:', error);
             }
         }
-
-        console.warn('ConnectionManager: No container sources found');
-        return null;
-    }
-
-    /**
-     * Get the ConnectHandler from the container
-     */
-    private getConnectHandler(): any {
-        const container = this.getSharedContainer();
-        if (!container) {
-            return null;
-        }
-
-        try {
-            return container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-        } catch (error) {
-            console.log('ConnectionManager: Failed to get handler from container:', error);
-            return null;
-        }
+        return this.sharedContainer;
     }
 
     /**
      * Register a connection for tracking
      */
-    registerConnection(connection: any): void {
-        if (connection && !this.activeConnections.has(connection)) {
-            this.activeConnections.add(connection);
-            console.log('ConnectionManager: Connection registered, total active:', this.activeConnections.size);
+    public registerConnection(connection: any): void {
+        if (connection && !this.connections.has(connection)) {
+            this.connections.add(connection);
+            console.log(`ConnectionManager: Connection registered. Total connections: ${this.connections.size}`);
         }
     }
 
     /**
      * Unregister a connection from tracking
      */
-    unregisterConnection(connection: any): void {
-        if (connection && this.activeConnections.has(connection)) {
-            this.activeConnections.delete(connection);
-            console.log('ConnectionManager: Connection unregistered, total active:', this.activeConnections.size);
-        }
-    }
-
-    /**
-     * Close a specific connection with proper cleanup
-     */
-    async closeConnection(connection: any, reason?: string): Promise<boolean> {
-        if (!connection) {
-            console.warn('ConnectionManager: No connection provided to close');
-            return false;
-        }
-
-        try {
-            console.log(`ConnectionManager: Closing connection${reason ? ` - ${reason}` : ''}`);
-
-            // 1. Remove event listeners first
-            this.removeConnectionListeners(connection);
-
-            // 2. Check connection state
-            if (connection.readyState === WebSocket.OPEN) {
-                // 3. Close the connection
-                await this.performConnectionClose(connection);
-            } else {
-                console.log('ConnectionManager: Connection already closed or in closing state');
-            }
-
-            // 4. Unregister from tracking
-            this.unregisterConnection(connection);
-
-            // 5. Clear references
-            this.clearConnectionReferences(connection);
-
-            console.log('ConnectionManager: Connection closed successfully');
-            return true;
-
-        } catch (error) {
-            console.error('ConnectionManager: Failed to close connection:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Close all active connections
-     */
-    async closeAllConnections(reason?: string): Promise<void> {
-        if (this.isShuttingDown) {
-            console.log('ConnectionManager: Already shutting down, skipping');
-            return;
-        }
-
-        this.isShuttingDown = true;
-        console.log(`ConnectionManager: Closing all connections${reason ? ` - ${reason}` : ''}`);
-
-        const connections = Array.from(this.activeConnections);
-        const closePromises = connections.map(connection =>
-            this.closeConnection(connection, reason)
-        );
-
-        try {
-            await Promise.allSettled(closePromises);
-            console.log('ConnectionManager: All connections closed');
-        } catch (error) {
-            console.error('ConnectionManager: Error during bulk close:', error);
-        } finally {
-            this.isShuttingDown = false;
+    public unregisterConnection(connection: any): void {
+        if (connection && this.connections.has(connection)) {
+            this.connections.delete(connection);
+            console.log(`ConnectionManager: Connection unregistered. Total connections: ${this.connections.size}`);
         }
     }
 
     /**
      * Disconnect using the handler's disconnect method
      */
-    async disconnect(reason?: string): Promise<void> {
-        try {
-            console.log(`ConnectionManager: Disconnecting${reason ? ` - ${reason}` : ''}`);
-
-            const handler = this.getConnectHandler();
-            if (handler) {
-                // 1. Call handler's disconnect method
-                if (typeof handler.disconnect === 'function') {
-                    await handler.disconnect();
-                }
-
-                // 2. Close the connection if it exists
-                if (handler.connection) {
-                    await this.closeConnection(handler.connection, reason);
-                }
-
-                console.log('ConnectionManager: Disconnect completed successfully');
-            } else {
-                console.warn('ConnectionManager: ConnectHandler not found');
-            }
-        } catch (error) {
-            console.error('ConnectionManager: Failed to disconnect:', error);
-        }
-    }
-
-    /**
-     * Reset connection state
-     */
-    async reset(): Promise<void> {
-        try {
-            console.log('ConnectionManager: Resetting connections');
-
-            const handler = this.getConnectHandler();
-            if (handler && typeof handler.reset === 'function') {
-                await handler.reset();
-            }
-
-            // Clear all tracked connections
-            this.activeConnections.clear();
-            this.isShuttingDown = false;
-
-            console.log('ConnectionManager: Reset completed');
-        } catch (error) {
-            console.error('ConnectionManager: Failed to reset:', error);
-        }
-    }
-
-    /**
-     * Remove event listeners from connection
-     */
-    private removeConnectionListeners(connection: any): void {
-        if (!connection || typeof connection.removeEventListener !== 'function') {
+    public async disconnect(reason: string): Promise<void> {
+        if (this.shutdownInProgress) {
+            console.log('ConnectionManager: Shutdown already in progress, skipping disconnect');
             return;
         }
 
         try {
-            // Remove common event listeners
-            const events = ['open', 'close', 'error', 'message'];
-            events.forEach(event => {
-                connection.removeEventListener(event, () => { });
-            });
+            console.log(`ConnectionManager: Starting disconnect (reason: ${reason})`);
+            this.shutdownInProgress = true;
 
-            console.log('ConnectionManager: Event listeners removed');
+            const container = this.getSharedContainer();
+            if (!container) {
+                console.log('ConnectionManager: No container available for disconnect');
+                return;
+            }
+
+            // Try to disconnect using the handler
+            const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+            if (handler && typeof handler.disconnect === 'function') {
+                console.log('ConnectionManager: Calling handler.disconnect()');
+                await handler.disconnect();
+            }
+
+            console.log(`ConnectionManager: Disconnect completed (reason: ${reason})`);
         } catch (error) {
-            console.warn('ConnectionManager: Error removing event listeners:', error);
+            console.error('ConnectionManager: Error during disconnect:', error);
+        } finally {
+            this.shutdownInProgress = false;
         }
     }
 
     /**
-     * Perform the actual connection close
+     * Close all tracked connections directly
      */
-    private async performConnectionClose(connection: any): Promise<void> {
-        return new Promise((resolve, reject) => {
+    public async closeAllConnections(reason: string): Promise<void> {
+        if (this.connections.size === 0) {
+            console.log('ConnectionManager: No connections to close');
+            return;
+        }
+
+        console.log(`ConnectionManager: Closing ${this.connections.size} connections (reason: ${reason})`);
+
+        const closePromises = Array.from(this.connections).map(async (connection) => {
             try {
-                // Set up close event listener
-                const onClose = () => {
-                    connection.removeEventListener('close', onClose);
-                    resolve();
-                };
-
-                const onError = (error: any) => {
-                    connection.removeEventListener('error', onError);
-                    reject(error);
-                };
-
-                connection.addEventListener('close', onClose);
-                connection.addEventListener('error', onError);
-
-                // Close the connection
-                connection.close();
-
-                // Set a timeout in case the close event doesn't fire
-                setTimeout(() => {
-                    connection.removeEventListener('close', onClose);
-                    connection.removeEventListener('error', onError);
-                    resolve();
-                }, 5000);
-
+                if (connection && typeof connection.close === 'function') {
+                    await connection.close();
+                    console.log('ConnectionManager: Connection closed successfully');
+                } else if (connection && typeof connection.disconnect === 'function') {
+                    await connection.disconnect();
+                    console.log('ConnectionManager: Connection disconnected successfully');
+                }
             } catch (error) {
-                reject(error);
+                console.error('ConnectionManager: Error closing connection:', error);
             }
         });
-    }
 
-    /**
-     * Clear connection references
-     */
-    private clearConnectionReferences(connection: any): void {
-        try {
-            // Clear common reference properties
-            if (connection && typeof connection === 'object') {
-                Object.keys(connection).forEach(key => {
-                    if (key.includes('connection') || key.includes('socket')) {
-                        (connection as any)[key] = null;
-                    }
-                });
-            }
-        } catch (error) {
-            console.warn('ConnectionManager: Error clearing references:', error);
-        }
-    }
-
-    /**
-     * Check if any connections are still active
-     */
-    hasActiveConnections(): boolean {
-        return this.activeConnections.size > 0;
+        await Promise.all(closePromises);
+        this.connections.clear();
+        console.log(`ConnectionManager: All connections closed (reason: ${reason})`);
     }
 
     /**
      * Get the number of active connections
      */
-    getActiveConnectionCount(): number {
-        return this.activeConnections.size;
+    public getActiveConnectionCount(): number {
+        return this.connections.size;
     }
 
     /**
-     * Check if connection manager is shutting down
+     * Check if shutdown is in progress
      */
-    isShutdownInProgress(): boolean {
-        return this.isShuttingDown;
+    public isShutdownInProgress(): boolean {
+        return this.shutdownInProgress;
+    }
+
+    /**
+     * Check if there are any active connections
+     */
+    public hasActiveConnections(): boolean {
+        return this.connections.size > 0;
+    }
+
+    /**
+     * Get all tracked connections (for debugging)
+     */
+    public getConnections(): any[] {
+        return Array.from(this.connections);
+    }
+
+    /**
+     * Clear all connections (for testing or reset)
+     */
+    public clearConnections(): void {
+        this.connections.clear();
+        console.log('ConnectionManager: All connections cleared');
+    }
+
+    /**
+     * Reset connection state and clear all connections
+     */
+    public async reset(): Promise<void> {
+        try {
+            console.log('ConnectionManager: Resetting connections');
+            await this.closeAllConnections('reset');
+            this.shutdownInProgress = false;
+            console.log('ConnectionManager: Reset completed');
+        } catch (error) {
+            console.error('ConnectionManager: Error during reset:', error);
+        }
     }
 } 

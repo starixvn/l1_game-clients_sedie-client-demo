@@ -12,10 +12,12 @@ import { GameMatchTab } from '../_shared/components/all-tab-components/game-matc
 import { IOfferGame, ILobbyState } from './type';
 import { GameListTab } from '../_shared/components/all-tab-components/game-list-tab';
 import SessionTimeout from '../_shared/components/timeout';
+import { ConnectionManager } from '../_shared/components/game-base/connection-manager';
 
 @observer
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private reRenderGameTimeout?: NodeJS.Timeout;
+    private connectionManager: ConnectionManager;
 
     constructor(props: { token: string }) {
         super(props);
@@ -30,7 +32,11 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
             isAuthenticated: false,
             username: '',
         };
+
+        // Initialize connection manager at lobby level
+        this.connectionManager = ConnectionManager.getInstance();
     }
+
     clearReRenderGameTimeout = () => {
         if (!this.reRenderGameTimeout) {
             return;
@@ -40,6 +46,22 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     componentWillUnmount() {
         this.clearReRenderGameTimeout();
+        // Clean up connections when lobby unmounts
+        this.cleanupLobbyConnections();
+    }
+
+    /**
+     * Clean up all connections when lobby unmounts
+     */
+    private async cleanupLobbyConnections() {
+        try {
+            console.log('Lobby: Starting connection cleanup');
+            await this.connectionManager.disconnect('lobby_unmount');
+            await this.connectionManager.closeAllConnections('lobby_unmount');
+            console.log('Lobby: Connection cleanup completed');
+        } catch (error) {
+            console.error('Lobby: Error during connection cleanup:', error);
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<ILobbyState>, snapshot?: any): void {
@@ -72,7 +94,29 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
-    connectLiveGateway() {}
+    connectLiveGateway() {
+        // Register the connection when it's established
+        const handler = this.getConnectionHandler();
+        if (handler && handler.connection) {
+            this.connectionManager.registerConnection(handler.connection);
+        }
+    }
+
+    /**
+     * Get connection handler from the container
+     */
+    private getConnectionHandler(): any {
+        try {
+            const container = gc.getContainer();
+            if (!container) {
+                return null;
+            }
+            return container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+        } catch (error) {
+            console.error('Lobby: Failed to get connection handler:', error);
+            return null;
+        }
+    }
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
@@ -141,12 +185,20 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
             return (
                 <>
-                    <GameListTab 
-                        offerGames={offerGames} 
-                        selectedGameId={selectedGameId} 
-                        onTabClick={this.handleTabClick} 
+                    <GameListTab
+                        offerGames={offerGames}
+                        selectedGameId={selectedGameId}
+                        onTabClick={this.handleTabClick}
                     />
-                    <GameMatchTab gameId={selectedGame.gameId} className={styles['lobby-tabs']} leagueToogle={leagueToogle} language={this.props.language} />
+                    {/* Use the same pattern as preview.tsx - single component with key-based rendering */}
+                    <div key={selectedGameId} style={{ height: '100%' }}>
+                        <GameMatchTab
+                            gameId={selectedGame.gameId}
+                            className={styles['lobby-tabs']}
+                            leagueToogle={leagueToogle}
+                            language={this.props.language}
+                        />
+                    </div>
                 </>
             );
         };

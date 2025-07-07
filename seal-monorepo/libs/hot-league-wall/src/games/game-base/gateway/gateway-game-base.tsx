@@ -17,6 +17,7 @@ import { GatewayConnectionManager } from './gateway-connection-manager';
 class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> extends GameBase<P, S> {
     private authHandler: AuthorizationHandler;
     protected uiRenderer: GameUIRenderer<P, S>;
+    protected connectionManager: GatewayConnectionManager;
 
     constructor(props: P) {
         super(props);
@@ -34,37 +35,117 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         );
 
         this.uiRenderer = new GameUIRenderer<P, S>();
+        this.connectionManager = GatewayConnectionManager.getInstance();
     }
 
     componentWillUnmount() {
         try {
-            // 1. Use singleton manager to disconnect (independent of observer lifecycle)
-            console.log('Using GatewayConnectionManager to disconnect');
-            GatewayConnectionManager.getInstance().close();
+            // 1. Use enhanced connection manager for proper cleanup
+            console.log('GatewayGameBase: Starting connection cleanup');
+            this.cleanupConnections();
         } catch (error) {
-            console.error('Failed to disconnect via GatewayConnectionManager:', error);
+            console.error('GatewayGameBase: Failed to cleanup connections:', error);
         }
 
         try {
             // 2. Then cleanup observer
             const { dispose } = this.state;
-            console.log('Cleanup observer');
+            console.log('GatewayGameBase: Cleanup observer');
             if (dispose) {
                 dispose();
             }
         } catch (error) {
-            console.error('Failed to cleanup observer:', error);
+            console.error('GatewayGameBase: Failed to cleanup observer:', error);
         }
 
         // 3. Call parent cleanup
         super.componentWillUnmount();
     }
 
-    // override onVisibilityChange = () => {
-    //     if (document.hidden) {
-    //         GatewayConnectionManager.getInstance().disconnect('visibility_change');
-    //     }
-    // }
+    /**
+     * Clean up all connections properly
+     */
+    private async cleanupConnections() {
+        try {
+            // Disconnect using the manager (handles both handler.disconnect() and connection.close())
+            await this.connectionManager.disconnect('component_unmount');
+
+            // Close all remaining connections as a safety measure
+            await this.connectionManager.closeAllConnections('component_unmount');
+
+            console.log('GatewayGameBase: Connection cleanup completed');
+        } catch (error) {
+            console.error('GatewayGameBase: Error during connection cleanup:', error);
+        }
+    }
+
+    /**
+     * Register a connection when it's created
+     */
+    protected registerConnection(connection: any): void {
+        if (connection) {
+            this.connectionManager.registerConnection(connection);
+            console.log('GatewayGameBase: Connection registered for tracking');
+        }
+    }
+
+    /**
+     * Unregister a connection when it's closed
+     */
+    protected unregisterConnection(connection: any): void {
+        if (connection) {
+            this.connectionManager.unregisterConnection(connection);
+            console.log('GatewayGameBase: Connection unregistered from tracking');
+        }
+    }
+
+    /**
+     * Get connection handler and register its connection
+     */
+    protected getConnectionHandler(): any {
+        try {
+            const container = this.connectionManager['getSharedContainer']();
+            if (!container) {
+                return null;
+            }
+
+            const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+
+            // Register the connection if it exists
+            if (handler && handler.connection) {
+                this.registerConnection(handler.connection);
+            }
+
+            return handler;
+        } catch (error) {
+            console.error('GatewayGameBase: Failed to get connection handler:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Enhanced visibility change handling
+     */
+    onVisibilityChange = async () => {
+        if (document.hidden) {
+            console.log('GatewayGameBase: Page hidden, disconnecting connections');
+            await this.connectionManager.disconnect('visibility_change');
+        } else {
+            console.log('GatewayGameBase: Page visible, reconnecting if needed');
+            this.connectLiveGateway();
+        }
+    };
+
+    /**
+     * Get connection status information
+     */
+    getConnectionInfo() {
+        return {
+            activeConnections: this.connectionManager.getActiveConnectionCount(),
+            isShuttingDown: this.connectionManager.isShutdownInProgress(),
+            hasActiveConnections: this.connectionManager.hasActiveConnections(),
+        };
+    }
 
     protected configureUIRenderer(): UIExtensionOptions {
         return {};
@@ -108,15 +189,20 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     // CONNECTION METHODS
     @render(gc.GatewayConnection.GatewayConnectionStore, (store) => store.isConnected)
     handleConnectLiveGatewayForGame(isConnected: boolean): void {
-        // this.terminateConnection();
         if (isConnected) this.connectLiveGateway();
     }
 
     @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => {
-        console.log('connectLiveGateway');
+        console.log('GatewayGameBase: connectLiveGateway');
         handler.handleGateway();
     })
-    override connectLiveGateway(): void { }
+    override connectLiveGateway(): void {
+        // Register the connection when it's established
+        const handler = this.getConnectionHandler();
+        if (handler && handler.connection) {
+            this.registerConnection(handler.connection);
+        }
+    }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
     handleJoinGame(isConnected: boolean): void {
@@ -138,9 +224,16 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler, (handler) => handler.handleGateway())
     inGameLiveGateway(): void { }
 
-    // ABSTRACT METHOD IMPLEMENTATIONS
-    override closeConnect(): void { }
+    /**
+     * Enhanced closeConnect method using ConnectionManager
+     */
+    @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
+    override closeConnect(): void {
+        // Use ConnectionManager for proper cleanup
+        this.connectionManager.disconnect('close_connect_handler');
+    }
 
+    // ABSTRACT METHOD IMPLEMENTATIONS
     override showResult(
         hasAnimation: boolean,
         result?: gc.GameServiceMessage.TResult,
