@@ -105,13 +105,13 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         this.connectToServiceGateway();
     }
 
-    @handle(gc.GatewayConnection.GatewayConnectionStore, (store) => store.connection?.disconnect())
-    terminateGatewayConnection() {
-        console.log('terminate Gateway Connection');
-    }
+    // @handle(gc.GatewayConnection.GatewayConnectionStore, (store) => store.connection?.close())
+    // terminateGatewayConnection() {
+    //     console.log('Close Gateway Connection');
+    // }
 
     handleReconnect = () => {
-        this.terminateGatewayConnection();
+        // this.terminateGatewayConnection();
         GameConnectionService.handleReconnect(this);
     };
 

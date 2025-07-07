@@ -21,9 +21,8 @@ export class GatewayConnectionManager {
      * Get the shared container from various possible sources
      */
     private getSharedContainer(): any {
-        // Try multiple sources for the shared container
         const sources = [
-            sharedContainer, // Imported from startup
+            sharedContainer,
             window['seal_shared_container'],
             (gc as any).sharedContainer,
             (window as any).sharedContainer
@@ -31,93 +30,47 @@ export class GatewayConnectionManager {
 
         for (const source of sources) {
             if (source && typeof source.get === 'function') {
-                console.log('GatewayConnectionManager: Found container source:', source);
                 return source;
             }
         }
 
         console.warn('GatewayConnectionManager: No container sources found');
-        console.log('Available sources:', {
-            imported_shared: sharedContainer,
-            window_seal: window['seal_shared_container'],
-            gc_shared: (gc as any).sharedContainer,
-            window_shared: (window as any).sharedContainer
-        });
-
         return null;
     }
 
     /**
- * Disconnect gateway connection directly without decorator dependency
- * @param reason - Optional reason for disconnection (for logging)
- */
+     * Get the ConnectHandler from the container
+     */
+    private getConnectHandler(): any {
+        const container = this.getSharedContainer();
+        if (!container) {
+            return null;
+        }
+
+        try {
+            return container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+        } catch (error) {
+            console.log('GatewayConnectionManager: Failed to get handler from container:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Disconnect gateway connection directly without decorator dependency
+     * @param reason - Optional reason for disconnection (for logging)
+     */
     disconnect(reason?: string): void {
         try {
             console.log(`GatewayConnectionManager: Disconnecting gateway connection${reason ? ` - ${reason}` : ''}`);
 
-            // Try multiple approaches to get the handler
-            let handler: any = null;
-
-            // Approach 1: Try container access
-            const container = this.getSharedContainer();
-            if (container) {
-                console.log('GatewayConnectionManager: Container found, attempting to get handler');
-                console.log('GatewayConnectionManager: Handler class:', gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-
-                try {
-                    handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-                    console.log('GatewayConnectionManager: Handler retrieved from container:', handler);
-                } catch (e) {
-                    console.log('GatewayConnectionManager: Failed to get handler from container:', e);
-                }
-            }
-
-            // Approach 2: Try global window access
-            if (!handler && window['seal_shared_container']) {
-                try {
-                    handler = window['seal_shared_container'].get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-                    console.log('GatewayConnectionManager: Handler retrieved from window:', handler);
-                } catch (e) {
-                    console.log('GatewayConnectionManager: Failed to get handler from window:', e);
-                }
-            }
-
-            // Approach 3: Try to create a new instance directly
-            if (!handler) {
-                try {
-                    console.log('GatewayConnectionManager: Attempting to create handler instance directly');
-                    const HandlerClass = gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler;
-                    if (typeof HandlerClass === 'function') {
-                        // Try to get the store from the container first
-                        const store = container?.get(gc.GatewayConnection.GatewayConnectionStore);
-                        if (store) {
-                            handler = new HandlerClass(store);
-                            console.log('GatewayConnectionManager: Created handler instance directly:', handler);
-                        }
-                    }
-                } catch (e) {
-                    console.log('GatewayConnectionManager: Failed to create handler instance:', e);
-                }
-            }
+            const handler = this.getConnectHandler();
 
             if (handler) {
                 console.log('GatewayConnectionManager: Calling handler.disconnect()');
                 handler.disconnect();
                 console.log('GatewayConnectionManager: Disconnect called successfully');
             } else {
-                console.warn('GatewayConnectionManager: ConnectHandler not found in any source');
-
-                // Try to list available handlers in container
-                if (container) {
-                    try {
-                        if (container._registry && container._registry._registrations) {
-                            const registrations = Object.keys(container._registry._registrations);
-                            console.log('GatewayConnectionManager: Available registrations:', registrations);
-                        }
-                    } catch (e) {
-                        console.log('GatewayConnectionManager: Could not inspect container registrations');
-                    }
-                }
+                console.warn('GatewayConnectionManager: ConnectHandler not found');
             }
         } catch (error) {
             console.error('GatewayConnectionManager: Failed to disconnect:', error);
@@ -131,13 +84,8 @@ export class GatewayConnectionManager {
         try {
             console.log('GatewayConnectionManager: Resetting gateway connection');
 
-            const container = this.getSharedContainer();
-            if (!container) {
-                console.warn('GatewayConnectionManager: No shared container found');
-                return;
-            }
+            const handler = this.getConnectHandler();
 
-            const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
             if (handler) {
                 handler.reset();
                 console.log('GatewayConnectionManager: Reset called successfully');
@@ -154,12 +102,7 @@ export class GatewayConnectionManager {
      */
     isHandlerAvailable(): boolean {
         try {
-            const container = this.getSharedContainer();
-            if (!container) {
-                return false;
-            }
-
-            const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
+            const handler = this.getConnectHandler();
             return !!handler;
         } catch (error) {
             console.error('GatewayConnectionManager: Error checking handler availability:', error);
