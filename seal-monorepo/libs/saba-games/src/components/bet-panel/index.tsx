@@ -24,6 +24,7 @@ export interface BetPanelState {
         left: number;
     };
     clientSeed: string;
+    gameIconData?: string;
 }
 
 interface BetPanelProps {
@@ -143,7 +144,20 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                         <div className="c-ticket" data-status="default" data-open="true">
                                             <div className="c-ticket__header">
                                                 <span className="c-text-bettype sg-bet-panel__header-flex">
-                                                    <div className={`sg-bet-panel__game-icon ${betPanelState.namespace}-icon`}></div>
+                                                    {betPanelState.gameIconData ? (
+                                                        <img
+                                                            className="sg-bet-panel__game-icon"
+                                                            src={betPanelState.gameIconData}
+                                                            alt={`${betPanelState.gameName} icon`}
+                                                            style={{
+                                                                width: '24px',
+                                                                height: '24px',
+                                                                marginRight: '4px'
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className={`sg-bet-panel__game-icon ${betPanelState.namespace}-icon`}></div>
+                                                    )}
                                                     <div>
                                                         <div className="game-name">{betPanelState.gameName}</div>
                                                         <div className="bet-option">{betPanelState.betChoice}</div>
