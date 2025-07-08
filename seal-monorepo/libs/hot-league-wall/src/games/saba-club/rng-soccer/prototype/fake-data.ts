@@ -35,14 +35,14 @@ export const FAKE_RNG_SOCCER_DATA = {
             name: TeamUtils.getTeamFullName('LIV'),
             rank: 3,
             suit: 1,
-            score: 1,
+            score: 4,
         },
     },
 
     // Current result
     currentResult: {
         homeScore: 2,
-        awayScore: 1,
+        awayScore: 4,
         home: { rank: 1, suit: 2 },
         away: { rank: 3, suit: 1 },
     },

@@ -9,95 +9,95 @@
 
 // Flex layouts
 @mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 @mixin flex-column {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 @mixin flex-column-center {
-  @include flex-column;
-  align-items: center;
-  justify-content: center;
+    @include flex-column;
+    align-items: center;
+    justify-content: center;
 }
 
 @mixin flex-row-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 // Typography
 @mixin text-style-default {
-  font-weight: $font-weight-bold;
-  color: $color-white;
+    font-weight: $font-weight-bold;
+    color: $color-white;
 }
 
 @mixin text-style-heading {
-  @include text-style-default;
-  font-size: $font-size-md;
-  text-transform: capitalize;
+    @include text-style-default;
+    font-size: $font-size-md;
+    text-transform: capitalize;
 }
 
 @mixin text-style-score {
-  @include text-style-default;
-  font-size: $font-size-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    @include text-style-default;
+    font-size: $font-size-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 // Components
 @mixin score-box {
-  @include text-style-score;
-  width: $score-width;
-  height: $score-height;
-  background: $color-white-20;
-  border-radius: $border-radius-lg;
-  border: 1px solid $color-white-50;
-  overflow: hidden;
+    @include text-style-score;
+    width: $score-width;
+    height: $score-height;
+    background: $color-white-20;
+    border-radius: $border-radius-lg;
+    border: 1px solid $color-white-50;
+    overflow: hidden;
 
-  span {
-    animation: scoreAppear $animation-duration-medium ease-out forwards;
-  }
+    .score-slide-up {
+        animation: scoreAppear $animation-duration-fast cubic-bezier(0.498, 0.057, 0.178, 0.84) forwards;
+    }
 }
 
 @mixin card-style {
-  width: $card-width;
-  height: $card-height;
-  @include flex-center;
-  
-  img {
-    max-width: 100%;
-    height: auto;
-    border-radius: $border-radius-sm;
-  }
+    width: $card-width;
+    height: $card-height;
+    @include flex-center;
+
+    img {
+        max-width: 100%;
+        height: auto;
+        border-radius: $border-radius-sm;
+    }
 }
 
 @mixin fullsize-container {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 @mixin fullsize-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  @include fullsize-container;
+    position: absolute;
+    top: 0;
+    left: 0;
+    @include fullsize-container;
 }
 
 // Animation related
 @mixin transition-default {
-  transition: all $animation-duration-fast ease;
+    transition: all $animation-duration-fast ease;
 }
 
 // Status containers
 @mixin status-container {
-  @include flex-column-center;
-  @include fullsize-container;
-  padding: $spacing-xl;
-} 
+    @include flex-column-center;
+    @include fullsize-container;
+    padding: $spacing-xl;
+}

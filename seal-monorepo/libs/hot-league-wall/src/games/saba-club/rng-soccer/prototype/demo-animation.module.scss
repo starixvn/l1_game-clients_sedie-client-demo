@@ -89,3 +89,18 @@
         opacity: 0;
     }
 }
+
+.score-slide-up {
+    animation: score-slide-up 0.3s cubic-bezier(0.498, 0.057, 0.178, 0.84) forwards;
+}
+
+@keyframes score-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -9,29 +9,32 @@ interface ScoreDisplayProps {
 }
 
 export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
-    homeScore = "",
-    awayScore = "",
+    homeScore = '',
+    awayScore = '',
     showWinningHighlight = false,
-    showDefaultScore = false
+    showDefaultScore = false,
 }) => {
-    const DEFAULT_HOME_SCORE = 0;
-    const DEFAULT_AWAY_SCORE = 0;
+    const DEFAULT_SCORE = 0;
 
-    const homeScoreValue = showDefaultScore ? DEFAULT_HOME_SCORE : homeScore;
-    const awayScoreValue = showDefaultScore ? DEFAULT_AWAY_SCORE : awayScore;
+    const homeScoreValue = showDefaultScore ? DEFAULT_SCORE : homeScore;
+    const awayScoreValue = showDefaultScore ? DEFAULT_SCORE : awayScore;
     const isHomeHigher = homeScoreValue > awayScoreValue;
     const isAwayHigher = awayScoreValue > homeScoreValue;
 
     return (
         <div className={styles['result-section']}>
             <div className={`${styles['result']} ${isHomeHigher && showWinningHighlight ? styles['higher-score'] : ''}`}>
-                <span>{showDefaultScore? "" :homeScoreValue}</span>
+                {!showDefaultScore && (
+                    <span className={`${+homeScoreValue > DEFAULT_SCORE ? styles['score-slide-up'] : ''}`}>{homeScoreValue}</span>
+                )}
             </div>
             <div className={`${styles['result']} ${isAwayHigher && showWinningHighlight ? styles['higher-score'] : ''}`}>
-                <span>{showDefaultScore ? "" : awayScoreValue}</span>
+                {!showDefaultScore && (
+                    <span className={`${+awayScoreValue > DEFAULT_SCORE ? styles['score-slide-up'] : ''}`}>{awayScoreValue}</span>
+                )}
             </div>
         </div>
     );
 };
 
-export default ScoreDisplay; 
+export default ScoreDisplay;

@@ -272,12 +272,16 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                 <div
                                     className={`${styles['result']} ${isHomeHigher && isShowBetOptionHighlight ? styles['higher-score'] : ''}`}
                                 >
-                                    <span>{isShowHomeScore ? gameData.currentResult.homeScore : ''}</span>
+                                    {isShowHomeScore && (
+                                        <span className={demoAnimationStyles['score-slide-up']}>{gameData.currentResult.homeScore}</span>
+                                    )}
                                 </div>
                                 <div
                                     className={`${styles['result']} ${isAwayHigher && isShowBetOptionHighlight ? styles['higher-score'] : ''}`}
                                 >
-                                    <span>{isShowAwayScore ? gameData.currentResult.awayScore : ''}</span>
+                                    {isShowAwayScore && (
+                                        <span className={demoAnimationStyles['score-slide-up']}>{gameData.currentResult.awayScore}</span>
+                                    )}
                                 </div>
                             </div>
 
