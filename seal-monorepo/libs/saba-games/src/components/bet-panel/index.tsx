@@ -14,6 +14,7 @@ export interface BetPanelState {
     min: number;
     max: number;
     payout: string;
+    vendorName: string;
     gameName: string;
     namespace: string;
     clientRoundId: number;
@@ -191,7 +192,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
 
                                             <div className="c-ticket__info">
                                                 <div className="c-ticket-match-info">
-                                                    <div className="c-ticket-match-info__row">{betPanelState.namespace}</div>
+                                                    <div className="c-ticket-match-info__row">{betPanelState.vendorName}</div>
                                                     <div className="c-ticket-match-info__row">{betPanelState.gameName}</div>
                                                     <div className="c-ticket-match-info__row">
                                                         Result No. {betPanelState.clientRoundId}
