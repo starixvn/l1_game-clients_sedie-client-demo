@@ -78,10 +78,6 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
                 handleMessage(undefined, MessageType.HANDLE_CLEAR);
                 options.onHandleClear?.();
             },
-            onHideAllBetPanels: () => {
-                handleMessage(undefined, MessageType.HIDE_ALL_BET_PANELS);
-                options.onHideAllBetPanels?.();
-            },
             onToggleStatistic: (data) => {
                 handleMessage(data, MessageType.TOGGLE_STATISTIC);
                 options.onToggleStatistic?.(data);

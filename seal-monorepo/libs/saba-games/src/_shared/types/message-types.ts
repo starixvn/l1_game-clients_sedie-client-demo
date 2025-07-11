@@ -3,7 +3,6 @@ export enum MessageType {
     UPDATE_SETTINGS = 'UPDATE_SETTINGS',
     BETTING_BLOCK_STATE = 'BETTING_BLOCK_STATE',
     BET_PANEL_STATE = 'BET_PANEL_STATE',
-    HIDE_ALL_BET_PANELS = 'HIDE_ALL_BET_PANELS',
     HANDLE_BET = 'HANDLE_BET',
     HANDLE_INPUT_CHANGE = 'HANDLE_INPUT_CHANGE',
     HANDLE_CLEAR = 'HANDLE_CLEAR',
@@ -110,7 +109,6 @@ export interface MessageData {
     [MessageType.HANDLE_INPUT_CHANGE]: HandleInputChangeData;
     [MessageType.TOGGLE_STATISTIC]: ToggleStatisticData;
     [MessageType.SET_HEIGHT]: SetHeightData;
-    [MessageType.HIDE_ALL_BET_PANELS]: any;
     [MessageType.GET_HEIGHT]: any;
     [MessageType.HANDLE_CLEAR]: any;
 }
@@ -125,7 +123,7 @@ export type WindowMessage =
     | HandleInputChangeMessage
     | GetHeightMessage
     | SetHeightMessage
-    | { type: MessageType.HIDE_ALL_BET_PANELS | MessageType.HANDLE_CLEAR };
+    | { type: MessageType.HANDLE_CLEAR };
 
 // Message event type
 export type MessageEvent = {

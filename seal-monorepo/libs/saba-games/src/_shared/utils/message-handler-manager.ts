@@ -15,7 +15,6 @@ export interface MessageHandlerOptions {
     onHandleBet?: (data: any) => void;
     onHandleInputChange?: (value: string) => void;
     onHandleClear?: () => void;
-    onHideAllBetPanels?: () => void;
     onToggleStatistic?: (isOpen: boolean) => void;
     onGetHeight?: () => void;
     onSetHeight?: (height: number) => void;
@@ -51,7 +50,6 @@ export class MessageHandlerManager {
             [MessageType.HANDLE_BET]: this.options.onHandleBet,
             [MessageType.HANDLE_INPUT_CHANGE]: this.options.onHandleInputChange,
             [MessageType.HANDLE_CLEAR]: this.options.onHandleClear,
-            [MessageType.HIDE_ALL_BET_PANELS]: this.options.onHideAllBetPanels,
             [MessageType.TOGGLE_STATISTIC]: this.options.onToggleStatistic,
             [MessageType.GET_HEIGHT]: this.options.onGetHeight,
             [MessageType.SET_HEIGHT]: this.options.onSetHeight,
