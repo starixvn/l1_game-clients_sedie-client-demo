@@ -119,9 +119,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     const handlePlayButtonClick = useCallback(
         async () => {
-            console.log('Play button clicked - starting token request and connection flow');
             const result = await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
-            console.log('Token request completed:', { success: result.success, hasToken: !!result.token });
         },
         [performTokenRequest]
     );

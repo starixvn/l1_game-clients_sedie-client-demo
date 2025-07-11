@@ -39,12 +39,11 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         try {
             // Cleanup observer
             const { dispose } = this.state;
-            console.log('GatewayGameBase: Cleanup observer');
             if (dispose) {
                 dispose();
             }
         } catch (error) {
-            console.error('GatewayGameBase: Failed to cleanup observer:', error);
+            // Failed to cleanup observer
         }
 
         // Call parent cleanup
@@ -60,7 +59,6 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
             // This method is kept for backward compatibility but doesn't manage connections
             return null;
         } catch (error) {
-            console.error('GatewayGameBase: Failed to get connection handler:', error);
             return null;
         }
     }
@@ -111,12 +109,10 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     }
 
     @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => {
-        console.log('GatewayGameBase: connectLiveGateway');
         handler.handleGateway();
     })
     override connectLiveGateway(): void {
         // Connection management is now handled at the lobby level
-        console.log('GatewayGameBase: connectLiveGateway called (connection managed by lobby)');
     }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
@@ -145,7 +141,6 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
     override closeConnect(): void {
         // Connection management is now handled at the lobby level
-        console.log('GatewayGameBase: closeConnect called (connection managed by lobby)');
     }
 
     // ABSTRACT METHOD IMPLEMENTATIONS

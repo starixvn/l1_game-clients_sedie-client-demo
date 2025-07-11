@@ -56,17 +56,13 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
      */
     private async cleanupLobbyConnections() {
         try {
-            console.log('Lobby: Starting connection cleanup');
-
             // Disconnect using the manager (handles both handler.disconnect() and connection.close())
             await this.connectionManager.disconnect('lobby_unmount');
 
             // Close all remaining connections as a safety measure (sends WebSocket close frames)
             await this.connectionManager.closeAllGatewayConnections('lobby_unmount');
-
-            console.log('Lobby: Connection cleanup completed');
         } catch (error) {
-            console.error('Lobby: Error during connection cleanup:', error);
+            // Error during connection cleanup
         }
     }
 
@@ -101,18 +97,11 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
     connectLiveGateway() {
-        console.log('Lobby: connectLiveGateway called - establishing connection to service');
-
         // Register the connection when it's established
         const handler = this.getConnectionHandler();
-        console.log('Lobby: Handler retrieved:', handler ? 'exists' : 'null/undefined');
 
         if (handler && (handler as any).connection) {
-            console.log('Lobby: Registering gateway connection');
             this.connectionManager.registerGatewayConnection((handler as any).connection);
-            console.log('Lobby: Gateway connection registered successfully');
-        } else {
-            console.log('Lobby: No handler or connection available for registration');
         }
     }
 
@@ -121,27 +110,16 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
      */
     private getConnectionHandler(): any {
         try {
-            console.log('Lobby: Attempting to get container');
             const container = sharedContainer;
-            console.log('Lobby: Container retrieved:', container ? 'exists' : 'null/undefined');
 
             if (!container) {
-                console.warn('Lobby: No container available');
                 return null;
             }
 
-            console.log('Lobby: Attempting to get handler with key:', gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
             const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
-            console.log('Lobby: Handler from container:', handler ? 'exists' : 'null/undefined');
-
-            if (handler) {
-                console.log('Lobby: Handler properties:', Object.keys(handler));
-                console.log('Lobby: Handler.connection:', (handler as any).connection ? 'exists' : 'null/undefined');
-            }
 
             return handler;
         } catch (error) {
-            console.error('Lobby: Failed to get connection handler:', error);
             return null;
         }
     }

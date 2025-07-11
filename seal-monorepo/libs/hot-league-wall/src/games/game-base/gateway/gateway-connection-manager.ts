@@ -53,7 +53,6 @@ export class GatewayConnectionManager {
         try {
             return container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
         } catch (error) {
-            console.log('GatewayConnectionManager: Failed to get handler from container:', error);
             return null;
         }
     }
@@ -64,7 +63,6 @@ export class GatewayConnectionManager {
     registerConnection(connection: any): void {
         if (connection && !this.activeConnections.has(connection)) {
             this.activeConnections.add(connection);
-            console.log('GatewayConnectionManager: Connection registered, total active:', this.activeConnections.size);
         }
     }
 
@@ -74,7 +72,6 @@ export class GatewayConnectionManager {
     unregisterConnection(connection: any): void {
         if (connection && this.activeConnections.has(connection)) {
             this.activeConnections.delete(connection);
-            console.log('GatewayConnectionManager: Connection unregistered, total active:', this.activeConnections.size);
         }
     }
 
@@ -83,13 +80,10 @@ export class GatewayConnectionManager {
      */
     async closeConnection(connection: any, reason?: string): Promise<boolean> {
         if (!connection) {
-            console.warn('GatewayConnectionManager: No connection provided to close');
             return false;
         }
 
         try {
-            console.log(`GatewayConnectionManager: Closing connection${reason ? ` - ${reason}` : ''}`);
-
             // 1. Remove event listeners first
             this.removeConnectionListeners(connection);
 
@@ -97,8 +91,6 @@ export class GatewayConnectionManager {
             if (connection.readyState === WebSocket.OPEN) {
                 // 3. Close the connection
                 await this.performConnectionClose(connection);
-            } else {
-                console.log('GatewayConnectionManager: Connection already closed or in closing state');
             }
 
             // 4. Unregister from tracking
@@ -107,11 +99,9 @@ export class GatewayConnectionManager {
             // 5. Clear references
             this.clearConnectionReferences(connection);
 
-            console.log('GatewayConnectionManager: Connection closed successfully');
             return true;
 
         } catch (error) {
-            console.error('GatewayConnectionManager: Failed to close connection:', error);
             return false;
         }
     }
@@ -121,12 +111,10 @@ export class GatewayConnectionManager {
      */
     async closeAllConnections(reason?: string): Promise<void> {
         if (this.isShuttingDown) {
-            console.log('GatewayConnectionManager: Already shutting down, skipping');
             return;
         }
 
         this.isShuttingDown = true;
-        console.log(`GatewayConnectionManager: Closing all connections${reason ? ` - ${reason}` : ''}`);
 
         const connections = Array.from(this.activeConnections);
         const closePromises = connections.map(connection =>
@@ -135,9 +123,8 @@ export class GatewayConnectionManager {
 
         try {
             await Promise.allSettled(closePromises);
-            console.log('GatewayConnectionManager: All connections closed');
         } catch (error) {
-            console.error('GatewayConnectionManager: Error during bulk close:', error);
+            // Error during bulk close
         } finally {
             this.isShuttingDown = false;
         }
@@ -148,8 +135,6 @@ export class GatewayConnectionManager {
      */
     async disconnect(reason?: string): Promise<void> {
         try {
-            console.log(`GatewayConnectionManager: Disconnecting${reason ? ` - ${reason}` : ''}`);
-
             const handler = this.getConnectHandler();
             if (handler) {
                 // 1. Call handler's disconnect method
@@ -161,13 +146,9 @@ export class GatewayConnectionManager {
                 if (handler.connection) {
                     await this.closeConnection(handler.connection, reason);
                 }
-
-                console.log('GatewayConnectionManager: Disconnect completed successfully');
-            } else {
-                console.warn('GatewayConnectionManager: ConnectHandler not found');
             }
         } catch (error) {
-            console.error('GatewayConnectionManager: Failed to disconnect:', error);
+            // Failed to disconnect
         }
     }
 
@@ -176,8 +157,6 @@ export class GatewayConnectionManager {
      */
     async reset(): Promise<void> {
         try {
-            console.log('GatewayConnectionManager: Resetting connections');
-
             const handler = this.getConnectHandler();
             if (handler && typeof handler.reset === 'function') {
                 await handler.reset();
@@ -186,10 +165,8 @@ export class GatewayConnectionManager {
             // Clear all tracked connections
             this.activeConnections.clear();
             this.isShuttingDown = false;
-
-            console.log('GatewayConnectionManager: Reset completed');
         } catch (error) {
-            console.error('GatewayConnectionManager: Failed to reset:', error);
+            // Failed to reset
         }
     }
 
@@ -207,10 +184,8 @@ export class GatewayConnectionManager {
             events.forEach(event => {
                 connection.removeEventListener(event, () => { });
             });
-
-            console.log('GatewayConnectionManager: Event listeners removed');
         } catch (error) {
-            console.warn('GatewayConnectionManager: Error removing event listeners:', error);
+            // Error removing event listeners
         }
     }
 
@@ -264,7 +239,7 @@ export class GatewayConnectionManager {
                 });
             }
         } catch (error) {
-            console.warn('GatewayConnectionManager: Error clearing references:', error);
+            // Error clearing references
         }
     }
 
@@ -304,7 +279,6 @@ export class GatewayConnectionManager {
             const handler = this.getConnectHandler();
             return !!handler;
         } catch (error) {
-            console.error('GatewayConnectionManager: Error checking handler availability:', error);
             return false;
         }
     }
