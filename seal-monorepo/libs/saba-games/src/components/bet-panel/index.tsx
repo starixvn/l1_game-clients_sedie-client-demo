@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import classNames from 'classnames';
 import BettingChips from '../betting-chips';
 import './bet-panel.scss';
+import { useMessageContext } from '../../_shared/contexts/message-context';
+import { MessageType } from '../../_shared/types/message-types';
 
 export interface BetPanelState {
     isShowBetSlip: boolean;
@@ -30,26 +32,51 @@ export interface BetPanelState {
 
 interface BetPanelProps {
     betPanelState: BetPanelState;
-    isPanelVisible: boolean;
     panelRef: React.RefObject<HTMLDivElement>;
     iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
 export const BetPanel: React.FC<BetPanelProps> = ({
     betPanelState,
-    isPanelVisible,
     panelRef,
     iframeRef
 }) => {
+    const { sendMessage,sendMessageToSpecificIframe } = useMessageContext();
     const [amount, setAmount] = useState(betPanelState.amount);
     const [warnMsg, setWarnMsg] = useState(betPanelState.warnMsg);
+
+    const handleClose = useCallback(() => {
+        setAmount(0);
+        setWarnMsg('');
+        const bettingBlockData = {
+            isShowBetSlip: false,
+            betChoice: betPanelState.betChoice || '',
+            odd: betPanelState.odd || 0
+        }
+        sendMessage({ type: MessageType.BETTING_BLOCK_STATE, data: bettingBlockData });
+        sendMessageToSpecificIframe({
+            type: MessageType.BETTING_BLOCK_STATE,
+            data: bettingBlockData
+        }, iframeRef.current);
+    }, []);
 
     useEffect(() => {
         setAmount(betPanelState.amount);
         setWarnMsg(betPanelState.warnMsg);
     }, [betPanelState]);
 
-    if (!isPanelVisible) return null;
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+                handleClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [panelRef, handleClose]);
 
     const handleChipAmountChange = (amount: number) => {
         setAmount(amount);
@@ -70,13 +97,6 @@ export const BetPanel: React.FC<BetPanelProps> = ({
             setWarnMsg('');
         }
     };
-
-    const handleClose = useCallback(() => {
-        setAmount(0);
-        setWarnMsg('');
-        // Post message to parent to hide panel
-        window.parent.postMessage({ type: 'HIDE_PANEL' }, '*');
-    }, []);
 
     const handleClear = useCallback(() => {
         setAmount(0);

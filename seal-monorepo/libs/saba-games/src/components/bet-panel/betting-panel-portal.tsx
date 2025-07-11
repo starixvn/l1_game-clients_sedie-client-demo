@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BetPanel } from '.';
 import { BetPanelState } from '.';
+import { useBettingBlockData } from '../../hooks/use-message-data';
 
 interface BettingPanelPortalProps {
     betPanelState: BetPanelState;
@@ -12,6 +13,7 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
     betPanelState,
     iframeRef
 }) => {
+    const bettingBlockData = useBettingBlockData();
     const [isContainerReady, setIsContainerReady] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const portalContainerRef = useRef<HTMLDivElement | null>(null);
@@ -30,39 +32,16 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
         document.body.appendChild(container);
         portalContainerRef.current = container;
         setIsContainerReady(true);
-
-        const handleMessage = (event: MessageEvent) => {
-            switch (event.data.type) {
-                case 'HIDE_PANEL':
-                case 'HIDE_BET_PANEL':
-                case 'HIDE_ALL_BET_PANELS':
-                    setIsVisible(false);
-                    break;
-                case 'SHOW_BET_PANEL':
-                    setIsVisible(true);
-                    break;
-            }
-        };
-
-        window.addEventListener('message', handleMessage);
-
-        return () => {
-            if (portalContainerRef.current) {
-                document.body.removeChild(portalContainerRef.current);
-                setIsContainerReady(false);
-            }
-            window.removeEventListener('message', handleMessage);
-        };
     }, []);
 
     // Reset visibility when betPanelState changes
     useEffect(() => {
-        if (betPanelState?.isShowBetSlip) {
+        if (betPanelState) {
             setIsVisible(true);
         }
     }, [betPanelState]);
 
-    if (!isContainerReady || !betPanelState?.isShowBetSlip || !portalContainerRef.current || !isVisible) {
+    if (!isContainerReady || !portalContainerRef.current || !isVisible) {
         return null;
     }
 
@@ -74,12 +53,11 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
             pointerEvents: 'auto',
             zIndex: 9999
         }}>
-            <BetPanel
+            {bettingBlockData?.isShowBetSlip && <BetPanel
                 betPanelState={betPanelState}
-                isPanelVisible={betPanelState.isShowBetSlip}
                 panelRef={panelRef}
                 iframeRef={iframeRef}
-            />
+            />}
         </div>,
         portalContainerRef.current
     );
