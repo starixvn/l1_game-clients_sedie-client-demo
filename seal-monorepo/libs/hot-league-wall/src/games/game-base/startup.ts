@@ -41,6 +41,11 @@ function getSharedContainer(siteConfigs: gc.Configs.SiteConfigs) {
 
 export const sharedContainer = getSharedContainer(getSiteConfig(appSettings.defaultGameId));
 
+// Make the shared container available globally for external access
+if (typeof window !== 'undefined') {
+    (window as any).hot_league_wall_shared_container = sharedContainer;
+}
+
 export function configSharedContainer() {
     Observer.configure({ default: { mobx, container: gc.buildObserverContainer(sharedContainer) } });
     Observer.configure({ default: { mobx, container: gc.buildObserverContainer(sharedContainer) } });

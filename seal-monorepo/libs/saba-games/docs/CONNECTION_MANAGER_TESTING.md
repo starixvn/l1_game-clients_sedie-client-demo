@@ -330,7 +330,7 @@ describe('Container Integration', () => {
         // Test different container sources
         const sources = [
             { source: 'sharedContainer', mock: () => ({ get: jest.fn().mockReturnValue(mockHandler) }) },
-            { source: 'window.seal_shared_container', mock: () => ({ get: jest.fn().mockReturnValue(mockHandler) }) },
+            { source: 'window.saba_games_shared_container', mock: () => ({ get: jest.fn().mockReturnValue(mockHandler) }) },
             { source: 'gc.sharedContainer', mock: () => ({ get: jest.fn().mockReturnValue(mockHandler) }) },
             { source: 'window.sharedContainer', mock: () => ({ get: jest.fn().mockReturnValue(mockHandler) }) },
             { source: 'gc.getContainer()', mock: () => ({ get: jest.fn().mockReturnValue(mockHandler) }) },

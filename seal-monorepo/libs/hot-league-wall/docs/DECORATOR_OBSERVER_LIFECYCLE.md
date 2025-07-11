@@ -373,7 +373,7 @@ class GatewayConnectionManager {
         // Try multiple sources for the shared container
         const sources = [
             sharedContainer, // Imported from startup
-            window['seal_shared_container'],
+            window['hot_league_wall_shared_container'],
             (gc as any).sharedContainer,
             (window as any).sharedContainer
         ];

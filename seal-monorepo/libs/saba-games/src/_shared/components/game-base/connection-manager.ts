@@ -35,7 +35,7 @@ export class ConnectionManager {
                 // Try multiple container sources like hot-league-wall
                 const sources = [
                     sharedContainer,
-                    window['seal_shared_container'],
+                    window['saba_games_shared_container'],
                     (gc as any).sharedContainer,
                     (window as any).sharedContainer
                 ];

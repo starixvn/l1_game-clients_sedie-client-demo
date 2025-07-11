@@ -101,7 +101,7 @@ describe('LobbyComponent Connection Management', () => {
         (GatewayConnectionManager.getInstance as jest.Mock).mockReturnValue(mockConnectionManager);
 
         // Mock window object
-        Object.defineProperty(window, 'seal_shared_container', {
+        Object.defineProperty(window, 'hot_league_wall_shared_container', {
             value: mockContainer,
             writable: true
         });
@@ -109,7 +109,7 @@ describe('LobbyComponent Connection Management', () => {
 
     afterEach(() => {
         consoleSpy.mockRestore();
-        delete (window as any).seal_shared_container;
+        delete (window as any).hot_league_wall_shared_container;
     });
 
     describe('componentWillUnmount', () => {

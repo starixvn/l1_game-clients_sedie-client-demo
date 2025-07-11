@@ -33,7 +33,7 @@ The manager integrates with the dependency injection container to access gateway
 ```typescript
 // Multiple container sources are tried in order:
 1. sharedContainer (from startup)
-2. window['seal_shared_container']
+2. window['saba_games_shared_container']
 3. gc.sharedContainer
 4. window.sharedContainer
 5. gc.getContainer() (fallback)

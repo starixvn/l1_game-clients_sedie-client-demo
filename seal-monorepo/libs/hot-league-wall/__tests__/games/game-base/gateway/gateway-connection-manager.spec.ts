@@ -36,7 +36,7 @@ describe('GatewayConnectionManager', () => {
         };
 
         // Mock window object
-        Object.defineProperty(window, 'seal_shared_container', {
+        Object.defineProperty(window, 'hot_league_wall_shared_container', {
             value: mockContainer,
             writable: true
         });
@@ -48,7 +48,7 @@ describe('GatewayConnectionManager', () => {
 
     afterEach(() => {
         consoleSpy.mockRestore();
-        delete (window as any).seal_shared_container;
+        delete (window as any).hot_league_wall_shared_container;
     });
 
     describe('getInstance', () => {
@@ -102,7 +102,7 @@ describe('GatewayConnectionManager', () => {
             sharedContainer.get.mockImplementation(() => {
                 throw new Error('Container not found');
             });
-            delete (window as any).seal_shared_container;
+            delete (window as any).hot_league_wall_shared_container;
 
             // Act
             GatewayConnectionManager.getInstance().disconnect('test');
@@ -156,7 +156,7 @@ describe('GatewayConnectionManager', () => {
             errorSpy.mockRestore();
         });
 
-        it('should use window.seal_shared_container when imported container fails', () => {
+        it('should use window.hot_league_wall_shared_container when imported container fails', () => {
             // Arrange
             const { sharedContainer } = require('../../../../src/games/game-base/startup');
             sharedContainer.get.mockImplementation(() => {
@@ -193,7 +193,7 @@ describe('GatewayConnectionManager', () => {
             sharedContainer.get.mockImplementation(() => {
                 throw new Error('Container not found');
             });
-            delete (window as any).seal_shared_container;
+            delete (window as any).hot_league_wall_shared_container;
 
             // Act
             GatewayConnectionManager.getInstance().reset();
@@ -260,7 +260,7 @@ describe('GatewayConnectionManager', () => {
             sharedContainer.get.mockImplementation(() => {
                 throw new Error('Container not found');
             });
-            delete (window as any).seal_shared_container;
+            delete (window as any).hot_league_wall_shared_container;
 
             // Act
             const result = GatewayConnectionManager.getInstance().isHandlerAvailable();

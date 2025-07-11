@@ -129,7 +129,7 @@ sequenceDiagram
 sequenceDiagram
     participant CM as ConnectionManager
     participant Shared as sharedContainer
-    participant Window as window.seal_shared_container
+    participant Window as window.saba_games_shared_container
     participant GC as gc.sharedContainer
     participant Fallback as gc.getContainer()
 
@@ -137,7 +137,7 @@ sequenceDiagram
     alt Shared container available
         Shared-->>CM: container instance
     else Shared container not available
-        CM->>Window: check window.seal_shared_container
+        CM->>Window: check window.saba_games_shared_container
         alt Window container available
             Window-->>CM: container instance
         else Window container not available
@@ -406,10 +406,10 @@ flowchart TD
     A[Get Shared Container] --> B[Try sharedContainer]
     B --> C{Available?}
     C -->|Yes| D[Use sharedContainer]
-    C -->|No| E[Try window.seal_shared_container]
+    C -->|No| E[Try window.saba_games_shared_container]
 
     E --> F{Available?}
-    F -->|Yes| G[Use window.seal_shared_container]
+    F -->|Yes| G[Use window.saba_games_shared_container]
     F -->|No| H[Try gc.sharedContainer]
 
     H --> I{Available?}
