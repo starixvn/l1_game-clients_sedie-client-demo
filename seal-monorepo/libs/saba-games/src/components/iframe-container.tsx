@@ -99,16 +99,10 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
             // Handle confirm bet messages
             handleConfirmBetMessage(data);
-
-            // Handle bet response
-            if (data.type === 'BET_RESPONSE') {
-                console.log('Parent: Received bet response:', data);
-                // Handle bet response if needed
-            }
         } catch (error) {
             console.error('Parent: Error processing message:', error);
         }
-    }, [ handleConfirmBetMessage, messageEncryption]);
+    }, [handleConfirmBetMessage, messageEncryption]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
@@ -178,12 +172,9 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                     onLoad={handleIframeLoad}
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
-                {betPanelData && (
-                    <BettingPanelPortal
-                        betPanelState={betPanelData as BetPanelState}
-                        iframeRef={iframeRef}
-                    />
-                )}
+                <BettingPanelPortal
+                    iframeRef={iframeRef}
+                />
 
                 <ConfirmBetPortal
                     iframeRef={iframeRef}

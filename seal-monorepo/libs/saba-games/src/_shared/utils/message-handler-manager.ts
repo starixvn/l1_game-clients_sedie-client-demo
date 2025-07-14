@@ -150,7 +150,7 @@ export const createMessageHandlerConfig = (environment: string, encryptionKey?: 
     return {
         isLocalDevelopment,
         allowedOrigins: isLocalDevelopment 
-            ? ['localhost:4551']
+            ? ['localhost:4551', 'localhost:4200']
             : ['*'],
         encryptionKey,
         enableEncryption: !isLocalDevelopment && !!encryptionKey
