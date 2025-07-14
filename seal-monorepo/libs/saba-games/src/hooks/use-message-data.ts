@@ -35,10 +35,6 @@ export const useHideConfirmBetData = (): MessageData[MessageType.HIDE_CONFIRM_BE
     return useMessageData(MessageType.HIDE_CONFIRM_BET);
 };
 
-export const useInputChangeData = (): MessageData[MessageType.HANDLE_INPUT_CHANGE] | undefined => {
-    return useMessageData(MessageType.HANDLE_INPUT_CHANGE);
-};
-
 export const useHeightData = (): MessageData[MessageType.SET_HEIGHT] | undefined => {
     return useMessageData(MessageType.SET_HEIGHT);
 };

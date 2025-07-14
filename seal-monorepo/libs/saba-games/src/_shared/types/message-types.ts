@@ -4,7 +4,6 @@ export enum MessageType {
     BETTING_BLOCK_STATE = 'BETTING_BLOCK_STATE',
     BET_PANEL_STATE = 'BET_PANEL_STATE',
     HANDLE_BET = 'HANDLE_BET',
-    HANDLE_INPUT_CHANGE = 'HANDLE_INPUT_CHANGE',
     HANDLE_CLEAR = 'HANDLE_CLEAR',
     TOGGLE_STATISTIC = 'TOGGLE_STATISTIC',
     GET_HEIGHT = 'GET_HEIGHT',
@@ -105,15 +104,6 @@ interface HideConfirmBetMessage {
     data: HideConfirmBetData;
 }
 
-// handle input change data
-interface HandleInputChangeData {
-    value: string;
-}
-interface HandleInputChangeMessage {
-    type: MessageType.HANDLE_INPUT_CHANGE;
-    data: HandleInputChangeData;
-}
-
 // set height data
 interface SetHeightData {
     height: number;
@@ -132,7 +122,6 @@ export interface MessageData {
     [MessageType.BETTING_BLOCK_STATE]: BettingBlockStateData;
     [MessageType.BET_PANEL_STATE]: BetPanelStateData;
     [MessageType.HANDLE_BET]: HandleBetData;
-    [MessageType.HANDLE_INPUT_CHANGE]: HandleInputChangeData;
     [MessageType.SHOW_CONFIRM_BET]: ShowConfirmBetData;
     [MessageType.HIDE_CONFIRM_BET]: HideConfirmBetData;
     [MessageType.TOGGLE_STATISTIC]: ToggleStatisticData;
@@ -150,7 +139,6 @@ export type WindowMessage =
     | HandleBetMessage
     | ShowConfirmBetMessage
     | HideConfirmBetMessage
-    | HandleInputChangeMessage
     | GetHeightMessage
     | SetHeightMessage
     | { type: MessageType.HANDLE_CLEAR };

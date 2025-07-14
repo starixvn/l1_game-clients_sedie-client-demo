@@ -15,7 +15,6 @@ export interface MessageHandlerOptions {
     onHandleBet?: (data: any) => void;
     onShowConfirmBet?: (data: any) => void;
     onHideConfirmBet?: (data: any) => void;
-    onHandleInputChange?: (value: string) => void;
     onHandleClear?: () => void;
     onToggleStatistic?: (isOpen: boolean) => void;
     onGetHeight?: () => void;
@@ -52,7 +51,6 @@ export class MessageHandlerManager {
             [MessageType.HANDLE_BET]: this.options.onHandleBet,
             [MessageType.SHOW_CONFIRM_BET]: this.options.onShowConfirmBet,
             [MessageType.HIDE_CONFIRM_BET]: this.options.onHideConfirmBet,
-            [MessageType.HANDLE_INPUT_CHANGE]: this.options.onHandleInputChange,
             [MessageType.HANDLE_CLEAR]: this.options.onHandleClear,
             [MessageType.TOGGLE_STATISTIC]: this.options.onToggleStatistic,
             [MessageType.GET_HEIGHT]: this.options.onGetHeight,
