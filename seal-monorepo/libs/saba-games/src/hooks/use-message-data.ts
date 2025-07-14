@@ -27,6 +27,14 @@ export const useHandleBetData = (): MessageData[MessageType.HANDLE_BET] | undefi
     return useMessageData(MessageType.HANDLE_BET);
 };
 
+export const useShowConfirmBetData = (): MessageData[MessageType.SHOW_CONFIRM_BET] | undefined => {
+    return useMessageData(MessageType.SHOW_CONFIRM_BET);
+};
+
+export const useHideConfirmBetData = (): MessageData[MessageType.HIDE_CONFIRM_BET] | undefined => {
+    return useMessageData(MessageType.HIDE_CONFIRM_BET);
+};
+
 export const useInputChangeData = (): MessageData[MessageType.HANDLE_INPUT_CHANGE] | undefined => {
     return useMessageData(MessageType.HANDLE_INPUT_CHANGE);
 };

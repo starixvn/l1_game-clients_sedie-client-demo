@@ -70,6 +70,14 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
                 handleMessage(data, MessageType.HANDLE_BET);
                 options.onHandleBet?.(data);
             },
+            onShowConfirmBet: (data) => {
+                handleMessage(data, MessageType.SHOW_CONFIRM_BET);
+                options.onShowConfirmBet?.(data);
+            },
+            onHideConfirmBet: (data) => {
+                handleMessage(data, MessageType.HIDE_CONFIRM_BET);
+                options.onHideConfirmBet?.(data);
+            },
             onHandleInputChange: (data) => {
                 handleMessage(data, MessageType.HANDLE_INPUT_CHANGE);
                 options.onHandleInputChange?.(data);

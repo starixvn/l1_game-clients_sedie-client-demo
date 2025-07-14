@@ -9,6 +9,8 @@ export enum MessageType {
     TOGGLE_STATISTIC = 'TOGGLE_STATISTIC',
     GET_HEIGHT = 'GET_HEIGHT',
     SET_HEIGHT = 'SET_HEIGHT',
+    SHOW_CONFIRM_BET = 'SHOW_CONFIRM_BET',
+    HIDE_CONFIRM_BET = 'HIDE_CONFIRM_BET',
 }
 
 // toggle statistic data
@@ -79,6 +81,30 @@ interface HandleBetMessage {
     data: HandleBetData;
 }
 
+// show confirm bet data
+interface ShowConfirmBetData {
+    totalStake: number;
+    betChoice: string;
+    namespace: string;
+    position?: {
+        top: number;
+        left: number;
+    };
+}
+interface ShowConfirmBetMessage {
+    type: MessageType.SHOW_CONFIRM_BET;
+    data: ShowConfirmBetData;
+}
+
+interface HideConfirmBetData {
+    turnOffNotification: boolean;
+}
+// hide confirm bet data
+interface HideConfirmBetMessage {
+    type: MessageType.HIDE_CONFIRM_BET;
+    data: HideConfirmBetData;
+}
+
 // handle input change data
 interface HandleInputChangeData {
     value: string;
@@ -107,6 +133,8 @@ export interface MessageData {
     [MessageType.BET_PANEL_STATE]: BetPanelStateData;
     [MessageType.HANDLE_BET]: HandleBetData;
     [MessageType.HANDLE_INPUT_CHANGE]: HandleInputChangeData;
+    [MessageType.SHOW_CONFIRM_BET]: ShowConfirmBetData;
+    [MessageType.HIDE_CONFIRM_BET]: HideConfirmBetData;
     [MessageType.TOGGLE_STATISTIC]: ToggleStatisticData;
     [MessageType.SET_HEIGHT]: SetHeightData;
     [MessageType.GET_HEIGHT]: any;
@@ -120,6 +148,8 @@ export type WindowMessage =
     | BettingBlockStateMessage
     | BetPanelStateMessage
     | HandleBetMessage
+    | ShowConfirmBetMessage
+    | HideConfirmBetMessage
     | HandleInputChangeMessage
     | GetHeightMessage
     | SetHeightMessage

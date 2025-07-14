@@ -13,6 +13,8 @@ export interface MessageHandlerOptions {
     onBettingBlockState?: (data: any) => void;
     onBetPanelState?: (data: any) => void;
     onHandleBet?: (data: any) => void;
+    onShowConfirmBet?: (data: any) => void;
+    onHideConfirmBet?: (data: any) => void;
     onHandleInputChange?: (value: string) => void;
     onHandleClear?: () => void;
     onToggleStatistic?: (isOpen: boolean) => void;
@@ -31,7 +33,7 @@ export class MessageHandlerManager {
     constructor(config: MessageHandlerConfig, options: MessageHandlerOptions = {}) {
         this.config = config;
         this.options = options;
-        
+
         if (config.enableEncryption && config.encryptionKey) {
             this.messageEncryption = new MessageEncryption(config.encryptionKey);
         }
@@ -48,6 +50,8 @@ export class MessageHandlerManager {
             [MessageType.BETTING_BLOCK_STATE]: this.options.onBettingBlockState,
             [MessageType.BET_PANEL_STATE]: this.options.onBetPanelState,
             [MessageType.HANDLE_BET]: this.options.onHandleBet,
+            [MessageType.SHOW_CONFIRM_BET]: this.options.onShowConfirmBet,
+            [MessageType.HIDE_CONFIRM_BET]: this.options.onHideConfirmBet,
             [MessageType.HANDLE_INPUT_CHANGE]: this.options.onHandleInputChange,
             [MessageType.HANDLE_CLEAR]: this.options.onHandleClear,
             [MessageType.TOGGLE_STATISTIC]: this.options.onToggleStatistic,
@@ -100,7 +104,7 @@ export class MessageHandlerManager {
         handlers: Partial<Record<MessageType, (data: any) => void>>
     ): MessageHandler => {
         return (event: MessageEvent) => {
-            if (!this.config.allowedOrigins.some(origin => 
+            if (!this.config.allowedOrigins.some(origin =>
                 origin === '*' || event.origin.includes(origin)
             )) {
                 console.warn('Message from unauthorized origin:', event.origin);
@@ -149,7 +153,7 @@ export const createMessageHandlerConfig = (environment: string, encryptionKey?: 
 
     return {
         isLocalDevelopment,
-        allowedOrigins: isLocalDevelopment 
+        allowedOrigins: isLocalDevelopment
             ? ['localhost:4551', 'localhost:4200']
             : ['*'],
         encryptionKey,
