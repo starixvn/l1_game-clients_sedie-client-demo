@@ -109,19 +109,14 @@ export const BetPanel: React.FC<BetPanelProps> = ({
             return;
         }
 
-        if (iframeRef.current?.contentWindow) {
-            console.log('Sending HANDLE_BET to iframe:', {
+        sendMessageToSpecificIframe({
+            type: MessageType.HANDLE_BET,
+            data: {
                 amount,
                 betChoice: betPanelState.betChoice,
                 clientSeed: betPanelState.clientSeed
-            });
-            iframeRef.current.contentWindow.postMessage({
-                type: 'HANDLE_BET',
-                amount,
-                betChoice: betPanelState.betChoice,
-                clientSeed: betPanelState.clientSeed
-            }, '*');
-        }
+            }
+        }, iframeRef.current);
 
         handleClose();
     }, [amount, betPanelState.min, betPanelState.max, betPanelState.betChoice, betPanelState.clientSeed, handleClose, iframeRef]);
