@@ -1,14 +1,13 @@
 import './styles/main.scss';
 import './_shared/utils/string-helper';
 import { loadI18n } from './i18n';
-import { AppProvider, useAppContext } from './appProvider';
+import { AppProvider } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
 import IframeContainer from './components/iframe-container';
-import { MessageProvider, useMessageContext } from './_shared/contexts/message-context';
-import { createMessageHandlerConfig, MessageHandlerOptions } from './_shared/utils/message-handler-manager';
+import { MessageProvider } from './_shared/contexts/message-context';
+import { createMessageHandlerConfig } from './_shared/utils/message-handler-manager';
 import { appSettings } from './_shared/app-settings';
-import { MessageType } from './_shared/types/message-types';
 
 interface AppProps extends AppContentProps {
     appEnv: string;
@@ -16,7 +15,6 @@ interface AppProps extends AppContentProps {
     language: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
-    iframeSrc?: string;
     encryptionKey: string;
 }
 
@@ -45,6 +43,7 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
 };
 
 const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
+    const iframeSrc = appSettings.standaloneUrl;
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
@@ -55,7 +54,7 @@ const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryp
     return (
         <>
             <IframeContainer
-                src={'http://localhost:4551/'}
+                src={iframeSrc || 'http://localhost:4551/'}
                 token={token}
                 language={language}
                 renewToken={renewToken}

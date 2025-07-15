@@ -1,5 +1,6 @@
 import { MessageType, WindowMessage, MessageEvent, MessageHandler, MessageData } from '../types/message-types';
 import { EncryptedMessage, MessageEncryption } from '../../utils/encryption';
+import { appSettings } from '../app-settings';
 
 export interface MessageHandlerConfig {
     isLocalDevelopment: boolean;
@@ -148,12 +149,23 @@ export class MessageHandlerManager {
 
 export const createMessageHandlerConfig = (environment: string, encryptionKey?: string): MessageHandlerConfig => {
     const isLocalDevelopment = environment === 'LOCAL' || environment === '';
+    const currentOrigin = window.location.origin;
+
+    let allowedOrigins: string[];
+    if (isLocalDevelopment) {
+        allowedOrigins = [
+            'localhost:4551',
+            appSettings.standaloneUrl,
+            currentOrigin
+        ];
+    } else {
+        // TODO: UAT, SIT, PROD
+        allowedOrigins = ['*'];
+    }
 
     return {
         isLocalDevelopment,
-        allowedOrigins: isLocalDevelopment
-            ? ['localhost:4551', 'localhost:4200']
-            : ['*'],
+        allowedOrigins,
         encryptionKey,
         enableEncryption: !isLocalDevelopment && !!encryptionKey
     };
