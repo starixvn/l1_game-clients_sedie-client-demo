@@ -1,5 +1,5 @@
+import * as gc from '@sg/sg-game-client';
 import React, { useEffect, useState, useCallback } from 'react';
-import classNames from 'classnames';
 import BettingChips from '../betting-chips';
 import './bet-panel.scss';
 import { useMessageContext } from '../../_shared/contexts/message-context';
@@ -44,7 +44,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
     const { sendMessage,sendMessageToSpecificIframe } = useMessageContext();
     const [amount, setAmount] = useState(betPanelState.amount);
     const [warnMsg, setWarnMsg] = useState(betPanelState.warnMsg);
-
+    const t = (key: string) => gc.Translator.translate(key, { languageId: gc.Translator.getCurrentLanguageId() });
     const handleClose = useCallback(() => {
         setAmount(0);
         setWarnMsg('');
@@ -121,7 +121,6 @@ export const BetPanel: React.FC<BetPanelProps> = ({
         handleClose();
     }, [amount, betPanelState.min, betPanelState.max, betPanelState.betChoice, betPanelState.clientSeed, handleClose, iframeRef]);
 
-    const t = (key: string) => key; // Placeholder translation function
     const addCommas = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     const displayAmount = amount > 0 ? addCommas(amount) : '';
     const payout = amount > 0 ? addCommas(amount * betPanelState.odd) : '0.00';
@@ -138,9 +137,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
         }}>
             <div
                 ref={panelRef}
-                className={classNames('c-quick-bet c-quick-bet--bottom-left', {
-                    ['sg-bet-panel__left-dec-100']: betPanelState.isSpecialChoice,
-                })}
+                className={'c-quick-bet c-quick-bet--bottom-left'}
                 style={{
                     pointerEvents: 'auto',
                     position: 'absolute',
@@ -201,7 +198,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                             {betPanelState.odd || ''}
                                                         </span>
                                                     </span>
-                                                    <span className="c-text-oddstype">(Decimal)</span>
+                                                    <span className="c-text-oddstype">({t('Common.decimal')})</span>
                                                 </div>
                                             </div>
 
@@ -210,7 +207,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                     <div className="c-ticket-match-info__row">{betPanelState.vendorName}</div>
                                                     <div className="c-ticket-match-info__row">{betPanelState.gameName}</div>
                                                     <div className="c-ticket-match-info__row">
-                                                        Result No. {betPanelState.clientRoundId}
+                                                        {t(`Common.result_no`)} {betPanelState.clientRoundId}
                                                     </div>
                                                 </div>
                                             </div>
@@ -244,7 +241,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             </div>
                                             <div className="c-betting-stake-info">
                                                 <span className="c-text-group">
-                                                    <span className="c-text-label">Payout: </span>
+                                                    <span className="c-text-label">{t('Common.payout')} </span>
                                                     <span className="c-text-value">{payout}</span>
                                                 </span>
                                             </div>
@@ -265,14 +262,14 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             aria-hidden="true"
                                             onClick={handleBet}
                                         >
-                                            <span className="c-text">Bet</span>
+                                            <span className="c-text">{t('Common.btn_bet')}</span>
                                         </button>
                                         <button
                                             className="c-btn c-btn--default"
                                             aria-hidden="true"
                                             onClick={handleClose}
                                         >
-                                            <span className="c-text">Cancel</span>
+                                            <span className="c-text">{t('Common.btn_cancel')}</span>
                                         </button>
                                     </div>
                                 </div>
