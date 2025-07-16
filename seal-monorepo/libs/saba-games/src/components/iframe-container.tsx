@@ -1,10 +1,9 @@
-import React, { useCallback, useRef, useEffect, useState } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { useIframeHeight } from '../hooks/use-iframe-height';
-import { useBettingPanel } from '../hooks/use-betting-panel';
 import { BettingPanelPortal } from './bet-panel/betting-panel-portal';
 import { ConfirmBetPortal } from './confirm-bet/confirm-bet-portal';
-import { ConfirmBetState } from './confirm-bet';
-import { MessageEncryption, EncryptedMessage } from '../utils/encryption';
+import { MessageEncryption } from '../utils/encryption';
+import { useStatisticData } from '../hooks/use-message-data';
 
 interface IframeContainerProps {
     src: string;
@@ -41,18 +40,8 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     encryptionKey
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const { iframeHeight, requestIframeHeight, handleHeightMessage } = useIframeHeight();
-    const { betPanelState, handleBettingMessage } = useBettingPanel();
-    const [confirmBetState, setConfirmBetState] = useState<ConfirmBetState>({
-        isVisible: false,
-        totalStake: 0,
-        betChoice: '',
-        namespace: '',
-        position: {
-            top: 0,
-            left: 0
-        }
-    });
+    const statisticData = useStatisticData();
+    const { iframeHeight, requestIframeHeight } = useIframeHeight();
 
     const messageEncryption = new MessageEncryption(encryptionKey);
 
@@ -63,62 +52,10 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         iframeRef.current.contentWindow.postMessage(encryptedMessage, '*');
     }, [messageEncryption]);
 
-    const handleConfirmBetMessage = useCallback((data: any) => {
-        console.log('%c[IFRAME_CONTAINER] Received confirm bet message:', 'color: red; font-weight: bold;', data);
-
-        switch (data.type) {
-            case 'SHOW_CONFIRM_BET':
-                console.log('%c[IFRAME_CONTAINER] Showing confirm bet', 'color: red; font-weight: bold;', data.payload);
-                setConfirmBetState({
-                    ...data.payload,
-                    isVisible: true
-                });
-                break;
-            case 'HIDE_CONFIRM_BET':
-                console.log('%c[IFRAME_CONTAINER] Hiding confirm bet', 'color: red; font-weight: bold;');
-                setConfirmBetState(prev => ({
-                    ...prev,
-                    isVisible: false
-                }));
-                break;
-        }
-    }, []);
-
-    const handleMessage = useCallback((event: MessageEvent) => {
-        try {
-            // Validate and decrypt the message
-            const encryptedMessage = event.data as EncryptedMessage;
-            if (!messageEncryption.validateMessage(encryptedMessage)) {
-                console.warn('Received invalid encrypted message');
-                return;
-            }
-
-            const data = messageEncryption.decrypt(encryptedMessage);
-
-            // Handle height update message
-            handleHeightMessage(data);
-
-            // Handle betting related messages
-            handleBettingMessage(data);
-
-            // Handle confirm bet messages
-            handleConfirmBetMessage(data);
-
-            // Handle bet response
-            if (data.type === 'BET_RESPONSE') {
-                console.log('Parent: Received bet response:', data);
-                // Handle bet response if needed
-            }
-        } catch (error) {
-            console.error('Parent: Error processing message:', error);
-        }
-    }, [handleHeightMessage, handleBettingMessage, handleConfirmBetMessage, messageEncryption]);
-
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
         console.log('Iframe loaded from src:', src);
 
-        // Send initial configuration to iframe
         sendEncryptedMessage({
             type: 'INIT_CONFIG',
             payload: {
@@ -127,9 +64,8 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
             }
         });
 
-        // Request initial height
-        setTimeout(() => requestIframeHeight(iframeRef.current), 500);
-    }, [requestIframeHeight, src, token, language, sendEncryptedMessage]);
+        setTimeout(() => requestIframeHeight(iframeRef.current), 300);
+    }, [src, token, language, sendEncryptedMessage, requestIframeHeight]);
 
     // Add effect to check iframe origin on mount and src change
     useEffect(() => {
@@ -149,12 +85,10 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         return () => clearTimeout(timeoutId);
     }, [src]);
 
+    // Request height when scoreboard state changes
     useEffect(() => {
-        window.addEventListener('message', handleMessage);
-        return () => {
-            window.removeEventListener('message', handleMessage);
-        };
-    }, [handleMessage]);
+        setTimeout(() => requestIframeHeight(iframeRef.current), 300);
+    }, [statisticData, requestIframeHeight]);
 
     return (
         <CustomContainer className="mt-3" fluid="xl">
@@ -179,12 +113,9 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                     onLoad={handleIframeLoad}
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
-                {betPanelState && (
-                    <BettingPanelPortal
-                        betPanelState={betPanelState}
-                        iframeRef={iframeRef}
-                    />
-                )}
+                <BettingPanelPortal
+                    iframeRef={iframeRef}
+                />
 
                 <ConfirmBetPortal
                     iframeRef={iframeRef}

@@ -1,7 +1,9 @@
+import * as gc from '@sg/sg-game-client';
 import React, { useEffect, useState, useCallback } from 'react';
-import classNames from 'classnames';
 import BettingChips from '../betting-chips';
 import './bet-panel.scss';
+import { useMessageContext } from '../../_shared/contexts/message-context';
+import { MessageType } from '../../_shared/types/message-types';
 
 export interface BetPanelState {
     isShowBetSlip: boolean;
@@ -14,6 +16,7 @@ export interface BetPanelState {
     min: number;
     max: number;
     payout: string;
+    vendorName: string;
     gameName: string;
     namespace: string;
     clientRoundId: number;
@@ -24,30 +27,56 @@ export interface BetPanelState {
         left: number;
     };
     clientSeed: string;
+    gameIconData?: string;
 }
 
 interface BetPanelProps {
     betPanelState: BetPanelState;
-    isPanelVisible: boolean;
     panelRef: React.RefObject<HTMLDivElement>;
     iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
 export const BetPanel: React.FC<BetPanelProps> = ({
     betPanelState,
-    isPanelVisible,
     panelRef,
     iframeRef
 }) => {
+    const { sendMessage,sendMessageToSpecificIframe } = useMessageContext();
     const [amount, setAmount] = useState(betPanelState.amount);
     const [warnMsg, setWarnMsg] = useState(betPanelState.warnMsg);
+    const t = (key: string) => gc.Translator.translate(key, { languageId: gc.Translator.getCurrentLanguageId() });
+    const handleClose = useCallback(() => {
+        setAmount(0);
+        setWarnMsg('');
+        const bettingBlockData = {
+            isShowBetSlip: false,
+            betChoice: betPanelState.betChoice || '',
+            odd: betPanelState.odd || 0
+        }
+        sendMessage({ type: MessageType.BETTING_BLOCK_STATE, data: bettingBlockData });
+        sendMessageToSpecificIframe({
+            type: MessageType.BETTING_BLOCK_STATE,
+            data: bettingBlockData
+        }, iframeRef.current);
+    }, []);
 
     useEffect(() => {
         setAmount(betPanelState.amount);
         setWarnMsg(betPanelState.warnMsg);
     }, [betPanelState]);
 
-    if (!isPanelVisible) return null;
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+                handleClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [panelRef, handleClose]);
 
     const handleChipAmountChange = (amount: number) => {
         setAmount(amount);
@@ -69,13 +98,6 @@ export const BetPanel: React.FC<BetPanelProps> = ({
         }
     };
 
-    const handleClose = useCallback(() => {
-        setAmount(0);
-        setWarnMsg('');
-        // Post message to parent to hide panel
-        window.parent.postMessage({ type: 'HIDE_PANEL' }, '*');
-    }, []);
-
     const handleClear = useCallback(() => {
         setAmount(0);
         setWarnMsg('');
@@ -87,24 +109,18 @@ export const BetPanel: React.FC<BetPanelProps> = ({
             return;
         }
 
-        if (iframeRef.current?.contentWindow) {
-            console.log('Sending HANDLE_BET to iframe:', {
+        sendMessageToSpecificIframe({
+            type: MessageType.HANDLE_BET,
+            data: {
                 amount,
                 betChoice: betPanelState.betChoice,
                 clientSeed: betPanelState.clientSeed
-            });
-            iframeRef.current.contentWindow.postMessage({
-                type: 'HANDLE_BET',
-                amount,
-                betChoice: betPanelState.betChoice,
-                clientSeed: betPanelState.clientSeed
-            }, '*');
-        }
+            }
+        }, iframeRef.current);
 
         handleClose();
     }, [amount, betPanelState.min, betPanelState.max, betPanelState.betChoice, betPanelState.clientSeed, handleClose, iframeRef]);
 
-    const t = (key: string) => key; // Placeholder translation function
     const addCommas = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     const displayAmount = amount > 0 ? addCommas(amount) : '';
     const payout = amount > 0 ? addCommas(amount * betPanelState.odd) : '0.00';
@@ -121,9 +137,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
         }}>
             <div
                 ref={panelRef}
-                className={classNames('c-quick-bet c-quick-bet--bottom-left', {
-                    ['sg-bet-panel__left-dec-100']: betPanelState.isSpecialChoice,
-                })}
+                className={'c-quick-bet c-quick-bet--bottom-left'}
                 style={{
                     pointerEvents: 'auto',
                     position: 'absolute',
@@ -143,7 +157,20 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                         <div className="c-ticket" data-status="default" data-open="true">
                                             <div className="c-ticket__header">
                                                 <span className="c-text-bettype sg-bet-panel__header-flex">
-                                                    <div className={`sg-bet-panel__game-icon ${betPanelState.namespace}-icon`}></div>
+                                                    {betPanelState.gameIconData ? (
+                                                        <img
+                                                            className="sg-bet-panel__game-icon"
+                                                            src={betPanelState.gameIconData}
+                                                            alt={`${betPanelState.gameName} icon`}
+                                                            style={{
+                                                                width: '24px',
+                                                                height: '24px',
+                                                                marginRight: '4px'
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className={`sg-bet-panel__game-icon ${betPanelState.namespace}-icon`}></div>
+                                                    )}
                                                     <div>
                                                         <div className="game-name">{betPanelState.gameName}</div>
                                                         <div className="bet-option">{betPanelState.betChoice}</div>
@@ -171,16 +198,16 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                                             {betPanelState.odd || ''}
                                                         </span>
                                                     </span>
-                                                    <span className="c-text-oddstype">(Decimal)</span>
+                                                    <span className="c-text-oddstype">({t('Common.decimal')})</span>
                                                 </div>
                                             </div>
 
                                             <div className="c-ticket__info">
                                                 <div className="c-ticket-match-info">
-                                                    <div className="c-ticket-match-info__row">{betPanelState.namespace}</div>
+                                                    <div className="c-ticket-match-info__row">{betPanelState.vendorName}</div>
                                                     <div className="c-ticket-match-info__row">{betPanelState.gameName}</div>
                                                     <div className="c-ticket-match-info__row">
-                                                        Result No. {betPanelState.clientRoundId}
+                                                        {t(`Common.result_no`)} {betPanelState.clientRoundId}
                                                     </div>
                                                 </div>
                                             </div>
@@ -214,7 +241,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             </div>
                                             <div className="c-betting-stake-info">
                                                 <span className="c-text-group">
-                                                    <span className="c-text-label">Payout: </span>
+                                                    <span className="c-text-label">{t('Common.payout')} </span>
                                                     <span className="c-text-value">{payout}</span>
                                                 </span>
                                             </div>
@@ -235,14 +262,14 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                                             aria-hidden="true"
                                             onClick={handleBet}
                                         >
-                                            <span className="c-text">Bet</span>
+                                            <span className="c-text">{t('Common.btn_bet')}</span>
                                         </button>
                                         <button
                                             className="c-btn c-btn--default"
                                             aria-hidden="true"
                                             onClick={handleClose}
                                         >
-                                            <span className="c-text">Cancel</span>
+                                            <span className="c-text">{t('Common.btn_cancel')}</span>
                                         </button>
                                     </div>
                                 </div>
