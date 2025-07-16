@@ -13,7 +13,7 @@ export enum MessageType {
 }
 
 // toggle statistic data
-interface ToggleStatisticData {
+export interface ToggleStatisticData {
     isOpen: boolean;
 }
 
@@ -23,7 +23,7 @@ interface ToggleStatisticMessage {
 }
 
 // update settings data
-interface UpdateSettingsData {
+export interface UpdateSettingsData {
     theme: string;
     isDarkMode: boolean;
     language: string;
@@ -35,7 +35,7 @@ interface UpdateSettingsMessage {
 }
 
 // betting block state data
-interface BettingBlockStateData {
+export interface BettingBlockStateData {
     isShowBetSlip: boolean;
     betChoice: string;
     odd: number;
@@ -47,7 +47,7 @@ interface BettingBlockStateMessage {
 }
 
 // bet panel state data
-interface BetPanelStateData {
+export interface BetPanelStateData {
     top: number;
     left: number;
     betChoice: string;
@@ -69,7 +69,7 @@ interface BetPanelStateMessage {
 }
 
 // handle bet data
-interface HandleBetData {
+export interface HandleBetData {
     amount: number;
     betChoice: string;
     clientSeed: string;
@@ -81,7 +81,7 @@ interface HandleBetMessage {
 }
 
 // show confirm bet data
-interface ShowConfirmBetData {
+export interface ShowConfirmBetData {
     totalStake: number;
     betChoice: string;
     namespace: string;
@@ -95,7 +95,7 @@ interface ShowConfirmBetMessage {
     data: ShowConfirmBetData;
 }
 
-interface HideConfirmBetData {
+export interface HideConfirmBetData {
     turnOffNotification: boolean;
 }
 // hide confirm bet data
@@ -105,7 +105,7 @@ interface HideConfirmBetMessage {
 }
 
 // set height data
-interface SetHeightData {
+export interface SetHeightData {
     height: number;
 }
 interface SetHeightMessage {

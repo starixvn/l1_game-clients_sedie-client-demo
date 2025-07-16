@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { MessageHandlerManager, MessageHandlerConfig, MessageHandlerOptions } from '../utils/message-handler-manager';
-import { WindowMessage, MessageType, MessageData } from '../types/message-types';
+import { WindowMessage, MessageType, MessageData, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData } from '../types/message-types';
 
 interface MessageContextType {
     sendMessage: (message: WindowMessage) => void;
@@ -54,27 +54,27 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
     useEffect(() => {
         const enhancedOptions: MessageHandlerOptions = {
             ...options,
-            onUpdateSettings: (data) => {
+            onUpdateSettings: (data: UpdateSettingsData) => {
                 handleMessage(data, MessageType.UPDATE_SETTINGS);
                 options.onUpdateSettings?.(data);
             },
-            onBettingBlockState: (data) => {
+            onBettingBlockState: (data: BettingBlockStateData) => {
                 handleMessage(data, MessageType.BETTING_BLOCK_STATE);
                 options.onBettingBlockState?.(data);
             },
-            onBetPanelState: (data) => {
+            onBetPanelState: (data: BetPanelStateData) => {
                 handleMessage(data, MessageType.BET_PANEL_STATE);
                 options.onBetPanelState?.(data);
             },
-            onHandleBet: (data) => {
+            onHandleBet: (data: HandleBetData) => {
                 handleMessage(data, MessageType.HANDLE_BET);
                 options.onHandleBet?.(data);
             },
-            onShowConfirmBet: (data) => {
+            onShowConfirmBet: (data: ShowConfirmBetData) => {
                 handleMessage(data, MessageType.SHOW_CONFIRM_BET);
                 options.onShowConfirmBet?.(data);
             },
-            onHideConfirmBet: (data) => {
+            onHideConfirmBet: (data: HideConfirmBetData) => {
                 handleMessage(data, MessageType.HIDE_CONFIRM_BET);
                 options.onHideConfirmBet?.(data);
             },
@@ -82,11 +82,11 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
                 handleMessage(undefined, MessageType.HANDLE_CLEAR);
                 options.onHandleClear?.();
             },
-            onToggleStatistic: (data) => {
+            onToggleStatistic: (data: ToggleStatisticData) => {
                 handleMessage(data, MessageType.TOGGLE_STATISTIC);
                 options.onToggleStatistic?.(data);
             },
-            onSetHeight: (data) => {
+            onSetHeight: (data: SetHeightData) => {
                 handleMessage(data, MessageType.SET_HEIGHT);
                 options.onSetHeight?.(data);
             }
