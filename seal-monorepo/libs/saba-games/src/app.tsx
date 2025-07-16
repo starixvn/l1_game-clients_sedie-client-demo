@@ -1,7 +1,7 @@
 import './styles/main.scss';
 import './_shared/utils/string-helper';
 import { loadI18n } from './i18n';
-import { AppProvider } from './appProvider';
+import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
 import { useEffect } from 'react';
 import IframeContainer from './components/iframe-container';
@@ -43,7 +43,8 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
 };
 
 const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
-    const iframeSrc = appSettings.standaloneUrl;
+    const { appEnv } = useAppContext();
+    const iframeSrc = !appEnv? 'http://localhost:4551/' : appSettings.standaloneUrl;
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
@@ -54,7 +55,7 @@ const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryp
     return (
         <>
             <IframeContainer
-                src={iframeSrc || 'http://localhost:4551/'}
+                src={iframeSrc}
                 token={token}
                 language={language}
                 renewToken={renewToken}
