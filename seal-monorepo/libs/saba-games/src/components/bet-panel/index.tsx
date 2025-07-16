@@ -125,6 +125,17 @@ export const BetPanel: React.FC<BetPanelProps> = ({
     const displayAmount = amount > 0 ? addCommas(amount) : '';
     const payout = amount > 0 ? addCommas(amount * betPanelState.odd) : '0.00';
 
+    const getBetPanelPosition = () => {
+        const rect = iframeRef.current?.getBoundingClientRect();
+        const top = betPanelState.top;
+        const left = betPanelState.left + (rect?.left || 0);
+
+        return {
+            top: top,
+            left: left
+        }
+    }
+
     return (
         <div className="seal-vg-sg-index" style={{
             position: 'fixed',
@@ -141,8 +152,8 @@ export const BetPanel: React.FC<BetPanelProps> = ({
                 style={{
                     pointerEvents: 'auto',
                     position: 'absolute',
-                    top: `${betPanelState.top}px`,
-                    left: `${betPanelState.left}px`,
+                    top: `${getBetPanelPosition().top}px`,
+                    left: `${getBetPanelPosition().left}px`,
                     transform: 'translateY(10px)'
                 }}
             >
