@@ -44,7 +44,7 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
 
 const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
     const { appEnv } = useAppContext();
-    const iframeSrc = !appEnv? 'http://localhost:4551/' : appSettings.standaloneUrl;
+    const iframeSrc = appSettings.standaloneUrl;
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
