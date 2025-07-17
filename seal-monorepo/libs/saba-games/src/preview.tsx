@@ -51,11 +51,8 @@ const Preview = () => {
 
 const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
-    const animationTimeoutRef = useRef<NodeJS.Timeout>();
 
     const appEnv = '';
     const siteId = VIVA88_SITE_ID;
@@ -99,47 +96,6 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
         };
     }, [theme, isDarkMode, language]);
 
-    // Handle messages from parent window
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data.type === MessageType.TOGGLE_STATISTIC) {
-                setIsAnimating(true);
-                setIsExpanded(event.data.isOpen);
-
-                // Clear any existing animation timeout
-                if (animationTimeoutRef.current) {
-                    clearTimeout(animationTimeoutRef.current);
-                }
-            }
-        };
-
-        window.addEventListener('message', handleMessage);
-        return () => {
-            window.removeEventListener('message', handleMessage);
-            if (animationTimeoutRef.current) {
-                clearTimeout(animationTimeoutRef.current);
-            }
-        };
-    }, []);
-
-    // Send height updates when content changes
-    useEffect(() => {
-        if (isAnimating) return; // Don't observe during animation
-
-        const observer = new ResizeObserver(() => {
-            if (isAnimating) return; // Don't update during animation
-            // Debounce resize observer updates
-        });
-
-        if (contentRef.current) {
-            observer.observe(contentRef.current);
-        }
-
-        return () => {
-            observer.disconnect();
-        };
-    }, [isExpanded, isAnimating]);
-
     return (
         <div
             ref={containerRef}
@@ -147,7 +103,6 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
             data-version={process.env.TAG_VERSION}
             className={'seal-vg-sg-index'}
             style={{
-                minHeight: isExpanded ? '400px' : '264px',
                 transition: 'min-height 0.3s ease-in-out',
                 overflow: 'hidden'
             }}
