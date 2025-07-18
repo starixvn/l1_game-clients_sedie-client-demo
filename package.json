@@ -3,9 +3,6 @@
     "version": "1.0.0",
     "description": "Game client demo application",
     "private": true,
-    "workspaces": [
-        "seal-monorepo"
-    ],
     "scripts": {
         "start-saba-games": "cd seal-monorepo && nx serve saba-games",
         "start-hot-league": "cd seal-monorepo && nx serve hot-league-wall",
@@ -23,6 +20,12 @@
     "engines": {
         "node": ">=18.0.0",
         "npm": ">=8.0.0"
+    },
+    "dependencies": {
+        "cross-env": "^7.0.3"
+    },
+    "devDependencies": {
+        "nx": "18.0.4"
     },
     "author": "",
     "license": "MIT"
