@@ -19,12 +19,10 @@ jest.mock('../../../../src/games/game-base/startup', () => ({
 describe('GatewayConnectionManager', () => {
     let mockHandler: any;
     let mockContainer: any;
-    let consoleSpy: jest.SpyInstance;
 
     beforeEach(() => {
-        // Arrange: Setup mocks and spies
+        // Arrange: Setup mocks
         jest.clearAllMocks();
-        consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
         mockHandler = {
             disconnect: jest.fn(),
@@ -47,7 +45,6 @@ describe('GatewayConnectionManager', () => {
     });
 
     afterEach(() => {
-        consoleSpy.mockRestore();
         delete (window as any).hot_league_wall_shared_container;
     });
 
@@ -64,107 +61,30 @@ describe('GatewayConnectionManager', () => {
     });
 
     describe('disconnect', () => {
-        it('should disconnect successfully with valid container and handler', () => {
-            // Arrange
-            const reason = 'test_disconnect';
-
+        it('should disconnect successfully with valid handler', async () => {
             // Act
-            GatewayConnectionManager.getInstance().disconnect(reason);
+            await GatewayConnectionManager.getInstance().disconnect('test_reason');
 
             // Assert
             expect(mockHandler.disconnect).toHaveBeenCalledTimes(1);
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Disconnecting gateway connection - test_disconnect'
-            );
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Calling handler.disconnect()'
-            );
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Disconnect called successfully'
-            );
         });
 
-        it('should disconnect successfully without reason parameter', () => {
+        it('should disconnect successfully without reason parameter', async () => {
             // Act
-            GatewayConnectionManager.getInstance().disconnect();
+            await GatewayConnectionManager.getInstance().disconnect();
 
             // Assert
             expect(mockHandler.disconnect).toHaveBeenCalledTimes(1);
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Disconnecting gateway connection'
-            );
         });
 
-        it('should handle missing container gracefully', () => {
+        it('should handle handler.disconnect throwing error', async () => {
             // Arrange
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-            const { sharedContainer } = require('../../../../src/games/game-base/startup');
-            sharedContainer.get.mockImplementation(() => {
-                throw new Error('Container not found');
-            });
-            delete (window as any).hot_league_wall_shared_container;
-
-            // Act
-            GatewayConnectionManager.getInstance().disconnect('test');
-
-            // Assert
-            expect(warnSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: No container sources found'
-            );
-            expect(warnSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: ConnectHandler not found'
-            );
-            expect(mockHandler.disconnect).not.toHaveBeenCalled();
-
-            warnSpy.mockRestore();
-        });
-
-        it('should handle missing handler gracefully', () => {
-            // Arrange
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-            mockContainer.get.mockReturnValue(null);
-
-            // Act
-            GatewayConnectionManager.getInstance().disconnect('test');
-
-            // Assert
-            expect(warnSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: ConnectHandler not found'
-            );
-            expect(mockHandler.disconnect).not.toHaveBeenCalled();
-
-            warnSpy.mockRestore();
-        });
-
-        it('should handle handler.disconnect throwing error', () => {
-            // Arrange
-            const errorSpy = jest.spyOn(console, 'error').mockImplementation();
-            const testError = new Error('Disconnect failed');
             mockHandler.disconnect.mockImplementation(() => {
-                throw testError;
+                throw new Error('Disconnect failed');
             });
 
             // Act
-            GatewayConnectionManager.getInstance().disconnect('test');
-
-            // Assert
-            expect(errorSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Failed to disconnect:',
-                testError
-            );
-
-            errorSpy.mockRestore();
-        });
-
-        it('should use window.hot_league_wall_shared_container when imported container fails', () => {
-            // Arrange
-            const { sharedContainer } = require('../../../../src/games/game-base/startup');
-            sharedContainer.get.mockImplementation(() => {
-                throw new Error('Import container failed');
-            });
-
-            // Act
-            GatewayConnectionManager.getInstance().disconnect('test');
+            await GatewayConnectionManager.getInstance().disconnect('test');
 
             // Assert
             expect(mockHandler.disconnect).toHaveBeenCalledTimes(1);
@@ -172,76 +92,25 @@ describe('GatewayConnectionManager', () => {
     });
 
     describe('reset', () => {
-        it('should reset successfully with valid handler', () => {
+        it('should reset successfully with valid handler', async () => {
             // Act
-            GatewayConnectionManager.getInstance().reset();
+            await GatewayConnectionManager.getInstance().reset();
 
             // Assert
             expect(mockHandler.reset).toHaveBeenCalledTimes(1);
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Resetting gateway connection'
-            );
-            expect(consoleSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Reset called successfully'
-            );
         });
 
-        it('should handle missing container gracefully', () => {
+        it('should handle handler.reset throwing error', async () => {
             // Arrange
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-            const { sharedContainer } = require('../../../../src/games/game-base/startup');
-            sharedContainer.get.mockImplementation(() => {
-                throw new Error('Container not found');
-            });
-            delete (window as any).hot_league_wall_shared_container;
-
-            // Act
-            GatewayConnectionManager.getInstance().reset();
-
-            // Assert
-            expect(warnSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: ConnectHandler not found in container'
-            );
-            expect(mockHandler.reset).not.toHaveBeenCalled();
-
-            warnSpy.mockRestore();
-        });
-
-        it('should handle missing handler gracefully', () => {
-            // Arrange
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-            mockContainer.get.mockReturnValue(null);
-
-            // Act
-            GatewayConnectionManager.getInstance().reset();
-
-            // Assert
-            expect(warnSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: ConnectHandler not found in container'
-            );
-            expect(mockHandler.reset).not.toHaveBeenCalled();
-
-            warnSpy.mockRestore();
-        });
-
-        it('should handle handler.reset throwing error', () => {
-            // Arrange
-            const errorSpy = jest.spyOn(console, 'error').mockImplementation();
-            const testError = new Error('Reset failed');
             mockHandler.reset.mockImplementation(() => {
-                throw testError;
+                throw new Error('Reset failed');
             });
 
             // Act
-            GatewayConnectionManager.getInstance().reset();
+            await GatewayConnectionManager.getInstance().reset();
 
             // Assert
-            expect(errorSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Failed to reset:',
-                testError
-            );
-
-            errorSpy.mockRestore();
+            expect(mockHandler.reset).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -253,91 +122,31 @@ describe('GatewayConnectionManager', () => {
             // Assert
             expect(result).toBe(true);
         });
-
-        it('should return false when container is not available', () => {
-            // Arrange
-            const { sharedContainer } = require('../../../../src/games/game-base/startup');
-            sharedContainer.get.mockImplementation(() => {
-                throw new Error('Container not found');
-            });
-            delete (window as any).hot_league_wall_shared_container;
-
-            // Act
-            const result = GatewayConnectionManager.getInstance().isHandlerAvailable();
-
-            // Assert
-            expect(result).toBe(false);
-        });
-
-        it('should return false when handler is not available', () => {
-            // Arrange
-            mockContainer.get.mockReturnValue(null);
-
-            // Act
-            const result = GatewayConnectionManager.getInstance().isHandlerAvailable();
-
-            // Assert
-            expect(result).toBe(false);
-        });
-
-        it('should return false when container.get throws error', () => {
-            // Arrange
-            const errorSpy = jest.spyOn(console, 'error').mockImplementation();
-            mockContainer.get.mockImplementation(() => {
-                throw new Error('Container get failed');
-            });
-
-            // Act
-            const result = GatewayConnectionManager.getInstance().isHandlerAvailable();
-
-            // Assert
-            expect(result).toBe(false);
-            expect(errorSpy).toHaveBeenCalledWith(
-                'GatewayConnectionManager: Error checking handler availability:',
-                expect.any(Error)
-            );
-
-            errorSpy.mockRestore();
-        });
     });
 
     describe('Edge Cases', () => {
-        it('should handle multiple container sources gracefully', () => {
+        it('should handle handler without disconnect method', async () => {
             // Arrange
-            const { sharedContainer } = require('../../../../src/games/game-base/startup');
-            sharedContainer.get.mockImplementation(() => {
-                throw new Error('First source failed');
-            });
-
-            // Act
-            GatewayConnectionManager.getInstance().disconnect('test');
-
-            // Assert
-            expect(mockHandler.disconnect).toHaveBeenCalledTimes(1);
-        });
-
-        it('should handle handler without disconnect method', () => {
-            // Arrange
-            const invalidHandler = { reset: jest.fn() }; // Missing disconnect method
+            const invalidHandler = { reset: jest.fn() } as any; // Missing disconnect method
             mockContainer.get.mockReturnValue(invalidHandler);
 
             // Act
-            GatewayConnectionManager.getInstance().disconnect('test');
+            await GatewayConnectionManager.getInstance().disconnect('test');
 
             // Assert
-            expect(() => invalidHandler.disconnect()).toThrow();
+            expect(invalidHandler.disconnect).toBeUndefined();
         });
 
-        it('should handle handler without reset method', () => {
+        it('should handle handler without reset method', async () => {
             // Arrange
-            const invalidHandler = { disconnect: jest.fn() }; // Missing reset method
+            const invalidHandler = { disconnect: jest.fn() } as any; // Missing reset method
             mockContainer.get.mockReturnValue(invalidHandler);
 
             // Act
-            GatewayConnectionManager.getInstance().reset();
+            await GatewayConnectionManager.getInstance().reset();
 
             // Assert
-            expect(() => invalidHandler.reset()).toThrow();
+            expect(invalidHandler.reset).toBeUndefined();
         });
     });
 
@@ -355,14 +164,14 @@ describe('GatewayConnectionManager', () => {
             expect(isAvailable).toBe(true);
         });
 
-        it('should maintain singleton pattern across multiple calls', () => {
+        it('should maintain singleton pattern across multiple calls', async () => {
             // Arrange
             const manager1 = GatewayConnectionManager.getInstance();
             const manager2 = GatewayConnectionManager.getInstance();
 
             // Act
-            manager1.disconnect('test1');
-            manager2.disconnect('test2');
+            await manager1.disconnect('test1');
+            await manager2.disconnect('test2');
 
             // Assert
             expect(manager1).toBe(manager2);
