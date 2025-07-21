@@ -4,11 +4,15 @@ import { BettingPanelPortal } from './bet-panel/betting-panel-portal';
 import { ConfirmBetPortal } from './confirm-bet/confirm-bet-portal';
 import { MessageEncryption } from '../utils/encryption';
 import { useStatisticData } from '../hooks/use-message-data';
+import { useMessageContext } from '../_shared/contexts/message-context';
+import { MessageType } from '../_shared/types/message-types';
 
 interface IframeContainerProps {
     src: string;
     token: string;
     language: string;
+    theme: string;
+    isDarkMode: boolean;
     renewToken?: Function;
     encryptionKey: string;
 }
@@ -36,10 +40,13 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     src,
     token,
     language,
+    theme,
+    isDarkMode,
     renewToken,
     encryptionKey
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const { sendMessageToSpecificIframe } = useMessageContext();
     const statisticData = useStatisticData();
     const { iframeHeight, requestIframeHeight } = useIframeHeight();
 
@@ -89,6 +96,17 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     useEffect(() => {
         setTimeout(() => requestIframeHeight(iframeRef.current), 300);
     }, [statisticData, requestIframeHeight]);
+
+    useEffect(() => {
+        sendMessageToSpecificIframe({
+            type: MessageType.UPDATE_SETTINGS,
+            data: {
+                theme,
+                isDarkMode,
+                language
+            }
+        }, iframeRef.current);
+    }, [language, theme, isDarkMode]);
 
     return (
         <CustomContainer className="mt-3" fluid="xl">

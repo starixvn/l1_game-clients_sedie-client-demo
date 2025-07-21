@@ -5,9 +5,8 @@ import App from './app';
 import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { appSettings } from './_shared/app-settings/vgaming-index';
-import { MessageType } from './_shared/types/message-types';
 
 declare global {
     interface Window {
@@ -61,41 +60,6 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
     const encryptionKey = appSettings.encryptionKey || 'development-key';
     useSentryInit();
 
-    useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
-    }, [theme, isDarkMode]);
-
-    //Send theme and language updates to iframe content
-    useEffect(() => {
-        const iframe = document.querySelector('iframe');
-
-        const sendSettings = () => {
-            if (iframe?.contentWindow) {
-                iframe.contentWindow.postMessage({
-                    type: 'UPDATE_SETTINGS',
-                    settings: {
-                        theme,
-                        isDarkMode,
-                        language
-                    }
-                }, '*');
-            } else {
-                console.warn('Iframe or contentWindow not found');
-            }
-        };
-
-        // Send settings when iframe loads
-        iframe?.addEventListener('load', sendSettings);
-
-        // Also try to send immediately in case iframe is already loaded
-        sendSettings();
-
-        return () => {
-            iframe?.removeEventListener('load', sendSettings);
-        };
-    }, [theme, isDarkMode, language]);
-
     return (
         <div
             ref={containerRef}
@@ -115,6 +79,8 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
                             appEnv={appEnv}
                             token={token}
                             language={language}
+                            theme={theme}
+                            isDarkMode={isDarkMode}
                             siteId={siteId}
                             renewToken={renewToken}
                             updateBalanceCallback={updateBalanceCallback}

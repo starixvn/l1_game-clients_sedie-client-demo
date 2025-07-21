@@ -21,18 +21,22 @@ interface AppProps extends AppContentProps {
 interface AppContentProps {
     token: string;
     language: string;
+    theme: string;
+    isDarkMode: boolean;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
     encryptionKey: string;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, encryptionKey }: AppProps) => {
+const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, updateBalanceCallback, encryptionKey }: AppProps) => {
     return (
         <MessageProvider config={createMessageHandlerConfig(appEnv, encryptionKey)} options={{}}>
             <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
                 <AppContent
                     token={token}
                     language={language}
+                    theme={theme}
+                    isDarkMode={isDarkMode}
                     renewToken={renewToken}
                     updateBalanceCallback={updateBalanceCallback}
                     encryptionKey={encryptionKey}
@@ -42,7 +46,7 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
     );
 };
 
-const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
+const AppContent = ({ token, language, theme, isDarkMode, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
     const { appEnv } = useAppContext();
     const iframeSrc = appSettings.standaloneUrl;
     useEffect(() => {
@@ -58,6 +62,8 @@ const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryp
                 src={iframeSrc}
                 token={token}
                 language={language}
+                theme={theme}
+                isDarkMode={isDarkMode}
                 renewToken={renewToken}
                 encryptionKey={encryptionKey}
             />
