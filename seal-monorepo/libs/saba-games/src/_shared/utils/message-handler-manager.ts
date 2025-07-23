@@ -1,4 +1,4 @@
-import { MessageType, WindowMessage, MessageEvent, MessageHandler, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData } from '../types/message-types';
+import { MessageType, WindowMessage, MessageEvent, MessageHandler, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData, SetTokenData } from '../types/message-types';
 import { EncryptedMessage, MessageEncryption } from '../../utils/encryption';
 import { appSettings } from '../app-settings';
 
@@ -10,6 +10,7 @@ export interface MessageHandlerConfig {
 }
 
 export interface MessageHandlerOptions {
+    onSetToken?: (data: SetTokenData) => void;
     onUpdateSettings?: (data: UpdateSettingsData) => void;
     onBettingBlockState?: (data: BettingBlockStateData) => void;
     onBetPanelState?: (data: BetPanelStateData) => void;
@@ -46,6 +47,7 @@ export class MessageHandlerManager {
         }
 
         const handlers: Partial<Record<MessageType, (data: any) => void>> = {
+            [MessageType.SET_TOKEN]: this.options.onSetToken,
             [MessageType.UPDATE_SETTINGS]: this.options.onUpdateSettings,
             [MessageType.BETTING_BLOCK_STATE]: this.options.onBettingBlockState,
             [MessageType.BET_PANEL_STATE]: this.options.onBetPanelState,

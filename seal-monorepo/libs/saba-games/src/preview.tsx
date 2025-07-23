@@ -129,7 +129,6 @@ const TabContent: React.FC<TabContentProps> = ({
                         }}
                     >
                         <div ref={contentRef}>
-                            <ProviderSetDropDown />
                             <Routes>
                                 <Route path="*" element={
                                     <App

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { MessageHandlerManager, MessageHandlerConfig, MessageHandlerOptions } from '../utils/message-handler-manager';
-import { WindowMessage, MessageType, MessageData, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData } from '../types/message-types';
+import { WindowMessage, MessageType, MessageData, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData, SetTokenData } from '../types/message-types';
 
 interface MessageContextType {
     sendMessage: (message: WindowMessage) => void;
@@ -54,6 +54,10 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
     useEffect(() => {
         const enhancedOptions: MessageHandlerOptions = {
             ...options,
+            onSetToken: (data: SetTokenData) => {
+                handleMessage(data, MessageType.SET_TOKEN);
+                options.onSetToken?.(data);
+            },
             onUpdateSettings: (data: UpdateSettingsData) => {
                 handleMessage(data, MessageType.UPDATE_SETTINGS);
                 options.onUpdateSettings?.(data);

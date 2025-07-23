@@ -41,7 +41,6 @@ const SabaGamesGroup = ({
                 isDarkMode={isDarkMode}
                 siteId={siteId}
                 renewToken={renewToken}
-                encryptionKey={encryptionKey}
             />
         </div>
     );

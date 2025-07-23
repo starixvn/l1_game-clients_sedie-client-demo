@@ -26,8 +26,7 @@ const SabaGamesGroup = ({
     siteId = '',
     language = 'en',
     theme = 'default',
-    updateBalanceCallback = null,
-    encryptionKey = appSettings.encryptionKey || 'development-key'
+    updateBalanceCallback = null
 }) => {
     const platform = PLATFORM_TYPE_MAPPING[platformType] || '';
     useSentryInit({ siteId, appEnv });
@@ -43,7 +42,6 @@ const SabaGamesGroup = ({
                 siteId={siteId}
                 renewToken={renewToken}
                 updateBalanceCallback={updateBalanceCallback}
-                encryptionKey={encryptionKey}
             />
         </div>
     );

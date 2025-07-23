@@ -2,7 +2,6 @@ import React, { useCallback, useRef, useEffect } from 'react';
 import { useIframeHeight } from '../hooks/use-iframe-height';
 import { BettingPanelPortal } from './bet-panel/betting-panel-portal';
 import { ConfirmBetPortal } from './confirm-bet/confirm-bet-portal';
-import { MessageEncryption } from '../utils/encryption';
 import { useStatisticData } from '../hooks/use-message-data';
 import { useMessageContext } from '../_shared/contexts/message-context';
 import { MessageType } from '../_shared/types/message-types';
@@ -14,7 +13,6 @@ interface IframeContainerProps {
     theme: string;
     isDarkMode: boolean;
     renewToken?: Function;
-    encryptionKey: string;
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -42,37 +40,32 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     language,
     theme,
     isDarkMode,
-    renewToken,
-    encryptionKey
+    renewToken
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { sendMessageToSpecificIframe } = useMessageContext();
     const statisticData = useStatisticData();
     const { iframeHeight, requestIframeHeight } = useIframeHeight();
 
-    const messageEncryption = new MessageEncryption(encryptionKey);
-
-    const sendEncryptedMessage = useCallback((data: any) => {
-        if (!iframeRef.current?.contentWindow) return;
-
-        const encryptedMessage = messageEncryption.encrypt(data);
-        iframeRef.current.contentWindow.postMessage(encryptedMessage, '*');
-    }, [messageEncryption]);
 
     // Handle iframe load event
     const handleIframeLoad = useCallback(() => {
         console.log('Iframe loaded from src:', src);
+        setTimeout(() => {
+            requestIframeHeight(iframeRef.current);
+        }, 500);
+    }, [src, requestIframeHeight]);
 
-        sendEncryptedMessage({
-            type: 'INIT_CONFIG',
-            payload: {
-                token,
-                language
-            }
-        });
-
-        setTimeout(() => requestIframeHeight(iframeRef.current), 300);
-    }, [src, token, language, sendEncryptedMessage, requestIframeHeight]);
+    useEffect(() => {
+        if (token) {
+            sendMessageToSpecificIframe({
+                type: MessageType.SET_TOKEN,
+                data: {
+                    token
+                }
+            }, iframeRef.current);
+        }
+    }, [token]);
 
     // Add effect to check iframe origin on mount and src change
     useEffect(() => {

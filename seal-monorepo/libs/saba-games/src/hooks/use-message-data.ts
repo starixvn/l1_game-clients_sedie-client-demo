@@ -7,6 +7,10 @@ export const useMessageData = <T extends MessageType>(messageType: T) => {
     return getMessageData(messageType);
 };
 
+export const useTokenData = (): MessageData[MessageType.SET_TOKEN] | undefined => {
+    return useMessageData(MessageType.SET_TOKEN);
+};
+
 export const useBetPanelData = (): MessageData[MessageType.BET_PANEL_STATE] | undefined => {
     return useMessageData(MessageType.BET_PANEL_STATE);
 };

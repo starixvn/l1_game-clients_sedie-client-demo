@@ -1,5 +1,6 @@
 // Message types enum
 export enum MessageType {
+    SET_TOKEN = 'SET_TOKEN',
     UPDATE_SETTINGS = 'UPDATE_SETTINGS',
     BETTING_BLOCK_STATE = 'BETTING_BLOCK_STATE',
     BET_PANEL_STATE = 'BET_PANEL_STATE',
@@ -10,6 +11,16 @@ export enum MessageType {
     SET_HEIGHT = 'SET_HEIGHT',
     SHOW_CONFIRM_BET = 'SHOW_CONFIRM_BET',
     HIDE_CONFIRM_BET = 'HIDE_CONFIRM_BET',
+}
+
+// set token data
+export interface SetTokenData {
+    token: string;
+}
+
+interface SetTokenMessage {
+    type: MessageType.SET_TOKEN;
+    data: SetTokenData;
 }
 
 // toggle statistic data
@@ -118,6 +129,7 @@ interface GetHeightMessage {
 }
 
 export interface MessageData {
+    [MessageType.SET_TOKEN]: SetTokenData;
     [MessageType.UPDATE_SETTINGS]: UpdateSettingsData;
     [MessageType.BETTING_BLOCK_STATE]: BettingBlockStateData;
     [MessageType.BET_PANEL_STATE]: BetPanelStateData;
@@ -132,6 +144,7 @@ export interface MessageData {
 
 
 export type WindowMessage =
+    | SetTokenMessage
     | ToggleStatisticMessage
     | UpdateSettingsMessage
     | BettingBlockStateMessage
