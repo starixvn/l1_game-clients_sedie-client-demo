@@ -1,8 +1,7 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useIframeHeight } from '../hooks/use-iframe-height';
 import { BettingPanelPortal } from './bet-panel/betting-panel-portal';
 import { ConfirmBetPortal } from './confirm-bet/confirm-bet-portal';
-import { useStatisticData } from '../hooks/use-message-data';
 import { useMessageContext } from '../_shared/contexts/message-context';
 import { MessageType } from '../_shared/types/message-types';
 
@@ -44,17 +43,8 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { sendMessageToSpecificIframe } = useMessageContext();
-    const statisticData = useStatisticData();
-    const { iframeHeight, requestIframeHeight } = useIframeHeight();
+    const { iframeHeight } = useIframeHeight();
 
-
-    // Handle iframe load event
-    const handleIframeLoad = useCallback(() => {
-        console.log('Iframe loaded from src:', src);
-        setTimeout(() => {
-            requestIframeHeight(iframeRef.current);
-        }, 500);
-    }, [src, requestIframeHeight]);
 
     useEffect(() => {
         if (token) {
@@ -85,10 +75,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         return () => clearTimeout(timeoutId);
     }, [src]);
 
-    // Request height when scoreboard state changes
-    useEffect(() => {
-        setTimeout(() => requestIframeHeight(iframeRef.current), 300);
-    }, [statisticData, requestIframeHeight]);
 
     useEffect(() => {
         sendMessageToSpecificIframe({
@@ -121,7 +107,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
                     }}
                     scrolling="no"
                     title="External Content"
-                    onLoad={handleIframeLoad}
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
                 <BettingPanelPortal
