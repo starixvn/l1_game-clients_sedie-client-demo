@@ -3,7 +3,7 @@ import './_shared/utils/string-helper';
 import { loadI18n } from './i18n';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import IframeContainer from './components/iframe-container';
 import { MessageProvider } from './_shared/contexts/message-context';
 import { createMessageHandlerConfig } from './_shared/utils/message-handler-manager';
@@ -47,6 +47,8 @@ const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, u
 const AppContent = ({ token, language, theme, isDarkMode, renewToken, updateBalanceCallback }: AppContentProps) => {
     const { appEnv } = useAppContext();
     const gameSrc = appSettings.standaloneUrl;
+    const [iframeSrc, setIframeSrc] = useState<string>('');
+
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
@@ -76,7 +78,10 @@ const AppContent = ({ token, language, theme, isDarkMode, renewToken, updateBala
         return url.toString();
     }, [gameSrc, token]);
 
-    const iframeSrc = buildIframeSrc();
+    useEffect(() => {
+        const src = buildIframeSrc();
+        setIframeSrc(src);
+    }, [buildIframeSrc]);
 
     loadI18n(language);
     return (
