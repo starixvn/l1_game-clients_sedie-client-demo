@@ -3,12 +3,14 @@
     "version": "1.0.0",
     "description": "Game client demo application",
     "private": true,
-    "workspaces": [
-        "seal-monorepo"
-    ],
     "scripts": {
         "start-saba-games": "cd seal-monorepo && nx serve saba-games",
         "start-hot-league": "cd seal-monorepo && nx serve hot-league-wall",
+        "start-hot-league:with-sso-controls": "cd seal-monorepo && cross-env NODE_ENV=development SIMULATOR_CONFIG=\"{\\\"simulationMode\\\":{\\\"enabled\\\":true},\\\"simulatorConfigs\\\":{\\\"enabled\\\":true,\\\"defaultGameType\\\":\\\"rng-soccer\\\"}}\" nx serve hot-league-wall --port=4203",
+        "start-hot-league:no-sso-controls": "cd seal-monorepo && cross-env NODE_ENV=development SIMULATOR_CONFIG=\"{\\\"simulationMode\\\":{\\\"enabled\\\":false},\\\"simulatorConfigs\\\":{\\\"enabled\\\":false,\\\"defaultGameType\\\":\\\"rng-soccer\\\"}}\" nx serve hot-league-wall --port=4202",
+        "test-env-vars": "cd seal-monorepo/libs/hot-league-wall && cross-env NODE_ENV=development SIMULATOR_CONFIG=\"{\\\"simulationMode\\\":{\\\"enabled\\\":true},\\\"simulatorConfigs\\\":{\\\"enabled\\\":true,\\\"defaultGameType\\\":\\\"rng-soccer\\\"}}\" node test-env-vars.js",
+        "test-sso-controls:enabled": "cd seal-monorepo/libs/hot-league-wall && cross-env NODE_ENV=development SIMULATOR_CONFIG=\"{\\\"simulationMode\\\":{\\\"enabled\\\":true},\\\"simulatorConfigs\\\":{\\\"enabled\\\":true,\\\"defaultGameType\\\":\\\"rng-soccer\\\"}}\" node -e \"console.log('Should show SSO controls: true')\"",
+        "test-sso-controls:disabled": "cd seal-monorepo/libs/hot-league-wall && cross-env NODE_ENV=development SIMULATOR_CONFIG=\"{\\\"simulationMode\\\":{\\\"enabled\\\":false},\\\"simulatorConfigs\\\":{\\\"enabled\\\":false,\\\"defaultGameType\\\":\\\"rng-soccer\\\"}}\" node -e \"console.log('Should show SSO controls: false')\"",
         "test-saba-games": "cd seal-monorepo && nx test saba-games",
         "test-hot-league-wall": "cd seal-monorepo && nx test hot-league-wall",
         "test-coverage:saba": "cd seal-monorepo && nx test saba-games --coverage",
@@ -18,6 +20,12 @@
     "engines": {
         "node": ">=18.0.0",
         "npm": ">=8.0.0"
+    },
+    "dependencies": {
+        "cross-env": "^7.0.3"
+    },
+    "devDependencies": {
+        "nx": "18.0.4"
     },
     "author": "",
     "license": "MIT"

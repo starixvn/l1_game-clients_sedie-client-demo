@@ -10,7 +10,7 @@ interface RNGSoccerBetOptionsProps {
     gameName: string;
     namespace: string;
     language: string;
-    onBet: (symbol: string, amount: number) => void;
+    onBet: () => void;
 }
 
 const betOptionsList = [
@@ -30,7 +30,9 @@ export default class RNGSoccerBetOptions extends BetOptions {
                 gameName={this.props.gameName}
                 namespace={this.props.namespace}
                 settlementResult={settlementResult}
-                onBet={this.props.onBet}
+                onBet={() => {
+                    this.props.onBet();
+                }}
             >
                 <div className={`${styles['container-bets']} ${rngSoccerStyles['padding-bet']}`}>
                     <span className={rngSoccerStyles['bet-choice-text']} title={name}>{name}</span>
@@ -41,10 +43,8 @@ export default class RNGSoccerBetOptions extends BetOptions {
     }
 
     isBoostedChoice = (choice: string, boostedChoices: string[] | null) => {
-        if (!boostedChoices) {
-            return false;
-        }
-        return boostedChoices.includes(choice);
+        const result = boostedChoices ? boostedChoices.includes(choice) : false;
+        return result;
     };
 
     render() {

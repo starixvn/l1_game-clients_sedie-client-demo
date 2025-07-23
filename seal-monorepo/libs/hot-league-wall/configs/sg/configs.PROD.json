@@ -1,6 +1,6 @@
 {
     "sentry": {
-        "dsn": "https://19b3909c434341f0b13eb3a8529e5862@sentry.sabagame.com/9",
+        "dsn": "",
         "environment": "PROD"
     },
     "systemType": "SG",

@@ -1,10 +1,9 @@
-import { ROUND_STATE, RoundTimeStore } from "@sg/sg-game-client/dist/game/rounds";
-import { render } from "@sg/sg-observer";
-import classnames from "classnames";
-import Styles from "./count-down-timer.module.scss";
-import { IPropsObserver, IStateObserver, ObserverComponent } from "../observer-component/observer-component";
-import { formatSecondsToTime } from "../../utils/count-down-format";
-
+import { ROUND_STATE, RoundTimeStore } from '@sg/sg-game-client/dist/game/rounds';
+import { render } from '@sg/sg-observer';
+import classnames from 'classnames';
+import Styles from './count-down-timer.module.scss';
+import { IPropsObserver, IStateObserver, ObserverComponent } from '../observer-component/observer-component';
+import { formatSecondsToTime } from '../../utils/count-down-format';
 
 export interface ICountDownTimerProps extends IPropsObserver {
     onComplete?: () => void;
@@ -40,12 +39,12 @@ export default class CountDownTimer extends ObserverComponent<ICountDownTimerPro
     }
 
     protected getTimerContentConfig(roundState: string) {
-        const { PLACING_BET, LOCKING_BET, SHOW_ANIMATION_RESULT, SHOW_RESULT, STOP_GAME_LOOP, STARTING_ROUND } = ROUND_STATE;
+        const { PLACING_BET, LOCKING_BET, SHOW_ANIMATION_RESULT, SHOW_RESULT, STOP_GAME_LOOP, STARTING_ROUND, NONE } = ROUND_STATE;
         return {
             showTimer: [PLACING_BET].includes(roundState),
             showNoMoreBet: [LOCKING_BET].includes(roundState),
             showResult: [SHOW_ANIMATION_RESULT, STOP_GAME_LOOP, SHOW_RESULT].includes(roundState),
-            startRound: [STARTING_ROUND].includes(roundState),
+            startRound: [STARTING_ROUND, NONE].includes(roundState),
         };
     }
 
@@ -60,6 +59,11 @@ export default class CountDownTimer extends ObserverComponent<ICountDownTimerPro
         if (config.showTimer || config.showNoMoreBet) {
             return formatSecondsToTime(countdownTimer);
         }
+
+        if (config.startRound) {
+            return <></>;
+        }
+
         return (
             <div className={Styles['waiting-container']}>
                 <div className={Styles['dot-elastic']}></div>
@@ -80,15 +84,17 @@ export default class CountDownTimer extends ObserverComponent<ICountDownTimerPro
             <div className={classnames(Styles['game-countdown-wrapper'], customStyles?.wrapper)}>
                 <div className={Styles['count-down']}>
                     <div
-                        className={classnames(Styles['timer-wrapper'], {
-                            [Styles['placing-bet-state']]: roundState === ROUND_STATE.PLACING_BET,
-                            [Styles['no-more-bet-state']]: roundState === ROUND_STATE.LOCKING_BET,
-                            [Styles['show-result-state']]: isShowResult,
-                        }, customStyles?.timer)}
+                        className={classnames(
+                            Styles['timer-wrapper'],
+                            {
+                                [Styles['placing-bet-state']]: roundState === ROUND_STATE.PLACING_BET,
+                                [Styles['no-more-bet-state']]: roundState === ROUND_STATE.LOCKING_BET,
+                                [Styles['show-result-state']]: isShowResult,
+                            },
+                            customStyles?.timer,
+                        )}
                     >
-                        <div className={Styles['counting-text']}>
-                            {content}
-                        </div>
+                        <div className={Styles['counting-text']}>{content}</div>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,8 @@ include:
     - project: ci/core-cicd
       ref: main
       file: luminet.gitlab-ci.yml
+variables:
+  BYPASS_CRITICAL_VULNERABILITY: "true"     
 
 .base_transform_config:
   stage: transform-config

@@ -44,7 +44,8 @@ class RNGSoccerBigRoadConverter extends Converter<RNGSoccerSettlementItemResult>
     }
 
     convert(group: RNGSoccerSettlementItemResult[]): boolean {
-        return group.filter((result) => (result as any)[this.positiveKey()]).length !== 0;
+        const result = group.filter((result) => (result as any)[this.positiveKey()]).length !== 0;
+        return result;
     }
 }
 
@@ -86,6 +87,7 @@ export class RNGSoccerScoreboard extends ObserverComponent<Props, IBaccaratScore
         }
 
         const input = [...rounds].map((round) => round.settlementResult as unknown as RNGSoccerSettlementItemResult).reverse();
+
         this.bigRoad.initialize(input, isLockingBet);
         const rows = this.bigRoad.rows();
 

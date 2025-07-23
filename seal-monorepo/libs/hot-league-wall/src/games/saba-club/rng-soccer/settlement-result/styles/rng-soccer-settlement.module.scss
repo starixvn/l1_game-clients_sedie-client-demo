@@ -52,7 +52,7 @@
 
     .card-section {
         @include card-style;
-        
+
         img {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
@@ -66,7 +66,8 @@
 }
 
 // Score styling
-.score, .result {
+.score,
+.result {
     @include score-box;
 }
 
@@ -84,10 +85,11 @@
 .dots {
     width: $dots-size;
     height: $dots-size;
-    background: radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 0% 50%, 
-                radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 50% 50%, 
-                radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 100% 50%;
-    background-size: calc(100%/3) 13.4px;
+    background:
+        radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 0% 50%,
+        radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 50% 50%,
+        radial-gradient(circle closest-side, $color-green 90%, rgba(0, 0, 0, 0)) 100% 50%;
+    background-size: calc(100% / 3) 13.4px;
     background-repeat: no-repeat;
     animation: dots-animation $animation-duration-very-slow infinite linear;
 }
@@ -96,11 +98,6 @@
 .settlement-container {
     @include flex-center;
     @include fullsize-container;
-}
-
-// Score animation
-.score-pop-in {
-    animation: scoreAppear $animation-duration-medium ease-out forwards;
 }
 
 /* Card animations */
@@ -167,19 +164,31 @@
 
 @keyframes dots-7ar3yq {
     20% {
-        background-position: 0% 0%, 50% 50%, 100% 50%;
+        background-position:
+            0% 0%,
+            50% 50%,
+            100% 50%;
     }
 
     40% {
-        background-position: 0% 100%, 50% 0%, 100% 50%;
+        background-position:
+            0% 100%,
+            50% 0%,
+            100% 50%;
     }
 
     60% {
-        background-position: 0% 50%, 50% 100%, 100% 0%;
+        background-position:
+            0% 50%,
+            50% 100%,
+            100% 0%;
     }
 
     80% {
-        background-position: 0% 50%, 50% 50%, 100% 100%;
+        background-position:
+            0% 50%,
+            50% 50%,
+            100% 100%;
     }
 }
 
@@ -201,4 +210,4 @@
     100% {
         transform: rotate(360deg);
     }
-} 
+}

@@ -1,9 +1,12 @@
 // Theme colors
 // Using CSS variables for theming support
 $color-white: #fff;
-$color-light-gray: #A0A8C3;
-$color-green: #01FF0B;
-$color-highlight: #B7C711;
+$color-light-gray: #a0a8c3;
+$color-green: #01ff0b;
+$color-black-80: rgba(0, 0, 0, 0.8);
+$color-white-20: rgba(255, 255, 255, 0.2);
+$color-white-50: rgba(255, 255, 255, 0.5);
+$color-highlight: #b7c711;
 
 // App theme (CSS variables)
 $color-bg-main: var(--c-av-match-live-bg);
@@ -31,8 +34,13 @@ $font-weight-bold: 700;
 $border-radius-sm: 4px;
 $border-radius-md: 6px;
 $border-radius-lg: 7px;
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 10px;
+$spacing-lg: 16px;
+$spacing-xl: 20px;
 
-// Spacing 
+// Spacing
 // Using rem units for consistency
 $spacing-xs: 4px;
 $spacing-sm: 8px;
@@ -73,4 +81,4 @@ $breakpoint-xl: 1102px;
 // Z-index
 $z-index-base: 1;
 $z-index-modal: 50;
-$z-index-overlay: 100; 
+$z-index-overlay: 100;

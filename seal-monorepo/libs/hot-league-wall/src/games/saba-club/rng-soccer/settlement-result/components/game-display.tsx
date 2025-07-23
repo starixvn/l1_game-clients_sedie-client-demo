@@ -22,12 +22,12 @@ interface GameDisplayProps {
 
 const useTeamCardAnimation = (roundState: string, teamData: TeamsData) => {
     const prevTeamDataRef = useRef<TeamsData | null>(null);
-    
+
     return useMemo(() => {
-        const isTeamChanged = prevTeamDataRef.current && (
-            prevTeamDataRef.current.homeTeam.name !== teamData.homeTeam.name ||
-            prevTeamDataRef.current.awayTeam.name !== teamData.awayTeam.name
-        );
+        const isTeamChanged =
+            prevTeamDataRef.current &&
+            (prevTeamDataRef.current.homeTeam.name !== teamData.homeTeam.name ||
+                prevTeamDataRef.current.awayTeam.name !== teamData.awayTeam.name);
         prevTeamDataRef.current = teamData;
 
         if (!isTeamChanged) {
@@ -60,7 +60,7 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
     const homeCardData = useMemo(() => {
         const card: CardResult = {
             rank: result?.home?.rank ?? 0,
-            suit: result?.home?.suit ?? 0
+            suit: result?.home?.suit ?? 0,
         };
         const score = SCORE_MAP[card.rank] || 0;
         return { card, score };
@@ -69,15 +69,13 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
     const awayCardData = useMemo(() => {
         const card: CardResult = {
             rank: result?.away?.rank ?? 0,
-            suit: result?.away?.suit ?? 0
+            suit: result?.away?.suit ?? 0,
         };
         const score = SCORE_MAP[card.rank] || 0;
         return { card, score };
     }, [result?.away]);
 
-    const shouldHideCards = !isFinish ||
-        roundState === ROUND_STATE.PLACING_BET ||
-        roundState === ROUND_STATE.LOCKING_BET;
+    const shouldHideCards = !isFinish || roundState === ROUND_STATE.PLACING_BET || roundState === ROUND_STATE.LOCKING_BET;
 
     const showDefaultScores = !isFinish;
 
@@ -85,15 +83,20 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
 
     const [showHomeScore, setShowHomeScore] = useState(false);
     const [showAwayScore, setShowAwayScore] = useState(false);
-
-    const showHighLight = roundState === ROUND_STATE.STARTING_ROUND || isFinishShowResult;
+    const [showHighLight, setShowHighLight] = useState(false);
 
     useEffect(() => {
         if (roundState === ROUND_STATE.PLACING_BET) {
             setShowHomeScore(false);
             setShowAwayScore(false);
         }
-    }, [roundState]);
+
+        if (isFinishShowResult && (roundState === ROUND_STATE.SHOW_RESULT || roundState === ROUND_STATE.SHOW_ANIMATION_RESULT)) {
+            setShowHighLight(true);
+        } else {
+            setShowHighLight(false);
+        }
+    }, [roundState, isFinishShowResult]);
 
     if (isLoading) {
         return <Loading />;
@@ -101,16 +104,14 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
 
     return (
         <div className={styles['wrapper-sport-middle']}>
-            <TeamCard
-                logo={teamData.homeTeam.logo}
-                isHomeTeam={true}
-                animation={teamCardAnimation}
-            />
+            <TeamCard logo={teamData.homeTeam.logo} isHomeTeam={true} animation={teamCardAnimation} />
 
             <div className={styles['sport-result']}>
                 <div className={styles['container-result']}>
                     {/* Home card */}
-                    <div className={`${styles['card-section']} ${showHighLight && homeCardData.score > awayCardData.score ? styles['winning-card'] : ''}`}>
+                    <div
+                        className={`${styles['card-section']} ${showHighLight && homeCardData.score > awayCardData.score ? styles['winning-card'] : ''}`}
+                    >
                         <FlipCard
                             playResultAnimation={isAnimationResult}
                             card={homeCardData.card}
@@ -123,17 +124,19 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
                         />
                     </div>
                     <ScoreDisplay
-                        homeScore={showHomeScore ? homeCardData.score : ""}
-                        awayScore={showAwayScore ? awayCardData.score : ""}
+                        homeScore={showHomeScore ? homeCardData.score : ''}
+                        awayScore={showAwayScore ? awayCardData.score : ''}
                         showWinningHighlight={showHighLight}
                         showDefaultScore={showDefaultScores}
                     />
-                    <div className={`${styles['card-section']} ${showHighLight && awayCardData.score > homeCardData.score ? styles['winning-card'] : ''}`}>
+                    <div
+                        className={`${styles['card-section']} ${showHighLight && awayCardData.score > homeCardData.score ? styles['winning-card'] : ''}`}
+                    >
                         <FlipCard
                             playResultAnimation={isAnimationResult}
                             card={awayCardData.card}
                             isShowResult={!shouldHideCards}
-                            delayTime={1000}
+                            delayTime={isAnimationResult ? 1000 : 0}
                             onFlipComplete={() => {
                                 if (!shouldHideCards) {
                                     setShowAwayScore(true);
@@ -143,22 +146,14 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
                     </div>
                 </div>
             </div>
-            <TeamCard
-                logo={teamData.awayTeam.logo}
-                isHomeTeam={false}
-                animation={teamCardAnimation}
-            />
+            <TeamCard logo={teamData.awayTeam.logo} isHomeTeam={false} animation={teamCardAnimation} />
 
             <div className={styles['wrapper-team-name']}>
-                <div className={styles['name']}>
-                    {teamData.homeTeam.name}
-                </div>
-                <div className={styles['name']}>
-                    {teamData.awayTeam.name}
-                </div>
+                <div className={styles['name']}>{teamData.homeTeam.name}</div>
+                <div className={styles['name']}>{teamData.awayTeam.name}</div>
             </div>
         </div>
     );
 };
 
-export default GameDisplay; 
+export default GameDisplay;

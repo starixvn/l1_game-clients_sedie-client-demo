@@ -1,6 +1,7 @@
 const { NxWebpackPlugin } = require('@nx/webpack');
 const { NxReactWebpackPlugin } = require('@nx/react');
 const { join } = require('path');
+const webpack = require('webpack');
 
 module.exports = {
     output: {
@@ -44,6 +45,12 @@ module.exports = {
             // Uncomment this line if you don't want to use SVGR
             // See: https://react-svgr.com/
             svgr: true,
+        }),
+
+        // Define environment variables for client-side access
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+            'process.env.SIMULATOR_CONFIG': JSON.stringify(process.env.SIMULATOR_CONFIG),
         }),
     ],
 };

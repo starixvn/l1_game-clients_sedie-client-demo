@@ -22,11 +22,10 @@
     background: url('../../../assets/rng-soccer/bg-game.webp') no-repeat center;
     background-size: cover;
     border-radius: $border-radius-md;
-    padding: $spacing-xs;
+    padding: 2px 4px 4px;
     @include flex-column;
-    justify-content: space-between;
     position: relative;
-    gap: $spacing-xs;
+    z-index: 11;
 }
 
 // Top section styling
@@ -36,13 +35,42 @@
     .score-board-img {
         cursor: pointer;
     }
+
+    .game-name {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        .live-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .game-name-text {
+            font-size: $font-size-sm;
+            font-weight: $font-weight-bold;
+            color: $color-light-gray;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: $spacing-xs;
+        }
+
+        .game-name-round {
+            font-size: $font-size-xs;
+            font-weight: $font-weight-medium;
+            color: $color-light-gray;
+        }
+    }
 }
 
 // Middle section styling
 .wrapper-sport-middle {
     display: grid;
     grid-template-columns: 81px 1fr 81px;
-    align-items: end;
+    align-items: center;
+    grid-template-rows: 46px;
+    margin-bottom: 4px;
 
     .sport-team {
         @include flex-column;
@@ -58,7 +86,6 @@
         &-img {
             width: $team-img-size;
             height: $team-img-size;
-            margin-bottom: $spacing-xs;
 
             img {
                 max-width: 100%;
@@ -67,11 +94,11 @@
         }
 
         &.pop-in-animation {
-            animation: popIn $animation-duration-slow cubic-bezier(.53, -0.01, .33, 1) forwards;
+            animation: popIn $animation-duration-slow cubic-bezier(0.53, -0.01, 0.33, 1) forwards;
         }
 
         &.pop-out-animation {
-            animation: popOut $animation-duration-slow cubic-bezier(.53, -0.01, .33, 1) forwards;
+            animation: popOut $animation-duration-slow cubic-bezier(0.53, -0.01, 0.33, 1) forwards;
         }
     }
 
@@ -81,7 +108,6 @@
         grid-column: 1 / -1;
         align-items: flex-start;
         justify-content: space-between;
-        margin: 2px 0;
 
         .name {
             line-height: 100%;
@@ -95,6 +121,7 @@
 
     .sport-result {
         position: relative;
+        top: -6px;
 
         .container-result {
             @include flex-center;
@@ -143,9 +170,9 @@
 // Timer styling
 .timer {
     position: absolute;
-    top: 50%;
+    top: 2px;
     right: 50%;
-    transform: translate(50%, -70px);
+    transform: translateX(50%);
     display: flex;
     align-items: center;
 
@@ -162,10 +189,11 @@
 .dots {
     width: $dots-size;
     height: $dots-size;
-    background: radial-gradient(circle closest-side, $color-green 90%, #0000) 0% 50%,
+    background:
+        radial-gradient(circle closest-side, $color-green 90%, #0000) 0% 50%,
         radial-gradient(circle closest-side, $color-green 90%, #0000) 50% 50%,
         radial-gradient(circle closest-side, $color-green 90%, #0000) 100% 50%;
-    background-size: calc(100%/3) 13.4px;
+    background-size: calc(100% / 3) 13.4px;
     background-repeat: no-repeat;
     animation: dots-animation $animation-duration-very-slow infinite linear;
 }
@@ -182,7 +210,7 @@
         padding: $spacing-xs $spacing-sm;
         cursor: pointer;
         border-radius: $border-radius-md;
-        background: rgba(255, 255, 255, 0.20);
+        background: rgba(255, 255, 255, 0.2);
         width: 100%;
         min-height: 36px;
 
@@ -210,7 +238,9 @@
     flex-direction: column;
     opacity: 0;
     visibility: hidden;
-    transition: opacity $animation-duration-fast ease, visibility $animation-duration-fast ease;
+    transition:
+        opacity $animation-duration-fast ease,
+        visibility $animation-duration-fast ease;
     z-index: 10;
 
     &.active {
@@ -219,9 +249,11 @@
     }
 
     .close-popup {
+        position: absolute;
+        top: 2px;
+        right: 4px;
         cursor: pointer;
-        padding: 0 $spacing-xs;
-        align-self: flex-end;
+        padding: $spacing-xs;
 
         .close-icon {
             width: 11px;
@@ -242,8 +274,38 @@
     box-sizing: border-box;
 }
 
-@keyframes flash-glow {
+// Additional classes for UI extension options
+.statistic-popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
 
+.live-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.game-name-text {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $color-light-gray;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: $spacing-xs;
+}
+
+.game-name-round {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    color: $color-light-gray;
+}
+
+@keyframes flash-glow {
     0%,
     100% {
         box-shadow: 0 0 16px 8px rgba(255, 215, 0, 0.6);
@@ -255,5 +317,84 @@
         box-shadow: 0 0 4px 2px rgba(255, 215, 0, 0.2);
         border-color: #ffee58;
         opacity: 0.7;
+    }
+}
+
+// New round animation
+
+.slide-left {
+    animation: slideLeft 0.6s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+    z-index: 2;
+    filter: blur(2px);
+}
+
+@keyframes slideLeft {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 0.4;
+    }
+
+    100% {
+        transform: translateX(-120%);
+        opacity: 0;
+    }
+}
+
+.blur-bg-animated {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    transform: translateX(100%);
+    animation: slideLeftBg 0.5s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+    z-index: 10;
+    will-change: auto;
+}
+
+.new-round-section {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-size: cover;
+    pointer-events: none;
+    transform: translateX(100%);
+    animation: slideLeftBg 0.5s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+    z-index: 10;
+    will-change: auto;
+}
+
+.blur-bg-animated img {
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes slideLeftBg {
+    0% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    60% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
     }
 }

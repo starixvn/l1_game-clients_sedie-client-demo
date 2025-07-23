@@ -4,17 +4,15 @@
         "gameName": "RNGSoccer",
         "name": "RNGSoccer",
         "serviceName": "rng-soccer",
-        "namespaces": [
-            "RNGSoccer"
-        ],
+        "namespaces": ["RNGSoccer"],
         "isVisible": true,
         "durations": {
             "wholeRound": 20,
             "lockingBet": 3,
             "placingBet": 15,
             "generatingResult": 2,
-            "showingResult": 1,
-            "startRound": 2
+            "showingResult": 2,
+            "startRound": 1
         },
         "numberOfRoundHistory": 100,
         "websocket": {

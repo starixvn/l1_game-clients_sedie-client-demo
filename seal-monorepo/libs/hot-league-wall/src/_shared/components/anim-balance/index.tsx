@@ -1,6 +1,6 @@
 import * as gc from "@sg/sg-game-client";
 import { useEffect } from 'react';
-import { SyncMemberSiteBalance } from '../../utils/sync-member-site-balance';
+import { SyncMemberSiteBalance } from '../../utils/callback-singleton/sync-member-site-balance';
 import style from './balance.module.scss';
 
 const AnimationBalance = ({ winBet }) => {

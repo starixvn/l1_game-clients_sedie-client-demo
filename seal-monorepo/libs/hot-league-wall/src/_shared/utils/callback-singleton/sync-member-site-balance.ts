@@ -1,9 +1,8 @@
-export class SyncMemberSiteBalance {
-    private static instance: SyncMemberSiteBalance;
-    private syncBalanceCallback: ((totalStake?: number, winBet?: number) => void) | null = null;
+import { CallbackSingleton } from './callback-singleton';
 
+export class SyncMemberSiteBalance extends CallbackSingleton<(totalStake?: number, winBet?: number) => void> {
     private constructor() {
-        // Private constructor to prevent direct construction calls with the `new` operator
+        super();
     }
 
     public static getInstance(): SyncMemberSiteBalance {
@@ -14,16 +13,16 @@ export class SyncMemberSiteBalance {
     }
 
     public setSyncBalanceCallback(callback: (totalStake?: number, winBet?: number) => void): void {
-        this.syncBalanceCallback = callback;
+        this.setCallback(callback);
     }
 
     public getSyncBalanceCallback(): ((totalStake?: number, winBet?: number) => void) | null {
-        return this.syncBalanceCallback;
+        return this.getCallback();
     }
 
     public executeSyncBalance(totalStake?: number, winBet?: number): void {
-        if (this.syncBalanceCallback) {
-            this.syncBalanceCallback(totalStake, winBet);
+        if (this.hasCallback()) {
+            this.callback!(totalStake, winBet);
         }
     }
 } 

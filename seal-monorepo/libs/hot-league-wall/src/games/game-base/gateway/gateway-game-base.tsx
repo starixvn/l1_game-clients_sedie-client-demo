@@ -8,7 +8,7 @@ import GameBase from '../core/game-base.core';
 import GameUIRenderer, { UIExtensionOptions } from '../ui/game-ui-renderer';
 import { IGatewayGameBaseState } from '../interfaces/gateway-types';
 import { GameBaseProps } from '../type';
-import { SyncMemberSiteBalance } from '../../../_shared/utils/sync-member-site-balance';
+import { SyncMemberSiteBalance } from '../../../_shared/utils/callback-singleton/sync-member-site-balance';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 import { Settlements } from '@sg/sg-game-client';
 import { FunctionUtils } from '../../../_shared/utils/funtion-utils';
@@ -33,6 +33,34 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         );
 
         this.uiRenderer = new GameUIRenderer<P, S>();
+    }
+
+    componentWillUnmount() {
+        try {
+            // Cleanup observer
+            const { dispose } = this.state;
+            if (dispose) {
+                dispose();
+            }
+        } catch (error) {
+            // Failed to cleanup observer
+        }
+
+        // Call parent cleanup
+        super.componentWillUnmount();
+    }
+
+    /**
+     * Get connection handler (connection management now handled at lobby level)
+     */
+    protected getConnectionHandler(): any {
+        try {
+            // Connection management is now handled at the lobby level
+            // This method is kept for backward compatibility but doesn't manage connections
+            return null;
+        } catch (error) {
+            return null;
+        }
     }
 
     protected configureUIRenderer(): UIExtensionOptions {
@@ -80,8 +108,12 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         if (isConnected) this.connectLiveGateway();
     }
 
-    @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => handler.handleGateway())
-    override connectLiveGateway(): void { }
+    @handle(gc.Connection.ConnectionHandlers.ConnectHandler, (handler) => {
+        handler.handleGateway();
+    })
+    override connectLiveGateway(): void {
+        // Connection management is now handled at the lobby level
+    }
 
     @render(gc.Connection.ConnectionStore, (store) => store.isConnected)
     handleJoinGame(isConnected: boolean): void {
@@ -103,9 +135,15 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     @handle(gc.Connection.ConnectionHandlers.InGameHandler, (handler) => handler.handleGateway())
     inGameLiveGateway(): void { }
 
-    // ABSTRACT METHOD IMPLEMENTATIONS
-    override closeConnect(): void { }
+    /**
+     * Close connect method (connection management now handled at lobby level)
+     */
+    @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
+    override closeConnect(): void {
+        // Connection management is now handled at the lobby level
+    }
 
+    // ABSTRACT METHOD IMPLEMENTATIONS
     override showResult(
         hasAnimation: boolean,
         result?: gc.GameServiceMessage.TResult,
@@ -132,10 +170,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
     @render(Settlements.SettlementStore, (store) => store.currentFinish, {
         fireImmediately: false,
     })
-    async renderCurrentFinish(
-        currentFinish: gc.GameServiceMessage.Finish,
-    ) {
-        console.log('renderCurrentFinish', currentFinish);
+    async renderCurrentFinish(currentFinish: gc.GameServiceMessage.Finish) {
         if (!currentFinish) {
             return;
         }
@@ -155,7 +190,6 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
 
     @handle(Settlements.SettlementUIHandlers.FinishedShowResult)
     finishShowResult(): void {
-        console.log('finishShowResult');
         this.setState({ isFinishShowResult: true } as Pick<S, keyof S>);
     }
 
@@ -201,6 +235,7 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
         const customHeaderSection = this.getGameHeaderSection();
         const customContentSection = this.getGameContentSection();
         const customFooterSection = this.getGameFooterSection();
+        const customRoundHistorySection = this.getGameRoundHistorySection();
         const customHistorySection = this.getGameHistorySection();
         const backgroundImage = this.getGameBackgroundImage();
 
@@ -213,7 +248,8 @@ class GatewayGameBase<P extends GameBaseProps, S extends IGatewayGameBaseState> 
             customHeaderSection,
             customContentSection,
             customFooterSection,
-            customHistorySection
+            customHistorySection,
+            customRoundHistorySection,
         );
     }
 }

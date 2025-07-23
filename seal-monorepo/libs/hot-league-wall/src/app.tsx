@@ -3,33 +3,133 @@ import './_shared/utils/string-helper';
 import { loadI18n } from './i18n';
 import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
-import { SyncMemberSiteBalance } from './_shared/utils/sync-member-site-balance';
-import { useEffect } from 'react';
+import { SyncMemberSiteBalance } from './_shared/utils/callback-singleton/sync-member-site-balance';
+import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
+import { useEffect, useState, useCallback } from 'react';
+import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 
-interface AppProps extends AppContentProps {
+interface AppProps {
     appEnv: string;
     siteId: string;
     language: string;
-    renewToken?: Function;
     updateBalanceCallback?: void | null;
+    onRequestSSOToken?: () => Promise<string | null>;
 }
 
 interface AppContentProps {
-    token: string;
-    renewToken?: Function;
     updateBalanceCallback?: void | null;
+    onRequestSSOToken?: () => Promise<string | null>;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback }: AppProps) => {
+const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
-            <AppContent token={token} renewToken={renewToken} updateBalanceCallback={updateBalanceCallback} />
+            <AppContent
+                updateBalanceCallback={updateBalanceCallback}
+                onRequestSSOToken={onRequestSSOToken}
+            />
         </AppProvider>
     );
 };
 
-const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProps) => {
+const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProps) => {
     const { language } = useAppContext();
+    const [hasClickedPlay, setHasClickedPlay] = useState(false);
+    const [currentToken, setCurrentToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isReconnecting, setIsReconnecting] = useState(false);
+
+    // Shared token request logic
+    const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
+        const tokenStartTime = performance.now();
+
+        try {
+            let newToken: string | null = null;
+            if (onRequestSSOToken) {
+                newToken = await onRequestSSOToken();
+            } else {
+                newToken = await TokenRequestManager.getInstance().executeTokenRequest();
+            }
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
+
+            if (newToken) {
+                setCurrentToken(newToken);
+                return { success: true, token: newToken, duration: tokenDuration };
+            } else {
+                return { success: false, token: null, duration: tokenDuration };
+            }
+        } catch (error) {
+            const tokenEndTime = performance.now();
+            const tokenDuration = tokenEndTime - tokenStartTime;
+            return { success: false, token: null, duration: tokenDuration, error };
+        }
+    }, [onRequestSSOToken]);
+
+    // Effect to handle tab visibility changes and reset game state
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                // Only reset game state if we're not currently in a game session
+                // This prevents unmounting the game component when switching tabs
+                if (!currentToken) {
+                    // Tab became visible, reset game state to show prototype again
+                    setHasClickedPlay(false);
+                    setCurrentToken(null);
+                    setIsLoading(false);
+                    setIsReconnecting(false);
+                }
+                // If we have a current token, keep the game session active
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [currentToken]);
+
+    // Unified token request handler
+    const performTokenRequest = useCallback(
+        async ({
+            context,
+            showLoading = false,
+            triggerPlayTransition = false,
+            showReconnectLoading = false,
+        }: {
+            context: 'FIRST_SSO' | 'SSO_RETRY';
+            showLoading?: boolean;
+            triggerPlayTransition?: boolean;
+            showReconnectLoading?: boolean;
+        }) => {
+            if (showLoading) setIsLoading(true);
+            if (showReconnectLoading) setIsReconnecting(true);
+            const startTime = performance.now();
+            const result = await executeTokenRequest(context);
+            if (showLoading) setIsLoading(false);
+            if (showReconnectLoading) setIsReconnecting(false);
+            if (triggerPlayTransition && result.success) setHasClickedPlay(true);
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            return result;
+        },
+        [executeTokenRequest]
+    );
+
+    const handlePlayButtonClick = useCallback(
+        async () => {
+            const result = await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
+        },
+        [performTokenRequest]
+    );
+
+    const handleSessionReconnect = useCallback(
+        async () => {
+            await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
+        },
+        [performTokenRequest]
+    );
 
     useEffect(() => {
         if (updateBalanceCallback) {
@@ -37,10 +137,37 @@ const AppContent = ({ token, renewToken, updateBalanceCallback }: AppContentProp
         }
     }, [updateBalanceCallback]);
 
+    useEffect(() => {
+        if (onRequestSSOToken) {
+            TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken());
+        }
+    }, [onRequestSSOToken]);
+
+    // // Cleanup effect to reset state when component unmounts
+    // useEffect(() => {
+    //     return () => {
+    //         setHasClickedPlay(false);
+    //         setCurrentToken(null);
+    //         setIsLoading(false);
+    //         setIsReconnecting(false);
+    //         console.log('AppContent component unmounted');
+    //     };
+    // }, []);
+
     loadI18n(language);
+
+    // Show RNG Soccer prototype first, then main app after play button click
+    if (!hasClickedPlay) {
+        return (
+            <div data-react="true" style={{ width: '100%' }}>
+                <RNGSoccerStaticPrototype onPlayButtonClick={handlePlayButtonClick} isLoading={isLoading} />
+            </div>
+        );
+    }
+
     return (
         <div data-react="true" style={{ width: '100%' }}>
-            {token && <Lobby token={token} language={language} renewToken={renewToken} />}
+            {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handleSessionReconnect} isReconnecting={isReconnecting} />}
         </div>
     );
 };

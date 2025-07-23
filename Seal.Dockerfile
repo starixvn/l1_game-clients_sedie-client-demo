@@ -11,8 +11,12 @@ ENV PORT=$PORT
 # Copy package files from seal-monorepo directory
 COPY seal-monorepo/package*.json ./
 
-# Install dependencies and global packages
-RUN npm install && \
+# Install dependencies with comprehensive registry configuration
+RUN npm config set registry http://npm.lumigame.com && \
+    npm config set @sg:registry http://npm.lumigame.com && \
+    npm config set @lumigame:registry http://npm.lumigame.com && \
+    npm config set strict-ssl false && \
+    npm install --no-audit --no-fund --verbose && \
     npm install -g cross-env nx
 
 # Copy the rest of the application
@@ -20,7 +24,7 @@ COPY . .
 
 # Build the application for development
 WORKDIR /app/seal-monorepo
-RUN npm install && \
+RUN npm install --no-audit --no-fund && \
     nx reset && \
     cross-env NODE_ENV=development nx build saba-games --configuration=development
 

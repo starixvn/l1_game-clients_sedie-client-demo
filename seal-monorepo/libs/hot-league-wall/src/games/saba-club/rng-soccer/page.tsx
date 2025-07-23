@@ -11,11 +11,12 @@ import styles from './rng-soccer.module.scss';
 import { containerOptions, setting } from './game-settings';
 import RNGSoccerBetOptions from './bet-option/rng-soccer-bet-options';
 import liveIcon from '../../../assets/rng-soccer/live-icon.svg';
-import historyBtnIcon from '../../../assets/rng-soccer/history-btn.svg';
 import bgGame from '../../../assets/rng-soccer/bg-game.webp';
 import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
 import RNGSoccerSettlementResult from './settlement-result/rng-soccer-settlement-result';
 import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
+import { RNGSoccerRoundHistory } from './round-history';
+import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 
 interface IRNGSoccerPageState extends IGatewayGameBaseState {
     isTimerActive: boolean;
@@ -49,9 +50,9 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
     // State management methods
     togglePopup = () => {
         this.setState({
-            isPopupVisible: !this.state.isPopupVisible
+            isPopupVisible: !this.state.isPopupVisible,
         });
-    }
+    };
 
     setShowBetPanel = (show: boolean) => {
         this.setState({ showBetPanel: show });
@@ -63,10 +64,22 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
 
     // Game lifecycle and event handlers
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
-    override closeConnect() { }
+    override closeConnect() {}
 
     override getGameBackgroundImage(): string {
         return bgGame;
+    }
+
+    override getGameRoundHistorySection(): JSX.Element {
+        return (
+            <Suspense fallback={<div>Loading...</div>}>
+                <RNGSoccerRoundHistory
+                    namespace={setting.mainObserverNamespace}
+                    language={this.props.language}
+                    togglePopup={this.togglePopup}
+                />
+            </Suspense>
+        );
     }
 
     override getDisconnectViewBackground(): string {
@@ -79,47 +92,37 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
             classes: {
                 gameContainer: styles['sport-item'],
                 header: styles['wrapper-sport-top'],
-                content: styles['wrapper-sport-content'],
                 footer: styles['wrapper-sport-bottom'],
                 popup: styles['statistic-popup'],
                 gameNameText: styles['game-name-text'],
                 gameNameRound: styles['game-name-round'],
                 liveIcon: styles['live-icon'],
                 timer: styles['timer'],
-                statsIcon: styles['score-board-img']
+                statsIcon: styles['score-board-img'],
             },
             components: {
                 customContent: () => this.renderCustomContent(),
                 customFooter: () => this.renderCustomFooter(),
                 customHistory: (props, state) => this.renderCustomHistory(state as IRNGSoccerPageState),
-                customBetting: () => this.renderCustomBetting()
+                customBetting: () => this.renderCustomBetting(),
             },
             config: {
                 gameName: 'RNGSoccer',
                 liveIconUrl: liveIcon,
-                statsIconUrl: historyBtnIcon,
-                onStatsIconClick: this.togglePopup
-            }
+            },
         };
     }
 
     renderCustomContent(): JSX.Element {
         return (
             <Suspense fallback={<div>Loading...</div>}>
-                <RNGSoccerSettlementResult
-                    namespace={setting.mainObserverNamespace}
-                    language={this.props.language}
-                />
+                <RNGSoccerSettlementResult namespace={setting.mainObserverNamespace} language={this.props.language} />
             </Suspense>
         );
     }
 
     renderCustomFooter(): JSX.Element {
-        return (
-            <div className={styles['wrapper-sport-bottom']}>
-                {this.renderCustomBetting()}
-            </div>
-        );
+        return <div className={styles['wrapper-sport-bottom']}>{this.renderCustomBetting()}</div>;
     }
 
     renderCustomBetting(): JSX.Element {

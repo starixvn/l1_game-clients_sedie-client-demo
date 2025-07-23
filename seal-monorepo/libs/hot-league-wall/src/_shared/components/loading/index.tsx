@@ -1,9 +1,11 @@
 import Styles from './reconnecting.module.scss';
+import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
 
 export const Loading: React.FC = () => {
     return (
         <div className={Styles['reconnecting-container']}>
-            <div className={Styles['dot-elastic']}></div>
+            <img src={blurBgGame} alt="Blurred background" />
+            <div className={Styles['spinner']}></div>
         </div>
     );
 };
