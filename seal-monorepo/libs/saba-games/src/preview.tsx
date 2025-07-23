@@ -5,9 +5,8 @@ import App from './app';
 import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
 import { requestSSO } from './_shared/utils/sso-helper';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import TodayDayDemo from './_shared/components/today-day-demo';
-import { appSettings } from './_shared/app-settings';
 
 declare global {
     interface Window {
@@ -116,7 +115,6 @@ const TabContent: React.FC<TabContentProps> = ({
                 );
 
             case 'live-page':
-                const encryptionKey = appSettings.encryptionKey || 'development-key';
                 const containerRef = useRef<HTMLDivElement>(null);
                 const contentRef = useRef<HTMLDivElement>(null);
                 return (
@@ -143,7 +141,6 @@ const TabContent: React.FC<TabContentProps> = ({
                                         siteId={siteId}
                                         renewToken={renewToken}
                                         updateBalanceCallback={updateBalanceCallback}
-                                        encryptionKey={encryptionKey}
                                     />
                                 } />
                             </Routes>
