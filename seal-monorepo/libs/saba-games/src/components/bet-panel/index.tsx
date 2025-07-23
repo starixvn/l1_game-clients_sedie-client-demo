@@ -127,7 +127,7 @@ export const BetPanel: React.FC<BetPanelProps> = ({
 
     const getBetPanelPosition = () => {
         const rect = iframeRef.current?.getBoundingClientRect();
-        const top = betPanelState.top;
+        const top = betPanelState.top + (rect?.top || 0);
         const left = betPanelState.left + (rect?.left || 0);
 
         return {
