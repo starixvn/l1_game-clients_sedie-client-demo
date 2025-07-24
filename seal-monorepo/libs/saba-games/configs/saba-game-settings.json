@@ -1,4 +1,29 @@
 {
+    "22": {
+        "id": 22,
+        "gameName": "VipSeDie",
+        "name": "VipSeDie",
+        "namespaces": [
+            "VipSeDie"
+        ],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 39,
+            "lockingBet": 5,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 6,
+            "startRound": 2
+        },
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "",
+            "route": "livepagegateway"
+        },
+        "mainObserverNamespace": "VipSeDie",
+        "order": 1,
+        "isSocketGateway": true
+    },
     "2": {
         "id": 2,
         "gameName": "SeDie",
@@ -21,7 +46,7 @@
             "route": "livepagegateway"
         },
         "mainObserverNamespace": "SeDie",
-        "order": 4,
+        "order": 2,
         "isSocketGateway": true
     },
     "3": {
@@ -47,7 +72,33 @@
         },
         "serviceName": "fish-prawn-crab",
         "mainObserverNamespace": "FishPrawnCrab",
-        "order": 2,
+        "order": 3,
+        "isSocketGateway": true
+    },
+    "55": {
+        "id": 55,
+        "gameName": "UnbalancedBigSmall4",
+        "name": "UnbalancedBigSmall4",
+        "namespaces": [
+            "UnbalancedBigSmall4"
+        ],
+        "isVisible": true,
+        "durations": {
+            "wholeRound": 40,
+            "lockingBet": 5,
+            "placingBet": 30,
+            "generatingResult": 1,
+            "showingResult": 2,
+            "startRound": 2
+        },
+        "totalTurns": 1,
+        "numberOfRoundHistory": 100,
+        "websocket": {
+            "proxyPath": "unbalancedbigsmall",
+            "route": "unbalancedbigsmall"
+        },
+        "mainObserverNamespace": "UnbalancedBigSmall4",
+        "order": 4,
         "isSocketGateway": true
     },
     "10": {
@@ -77,54 +128,29 @@
         "order": 5,
         "isSocketGateway": true
     },
-    "22": {
-        "id": 22,
-        "gameName": "VipSeDie",
-        "name": "VipSeDie",
+    "80": {
+        "id": 80,
+        "gameName": "CoinToss",
+        "name": "CoinToss",
+        "serviceName": "coin-toss",
         "namespaces": [
-            "VipSeDie"
+            "CoinToss"
         ],
         "isVisible": true,
         "durations": {
-            "wholeRound": 39,
-            "lockingBet": 5,
-            "placingBet": 30,
+            "wholeRound": 29,
+            "lockingBet": 3,
+            "placingBet": 20,
             "generatingResult": 1,
-            "showingResult": 6,
-            "startRound": 2
+            "showingResult": 3,
+            "startRound": 3
         },
         "numberOfRoundHistory": 100,
         "websocket": {
             "proxyPath": "",
             "route": "livepagegateway"
         },
-        "mainObserverNamespace": "VipSeDie",
-        "order": 3,
-        "isSocketGateway": true
-    },
-    "55": {
-        "id": 55,
-        "gameName": "UnbalancedBigSmall4",
-        "name": "UnbalancedBigSmall4",
-        "namespaces": [
-            "UnbalancedBigSmall4"
-        ],
-        "isVisible": true,
-        "durations": {
-            "wholeRound": 40,
-            "lockingBet": 5,
-            "placingBet": 30,
-            "generatingResult": 1,
-            "showingResult": 2,
-            "startRound": 2
-        },
-        "totalTurns": 1,
-        "numberOfRoundHistory": 100,
-        "websocket": {
-            "proxyPath": "unbalancedbigsmall",
-            "route": "unbalancedbigsmall"
-        },
-        "mainObserverNamespace": "UnbalancedBigSmall4",
+        "mainObserverNamespace": "CoinToss",
         "order": 6,
         "isSocketGateway": true
     },
@@ -152,32 +178,6 @@
         },
         "mainObserverNamespace": "ColorGame",
         "order": 7,
-        "isSocketGateway": true
-    },
-    "80": {
-        "id": 80,
-        "gameName": "CoinToss",
-        "name": "CoinToss",
-        "serviceName": "coin-toss",
-        "namespaces": [
-            "CoinToss"
-        ],
-        "isVisible": true,
-        "durations": {
-            "wholeRound": 29,
-            "lockingBet": 3,
-            "placingBet": 20,
-            "generatingResult": 1,
-            "showingResult": 3,
-            "startRound": 3
-        },
-        "numberOfRoundHistory": 100,
-        "websocket": {
-            "proxyPath": "",
-            "route": "livepagegateway"
-        },
-        "mainObserverNamespace": "CoinToss",
-        "order": 1,
         "isSocketGateway": true
     }
 }
