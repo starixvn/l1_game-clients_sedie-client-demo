@@ -1,0 +1,17 @@
+{
+    "sentry": {
+        "dsn": "",
+        "environment": "SIT"
+    },
+    "systemType": "SG",
+    "serverDomain": "sgamesuat.com",
+    "ssl": true,
+    "subDomain": "l1proxy",
+    "subDirectory": "sit",
+    "env": "SIT",
+    "enableMsgpackParserAllGames": true,
+    "enableMsgpackParserOnNotification": true,
+    "defaultGameId": 118,
+    "userServicePath": "livepageuser",
+    "appType": 6
+}
