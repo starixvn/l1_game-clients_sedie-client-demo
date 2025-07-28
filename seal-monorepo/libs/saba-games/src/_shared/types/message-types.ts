@@ -11,6 +11,7 @@ export enum MessageType {
     SET_HEIGHT = 'SET_HEIGHT',
     SHOW_CONFIRM_BET = 'SHOW_CONFIRM_BET',
     HIDE_CONFIRM_BET = 'HIDE_CONFIRM_BET',
+    SYNC_BALANCE = 'SYNC_BALANCE',
 }
 
 // set token data
@@ -128,6 +129,17 @@ interface GetHeightMessage {
     type: MessageType.GET_HEIGHT;
 }
 
+// sync balance data
+export interface SyncBalanceData {
+    totalStake?: number;
+    winBet?: number;
+}
+
+interface SyncBalanceMessage {
+    type: MessageType.SYNC_BALANCE;
+    data: SyncBalanceData;
+}
+
 export interface MessageData {
     [MessageType.SET_TOKEN]: SetTokenData;
     [MessageType.UPDATE_SETTINGS]: UpdateSettingsData;
@@ -140,6 +152,7 @@ export interface MessageData {
     [MessageType.SET_HEIGHT]: SetHeightData;
     [MessageType.GET_HEIGHT]: any;
     [MessageType.HANDLE_CLEAR]: any;
+    [MessageType.SYNC_BALANCE]: SyncBalanceData;
 }
 
 
@@ -154,6 +167,7 @@ export type WindowMessage =
     | HideConfirmBetMessage
     | GetHeightMessage
     | SetHeightMessage
+    | SyncBalanceMessage
     | { type: MessageType.HANDLE_CLEAR };
 
 // Message event type

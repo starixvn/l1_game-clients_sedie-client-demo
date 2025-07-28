@@ -1,4 +1,4 @@
-import { MessageType, WindowMessage, MessageEvent, MessageHandler, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData, SetTokenData } from '../types/message-types';
+import { MessageType, WindowMessage, MessageEvent, MessageHandler, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData, SetTokenData, SyncBalanceData } from '../types/message-types';
 import { EncryptedMessage, MessageEncryption } from '../../utils/encryption';
 import { appSettings } from '../app-settings';
 
@@ -21,6 +21,7 @@ export interface MessageHandlerOptions {
     onToggleStatistic?: (data: ToggleStatisticData) => void;
     onGetHeight?: () => void;
     onSetHeight?: (data: SetHeightData) => void;
+    onSyncBalance?: (data: SyncBalanceData) => void;
     customHandlers?: Record<string, (data: any) => void>;
 }
 
@@ -58,6 +59,7 @@ export class MessageHandlerManager {
             [MessageType.TOGGLE_STATISTIC]: this.options.onToggleStatistic,
             [MessageType.GET_HEIGHT]: this.options.onGetHeight,
             [MessageType.SET_HEIGHT]: this.options.onSetHeight,
+            [MessageType.SYNC_BALANCE]: this.options.onSyncBalance,
         };
 
         const definedHandlers = Object.fromEntries(

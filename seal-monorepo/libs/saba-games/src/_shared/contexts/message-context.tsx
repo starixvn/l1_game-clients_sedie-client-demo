@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { MessageHandlerManager, MessageHandlerConfig, MessageHandlerOptions } from '../utils/message-handler-manager';
-import { WindowMessage, MessageType, MessageData, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData, SetTokenData } from '../types/message-types';
+import { WindowMessage, MessageType, MessageData, UpdateSettingsData, BettingBlockStateData, BetPanelStateData, HandleBetData, ShowConfirmBetData, HideConfirmBetData, ToggleStatisticData, SetHeightData, SetTokenData, SyncBalanceData } from '../types/message-types';
+import { SyncMemberSiteBalance } from '../utils/sync-member-site-balance';
 
 interface MessageContextType {
     sendMessage: (message: WindowMessage) => void;
@@ -93,6 +94,12 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
             onSetHeight: (data: SetHeightData) => {
                 handleMessage(data, MessageType.SET_HEIGHT);
                 options.onSetHeight?.(data);
+            },
+            onSyncBalance: (data: SyncBalanceData) => {
+                const { totalStake, winBet } = data;
+                SyncMemberSiteBalance.getInstance().executeSyncBalance(totalStake, winBet);
+                handleMessage(data, MessageType.SYNC_BALANCE);
+                options.onSyncBalance?.(data);
             }
         };
 
