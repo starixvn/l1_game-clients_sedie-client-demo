@@ -22,6 +22,7 @@ export interface MessageHandlerOptions {
     onGetHeight?: () => void;
     onSetHeight?: (data: SetHeightData) => void;
     onSyncBalance?: (data: SyncBalanceData) => void;
+    onRenewToken?: () => void;
     customHandlers?: Record<string, (data: any) => void>;
 }
 
@@ -60,6 +61,7 @@ export class MessageHandlerManager {
             [MessageType.GET_HEIGHT]: this.options.onGetHeight,
             [MessageType.SET_HEIGHT]: this.options.onSetHeight,
             [MessageType.SYNC_BALANCE]: this.options.onSyncBalance,
+            [MessageType.RENEW_TOKEN]: this.options.onRenewToken,
         };
 
         const definedHandlers = Object.fromEntries(

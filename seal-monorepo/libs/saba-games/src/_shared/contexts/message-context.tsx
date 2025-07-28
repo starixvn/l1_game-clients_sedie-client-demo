@@ -19,12 +19,14 @@ interface MessageProviderProps {
     children: React.ReactNode;
     config: MessageHandlerConfig;
     options: MessageHandlerOptions;
+    renewToken?: Function;
 }
 
 const MessageManagerProvider: React.FC<MessageProviderProps> = ({
     children,
     config,
-    options
+    options,
+    renewToken
 }) => {
     const messageManagerRef = useRef<MessageHandlerManager | null>(null);
     const [messageData, setMessageData] = useState<MessageData>({} as MessageData);
@@ -100,6 +102,10 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
                 SyncMemberSiteBalance.getInstance().executeSyncBalance(totalStake, winBet);
                 handleMessage(data, MessageType.SYNC_BALANCE);
                 options.onSyncBalance?.(data);
+            },
+            onRenewToken: () => {
+                renewToken?.();
+                options.onRenewToken?.();
             }
         };
 
@@ -142,10 +148,11 @@ const MessageManagerProvider: React.FC<MessageProviderProps> = ({
 export const MessageProvider: React.FC<MessageProviderProps> = ({
     children,
     config,
-    options
+    options,
+    renewToken
 }) => {
     return (
-        <MessageManagerProvider config={config} options={options}>
+        <MessageManagerProvider config={config} options={options} renewToken={renewToken}>
             {children}
         </MessageManagerProvider>
     );

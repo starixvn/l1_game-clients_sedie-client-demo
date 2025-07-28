@@ -23,20 +23,18 @@ interface AppContentProps {
     language: string;
     theme: string;
     isDarkMode: boolean;
-    renewToken?: Function;
     updateBalanceCallback?: void | null;
 }
 
 const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, updateBalanceCallback }: AppProps) => {
     return (
-        <MessageProvider config={createMessageHandlerConfig(appEnv)} options={{}}>
+        <MessageProvider config={createMessageHandlerConfig(appEnv)} options={{}} renewToken={renewToken}>
             <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
                 <AppContent
                     token={token}
                     language={language}
                     theme={theme}
                     isDarkMode={isDarkMode}
-                    renewToken={renewToken}
                     updateBalanceCallback={updateBalanceCallback}
                 />
             </AppProvider>
@@ -44,7 +42,7 @@ const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, u
     );
 };
 
-const AppContent = ({ token, language, theme, isDarkMode, renewToken, updateBalanceCallback }: AppContentProps) => {
+const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback }: AppContentProps) => {
     const { appEnv } = useAppContext();
     const gameSrc = appSettings.standaloneUrl;
     const [iframeSrc, setIframeSrc] = useState<string>('');
@@ -92,7 +90,6 @@ const AppContent = ({ token, language, theme, isDarkMode, renewToken, updateBala
                 language={language}
                 theme={theme}
                 isDarkMode={isDarkMode}
-                renewToken={renewToken}
             />
         </>
     );

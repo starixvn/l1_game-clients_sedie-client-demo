@@ -11,7 +11,6 @@ interface IframeContainerProps {
     language: string;
     theme: string;
     isDarkMode: boolean;
-    renewToken?: Function;
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -38,8 +37,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     token,
     language,
     theme,
-    isDarkMode,
-    renewToken
+    isDarkMode
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { sendMessageToSpecificIframe } = useMessageContext();

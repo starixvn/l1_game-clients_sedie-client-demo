@@ -25,8 +25,7 @@ const SabaGamesGroup = ({
     appEnv = '',
     siteId = '',
     language = 'en',
-    theme = 'default',
-    encryptionKey = appSettings.encryptionKey || 'development-key'
+    theme = 'default'
 }) => {
     const platform = PLATFORM_TYPE_MAPPING[platformType] || '';
     useSentryInit();

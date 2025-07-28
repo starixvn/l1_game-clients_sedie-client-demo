@@ -12,6 +12,7 @@ export enum MessageType {
     SHOW_CONFIRM_BET = 'SHOW_CONFIRM_BET',
     HIDE_CONFIRM_BET = 'HIDE_CONFIRM_BET',
     SYNC_BALANCE = 'SYNC_BALANCE',
+    RENEW_TOKEN = 'RENEW_TOKEN',
 }
 
 // set token data
@@ -153,6 +154,7 @@ export interface MessageData {
     [MessageType.GET_HEIGHT]: any;
     [MessageType.HANDLE_CLEAR]: any;
     [MessageType.SYNC_BALANCE]: SyncBalanceData;
+    [MessageType.RENEW_TOKEN]: any;
 }
 
 
@@ -168,7 +170,8 @@ export type WindowMessage =
     | GetHeightMessage
     | SetHeightMessage
     | SyncBalanceMessage
-    | { type: MessageType.HANDLE_CLEAR };
+    | { type: MessageType.HANDLE_CLEAR }
+    | { type: MessageType.RENEW_TOKEN };
 
 // Message event type
 export type MessageEvent = {
