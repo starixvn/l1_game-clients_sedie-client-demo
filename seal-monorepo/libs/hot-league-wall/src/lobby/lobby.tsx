@@ -12,13 +12,32 @@ import { gamePageMap } from '../_shared/utils/component-util';
 import { GameDisconnectView } from '../games/game-base/components/game-disconnect-view';
 import blurBgGame from '../assets/rng-soccer/blur-bg-game.png';
 import { GatewayConnectionManager } from '../games/game-base/gateway/gateway-connection-manager';
+import { useSentryHelper } from '../_shared/hooks/useSentryHelper';
+import { SentryLogLevel } from '../_shared/utils/sentry-helper';
+
+// Wrapper component to provide SentryHelper to the class component
+const LobbyWithSentry = (props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean; language: string }) => {
+    const { logError, logWarning, logInfo, workflow } = useSentryHelper({
+        componentName: 'Lobby',
+        logLevel: SentryLogLevel.ALL,
+        enableWorkflowTracking: true,
+        enablePerformanceTracking: true
+    });
+
+    return (
+        <LobbyComponent
+            {...props}
+            sentryHelper={{ logError, logWarning, logInfo, workflow }}
+        />
+    );
+};
 
 @observer
 class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private reRenderGameTimeout?: NodeJS.Timeout;
     private connectionManager: GatewayConnectionManager;
 
-    constructor(props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean }) {
+    constructor(props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean; sentryHelper?: any }) {
         super(props);
         configSharedContainer();
         this.state = {
@@ -43,10 +62,18 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     };
 
     componentWillUnmount() {
+        const { sentryHelper } = this.props;
+
         this.clearReRenderGameTimeout();
 
         // Remove visibility change listener
         document.removeEventListener('visibilitychange', this.onVisibilityChange);
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Lobby component unmounting', {
+                timestamp: Date.now()
+            });
+        }
 
         // Cleanup connections at lobby level
         this.cleanupConnections();
@@ -56,22 +83,50 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
      * Clean up all connections properly when lobby unmounts
      */
     private async cleanupConnections() {
+        const { sentryHelper } = this.props;
+
         try {
+            if (sentryHelper) {
+                sentryHelper.logInfo('Starting connection cleanup', {
+                    timestamp: Date.now()
+                });
+            }
+
             // Disconnect using the manager (handles both handler.disconnect() and connection.close())
             await this.connectionManager.disconnect('lobby_unmount');
 
             // Close all remaining connections as a safety measure
             await this.connectionManager.closeAllConnections('lobby_unmount');
+
+            if (sentryHelper) {
+                sentryHelper.logInfo('Connection cleanup completed successfully', {
+                    timestamp: Date.now()
+                });
+            }
         } catch (error) {
-            // Error during connection cleanup
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (sentryHelper) {
+                sentryHelper.logError(`Connection cleanup failed: ${errorMessage}`, {
+                    error,
+                    timestamp: Date.now()
+                });
+            }
         }
     }
 
     componentDidMount() {
-        const { token } = this.props;
+        const { token, sentryHelper } = this.props;
 
         // Set up visibility change listener
         document.addEventListener('visibilitychange', this.onVisibilityChange);
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Lobby component mounted', {
+                hasToken: !!token,
+                tokenLength: token?.length,
+                timestamp: Date.now()
+            });
+        }
 
         this.sso({ token });
     }
@@ -260,4 +315,4 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 }
 
-export default LobbyComponent;
+export default LobbyWithSentry;

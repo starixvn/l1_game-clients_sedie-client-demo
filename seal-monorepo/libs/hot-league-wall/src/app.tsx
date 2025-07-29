@@ -5,10 +5,11 @@ import Lobby from './lobby/lobby';
 import { AppProvider, useAppContext } from './appProvider';
 import { SyncMemberSiteBalance } from './_shared/utils/callback-singleton/sync-member-site-balance';
 import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 import { useSentryHelper } from './_shared/hooks/useSentryHelper';
 import { SentryLogLevel } from './_shared/utils/sentry-helper';
+import { initializeSentryForProject, configureSentryForEnvironment } from './_shared/utils/sentry-config';
 
 interface AppProps {
     appEnv: string;
@@ -24,6 +25,15 @@ interface AppContentProps {
 }
 
 const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
+    // Initialize SentryHelper for the entire project
+    React.useEffect(() => {
+        // Configure based on environment
+        configureSentryForEnvironment(process.env.NODE_ENV || 'development');
+
+        // Initialize project-specific configuration
+        initializeSentryForProject();
+    }, []);
+
     return (
         <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
             <AppContent
@@ -49,32 +59,56 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         enablePerformanceTracking: true
     });
 
-    // Shared token request logic
+    // Shared token request logic with Sentry tracking
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
-        const tokenStartTime = performance.now();
+        const workflowId = workflow.start(`Token Request - ${context}`, {
+            context,
+            timestamp: Date.now()
+        });
 
         try {
+            logInfo(`Starting token request`, { context, timestamp: Date.now() });
+
             let newToken: string | null = null;
             if (onRequestSSOToken) {
-                newToken = await onRequestSSOToken();
+                newToken = await workflow.track('SSO Token Request', async () => {
+                    return await onRequestSSOToken();
+                });
             } else {
-                newToken = await TokenRequestManager.getInstance().executeTokenRequest();
+                newToken = await workflow.track('Token Manager Request', async () => {
+                    return await TokenRequestManager.getInstance().executeTokenRequest();
+                });
             }
-            const tokenEndTime = performance.now();
-            const tokenDuration = tokenEndTime - tokenStartTime;
 
             if (newToken) {
                 setCurrentToken(newToken);
-                return { success: true, token: newToken, duration: tokenDuration };
+                workflow.complete(workflowId, true, {
+                    tokenReceived: true,
+                    tokenLength: newToken.length,
+                    context
+                });
+                logInfo(`Token request successful`, { context, tokenLength: newToken.length });
+                return { success: true, token: newToken };
             } else {
-                return { success: false, token: null, duration: tokenDuration };
+                workflow.complete(workflowId, false, {
+                    tokenReceived: false,
+                    context,
+                    reason: 'no_token_returned'
+                });
+                logWarning(`Token request returned null`, { context });
+                return { success: false, token: null };
             }
         } catch (error) {
-            const tokenEndTime = performance.now();
-            const tokenDuration = tokenEndTime - tokenStartTime;
-            return { success: false, token: null, duration: tokenDuration, error };
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            workflow.complete(workflowId, false, {
+                error: errorMessage,
+                context,
+                reason: 'token_request_failed'
+            });
+            logError(`Token request failed: ${errorMessage}`, { context, error });
+            return { success: false, token: null, error };
         }
-    }, [onRequestSSOToken]);
+    }, [onRequestSSOToken, workflow, logError, logWarning, logInfo]);
 
     // Effect to handle tab visibility changes and reset game state
     useEffect(() => {
@@ -84,12 +118,23 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                 // This prevents unmounting the game component when switching tabs
                 if (!currentToken) {
                     // Tab became visible, reset game state to show prototype again
+                    logInfo('Tab became visible, resetting game state', {
+                        hasToken: !!currentToken,
+                        hasClickedPlay,
+                        timestamp: Date.now()
+                    });
                     setHasClickedPlay(false);
                     setCurrentToken(null);
                     setIsLoading(false);
                     setIsReconnecting(false);
+                } else {
+                    logInfo('Tab became visible, keeping game session active', {
+                        hasToken: !!currentToken,
+                        timestamp: Date.now()
+                    });
                 }
-                // If we have a current token, keep the game session active
+            } else {
+                logInfo('Tab became hidden', { timestamp: Date.now() });
             }
         };
 
@@ -98,7 +143,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [currentToken]);
+    }, [currentToken, hasClickedPlay, logInfo]);
 
     // Unified token request handler
     const performTokenRequest = useCallback(
@@ -129,29 +174,61 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     const handlePlayButtonClick = useCallback(
         async () => {
+            logInfo('Play button clicked, initiating first SSO request', {
+                timestamp: Date.now()
+            });
             const result = await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
+
+            if (result.success) {
+                logInfo('Play button flow completed successfully', {
+                    hasToken: !!result.token,
+                    timestamp: Date.now()
+                });
+            } else {
+                logError('Play button flow failed', {
+                    error: result.error,
+                    timestamp: Date.now()
+                });
+            }
         },
-        [performTokenRequest]
+        [performTokenRequest, logInfo, logError]
     );
 
     const handleSessionReconnect = useCallback(
         async () => {
-            await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
+            logInfo('Session reconnect initiated', {
+                timestamp: Date.now()
+            });
+            const result = await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
+
+            if (result.success) {
+                logInfo('Session reconnect completed successfully', {
+                    hasToken: !!result.token,
+                    timestamp: Date.now()
+                });
+            } else {
+                logError('Session reconnect failed', {
+                    error: result.error,
+                    timestamp: Date.now()
+                });
+            }
         },
-        [performTokenRequest]
+        [performTokenRequest, logInfo, logError]
     );
 
     useEffect(() => {
         if (updateBalanceCallback) {
+            logInfo('Setting up balance callback', { timestamp: Date.now() });
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
         }
-    }, [updateBalanceCallback]);
+    }, [updateBalanceCallback, logInfo]);
 
     useEffect(() => {
         if (onRequestSSOToken) {
+            logInfo('Setting up SSO token callback', { timestamp: Date.now() });
             TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken());
         }
-    }, [onRequestSSOToken]);
+    }, [onRequestSSOToken, logInfo]);
 
     // // Cleanup effect to reset state when component unmounts
     // useEffect(() => {
@@ -168,6 +245,11 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     // Show RNG Soccer prototype first, then main app after play button click
     if (!hasClickedPlay) {
+        logInfo('Rendering RNG Soccer prototype', {
+            hasClickedPlay,
+            isLoading,
+            timestamp: Date.now()
+        });
         return (
             <div data-react="true" style={{ width: '100%' }}>
                 <RNGSoccerStaticPrototype onPlayButtonClick={handlePlayButtonClick} isLoading={isLoading} />
@@ -175,6 +257,12 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         );
     }
 
+    logInfo('Rendering main lobby', {
+        hasClickedPlay,
+        hasToken: !!currentToken,
+        isReconnecting,
+        timestamp: Date.now()
+    });
     return (
         <div data-react="true" style={{ width: '100%' }}>
             {currentToken && <Lobby token={currentToken} language={language} onSSORetry={handleSessionReconnect} isReconnecting={isReconnecting} />}
