@@ -10,6 +10,8 @@ import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng
 import { useSentryHelper } from './_shared/hooks/useSentryHelper';
 import { SentryLogLevel } from './_shared/utils/sentry-helper';
 import { initializeSentryForProject, configureSentryForEnvironment } from './_shared/utils/sentry-config';
+import { initializeSentryWithSessionReplay, configureSessionReplayForEnvironment } from './_shared/utils/sentry-session-replay';
+import { useSessionReplay } from './_shared/hooks/useSessionReplay';
 
 interface AppProps {
     appEnv: string;
@@ -25,13 +27,21 @@ interface AppContentProps {
 }
 
 const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
-    // Initialize SentryHelper for the entire project
+    // Initialize SentryHelper and Session Replay for the entire project
     React.useEffect(() => {
-        // Configure based on environment
-        configureSentryForEnvironment(process.env.NODE_ENV || 'development');
+        const environment = process.env.NODE_ENV || 'development';
+
+        // Configure SentryHelper based on environment
+        configureSentryForEnvironment(environment);
 
         // Initialize project-specific configuration
         initializeSentryForProject();
+
+        // Initialize Sentry with Session Replay
+        const sessionReplayConfig = configureSessionReplayForEnvironment(environment);
+        initializeSentryWithSessionReplay(sessionReplayConfig);
+
+        console.log('Sentry with Session Replay initialized for environment:', environment);
     }, []);
 
     return (
@@ -59,6 +69,16 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         enablePerformanceTracking: true
     });
 
+    // Initialize Session Replay for the main application
+    const {
+        startReplay,
+        trackInteraction,
+        trackError,
+        trackPerformance,
+        setUser,
+        setTags
+    } = useSessionReplay('HotLeagueWall');
+
     // Shared token request logic with Sentry tracking
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
         const workflowId = workflow.start(`Token Request - ${context}`, {
@@ -66,17 +86,32 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
             timestamp: Date.now()
         });
 
+        // Start Session Replay for token request
+        startReplay(`Token Request Session - ${context}`, {
+            context,
+            timestamp: Date.now()
+        });
+
         try {
             logInfo(`Starting token request`, { context, timestamp: Date.now() });
+            trackInteraction('token_request_started', { context });
 
             let newToken: string | null = null;
             if (onRequestSSOToken) {
                 newToken = await workflow.track('SSO Token Request', async () => {
-                    return await onRequestSSOToken();
+                    const startTime = performance.now();
+                    const result = await onRequestSSOToken();
+                    const duration = performance.now() - startTime;
+                    trackPerformance('sso_token_request', duration, { context });
+                    return result;
                 });
             } else {
                 newToken = await workflow.track('Token Manager Request', async () => {
-                    return await TokenRequestManager.getInstance().executeTokenRequest();
+                    const startTime = performance.now();
+                    const result = await TokenRequestManager.getInstance().executeTokenRequest();
+                    const duration = performance.now() - startTime;
+                    trackPerformance('token_manager_request', duration, { context });
+                    return result;
                 });
             }
 
@@ -88,6 +123,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                     context
                 });
                 logInfo(`Token request successful`, { context, tokenLength: newToken.length });
+                trackInteraction('token_request_success', { context, tokenLength: newToken.length });
                 return { success: true, token: newToken };
             } else {
                 workflow.complete(workflowId, false, {
@@ -96,6 +132,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                     reason: 'no_token_returned'
                 });
                 logWarning(`Token request returned null`, { context });
+                trackError('Token request returned null', { context });
                 return { success: false, token: null };
             }
         } catch (error) {
@@ -106,9 +143,10 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                 reason: 'token_request_failed'
             });
             logError(`Token request failed: ${errorMessage}`, { context, error });
+            trackError(errorMessage, { context });
             return { success: false, token: null, error };
         }
-    }, [onRequestSSOToken, workflow, logError, logWarning, logInfo]);
+    }, [onRequestSSOToken, workflow, logError, logWarning, logInfo, startReplay, trackInteraction, trackError, trackPerformance]);
 
     // Effect to handle tab visibility changes and reset game state
     useEffect(() => {
