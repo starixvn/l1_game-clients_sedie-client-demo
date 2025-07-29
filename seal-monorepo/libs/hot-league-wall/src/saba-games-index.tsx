@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import * as gc from '@sg/sg-game-client';
+import { configureSentryManager, SentryLogLevel } from './_shared/utils/sentry-manager';
 import { appSettings } from './_shared/app-settings';
 import { useEffect } from 'react';
 import './style.module.scss';
@@ -10,7 +10,15 @@ export const useSentryInit = () => {
     useEffect(() => {
         try {
             const settings = appSettings;
-            gc.sentryLogger.start(settings.sentry.dsn, settings.sentry.environment, 'live-page-client');
+            configureSentryManager({
+                dsn: settings.sentry.dsn,
+                environment: settings.sentry.environment,
+                componentName: 'HotLeagueWall',
+                logLevel: SentryLogLevel.INFO,
+                enableWorkflowTracking: true,
+                enablePerformanceTracking: true,
+                enableConsoleOverride: true,
+            });
         } catch (error) {
             console.error('Failed to initialize Sentry:', error);
         }

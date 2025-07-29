@@ -1,7 +1,7 @@
 // Direct integration with sg-game-client SentryLogger
 // This file provides a comprehensive Sentry management system for the HotLeagueWall project
 
-// Import the enhanced SentryLogger directly from sg-game-client
+// Import the enhanced SentryLogger from sg-game-client package
 import {
     SentryLogLevel,
     WorkflowState,
@@ -27,7 +27,7 @@ import {
     cleanup,
     close,
     resetLogger
-} from '../../../../../../../sg-game-client/src/shared/utils/logger';
+} from '@sg/sg-game-client';
 
 import { appSettings } from '../app-settings';
 

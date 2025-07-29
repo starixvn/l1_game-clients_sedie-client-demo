@@ -16,13 +16,20 @@ The component-specific Sentry implementation provides:
 ### 1. Initialize in Your Component
 
 ```typescript
-import { useComponentSentry } from './_shared/hooks/useComponentSentry';
+import { configureSentryManager, sentryManager, SentryLogLevel } from './_shared/utils/sentry-manager';
 
 const YourComponent = () => {
-    const { logError, logWarning, logInfo } = useComponentSentry({
-        componentName: 'HotLeagueWall',
-        enableConsoleOverride: true,
-    });
+    useEffect(() => {
+        configureSentryManager({
+            dsn: 'your-sentry-dsn',
+            environment: 'production',
+            componentName: 'HotLeagueWall',
+            logLevel: SentryLogLevel.INFO,
+            enableWorkflowTracking: true,
+            enablePerformanceTracking: true,
+            enableConsoleOverride: true,
+        });
+    }, []);
 
     // Your component logic here
 };
@@ -35,7 +42,7 @@ const YourComponent = () => {
 try {
     // Your code here
 } catch (error) {
-    logError(error, {
+    sentryManager.logError(error, {
         action: 'user-action',
         component: 'game-button',
         userId: 'user123',
@@ -43,15 +50,27 @@ try {
 }
 
 // Log warnings
-logWarning('User session expiring soon', {
+sentryManager.logWarning('User session expiring soon', {
     timeRemaining: '5 minutes',
     userId: 'user123',
 });
 
 // Log info
-logInfo('User started game', {
+sentryManager.logInfo('User started game', {
     gameId: 'rng-soccer',
     timestamp: Date.now(),
+});
+
+// Log debug
+sentryManager.logDebug('Game state updated', {
+    gameState: 'loading',
+    progress: 75,
+});
+
+// Log trace
+sentryManager.logTrace('Detailed debugging info', {
+    functionName: 'updateGameState',
+    parameters: { gameId: '123', action: 'bet' },
 });
 ```
 
@@ -61,13 +80,11 @@ logInfo('User started game', {
 
 ```typescript
 import React from 'react';
-import { useComponentSentry } from './_shared/hooks/useComponentSentry';
+import { sentryManager } from './_shared/utils/sentry-manager';
 
 const GameComponent = () => {
-    const { logError } = useComponentSentry();
-
     const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
-        logError(error, {
+        sentryManager.logError(error, {
             errorInfo,
             component: 'GameComponent',
             action: 'render'
@@ -86,10 +103,8 @@ const GameComponent = () => {
 
 ```typescript
 const fetchGameData = async () => {
-    const { logError, logInfo } = useComponentSentry();
-
     try {
-        logInfo('Fetching game data', { endpoint: '/api/game-data' });
+        sentryManager.logInfo('Fetching game data', { endpoint: '/api/game-data' });
 
         const response = await fetch('/api/game-data');
 
@@ -98,14 +113,14 @@ const fetchGameData = async () => {
         }
 
         const data = await response.json();
-        logInfo('Game data fetched successfully', {
+        sentryManager.logInfo('Game data fetched successfully', {
             dataSize: data.length,
             timestamp: Date.now(),
         });
 
         return data;
     } catch (error) {
-        logError(error, {
+        sentryManager.logError(error, {
             action: 'fetch-game-data',
             endpoint: '/api/game-data',
             timestamp: Date.now(),
@@ -119,40 +134,17 @@ const fetchGameData = async () => {
 
 ```typescript
 const measureOperation = async (operationName: string, operation: () => Promise<any>) => {
-    const { logError, logInfo } = useComponentSentry();
-    const startTime = performance.now();
-
     try {
-        logInfo(`Starting operation: ${operationName}`, {
-            operationName,
-            startTime: Date.now(),
-        });
-
-        const result = await operation();
-
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-
-        logInfo(`Operation completed: ${operationName}`, {
-            operationName,
-            duration: `${duration.toFixed(2)}ms`,
-            endTime: Date.now(),
-        });
-
+        const result = await sentryManager.trackPerformance(operationName, operation);
         return result;
     } catch (error) {
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-
-        logError(error, {
-            operationName,
-            duration: `${duration.toFixed(2)}ms`,
-            failedAt: Date.now(),
-        });
-
+        // Error is automatically logged by trackPerformance
         throw error;
     }
 };
+
+// Or use the convenience function
+const result = await trackSentryPerformance(operationName, operation);
 ```
 
 ## Configuration Options
@@ -169,12 +161,19 @@ interface SentryManagerConfig {
 }
 ```
 
-### useComponentSentry Options
+### SentryManager Configuration Options
 
 ```typescript
-interface UseComponentSentryOptions {
-    componentName?: string; // Default: 'HotLeagueWall'
-    enableConsoleOverride?: boolean; // Default: true
+interface SentryManagerConfig {
+    dsn: string; // Sentry DSN
+    environment: string; // Environment (PROD, SIT, UAT, LOCAL)
+    componentName: string; // Component name for tagging
+    release?: string; // Release version
+    debug?: boolean; // Enable debug mode
+    logLevel?: SentryLogLevel; // Default log level
+    enableWorkflowTracking?: boolean; // Enable workflow tracking
+    enablePerformanceTracking?: boolean; // Enable performance monitoring
+    enableConsoleOverride?: boolean; // Override console methods
 }
 ```
 
@@ -212,10 +211,10 @@ The system looks for these identifiers in error messages and stack traces:
 
 If you're migrating from the global Sentry setup:
 
-1. **Remove Global Initialization**: The `useSentryInit` function in `index.tsx` is now a no-op
-2. **Add Component Hook**: Use `useComponentSentry` in your main component
-3. **Update Error Logging**: Replace direct `gc.sentryLogger.logError` calls with the hook methods
-4. **Test**: Verify that only component-specific errors are being logged
+1. **Update Global Initialization**: Replace `gc.sentryLogger.start()` with `configureSentryManager()` in `useSentryInit`
+2. **Use SentryManager**: Replace direct `gc.sentryLogger.logError` calls with `sentryManager.logError()`
+3. **Add Enhanced Features**: Use workflow tracking, performance monitoring, and component-specific configuration
+4. **Test**: Verify that all logging features work correctly with the new system
 
 ## Troubleshooting
 
@@ -224,6 +223,8 @@ If you're migrating from the global Sentry setup:
 1. Check that the error message contains component identifiers
 2. Verify that `enableConsoleOverride` is set to `true`
 3. Ensure the component name is correctly set
+4. Check that the log level is appropriate for the message type
+5. Verify that SentryManager is properly initialized
 
 ### Too Many Errors Being Logged
 

@@ -5,7 +5,7 @@ The `SentryManager` is a comprehensive utility that provides granular control ov
 ## 🚀 Features
 
 -   **Six Standard Log Levels**: TRACE, DEBUG, INFO, WARN, ERROR, FATAL
--   **Direct Integration**: Uses sg-game-client SentryLogger directly instead of npm package
+-   **Direct Integration**: Uses sg-game-client SentryLogger via npm package with file: protocol
 -   **Global Enable/Disable**: Turn Sentry logging on/off globally
 -   **Component-Specific Configuration**: Different log levels for different components
 -   **Workflow Tracking**: Track complex operations with states and metadata
@@ -498,7 +498,7 @@ describe('SentryManager', () => {
 
 ## 🔄 Migration from Old Version
 
-### Before (using npm package)
+### Before (using old npm package)
 
 ```typescript
 import * as gc from '@sg/sg-game-client';
@@ -510,7 +510,7 @@ gc.sentryLogger.start(dsn, environment, identifier);
 gc.sentryLogger.logError('Error message');
 ```
 
-### After (using direct integration)
+### After (using enhanced SentryManager)
 
 ```typescript
 import { sentryManager, configureSentryManager } from './sentry-manager';
@@ -520,10 +520,18 @@ configureSentryManager({
     dsn: dsn,
     environment: environment,
     componentName: 'HotLeagueWall',
+    logLevel: SentryLogLevel.INFO,
+    enableWorkflowTracking: true,
+    enablePerformanceTracking: true,
+    enableConsoleOverride: true,
 });
 
 // Log errors with enhanced features
-sentryManager.logError('Error message', { context: 'additional data' });
+sentryManager.logError('Error message', {
+    context: 'additional data',
+    component: 'HotLeagueWall',
+    action: 'user_action',
+});
 ```
 
 ## 📚 API Reference

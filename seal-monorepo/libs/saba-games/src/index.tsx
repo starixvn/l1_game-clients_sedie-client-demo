@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import * as gc from '@sg/sg-game-client';
+import { configureSentryManager, SentryLogLevel } from './_shared/utils/sentry-manager';
 import { appSettings } from './_shared/app-settings';
 import { useEffect } from 'react';
 import './style.module.scss';
@@ -10,7 +10,15 @@ export const useSentryInit = ({ siteId, appEnv }) => {
     useEffect(() => {
         try {
             const settings = appSettings;
-            gc.sentryLogger.start(settings.sentry.dsn, settings.sentry.environment, 'live-page-client');
+            configureSentryManager({
+                dsn: settings.sentry.dsn,
+                environment: settings.sentry.environment,
+                componentName: 'SabaGames',
+                logLevel: SentryLogLevel.INFO,
+                enableWorkflowTracking: true,
+                enablePerformanceTracking: true,
+                enableConsoleOverride: true,
+            });
         } catch (error) {
             console.error('Failed to initialize Sentry:', error);
         }
@@ -21,7 +29,7 @@ const SabaGamesGroup = ({
     isDarkMode = false,
     platformType = PLATFORM_TYPE_NUMBER.DESKTOP,
     token = '',
-    renewToken = () => {},
+    renewToken = () => { },
     appEnv = '',
     siteId = '',
     language = 'en',

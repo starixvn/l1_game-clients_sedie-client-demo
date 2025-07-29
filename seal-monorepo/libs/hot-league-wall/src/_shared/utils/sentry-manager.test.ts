@@ -17,7 +17,7 @@ import {
 } from './sentry-manager';
 
 // Mock the sg-game-client logger functions
-jest.mock('../../../../../../../sg-game-client/src/shared/utils/logger', () => ({
+jest.mock('@sg/sg-game-client', () => ({
     SentryLogLevel: {
         TRACE: 'trace',
         DEBUG: 'debug',
@@ -158,7 +158,7 @@ describe('SentryManager', () => {
             };
 
             // Mock configureSentry to throw an error
-            const { configureSentry } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
+            const { configureSentry } = require('@sg/sg-game-client');
             configureSentry.mockImplementation(() => {
                 throw new Error('Configuration failed');
             });
@@ -183,7 +183,7 @@ describe('SentryManager', () => {
         describe('logTrace', () => {
             it('should log trace message when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logTrace } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
+                const { isLoggingEnabled, logTrace } = require('@sg/sg-game-client');
                 isLoggingEnabled.mockReturnValue(true);
 
                 // Act

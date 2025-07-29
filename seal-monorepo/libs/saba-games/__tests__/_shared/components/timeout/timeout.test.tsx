@@ -10,11 +10,14 @@ jest.mock('@sg/sg-game-client', () => ({
             ClearRecheckInInterval: 'CLEAR_RECHECK_IN_INTERVAL',
         },
     },
-    sentryLogger: {
-        logError: jest.fn(),
-    },
     Translator: {
         commonTranslate: jest.fn((key) => key),
+    },
+}));
+
+jest.mock('../../../../src/_shared/utils/sentry-manager', () => ({
+    sentryManager: {
+        logError: jest.fn(),
     },
 }));
 

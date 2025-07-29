@@ -1,12 +1,13 @@
-import * as gc from '@sg/sg-game-client';
+import { sentryManager } from '../../utils/sentry-manager';
 import { handle, observer } from '@sg/sg-observer';
 import { PureComponent } from 'react';
 import Styles from './timeout.module.scss';
 import Loading from '../loading';
+import * as gc from '@sg/sg-game-client';
 
 interface SessionTimeoutProps {
     token: string;
-    renewToken: Function;
+    renewToken: () => void;
     username: string;
     language: string;
 }
@@ -35,7 +36,9 @@ class SessionTimeout extends PureComponent<SessionTimeoutProps, SessionTimeoutSt
     }
 
     @handle(gc.Auth.AuthHandlers.ClearRecheckInInterval)
-    clearRecheckInInterval() {}
+    clearRecheckInInterval(): void {
+        // Handler for clearing recheck interval
+    }
 
     clearRenewTokenInterval() {
         this.retryInterval && clearInterval(this.retryInterval);
@@ -45,7 +48,12 @@ class SessionTimeout extends PureComponent<SessionTimeoutProps, SessionTimeoutSt
         const { retryCount } = this.state;
         if (retryCount >= 3) {
             this.clearRenewTokenInterval();
-            gc.sentryLogger.logError(`Live Page: Can not renew token for user: ${this.props.username}, expired token: ${this.props.token}`);
+            sentryManager.logError(`Live Page: Can not renew token for user: ${this.props.username}, expired token: ${this.props.token}`, {
+                component: 'SessionTimeout',
+                action: 'renewToken',
+                username: this.props.username,
+                retryCount,
+            });
             return;
         }
         this.props.renewToken();
