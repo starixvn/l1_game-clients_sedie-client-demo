@@ -7,6 +7,7 @@ import { SyncMemberSiteBalance } from './_shared/utils/callback-singleton/sync-m
 import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
 import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
+import { useComponentSentry } from './_shared/hooks/useComponentSentry';
 
 interface AppProps {
     appEnv: string;
@@ -38,6 +39,12 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     const [currentToken, setCurrentToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isReconnecting, setIsReconnecting] = useState(false);
+
+    // Initialize component-specific Sentry
+    const { logError, logWarning, logInfo } = useComponentSentry({
+        componentName: 'HotLeagueWall',
+        enableConsoleOverride: true
+    });
 
     // Shared token request logic
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {

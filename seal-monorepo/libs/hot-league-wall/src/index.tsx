@@ -6,15 +6,11 @@ import './style.module.scss';
 import App from './app';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER } from '../constant/app';
 
+// Component-specific Sentry is now handled by useComponentSentry hook
+// This function is kept for backward compatibility but does nothing
 export const useSentryInit = ({ siteId, appEnv }) => {
-    useEffect(() => {
-        try {
-            const settings = appSettings;
-            gc.sentryLogger.start(settings.sentry.dsn, settings.sentry.environment, 'live-page-client');
-        } catch (error) {
-            console.error('Failed to initialize Sentry:', error);
-        }
-    }, []);
+    // Sentry is now initialized within the component using useComponentSentry hook
+    // This prevents global Sentry from capturing logs from other components
 };
 
 const SabaGamesGroup = ({
