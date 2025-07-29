@@ -1,6 +1,6 @@
 {
     "sentry": {
-        "dsn": "",
+        "dsn": "https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056",
         "environment": "LOCAL1"
     },
     "systemType": "VG",

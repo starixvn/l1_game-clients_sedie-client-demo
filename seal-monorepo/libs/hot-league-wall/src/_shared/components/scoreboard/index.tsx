@@ -3,6 +3,8 @@ import { Translator } from '@sg/sg-game-client';
 import Styles from './scoreboard.module.scss';
 import { hasBlink } from './helper';
 import { OddEvenBigRoadConverter, OverUnderBigRoadConverter } from './converters';
+import { useSentryHelper } from '../../hooks/useSentryHelper';
+import { SentryLogLevel } from '../../utils/sentry-helper';
 
 type Props = {
     gameName: string | undefined;
@@ -17,6 +19,19 @@ const ScoreBoard: React.FunctionComponent<Props> = ({
     scoreboardCharacter,
     scoreboardDotClassName,
 }) => {
+    // Initialize SentryHelper for ScoreBoard
+    const { logInfo } = useSentryHelper({
+        componentName: 'ScoreBoard',
+        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        enableWorkflowTracking: false,
+        enablePerformanceTracking: true
+    });
+
+    logInfo('ScoreBoard rendered', {
+        gameName,
+        rowsCount: rows?.length,
+        timestamp: Date.now()
+    });
     const translateCharacter = (option) => Translator.t(`${gameName}.beadboard_${option}`);
     const { positiveItemContent: positiveCharacter, negativeItemContent: negativeCharacter } = scoreboardCharacter;
     const { positiveItemContent: positiveClassName, negativeItemContent: negativeClassName } = scoreboardDotClassName;

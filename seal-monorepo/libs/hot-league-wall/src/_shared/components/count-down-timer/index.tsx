@@ -4,6 +4,8 @@ import classnames from 'classnames';
 import Styles from './count-down-timer.module.scss';
 import { IPropsObserver, IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import { formatSecondsToTime } from '../../utils/count-down-format';
+import { useSentryHelper } from '../../hooks/useSentryHelper';
+import { SentryLogLevel } from '../../utils/sentry-helper';
 
 export interface ICountDownTimerProps extends IPropsObserver {
     onComplete?: () => void;
@@ -21,7 +23,7 @@ export interface ICountDownTimerState extends IStateObserver {
     roundState: string;
 }
 
-export default class CountDownTimer extends ObserverComponent<ICountDownTimerProps, ICountDownTimerState> {
+class CountDownTimerComponent extends ObserverComponent<ICountDownTimerProps, ICountDownTimerState> {
     constructor(props: ICountDownTimerProps) {
         super(props);
         this.state = { dispose: null, countdownTimer: 0, roundState: ROUND_STATE.NONE };
@@ -101,3 +103,23 @@ export default class CountDownTimer extends ObserverComponent<ICountDownTimerPro
         );
     }
 }
+
+// Wrapper component to provide SentryHelper to the class component
+const CountDownTimer: React.FC<ICountDownTimerProps> = (props) => {
+    const { logInfo } = useSentryHelper({
+        componentName: 'CountDownTimer',
+        logLevel: SentryLogLevel.ERROR_ONLY,
+        enableWorkflowTracking: false,
+        enablePerformanceTracking: false
+    });
+
+    logInfo('CountDownTimer rendered', {
+        countdownTimer: props.onCountdownTimerChange ? 'dynamic' : 'static',
+        language: props.language,
+        timestamp: Date.now()
+    });
+
+    return <CountDownTimerComponent {...props} />;
+};
+
+export default CountDownTimer;

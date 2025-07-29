@@ -2,6 +2,8 @@ import * as gc from '@sg/sg-game-client';
 import React, { useEffect, useState } from 'react';
 import Loading from '../../../_shared/components/loading';
 import Styles from '../game-base.module.scss';
+import { useSentryHelper } from '../../../_shared/hooks/useSentryHelper';
+import { SentryLogLevel } from '../../../_shared/utils/sentry-helper';
 
 // Rendering components for different game states
 export const GameLoadingView: React.FC = () => {
@@ -22,6 +24,13 @@ export const GameDisconnectView: React.FC<{
     isLoading?: boolean;
     language?: string;
 }> = ({ onReconnect, backgroundImage, isSSOFailure = false, customMessage, customButtonText, isLoading = false, language = 'en' }) => {
+    // Initialize SentryHelper for GameDisconnectView
+    const { logInfo, logWarning } = useSentryHelper({
+        componentName: 'GameDisconnectView',
+        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        enableWorkflowTracking: false,
+        enablePerformanceTracking: false
+    });
     // Add minimum loading duration to prevent flashing
     const [stableLoading, setStableLoading] = useState(false);
     const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
@@ -32,22 +41,37 @@ export const GameDisconnectView: React.FC<{
             // Start loading
             setStableLoading(true);
             setLoadingStartTime(Date.now());
+            logInfo('Game disconnect view loading started', {
+                isSSOFailure,
+                customMessage,
+                timestamp: Date.now()
+            });
         } else if (!isLoading && stableLoading) {
             // Check if minimum duration has passed
             const elapsed = Date.now() - (loadingStartTime || 0);
             if (elapsed >= MIN_LOADING_DURATION) {
                 setStableLoading(false);
                 setLoadingStartTime(null);
+                logInfo('Game disconnect view loading completed', {
+                    elapsed,
+                    isSSOFailure,
+                    timestamp: Date.now()
+                });
             } else {
                 // Wait for remaining time
                 const remainingTime = MIN_LOADING_DURATION - elapsed;
                 setTimeout(() => {
                     setStableLoading(false);
                     setLoadingStartTime(null);
+                    logInfo('Game disconnect view loading completed after delay', {
+                        totalElapsed: elapsed + remainingTime,
+                        isSSOFailure,
+                        timestamp: Date.now()
+                    });
                 }, remainingTime);
             }
         }
-    }, [isLoading, stableLoading, loadingStartTime]);
+    }, [isLoading, stableLoading, loadingStartTime, logInfo, isSSOFailure, customMessage]);
 
     // Show loading view when requesting new token
     if (stableLoading) {
@@ -71,6 +95,11 @@ export const GameDisconnectView: React.FC<{
                         data-disabled={isLoading}
                         disabled={isLoading}
                         onClick={() => {
+                            logInfo('Reconnect button clicked', {
+                                isSSOFailure,
+                                customMessage,
+                                timestamp: Date.now()
+                            });
                             onReconnect();
                         }}
                     >

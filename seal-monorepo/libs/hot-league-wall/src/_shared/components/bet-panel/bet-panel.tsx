@@ -3,6 +3,8 @@ import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSentryHelper } from '../../hooks/useSentryHelper';
+import { SentryLogLevel } from '../../utils/sentry-helper';
 import {
     RNGSoccer_GAME_NAMESPACE,
     SABA_GAMES,
@@ -134,6 +136,13 @@ const BetPanel: React.FC<{
     clientSeed: string;
     handleBet: (amount: number, betChoice: string, clientSeed: string) => void;
 }> = ({ namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet, clientSeed }) => {
+    // Initialize SentryHelper for BetPanel
+    const { logError, logWarning, logInfo, workflow } = useSentryHelper({
+        componentName: 'BetPanel',
+        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        enableWorkflowTracking: false,
+        enablePerformanceTracking: true
+    });
     const { panelId, setPanelId, setShow } = useGameBettingOptionsContext();
     const { gameName, betChoice, odd = 0 } = useGameBettingZoneContext();
     const { siteId } = useAppContext();
@@ -254,23 +263,109 @@ const BetPanel: React.FC<{
     };
 
     const handleClickBet = () => {
+        const workflowId = workflow.start('Bet Placement', {
+            betChoice,
+            amount,
+            namespace,
+            clientRoundId,
+            timestamp: Date.now()
+        });
+
+        logInfo('Bet button clicked', {
+            betChoice,
+            amount,
+            namespace,
+            clientRoundId,
+            timestamp: Date.now()
+        });
+
         const { newAmount: validatedAmount, msg } = checkValidAmount(amount, min, max);
 
         if (msg) {
             setAmount(validatedAmount);
+            let warning = '';
             if (msg === WarnMsgType.LESS_THAN_MIN) {
-                setWarningWithTimeout(t('Common.lessthanmin'));
+                warning = t('Common.lessthanmin');
+                setWarningWithTimeout(warning);
             }
             if (msg === WarnMsgType.MORE_THAN_MAX) {
-                setWarningWithTimeout(t('Common.morethanmax'));
+                warning = t('Common.morethanmax');
+                setWarningWithTimeout(warning);
             }
+
+            logWarning('Bet validation failed', {
+                msg,
+                amount,
+                validatedAmount,
+                min,
+                max,
+                namespace,
+                clientRoundId,
+                timestamp: Date.now()
+            });
+
+            workflow.complete(workflowId, false, {
+                reason: 'validation_failed',
+                msg,
+                warning
+            });
             return;
         }
 
         if (betChoice) {
-            handleBet?.(validatedAmount, betChoice, clientSeed);
-            onHide?.();
-            updateLatestBetToStorage(namespace, clientRoundId);
+            try {
+                logInfo('Processing bet', {
+                    validatedAmount,
+                    betChoice,
+                    namespace,
+                    clientRoundId,
+                    timestamp: Date.now()
+                });
+
+                handleBet?.(validatedAmount, betChoice, clientSeed);
+                onHide?.();
+                updateLatestBetToStorage(namespace, clientRoundId);
+
+                workflow.complete(workflowId, true, {
+                    validatedAmount,
+                    betChoice,
+                    namespace,
+                    clientRoundId,
+                    success: true
+                });
+
+                logInfo('Bet placed successfully', {
+                    validatedAmount,
+                    betChoice,
+                    namespace,
+                    clientRoundId,
+                    timestamp: Date.now()
+                });
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logError(`Bet handling error: ${errorMessage}`, {
+                    error,
+                    validatedAmount,
+                    betChoice,
+                    namespace,
+                    clientRoundId,
+                    timestamp: Date.now()
+                });
+                workflow.complete(workflowId, false, {
+                    error: errorMessage,
+                    validatedAmount,
+                    betChoice
+                });
+            }
+        } else {
+            logWarning('Bet validation failed: no bet choice', {
+                namespace,
+                clientRoundId,
+                timestamp: Date.now()
+            });
+            workflow.complete(workflowId, false, {
+                reason: 'no_bet_choice'
+            });
         }
     };
 

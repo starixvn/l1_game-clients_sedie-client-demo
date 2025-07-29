@@ -17,6 +17,8 @@ import RNGSoccerSettlementResult from './settlement-result/rng-soccer-settlement
 import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
 import { RNGSoccerRoundHistory } from './round-history';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
+import { useSentryHelper } from '../../../_shared/hooks/useSentryHelper';
+import { SentryLogLevel } from '../../../_shared/utils/sentry-helper';
 
 interface IRNGSoccerPageState extends IGatewayGameBaseState {
     isTimerActive: boolean;
@@ -24,7 +26,7 @@ interface IRNGSoccerPageState extends IGatewayGameBaseState {
 }
 
 @observer(setting.mainObserverNamespace)
-export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSoccerPageState> {
+class RNGSoccerPageComponent extends GatewayGameBase<GameBaseProps, IRNGSoccerPageState> {
     constructor(props: GameBaseProps) {
         super(props);
 
@@ -64,7 +66,7 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
 
     // Game lifecycle and event handlers
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
-    override closeConnect() {}
+    override closeConnect() { }
 
     override getGameBackgroundImage(): string {
         return bgGame;
@@ -164,3 +166,23 @@ export default class RNGSoccerPage extends GatewayGameBase<GameBaseProps, IRNGSo
         );
     }
 }
+
+// Wrapper component to provide SentryHelper to the class component
+const RNGSoccerPage: React.FC<GameBaseProps> = (props) => {
+    const { logInfo } = useSentryHelper({
+        componentName: 'RNGSoccerPage',
+        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        enableWorkflowTracking: false,
+        enablePerformanceTracking: true
+    });
+
+    logInfo('RNGSoccerPage rendered', {
+        namespace: props.namespace,
+        language: props.language,
+        timestamp: Date.now()
+    });
+
+    return <RNGSoccerPageComponent {...props} />;
+};
+
+export default RNGSoccerPage;

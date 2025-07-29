@@ -1,6 +1,8 @@
 import React from 'react';
 import Chip from './chip';
 import './betting-chips.scss';
+import { useSentryHelper } from '../../hooks/useSentryHelper';
+import { SentryLogLevel } from '../../utils/sentry-helper';
 
 interface BettingChipsProps {
     min: number;
@@ -19,6 +21,20 @@ const BettingChips: React.FC<BettingChipsProps> = ({
     t,
     addCommas
 }) => {
+    // Initialize SentryHelper for BettingChips
+    const { logInfo } = useSentryHelper({
+        componentName: 'BettingChips',
+        logLevel: SentryLogLevel.ERROR_ONLY,
+        enableWorkflowTracking: false,
+        enablePerformanceTracking: false
+    });
+
+    logInfo('BettingChips rendered', {
+        min,
+        max,
+        currentAmount,
+        timestamp: Date.now()
+    });
     const formatNumber = (num: number): string => {
         if (num >= 1000) {
             return (num / 1000).toString() + 'K';

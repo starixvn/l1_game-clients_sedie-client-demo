@@ -5,6 +5,8 @@ import * as gc from '@sg/sg-game-client';
 import BetOptions, { IBetOptionsState } from '../../../../_shared/components/bet-option';
 import OddsComponent from '../../../../_shared/components/bet-option/odd-component';
 import BettingBlock from '../../../../_shared/components/bet-option/betting-block';
+import { useSentryHelper } from '../../../../_shared/hooks/useSentryHelper';
+import { SentryLogLevel } from '../../../../_shared/utils/sentry-helper';
 
 interface RNGSoccerBetOptionsProps {
     gameName: string;
@@ -19,7 +21,7 @@ const betOptionsList = [
     RNGSoccerChoices.away
 ]
 
-export default class RNGSoccerBetOptions extends BetOptions {
+class RNGSoccerBetOptionsComponent extends BetOptions {
     renderBetOptions(betChoice: string, odd: number, name: string = '', isBoostedChoice: boolean = false) {
         const { settlementResult } = this.state;
 
@@ -72,4 +74,25 @@ export default class RNGSoccerBetOptions extends BetOptions {
             </div>
         );
     }
-} 
+}
+
+// Wrapper component to provide SentryHelper to the class component
+const RNGSoccerBetOptions: React.FC<RNGSoccerBetOptionsProps> = (props) => {
+    const { logInfo } = useSentryHelper({
+        componentName: 'RNGSoccerBetOptions',
+        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        enableWorkflowTracking: false,
+        enablePerformanceTracking: true
+    });
+
+    logInfo('RNGSoccerBetOptions rendered', {
+        gameName: props.gameName,
+        namespace: props.namespace,
+        language: props.language,
+        timestamp: Date.now()
+    });
+
+    return <RNGSoccerBetOptionsComponent {...props} />;
+};
+
+export default RNGSoccerBetOptions;
