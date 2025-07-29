@@ -166,7 +166,7 @@ export const createMessageHandlerConfig = (environment: string, encryptionKey?: 
         ];
     } else {
         // TODO: UAT, SIT, PROD
-        allowedOrigins = ['*'];
+        allowedOrigins = [appSettings.standaloneUrl];
     }
 
     return {
