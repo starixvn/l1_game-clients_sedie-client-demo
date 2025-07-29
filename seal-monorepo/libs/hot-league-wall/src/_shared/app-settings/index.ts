@@ -64,6 +64,13 @@ export const appSettings = getEnvironmentConfig({
     siteId: VIVA88_SITE_ID
 });
 
+// Add Sentry DSN to appSettings
+export const appSettingsWithSentry = {
+    ...appSettings,
+    sentryDsn: appSettings.sentry?.dsn || 'YOUR_DSN_HERE',
+    sentryEnvironment: appSettings.sentry?.environment || 'development'
+};
+
 export const getSiteConfig = (gameId: number) => {
     const gameSetting = appSettings.gameSettings[gameId];
 

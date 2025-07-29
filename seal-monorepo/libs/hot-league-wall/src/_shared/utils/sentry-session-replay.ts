@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/react';
-import { appSettings } from '../app-settings';
+import { appSettingsWithSentry } from '../app-settings';
 
 /**
  * Sentry Session Replay Configuration
@@ -168,7 +168,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     if (isDevelopment) {
         // Development: Full recording for debugging
         return {
-            dsn: appSettings.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'development',
             release: `hot-league-wall@${process.env.npm_package_version || 'dev'}`,
             debug: true,
@@ -181,7 +181,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     } else if (isProduction) {
         // Production: Conservative recording for privacy
         return {
-            dsn: appSettings.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'production',
             release: `hot-league-wall@${process.env.npm_package_version || 'prod'}`,
             debug: false,
@@ -194,7 +194,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     } else if (isTest) {
         // Test: Disabled to avoid noise
         return {
-            dsn: appSettings.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'test',
             release: `hot-league-wall@${process.env.npm_package_version || 'test'}`,
             debug: false,
@@ -207,7 +207,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     } else {
         // Default: Conservative settings
         return {
-            dsn: appSettings.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'unknown',
             release: `hot-league-wall@${process.env.npm_package_version || 'unknown'}`,
             debug: false,

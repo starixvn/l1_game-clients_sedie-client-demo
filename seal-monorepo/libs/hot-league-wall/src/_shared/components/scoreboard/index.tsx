@@ -22,7 +22,7 @@ const ScoreBoard: React.FunctionComponent<Props> = ({
     // Initialize SentryHelper for ScoreBoard
     const { logInfo } = useSentryHelper({
         componentName: 'ScoreBoard',
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });

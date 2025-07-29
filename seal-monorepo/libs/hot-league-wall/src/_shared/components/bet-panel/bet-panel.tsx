@@ -139,7 +139,7 @@ const BetPanel: React.FC<{
     // Initialize SentryHelper for BetPanel
     const { logError, logWarning, logInfo, workflow } = useSentryHelper({
         componentName: 'BetPanel',
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });

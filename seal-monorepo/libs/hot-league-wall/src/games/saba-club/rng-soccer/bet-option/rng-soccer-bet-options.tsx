@@ -80,7 +80,7 @@ class RNGSoccerBetOptionsComponent extends BetOptions {
 const RNGSoccerBetOptions: React.FC<RNGSoccerBetOptionsProps> = (props) => {
     const { logInfo } = useSentryHelper({
         componentName: 'RNGSoccerBetOptions',
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });

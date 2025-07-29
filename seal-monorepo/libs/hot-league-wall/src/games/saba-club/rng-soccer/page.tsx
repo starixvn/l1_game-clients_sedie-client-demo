@@ -171,7 +171,7 @@ class RNGSoccerPageComponent extends GatewayGameBase<GameBaseProps, IRNGSoccerPa
 const RNGSoccerPage: React.FC<GameBaseProps> = (props) => {
     const { logInfo } = useSentryHelper({
         componentName: 'RNGSoccerPage',
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });

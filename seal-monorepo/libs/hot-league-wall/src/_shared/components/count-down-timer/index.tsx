@@ -108,7 +108,7 @@ class CountDownTimerComponent extends ObserverComponent<ICountDownTimerProps, IC
 const CountDownTimer: React.FC<ICountDownTimerProps> = (props) => {
     const { logInfo } = useSentryHelper({
         componentName: 'CountDownTimer',
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });

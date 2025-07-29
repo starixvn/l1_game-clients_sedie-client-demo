@@ -6,7 +6,7 @@ import { SentryLogLevel } from '../../utils/sentry-helper';
 export const Loading: React.FC = () => {
     const { logInfo } = useSentryHelper({
         componentName: 'Loading',
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });

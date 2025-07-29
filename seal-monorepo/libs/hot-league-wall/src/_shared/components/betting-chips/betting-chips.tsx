@@ -24,7 +24,7 @@ const BettingChips: React.FC<BettingChipsProps> = ({
     // Initialize SentryHelper for BettingChips
     const { logInfo } = useSentryHelper({
         componentName: 'BettingChips',
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });

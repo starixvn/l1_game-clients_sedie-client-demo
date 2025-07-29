@@ -21,7 +21,7 @@ export const configureGlobalSentry = () => {
     // Initialize with custom configuration
     configureSentry({
         enabled: true,
-        defaultLogLevel: SentryLogLevel.ALL,
+        defaultLogLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true,
         enableConsoleOverride: true
@@ -29,20 +29,20 @@ export const configureGlobalSentry = () => {
 
     // Or use convenience functions
     enableSentry();
-    setLogLevel(SentryLogLevel.WARNING_AND_ERROR);
+    setLogLevel(SentryLogLevel.WARN);
 };
 
 // Example 2: Component-Specific Configuration
 export const configureComponents = () => {
     // Configure different components with different log levels
     configureComponent('GameLobby', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('BettingSystem', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });

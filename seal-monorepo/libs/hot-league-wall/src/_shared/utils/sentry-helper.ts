@@ -1,8 +1,15 @@
 import SentryManager from './sentry-manager';
 import { appSettings } from '../app-settings';
 
-// Logging levels for different granularity
+// Standard Sentry log levels
 export enum SentryLogLevel {
+    TRACE = 'trace',
+    DEBUG = 'debug',
+    INFO = 'info',
+    WARN = 'warn',
+    ERROR = 'error',
+    FATAL = 'fatal',
+    // Legacy levels for backward compatibility
     DISABLED = 'disabled',
     ERROR_ONLY = 'error_only',
     WARNING_AND_ERROR = 'warning_and_error',
@@ -57,7 +64,7 @@ class SentryHelper {
     private constructor() {
         this.globalConfig = {
             enabled: true,
-            defaultLogLevel: SentryLogLevel.ALL,
+            defaultLogLevel: SentryLogLevel.INFO,
             enableWorkflowTracking: true,
             enablePerformanceTracking: true,
             enableConsoleOverride: true,
@@ -135,19 +142,42 @@ class SentryHelper {
     }
 
     // Check if logging is enabled for a component and level
-    isLoggingEnabled(componentName: string, level: 'error' | 'warning' | 'info'): boolean {
+    isLoggingEnabled(componentName: string, level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'): boolean {
         if (!this.globalConfig.enabled) return false;
 
         const componentConfig = this.getComponentConfig(componentName);
         const logLevel = componentConfig?.logLevel || this.globalConfig.defaultLogLevel;
 
+        // Define level hierarchy (higher number = more important)
+        const levelHierarchy = {
+            'trace': 0,
+            'debug': 1,
+            'info': 2,
+            'warn': 3,
+            'error': 4,
+            'fatal': 5
+        };
+
         switch (logLevel) {
             case SentryLogLevel.DISABLED:
                 return false;
+            case SentryLogLevel.TRACE:
+                return levelHierarchy[level] >= levelHierarchy['trace'];
+            case SentryLogLevel.DEBUG:
+                return levelHierarchy[level] >= levelHierarchy['debug'];
+            case SentryLogLevel.INFO:
+                return levelHierarchy[level] >= levelHierarchy['info'];
+            case SentryLogLevel.WARN:
+                return levelHierarchy[level] >= levelHierarchy['warn'];
+            case SentryLogLevel.ERROR:
+                return levelHierarchy[level] >= levelHierarchy['error'];
+            case SentryLogLevel.FATAL:
+                return levelHierarchy[level] >= levelHierarchy['fatal'];
+            // Legacy levels for backward compatibility
             case SentryLogLevel.ERROR_ONLY:
-                return level === 'error';
+                return level === 'error' || level === 'fatal';
             case SentryLogLevel.WARNING_AND_ERROR:
-                return level === 'error' || level === 'warning';
+                return level === 'warn' || level === 'error' || level === 'fatal';
             case SentryLogLevel.ALL:
                 return true;
             default:
@@ -164,7 +194,7 @@ class SentryHelper {
     }
 
     logWarning(componentName: string, warning: string, context?: Record<string, any>): void {
-        if (!this.isLoggingEnabled(componentName, 'warning')) return;
+        if (!this.isLoggingEnabled(componentName, 'warn')) return;
 
         const sentryManager = this.getOrCreateComponentLogger(componentName);
         sentryManager.logWarning(warning, context);

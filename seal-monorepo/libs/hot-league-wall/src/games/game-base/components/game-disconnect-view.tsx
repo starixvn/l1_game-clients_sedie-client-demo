@@ -27,7 +27,7 @@ export const GameDisconnectView: React.FC<{
     // Initialize SentryHelper for GameDisconnectView
     const { logInfo, logWarning } = useSentryHelper({
         componentName: 'GameDisconnectView',
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });

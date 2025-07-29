@@ -18,7 +18,7 @@ export const RNGSoccerStaticPrototype: React.FC<{
     // Initialize SentryHelper for RNG Soccer prototype
     const { logError, logWarning, logInfo, workflow } = useSentryHelper({
         componentName: 'RNGSoccerStaticPrototype',
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });

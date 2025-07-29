@@ -9,7 +9,7 @@ export const initializeSentryForProject = () => {
     // Initialize global Sentry configuration
     configureSentry({
         enabled: true,
-        defaultLogLevel: SentryLogLevel.ALL,
+        defaultLogLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true,
         enableConsoleOverride: true
@@ -17,186 +17,186 @@ export const initializeSentryForProject = () => {
 
     // Configure main application components
     configureComponent('HotLeagueWall', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('App', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('AppContent', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure lobby and navigation components
     configureComponent('Lobby', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('LobbyComponent', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure game components
     configureComponent('RNGSoccerStaticPrototype', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('RNGSoccerBase', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     configureComponent('RNGSoccerPage', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     // Configure shared components with different log levels
     configureComponent('Loading', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     configureComponent('GameDisconnectView', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     // Configure UI components with minimal logging
     configureComponent('BetOption', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     configureComponent('BetPanel', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     configureComponent('BettingChips', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     configureComponent('Scoreboard', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     configureComponent('RoundHistory', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     // Configure utility components
     configureComponent('CountDownTimer', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     configureComponent('AnimBalance', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     configureComponent('WinnerDisplay', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     // Configure simulator components
     configureComponent('SSOControlSimulator', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('Preview', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure connection and gateway components
     configureComponent('GatewayConnectionManager', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('ConnectionManager', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure authentication components
     configureComponent('TokenRequestManager', {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('SyncMemberSiteBalance', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     // Configure state management components
     configureComponent('LobbyStore', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     configureComponent('GameStore', {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     // Configure utility components
     configureComponent('StringHelper', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     configureComponent('ComponentUtil', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
 
     // Configure internationalization
     configureComponent('I18n', {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
@@ -216,7 +216,7 @@ export const configureSentryForEnvironment = (environment: string) => {
         // Development: Full logging and tracking
         configureSentry({
             enabled: true,
-            defaultLogLevel: SentryLogLevel.ALL,
+            defaultLogLevel: SentryLogLevel.INFO,
             enableWorkflowTracking: true,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
@@ -226,7 +226,7 @@ export const configureSentryForEnvironment = (environment: string) => {
         // Production: Error and warning only, minimal tracking
         configureSentry({
             enabled: true,
-            defaultLogLevel: SentryLogLevel.WARNING_AND_ERROR,
+            defaultLogLevel: SentryLogLevel.WARN,
             enableWorkflowTracking: false,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
@@ -246,7 +246,7 @@ export const configureSentryForEnvironment = (environment: string) => {
         // Default: Conservative logging
         configureSentry({
             enabled: true,
-            defaultLogLevel: SentryLogLevel.ERROR_ONLY,
+            defaultLogLevel: SentryLogLevel.ERROR,
             enableWorkflowTracking: false,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
@@ -261,35 +261,35 @@ export const configureSentryForEnvironment = (environment: string) => {
 export const SENTRY_PRESETS = {
     // Critical components that need full tracking
     CRITICAL: {
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     },
 
     // Important components that need error and warning tracking
     IMPORTANT: {
-        logLevel: SentryLogLevel.WARNING_AND_ERROR,
+        logLevel: SentryLogLevel.WARN,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     },
 
     // UI components that only need error tracking
     UI: {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     },
 
     // Utility components that should be disabled in production
     UTILITY: {
-        logLevel: SentryLogLevel.ERROR_ONLY,
+        logLevel: SentryLogLevel.ERROR,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     },
 
     // Debug components that should be disabled in production
     DEBUG: {
-        logLevel: process.env.NODE_ENV === 'development' ? SentryLogLevel.ALL : SentryLogLevel.DISABLED,
+        logLevel: process.env.NODE_ENV === 'development' ? SentryLogLevel.INFO : SentryLogLevel.DISABLED,
         enableWorkflowTracking: process.env.NODE_ENV === 'development',
         enablePerformanceTracking: process.env.NODE_ENV === 'development'
     }

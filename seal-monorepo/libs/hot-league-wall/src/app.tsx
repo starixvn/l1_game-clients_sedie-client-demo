@@ -64,7 +64,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     // Initialize SentryHelper with workflow tracking
     const { logError, logWarning, logInfo, workflow } = useSentryHelper({
         componentName: 'HotLeagueWall',
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });

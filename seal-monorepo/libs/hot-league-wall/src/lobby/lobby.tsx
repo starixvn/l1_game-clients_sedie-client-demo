@@ -19,7 +19,7 @@ import { SentryLogLevel } from '../_shared/utils/sentry-helper';
 const LobbyWithSentry = (props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean; language: string }) => {
     const { logError, logWarning, logInfo, workflow } = useSentryHelper({
         componentName: 'Lobby',
-        logLevel: SentryLogLevel.ALL,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
