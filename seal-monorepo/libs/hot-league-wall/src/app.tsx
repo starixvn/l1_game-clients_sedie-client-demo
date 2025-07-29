@@ -7,7 +7,8 @@ import { SyncMemberSiteBalance } from './_shared/utils/callback-singleton/sync-m
 import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
 import { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
-import { useComponentSentry } from './_shared/hooks/useComponentSentry';
+import { useSentryHelper } from './_shared/hooks/useSentryHelper';
+import { SentryLogLevel } from './_shared/utils/sentry-helper';
 
 interface AppProps {
     appEnv: string;
@@ -40,10 +41,12 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     const [isLoading, setIsLoading] = useState(false);
     const [isReconnecting, setIsReconnecting] = useState(false);
 
-    // Initialize component-specific Sentry
-    const { logError, logWarning, logInfo } = useComponentSentry({
+    // Initialize SentryHelper with workflow tracking
+    const { logError, logWarning, logInfo, workflow } = useSentryHelper({
         componentName: 'HotLeagueWall',
-        enableConsoleOverride: true
+        logLevel: SentryLogLevel.ALL,
+        enableWorkflowTracking: true,
+        enablePerformanceTracking: true
     });
 
     // Shared token request logic
