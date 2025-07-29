@@ -213,7 +213,7 @@ export const configureSentryForEnvironment = (environment: string) => {
     const isTest = environment === 'test';
 
     if (isDevelopment) {
-        // Development: Full logging and tracking
+        // Development: Info logging for normal operations, error logging for exceptions
         configureSentry({
             enabled: true,
             defaultLogLevel: SentryLogLevel.INFO,
@@ -223,10 +223,10 @@ export const configureSentryForEnvironment = (environment: string) => {
         });
         console.log('SentryHelper configured for DEVELOPMENT environment');
     } else if (isProduction) {
-        // Production: Error and warning only, minimal tracking
+        // Production: Info logging for normal operations, error logging for exceptions
         configureSentry({
             enabled: true,
-            defaultLogLevel: SentryLogLevel.WARN,
+            defaultLogLevel: SentryLogLevel.INFO,
             enableWorkflowTracking: false,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
@@ -246,7 +246,7 @@ export const configureSentryForEnvironment = (environment: string) => {
         // Default: Conservative logging
         configureSentry({
             enabled: true,
-            defaultLogLevel: SentryLogLevel.ERROR,
+            defaultLogLevel: SentryLogLevel.INFO,
             enableWorkflowTracking: false,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
@@ -259,30 +259,30 @@ export const configureSentryForEnvironment = (environment: string) => {
  * Component-specific configuration presets
  */
 export const SENTRY_PRESETS = {
-    // Critical components that need full tracking
+    // Critical components that need info logging for normal operations, error logging for exceptions
     CRITICAL: {
         logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     },
 
-    // Important components that need error and warning tracking
+    // Important components that need info logging for normal operations, error logging for exceptions
     IMPORTANT: {
-        logLevel: SentryLogLevel.WARN,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     },
 
-    // UI components that only need error tracking
+    // UI components that need info logging for normal operations, error logging for exceptions
     UI: {
-        logLevel: SentryLogLevel.ERROR,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     },
 
-    // Utility components that should be disabled in production
+    // Utility components that need info logging for normal operations, error logging for exceptions
     UTILITY: {
-        logLevel: SentryLogLevel.ERROR,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     },

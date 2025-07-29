@@ -96,7 +96,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     };
 
     // Utility methods
-    const isLoggingEnabled = useCallback((level: 'error' | 'warning' | 'info') => {
+    const isLoggingEnabled = useCallback((level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal') => {
         return sentryHelper.isLoggingEnabled(componentName, level);
     }, [componentName]);
 

@@ -139,7 +139,7 @@ const BetPanel: React.FC<{
     // Initialize SentryHelper for BetPanel
     const { logError, logWarning, logInfo, workflow } = useSentryHelper({
         componentName: 'BetPanel',
-        logLevel: SentryLogLevel.WARN,
+        logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
@@ -169,9 +169,17 @@ const BetPanel: React.FC<{
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-                setPanelId(null);
-                setShow(false);
+            try {
+                if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+                    setPanelId(null);
+                    setShow(false);
+                }
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logError(`Click outside handler failed: ${errorMessage}`, {
+                    error,
+                    operation: 'click_outside_handler'
+                });
             }
         };
 
@@ -180,30 +188,43 @@ const BetPanel: React.FC<{
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [setPanelId]);
+    }, [setPanelId, logError]);
 
     useEffect(() => {
-        if (!betChoice) return;
-        // calculate min and max using helper
-        const { min: newMin, max: newMax } = calculateMinMaxAmount(
-            minBet,
-            stakeLevelMinBet,
-            maxBet,
-            stakeLevel.maxBet,
-            betChoiceMax,
-            maxBetPerChoices,
-            namespace
-        );
+        try {
+            if (!betChoice) return;
+            // calculate min and max using helper
+            const { min: newMin, max: newMax } = calculateMinMaxAmount(
+                minBet,
+                stakeLevelMinBet,
+                maxBet,
+                stakeLevel.maxBet,
+                betChoiceMax,
+                maxBetPerChoices,
+                namespace
+            );
 
-        setMin(newMin);
-        setMax(newMax);
+            setMin(newMin);
+            setMax(newMax);
 
-        setAmount((prev) => {
-            if (prev < newMin) return newMin;
-            if (prev > newMax) return newMax;
-            return prev;
-        });
-    }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace]);
+            setAmount((prev) => {
+                if (prev < newMin) return newMin;
+                if (prev > newMax) return newMax;
+                return prev;
+            });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logError(`Bet amount calculation failed: ${errorMessage}`, {
+                error,
+                operation: 'bet_amount_calculation',
+                betChoice,
+                minBet,
+                maxBet,
+                stakeLevelMinBet,
+                betChoiceMax
+            });
+        }
+    }, [betChoice, minBet, maxBet, stakeLevelMinBet, betChoiceMax, stakeLevel.maxBet, maxBetPerChoices, namespace, logError]);
 
     const setWarningWithTimeout = (message: string) => {
         if (warningTimeoutRef.current) {
@@ -223,23 +244,34 @@ const BetPanel: React.FC<{
     };
 
     const handleInputChange = (event: any) => {
-        const numericValue = parseInputValue(event.target.value);
+        try {
+            const numericValue = parseInputValue(event.target.value);
 
-        const { msg } = checkValidAmount(numericValue, min, max);
+            const { msg } = checkValidAmount(numericValue, min, max);
 
-        if (msg) {
-            if (msg === WarnMsgType.LESS_THAN_MIN) {
-                setWarnMsg(t('Common.lessthanmin'));
+            if (msg) {
+                if (msg === WarnMsgType.LESS_THAN_MIN) {
+                    setWarnMsg(t('Common.lessthanmin'));
+                }
+
+                if (msg === WarnMsgType.MORE_THAN_MAX) {
+                    setWarnMsg(t('Common.morethanmax'));
+                }
+            } else {
+                setWarnMsg('');
             }
 
-            if (msg === WarnMsgType.MORE_THAN_MAX) {
-                setWarnMsg(t('Common.morethanmax'));
-            }
-        } else {
-            setWarnMsg('');
+            setAmount(numericValue);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logError(`Input change handler failed: ${errorMessage}`, {
+                error,
+                operation: 'input_change_handler',
+                inputValue: event.target.value,
+                min,
+                max
+            });
         }
-
-        setAmount(numericValue);
     };
 
     const handleClear = () => {
@@ -247,19 +279,29 @@ const BetPanel: React.FC<{
     };
 
     const updateLatestBetToStorage = (namespace: string, clientRoundId: number) => {
-        const existingHistory = StorageManager.get(localStorageKeys.betHistory) as ILatestBetRecord[];
-        let betHistory = Array.isArray(existingHistory) ? existingHistory : [];
+        try {
+            const existingHistory = StorageManager.get(localStorageKeys.betHistory) as ILatestBetRecord[];
+            let betHistory = Array.isArray(existingHistory) ? existingHistory : [];
 
-        const newBet = { namespace, roundId: clientRoundId };
-        const existingNamespaceIndex = betHistory.findIndex(bet => bet.namespace === namespace);
+            const newBet = { namespace, roundId: clientRoundId };
+            const existingNamespaceIndex = betHistory.findIndex(bet => bet.namespace === namespace);
 
-        if (existingNamespaceIndex !== -1) {
-            betHistory[existingNamespaceIndex].roundId = clientRoundId;
-        } else {
-            betHistory.push(newBet);
+            if (existingNamespaceIndex !== -1) {
+                betHistory[existingNamespaceIndex].roundId = clientRoundId;
+            } else {
+                betHistory.push(newBet);
+            }
+
+            StorageManager.set(localStorageKeys.betHistory, betHistory);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logError(`Failed to update latest bet record to storage: ${errorMessage}`, {
+                error,
+                operation: 'update_latest_bet_storage',
+                namespace,
+                clientRoundId
+            });
         }
-
-        StorageManager.set(localStorageKeys.betHistory, betHistory);
     };
 
     const handleClickBet = () => {
@@ -293,7 +335,7 @@ const BetPanel: React.FC<{
                 setWarningWithTimeout(warning);
             }
 
-            logWarning('Bet validation failed', {
+            logError('Bet validation failed', {
                 msg,
                 amount,
                 validatedAmount,
@@ -301,7 +343,8 @@ const BetPanel: React.FC<{
                 max,
                 namespace,
                 clientRoundId,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                operation: 'bet_validation'
             });
 
             workflow.complete(workflowId, false, {
@@ -358,10 +401,11 @@ const BetPanel: React.FC<{
                 });
             }
         } else {
-            logWarning('Bet validation failed: no bet choice', {
+            logError('Bet validation failed: no bet choice', {
                 namespace,
                 clientRoundId,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                operation: 'bet_validation_no_choice'
             });
             workflow.complete(workflowId, false, {
                 reason: 'no_bet_choice'

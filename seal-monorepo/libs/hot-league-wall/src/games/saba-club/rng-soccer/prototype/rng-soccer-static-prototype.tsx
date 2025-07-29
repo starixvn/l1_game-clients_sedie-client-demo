@@ -25,43 +25,72 @@ export const RNGSoccerStaticPrototype: React.FC<{
 
     // Simulate countdown timer
     useEffect(() => {
-        logInfo('Starting countdown timer', {
-            initialCountdown: countdown,
-            animationTime: ANIMATION_TIME,
-            timestamp: Date.now()
-        });
-
-        const timer = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    logInfo('Countdown reset', {
-                        newCountdown: ANIMATION_TIME,
-                        timestamp: Date.now()
-                    });
-                    return ANIMATION_TIME;
-                }
-                return prev - 1;
+        try {
+            logInfo('Starting countdown timer', {
+                initialCountdown: countdown,
+                animationTime: ANIMATION_TIME,
+                timestamp: Date.now()
             });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [logInfo]);
+
+            const timer = setInterval(() => {
+                try {
+                    setCountdown((prev) => {
+                        if (prev <= 1) {
+                            logInfo('Countdown reset', {
+                                newCountdown: ANIMATION_TIME,
+                                timestamp: Date.now()
+                            });
+                            return ANIMATION_TIME;
+                        }
+                        return prev - 1;
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    logError(`Countdown timer update failed: ${errorMessage}`, {
+                        error,
+                        operation: 'countdown_timer_update',
+                        currentCountdown: countdown
+                    });
+                }
+            }, 1000);
+            return () => clearInterval(timer);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logError(`Countdown timer setup failed: ${errorMessage}`, {
+                error,
+                operation: 'countdown_timer_setup',
+                initialCountdown: countdown,
+                animationTime: ANIMATION_TIME
+            });
+        }
+    }, [logInfo, logError]);
 
     // Simulate round state changes
     useEffect(() => {
-        let roundState = 'placingBets';
-        if (countdown <= 8) roundState = 'showingResult';
-        if (countdown <= 3) roundState = 'lockingBet';
+        try {
+            let roundState = 'placingBets';
+            if (countdown <= 8) roundState = 'showingResult';
+            if (countdown <= 3) roundState = 'lockingBet';
 
-        setCurrentState((prev) => ({
-            ...prev,
-            currentRound: {
-                ...prev.currentRound,
-                roundState,
-                countdownTimer: countdown,
-                isLocking: roundState === 'lockingBet',
-            },
-        }));
-    }, [countdown]);
+            setCurrentState((prev) => ({
+                ...prev,
+                currentRound: {
+                    ...prev.currentRound,
+                    roundState,
+                    countdownTimer: countdown,
+                    isLocking: roundState === 'lockingBet',
+                },
+            }));
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logError(`Round state update failed: ${errorMessage}`, {
+                error,
+                operation: 'round_state_update',
+                countdown,
+                currentState
+            });
+        }
+    }, [countdown, logError]);
 
     const handlePlayClick = async () => {
         const workflowId = workflow.start('Play Button Click', {

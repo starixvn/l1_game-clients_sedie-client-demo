@@ -174,6 +174,8 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
      * Get connection handler and register its connection
      */
     private getConnectionHandler(): any {
+        const { sentryHelper } = this.props;
+
         try {
             const container = this.connectionManager['getSharedContainer']();
             if (!container) {
@@ -183,6 +185,13 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
             const handler = container.get(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler);
             return handler;
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (sentryHelper) {
+                sentryHelper.logError(`Failed to get connection handler: ${errorMessage}`, {
+                    error,
+                    operation: 'get_connection_handler'
+                });
+            }
             return null;
         }
     }
@@ -255,11 +264,20 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     };
 
     handleSessionReconnect = async () => {
+        const { sentryHelper } = this.props;
+
         // Call parent's onSSORetry callback if provided
         if (this.props.onSSORetry) {
             try {
                 await this.props.onSSORetry();
             } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                if (sentryHelper) {
+                    sentryHelper.logError(`Session reconnect failed: ${errorMessage}`, {
+                        error,
+                        operation: 'session_reconnect'
+                    });
+                }
             }
         }
     };

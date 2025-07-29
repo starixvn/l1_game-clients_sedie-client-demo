@@ -99,19 +99,39 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
             let newToken: string | null = null;
             if (onRequestSSOToken) {
                 newToken = await workflow.track('SSO Token Request', async () => {
-                    const startTime = performance.now();
-                    const result = await onRequestSSOToken();
-                    const duration = performance.now() - startTime;
-                    trackPerformance('sso_token_request', duration, { context });
-                    return result;
+                    try {
+                        const startTime = performance.now();
+                        const result = await onRequestSSOToken();
+                        const duration = performance.now() - startTime;
+                        trackPerformance('sso_token_request', duration, { context });
+                        return result;
+                    } catch (error) {
+                        const errorMessage = error instanceof Error ? error.message : String(error);
+                        logError(`SSO Token Request failed: ${errorMessage}`, {
+                            context,
+                            error,
+                            operation: 'sso_token_request'
+                        });
+                        throw error;
+                    }
                 });
             } else {
                 newToken = await workflow.track('Token Manager Request', async () => {
-                    const startTime = performance.now();
-                    const result = await TokenRequestManager.getInstance().executeTokenRequest();
-                    const duration = performance.now() - startTime;
-                    trackPerformance('token_manager_request', duration, { context });
-                    return result;
+                    try {
+                        const startTime = performance.now();
+                        const result = await TokenRequestManager.getInstance().executeTokenRequest();
+                        const duration = performance.now() - startTime;
+                        trackPerformance('token_manager_request', duration, { context });
+                        return result;
+                    } catch (error) {
+                        const errorMessage = error instanceof Error ? error.message : String(error);
+                        logError(`Token Manager Request failed: ${errorMessage}`, {
+                            context,
+                            error,
+                            operation: 'token_manager_request'
+                        });
+                        throw error;
+                    }
                 });
             }
 
@@ -131,7 +151,11 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                     context,
                     reason: 'no_token_returned'
                 });
-                logWarning(`Token request returned null`, { context });
+                logError(`Token request returned null`, {
+                    context,
+                    reason: 'no_token_returned',
+                    operation: 'token_request'
+                });
                 trackError('Token request returned null', { context });
                 return { success: false, token: null };
             }
@@ -142,7 +166,12 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                 context,
                 reason: 'token_request_failed'
             });
-            logError(`Token request failed: ${errorMessage}`, { context, error });
+            logError(`Token request failed: ${errorMessage}`, {
+                context,
+                error,
+                operation: 'token_request',
+                reason: 'token_request_failed'
+            });
             trackError(errorMessage, { context });
             return { success: false, token: null, error };
         }
@@ -151,28 +180,38 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     // Effect to handle tab visibility changes and reset game state
     useEffect(() => {
         const handleVisibilityChange = () => {
-            if (!document.hidden) {
-                // Only reset game state if we're not currently in a game session
-                // This prevents unmounting the game component when switching tabs
-                if (!currentToken) {
-                    // Tab became visible, reset game state to show prototype again
-                    logInfo('Tab became visible, resetting game state', {
-                        hasToken: !!currentToken,
-                        hasClickedPlay,
-                        timestamp: Date.now()
-                    });
-                    setHasClickedPlay(false);
-                    setCurrentToken(null);
-                    setIsLoading(false);
-                    setIsReconnecting(false);
+            try {
+                if (!document.hidden) {
+                    // Only reset game state if we're not currently in a game session
+                    // This prevents unmounting the game component when switching tabs
+                    if (!currentToken) {
+                        // Tab became visible, reset game state to show prototype again
+                        logInfo('Tab became visible, resetting game state', {
+                            hasToken: !!currentToken,
+                            hasClickedPlay,
+                            timestamp: Date.now()
+                        });
+                        setHasClickedPlay(false);
+                        setCurrentToken(null);
+                        setIsLoading(false);
+                        setIsReconnecting(false);
+                    } else {
+                        logInfo('Tab became visible, keeping game session active', {
+                            hasToken: !!currentToken,
+                            timestamp: Date.now()
+                        });
+                    }
                 } else {
-                    logInfo('Tab became visible, keeping game session active', {
-                        hasToken: !!currentToken,
-                        timestamp: Date.now()
-                    });
+                    logInfo('Tab became hidden', { timestamp: Date.now() });
                 }
-            } else {
-                logInfo('Tab became hidden', { timestamp: Date.now() });
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logError(`Tab visibility change handler failed: ${errorMessage}`, {
+                    error,
+                    operation: 'visibility_change_handler',
+                    documentHidden: document.hidden,
+                    hasToken: !!currentToken
+                });
             }
         };
 
@@ -181,7 +220,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [currentToken, hasClickedPlay, logInfo]);
+    }, [currentToken, hasClickedPlay, logInfo, logError]);
 
     // Unified token request handler
     const performTokenRequest = useCallback(
@@ -212,20 +251,29 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     const handlePlayButtonClick = useCallback(
         async () => {
-            logInfo('Play button clicked, initiating first SSO request', {
-                timestamp: Date.now()
-            });
-            const result = await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
-
-            if (result.success) {
-                logInfo('Play button flow completed successfully', {
-                    hasToken: !!result.token,
+            try {
+                logInfo('Play button clicked, initiating first SSO request', {
                     timestamp: Date.now()
                 });
-            } else {
-                logError('Play button flow failed', {
-                    error: result.error,
-                    timestamp: Date.now()
+                const result = await performTokenRequest({ context: 'FIRST_SSO', showLoading: true, triggerPlayTransition: true });
+
+                if (result.success) {
+                    logInfo('Play button flow completed successfully', {
+                        hasToken: !!result.token,
+                        timestamp: Date.now()
+                    });
+                } else {
+                    logError('Play button flow failed', {
+                        error: result.error,
+                        timestamp: Date.now(),
+                        operation: 'play_button_flow'
+                    });
+                }
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logError(`Play button click handler failed: ${errorMessage}`, {
+                    error,
+                    operation: 'play_button_click_handler'
                 });
             }
         },
@@ -234,20 +282,29 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     const handleSessionReconnect = useCallback(
         async () => {
-            logInfo('Session reconnect initiated', {
-                timestamp: Date.now()
-            });
-            const result = await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
-
-            if (result.success) {
-                logInfo('Session reconnect completed successfully', {
-                    hasToken: !!result.token,
+            try {
+                logInfo('Session reconnect initiated', {
                     timestamp: Date.now()
                 });
-            } else {
-                logError('Session reconnect failed', {
-                    error: result.error,
-                    timestamp: Date.now()
+                const result = await performTokenRequest({ context: 'SSO_RETRY', showReconnectLoading: true });
+
+                if (result.success) {
+                    logInfo('Session reconnect completed successfully', {
+                        hasToken: !!result.token,
+                        timestamp: Date.now()
+                    });
+                } else {
+                    logError('Session reconnect failed', {
+                        error: result.error,
+                        timestamp: Date.now(),
+                        operation: 'session_reconnect'
+                    });
+                }
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logError(`Session reconnect handler failed: ${errorMessage}`, {
+                    error,
+                    operation: 'session_reconnect_handler'
                 });
             }
         },
