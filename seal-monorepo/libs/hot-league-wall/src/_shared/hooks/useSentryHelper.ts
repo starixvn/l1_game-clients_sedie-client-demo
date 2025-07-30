@@ -1,30 +1,13 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { sentryHelper } from '../utils/sentry-helper';
 import {
-    sentryHelper,
     SentryLogLevel,
     WorkflowState,
-    ComponentConfig,
-    startWorkflow,
-    updateWorkflow,
-    completeWorkflow,
-    trackPerformance,
-    configureComponent
-} from '../utils/sentry-helper';
+    UseSentryHelperOptions,
+    WorkflowTracker
+} from '../utils/sentry-types';
 
-interface UseSentryHelperOptions {
-    componentName: string;
-    logLevel?: SentryLogLevel;
-    enableWorkflowTracking?: boolean;
-    enablePerformanceTracking?: boolean;
-    autoConfigure?: boolean;
-}
 
-interface WorkflowTracker {
-    start: (workflowName: string, metadata?: Record<string, any>) => string;
-    update: (workflowId: string, state: WorkflowState, metadata?: Record<string, any>) => void;
-    complete: (workflowId: string, success?: boolean, metadata?: Record<string, any>) => void;
-    track: <T>(operationName: string, operation: () => Promise<T> | T) => Promise<T>;
-}
 
 export const useSentryHelper = (options: UseSentryHelperOptions) => {
     const {
@@ -50,7 +33,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
 
-                configureComponent(componentName, {
+                sentryHelper.configureComponent(componentName, {
                     logLevel,
                     enableWorkflowTracking,
                     enablePerformanceTracking
@@ -85,7 +68,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                 // Complete any remaining workflows
                 activeWorkflows.current.forEach(workflowId => {
                     try {
-                        completeWorkflow(workflowId, false, { reason: 'component_unmounted' });
+                        sentryHelper.completeWorkflow(workflowId, false, { reason: 'component_unmounted' });
                     } catch (error) {
                         console.error('Failed to complete workflow during cleanup:', error);
                     }
@@ -128,7 +111,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
 
-                startWorkflow(workflowId, workflowName, componentName, metadata);
+                sentryHelper.startWorkflow(workflowId, workflowName, componentName, metadata);
                 activeWorkflows.current.add(workflowId);
 
                 sentryHelper.logInfo(componentName, 'Workflow started successfully', {
@@ -154,7 +137,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
 
-                updateWorkflow(workflowId, state, metadata);
+                sentryHelper.updateWorkflow(workflowId, state, metadata);
             } catch (error) {
                 console.error('Failed to update workflow:', error);
             }
@@ -169,7 +152,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
 
-                completeWorkflow(workflowId, success, metadata);
+                sentryHelper.completeWorkflow(workflowId, success, metadata);
                 activeWorkflows.current.delete(workflowId);
 
                 sentryHelper.logInfo(componentName, 'Workflow completed successfully', {

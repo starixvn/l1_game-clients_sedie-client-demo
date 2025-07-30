@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Loading from '../../../_shared/components/loading';
 import Styles from '../game-base.module.scss';
 import { useSentryHelper } from '../../../_shared/hooks/useSentryHelper';
-import { SentryLogLevel } from '../../../_shared/utils/sentry-helper';
+import { SentryLogLevel } from '../../../_shared/utils/sentry-types';
 
 // Rendering components for different game states
 export const GameLoadingView: React.FC = () => {

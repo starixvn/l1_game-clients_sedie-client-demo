@@ -3,8 +3,6 @@
 
 import {
     sentryHelper,
-    SentryLogLevel,
-    WorkflowState,
     configureSentry,
     enableSentry,
     disableSentry,
@@ -15,6 +13,7 @@ import {
     completeWorkflow,
     trackPerformance
 } from './sentry-helper';
+import { SentryLogLevel, WorkflowState } from './sentry-types';
 
 import { setLocalStorageConfig, clearLocalStorageConfig } from './sentry-session-replay';
 

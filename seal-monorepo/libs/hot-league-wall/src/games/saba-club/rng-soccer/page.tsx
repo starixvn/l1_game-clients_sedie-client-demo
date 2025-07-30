@@ -18,7 +18,7 @@ import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
 import { RNGSoccerRoundHistory } from './round-history';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 import { useSentryHelper } from '../../../_shared/hooks/useSentryHelper';
-import { SentryLogLevel } from '../../../_shared/utils/sentry-helper';
+import { SentryLogLevel } from '../../../_shared/utils/sentry-types';
 
 interface IRNGSoccerPageState extends IGatewayGameBaseState {
     isTimerActive: boolean;

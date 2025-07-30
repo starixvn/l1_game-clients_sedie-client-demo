@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react';
 import { appSettingsWithSentry } from '../app-settings';
+import { LocalStorageConfig } from './sentry-types';
 
 /**
  * Sentry Session Replay Configuration
@@ -14,7 +15,7 @@ const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
 /**
  * Get logging configuration from localStorage
  */
-const getLocalStorageConfig = () => {
+const getLocalStorageConfig = (): LocalStorageConfig => {
     try {
         const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'info';
         const enabled = localStorage.getItem(SENTRY_ENABLED_KEY) !== 'false';

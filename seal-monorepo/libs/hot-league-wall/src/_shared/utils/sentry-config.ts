@@ -1,4 +1,5 @@
-import { configureSentry, configureComponent, SentryLogLevel } from './sentry-helper';
+import { configureSentry, configureComponent } from './sentry-helper';
+import { SentryLogLevel } from './sentry-types';
 
 // LocalStorage keys for logging control
 const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';

@@ -4,7 +4,7 @@ import Styles from './scoreboard.module.scss';
 import { hasBlink } from './helper';
 import { OddEvenBigRoadConverter, OverUnderBigRoadConverter } from './converters';
 import { useSentryHelper } from '../../hooks/useSentryHelper';
-import { SentryLogLevel } from '../../utils/sentry-helper';
+import { SentryLogLevel } from '../../utils/sentry-types';
 
 type Props = {
     gameName: string | undefined;

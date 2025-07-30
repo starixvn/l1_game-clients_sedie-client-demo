@@ -6,7 +6,7 @@ import BetOptions, { IBetOptionsState } from '../../../../_shared/components/bet
 import OddsComponent from '../../../../_shared/components/bet-option/odd-component';
 import BettingBlock from '../../../../_shared/components/bet-option/betting-block';
 import { useSentryHelper } from '../../../../_shared/hooks/useSentryHelper';
-import { SentryLogLevel } from '../../../../_shared/utils/sentry-helper';
+import { SentryLogLevel } from '../../../../_shared/utils/sentry-types';
 
 interface RNGSoccerBetOptionsProps {
     gameName: string;

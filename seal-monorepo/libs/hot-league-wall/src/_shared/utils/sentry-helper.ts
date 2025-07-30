@@ -1,5 +1,15 @@
 import SentryManager from './sentry-manager';
 import { appSettings } from '../app-settings';
+import {
+    SentryLogLevel,
+    WorkflowState,
+    ComponentConfig,
+    WorkflowConfig,
+    GlobalSentryConfig,
+    UseSentryHelperOptions,
+    WorkflowTracker,
+    LocalStorageConfig
+} from './sentry-types';
 
 // LocalStorage keys for logging control
 const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
@@ -55,59 +65,6 @@ export const clearLocalStorageConfig = () => {
         console.error('Failed to clear localStorage config:', error);
     }
 };
-
-// Standard Sentry log levels
-export enum SentryLogLevel {
-    TRACE = 'trace',
-    DEBUG = 'debug',
-    INFO = 'info',
-    WARN = 'warn',
-    ERROR = 'error',
-    FATAL = 'fatal',
-    // Legacy levels for backward compatibility
-    DISABLED = 'disabled',
-    ERROR_ONLY = 'error_only',
-    WARNING_AND_ERROR = 'warning_and_error',
-    ALL = 'all'
-}
-
-// Workflow tracking states
-export enum WorkflowState {
-    STARTED = 'started',
-    IN_PROGRESS = 'in_progress',
-    COMPLETED = 'completed',
-    FAILED = 'failed',
-    CANCELLED = 'cancelled'
-}
-
-// Component tracking configuration
-export interface ComponentConfig {
-    name: string;
-    logLevel: SentryLogLevel;
-    enableWorkflowTracking?: boolean;
-    enablePerformanceTracking?: boolean;
-}
-
-// Workflow tracking configuration
-export interface WorkflowConfig {
-    id: string;
-    name: string;
-    component: string;
-    logLevel: SentryLogLevel;
-    enablePerformanceTracking?: boolean;
-    metadata?: Record<string, any>;
-}
-
-// Global Sentry configuration
-export interface GlobalSentryConfig {
-    enabled: boolean;
-    defaultLogLevel: SentryLogLevel;
-    enableWorkflowTracking: boolean;
-    enablePerformanceTracking: boolean;
-    enableConsoleOverride: boolean;
-    componentConfigs: Map<string, ComponentConfig>;
-    workflowConfigs: Map<string, WorkflowConfig>;
-}
 
 class SentryHelper {
     private static instance: SentryHelper;
@@ -208,7 +165,15 @@ class SentryHelper {
     isLoggingEnabled(componentName: string, level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'): boolean {
         const localStorageConfig = getLocalStorageConfig();
 
-        if (!this.globalConfig.enabled || !localStorageConfig.enabled) return false;
+        // Warning, Error, and Fatal should always be sent regardless of localStorage
+        if (level === 'warn' || level === 'error' || level === 'fatal') {
+            return this.globalConfig.enabled;
+        }
+
+        // For trace, debug, and info levels, check localStorage enabled flag
+        if (!this.globalConfig.enabled || !localStorageConfig.enabled) {
+            return false;
+        }
 
         const componentConfig = this.getComponentConfig(componentName);
         const logLevel = componentConfig?.logLevel || this.globalConfig.defaultLogLevel;
@@ -223,26 +188,29 @@ class SentryHelper {
             'fatal': 5
         };
 
+        // At this point, level can only be 'trace', 'debug', or 'info'
+        const currentLevel = level as 'trace' | 'debug' | 'info';
+
         switch (logLevel) {
             case SentryLogLevel.DISABLED:
                 return false;
             case SentryLogLevel.TRACE:
-                return levelHierarchy[level] >= levelHierarchy['trace'];
+                return levelHierarchy[currentLevel] >= levelHierarchy['trace'];
             case SentryLogLevel.DEBUG:
-                return levelHierarchy[level] >= levelHierarchy['debug'];
+                return levelHierarchy[currentLevel] >= levelHierarchy['debug'];
             case SentryLogLevel.INFO:
-                return levelHierarchy[level] >= levelHierarchy['info'];
+                return levelHierarchy[currentLevel] >= levelHierarchy['info'];
             case SentryLogLevel.WARN:
-                return levelHierarchy[level] >= levelHierarchy['warn'];
+                return levelHierarchy[currentLevel] >= levelHierarchy['warn'];
             case SentryLogLevel.ERROR:
-                return levelHierarchy[level] >= levelHierarchy['error'];
+                return levelHierarchy[currentLevel] >= levelHierarchy['error'];
             case SentryLogLevel.FATAL:
-                return levelHierarchy[level] >= levelHierarchy['fatal'];
+                return levelHierarchy[currentLevel] >= levelHierarchy['fatal'];
             // Legacy levels for backward compatibility
             case SentryLogLevel.ERROR_ONLY:
-                return level === 'error' || level === 'fatal';
+                return false; // trace, debug, info are not error levels
             case SentryLogLevel.WARNING_AND_ERROR:
-                return level === 'warn' || level === 'error' || level === 'fatal';
+                return false; // trace, debug, info are not warning or error levels
             case SentryLogLevel.ALL:
                 return true;
             default:
@@ -321,7 +289,7 @@ class SentryHelper {
         });
     }
 
-    completeWorkflow(workflowId: string, success: boolean = true, metadata?: Record<string, any>): void {
+    completeWorkflow(workflowId: string, success = true, metadata?: Record<string, any>): void {
         const workflow = this.activeWorkflows.get(workflowId);
         if (!workflow) return;
 

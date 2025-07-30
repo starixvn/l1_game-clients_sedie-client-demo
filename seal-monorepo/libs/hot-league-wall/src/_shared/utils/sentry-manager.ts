@@ -1,35 +1,15 @@
 // Direct integration with sg-game-client SentryLogger
 // This file provides a comprehensive Sentry management system for the HotLeagueWall project
 
-// Import the enhanced SentryLogger from sg-game-client package
 import {
     SentryLogLevel,
     WorkflowState,
-    configureSentry,
-    enableSentry,
-    disableSentry,
-    setLogLevel,
-    configureComponent,
-    startWorkflow,
-    updateWorkflow,
-    completeWorkflow,
-    trackPerformance,
-    logTrace,
-    logDebug,
-    logInfo,
-    logWarning,
-    logError,
-    logFatal,
-    isLoggingEnabled,
-    getComponentConfig,
-    getConfig,
-    getActiveWorkflows,
-    cleanup,
-    close,
-    resetLogger
-} from '@sg/sg-game-client';
-
-import { appSettings } from '../app-settings';
+    ComponentConfig,
+    WorkflowConfig,
+    GlobalSentryConfig,
+    SentryManagerConfig
+} from './sentry-types';
+import * as Sentry from '@sentry/react';
 
 // LocalStorage keys for logging control
 const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
@@ -89,46 +69,7 @@ export const clearLocalStorageConfig = () => {
 // Standard Sentry log levels as per Sentry documentation
 export { SentryLogLevel, WorkflowState };
 
-// Component tracking configuration
-export interface ComponentConfig {
-    name: string;
-    logLevel: SentryLogLevel;
-    enableWorkflowTracking?: boolean;
-    enablePerformanceTracking?: boolean;
-}
 
-// Workflow tracking configuration
-export interface WorkflowConfig {
-    id: string;
-    name: string;
-    component: string;
-    logLevel: SentryLogLevel;
-    enablePerformanceTracking?: boolean;
-    metadata?: Record<string, any>;
-}
-
-// Global Sentry configuration
-export interface GlobalSentryConfig {
-    enabled: boolean;
-    defaultLogLevel: SentryLogLevel;
-    enableWorkflowTracking: boolean;
-    enablePerformanceTracking: boolean;
-    enableConsoleOverride: boolean;
-    componentConfigs: Map<string, ComponentConfig>;
-    workflowConfigs: Map<string, WorkflowConfig>;
-}
-
-interface SentryManagerConfig {
-    dsn: string;
-    environment: string;
-    componentName: string;
-    release?: string;
-    debug?: boolean;
-    logLevel?: SentryLogLevel;
-    enableWorkflowTracking?: boolean;
-    enablePerformanceTracking?: boolean;
-    enableConsoleOverride?: boolean;
-}
 
 class SentryManager {
     private static instance: SentryManager;
@@ -179,21 +120,28 @@ class SentryManager {
         // Initialize the global Sentry configuration
         try {
             // Configure global Sentry settings with localStorage override
-            configureSentry({
-                enabled: localStorageConfig.enabled && config.debug !== false,
-                defaultLogLevel: getLogLevelFromString(localStorageConfig.logLevel),
-                enableWorkflowTracking: config.enableWorkflowTracking !== false,
-                enablePerformanceTracking: config.enablePerformanceTracking !== false,
-                enableConsoleOverride: config.enableConsoleOverride !== false
+            Sentry.init({
+                dsn: config.dsn,
+                environment: config.environment,
+                release: config.release,
+                debug: config.debug,
+                tracesSampleRate: 1.0, // Sample rate for performance tracing
+                beforeSend: (event, hint) => {
+                    // Filter out errors that are not component-specific
+                    if (hint && hint.originalException) {
+                        const error = hint.originalException;
+                        if (this.errorFilter(error)) {
+                            return null; // Drop the event
+                        }
+                    }
+                    return event;
+                }
             });
 
             // Configure component-specific settings
-            configureComponent(this.componentName, {
-                name: this.componentName,
-                logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-                enableWorkflowTracking: config.enableWorkflowTracking !== false,
-                enablePerformanceTracking: config.enablePerformanceTracking !== false
-            });
+            Sentry.setContext('component', { name: this.componentName });
+            Sentry.setTag('component', this.componentName);
+            Sentry.setUser({ id: this.componentName }); // Assuming component name is user ID
 
             // Start Sentry with the provided configuration
             // Note: We need to call the start method from the sg-game-client logger
@@ -302,7 +250,10 @@ class SentryManager {
                         typeof arg === 'string' ? arg : arg?.message || String(arg)
                     ).join(' ');
 
-                    logError(this.componentName, `[${this.componentName}] ${errorMessage}`);
+                    Sentry.captureException(new Error(errorMessage), {
+                        level: 'error',
+                        tags: { component: this.componentName }
+                    });
                 } catch (sentryError) {
                     this.originalConsoleError('Failed to log to Sentry:', sentryError);
                 }
@@ -324,7 +275,10 @@ class SentryManager {
                         typeof arg === 'string' ? arg : arg?.message || String(arg)
                     ).join(' ');
 
-                    logWarning(this.componentName, `[${this.componentName}] ${warningMessage}`);
+                    Sentry.captureMessage(warningMessage, {
+                        level: 'warning',
+                        tags: { component: this.componentName }
+                    });
                 } catch (sentryError) {
                     this.originalConsoleError('Failed to log warning to Sentry:', sentryError);
                 }
@@ -346,7 +300,10 @@ class SentryManager {
                         typeof arg === 'string' ? arg : arg?.message || String(arg)
                     ).join(' ');
 
-                    logInfo(this.componentName, `[${this.componentName}] ${infoMessage}`);
+                    Sentry.captureMessage(infoMessage, {
+                        level: 'info',
+                        tags: { component: this.componentName }
+                    });
                 } catch (sentryError) {
                     this.originalConsoleError('Failed to log info to Sentry:', sentryError);
                 }
@@ -368,7 +325,10 @@ class SentryManager {
                         typeof arg === 'string' ? arg : arg?.message || String(arg)
                     ).join(' ');
 
-                    logDebug(this.componentName, `[${this.componentName}] ${debugMessage}`);
+                    Sentry.captureMessage(debugMessage, {
+                        level: 'debug',
+                        tags: { component: this.componentName }
+                    });
                 } catch (sentryError) {
                     this.originalConsoleError('Failed to log debug to Sentry:', sentryError);
                 }
@@ -390,7 +350,10 @@ class SentryManager {
                         typeof arg === 'string' ? arg : arg?.message || String(arg)
                     ).join(' ');
 
-                    logTrace(this.componentName, `[${this.componentName}] ${traceMessage}`);
+                    Sentry.captureMessage(traceMessage, {
+                        level: 'debug',
+                        tags: { component: this.componentName }
+                    });
                 } catch (sentryError) {
                     this.originalConsoleError('Failed to log trace to Sentry:', sentryError);
                 }
@@ -406,12 +369,16 @@ class SentryManager {
         }
 
         const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'trace')) {
+        // Trace level requires localStorage to be enabled
+        if (!localStorageConfig.enabled) {
             return;
         }
 
         try {
-            logTrace(this.componentName, message, context);
+            Sentry.captureMessage(message, {
+                level: 'debug',
+                tags: { component: this.componentName, ...context }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to log trace to Sentry:', sentryError);
         }
@@ -424,12 +391,16 @@ class SentryManager {
         }
 
         const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'debug')) {
+        // Debug level requires localStorage to be enabled
+        if (!localStorageConfig.enabled) {
             return;
         }
 
         try {
-            logDebug(this.componentName, message, context);
+            Sentry.captureMessage(message, {
+                level: 'debug',
+                tags: { component: this.componentName, ...context }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to log debug to Sentry:', sentryError);
         }
@@ -442,12 +413,16 @@ class SentryManager {
         }
 
         const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'info')) {
+        // Info level requires localStorage to be enabled
+        if (!localStorageConfig.enabled) {
             return;
         }
 
         try {
-            logInfo(this.componentName, message, context);
+            Sentry.captureMessage(message, {
+                level: 'info',
+                tags: { component: this.componentName, ...context }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to log info to Sentry:', sentryError);
         }
@@ -459,13 +434,14 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'warn')) {
-            return;
-        }
+        // Warning level should always be sent regardless of localStorage
+        // No additional checks needed for warning level
 
         try {
-            logWarning(this.componentName, message, context);
+            Sentry.captureMessage(message, {
+                level: 'warning',
+                tags: { component: this.componentName, ...context }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to log warning to Sentry:', sentryError);
         }
@@ -477,13 +453,14 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'error')) {
-            return;
-        }
+        // Error level should always be sent regardless of localStorage
+        // No additional checks needed for error level
 
         try {
-            logError(this.componentName, error, context);
+            Sentry.captureException(error, {
+                level: 'error',
+                tags: { component: this.componentName, ...context }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to log error to Sentry:', sentryError);
         }
@@ -495,13 +472,14 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'fatal')) {
-            return;
-        }
+        // Fatal level should always be sent regardless of localStorage
+        // No additional checks needed for fatal level
 
         try {
-            logFatal(this.componentName, error, context);
+            Sentry.captureException(error, {
+                level: 'fatal',
+                tags: { component: this.componentName, ...context }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to log fatal to Sentry:', sentryError);
         }
@@ -520,7 +498,10 @@ class SentryManager {
         }
 
         try {
-            startWorkflow(workflowId, workflowName, this.componentName, metadata);
+            Sentry.captureMessage(`Workflow started: ${workflowName} (ID: ${workflowId})`, {
+                level: 'info',
+                tags: { component: this.componentName, workflowId, workflowName, ...metadata }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to start workflow in Sentry:', sentryError);
         }
@@ -538,7 +519,10 @@ class SentryManager {
         }
 
         try {
-            updateWorkflow(workflowId, state, metadata);
+            Sentry.captureMessage(`Workflow updated: ${state} (ID: ${workflowId})`, {
+                level: 'info',
+                tags: { component: this.componentName, workflowId, workflowState: state, ...metadata }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to update workflow in Sentry:', sentryError);
         }
@@ -556,14 +540,17 @@ class SentryManager {
         }
 
         try {
-            completeWorkflow(workflowId, success, metadata);
+            Sentry.captureMessage(`Workflow completed: ${success ? 'Success' : 'Failure'} (ID: ${workflowId})`, {
+                level: success ? 'info' : 'error',
+                tags: { component: this.componentName, workflowId, workflowSuccess: success, ...metadata }
+            });
         } catch (sentryError) {
             this.originalConsoleError('Failed to complete workflow in Sentry:', sentryError);
         }
     }
 
     // Performance tracking
-    trackPerformance<T>(operationName: string, operation: () => Promise<T> | T): Promise<T> {
+    async trackPerformance<T>(operationName: string, operation: () => Promise<T> | T): Promise<T> {
         if (!this.isInitialized) {
             console.warn('SentryManager not initialized');
             return Promise.resolve(operation());
@@ -575,10 +562,24 @@ class SentryManager {
         }
 
         try {
-            return trackPerformance(this.componentName, operationName, operation);
-        } catch (sentryError) {
-            this.originalConsoleError('Failed to track performance in Sentry:', sentryError);
-            return Promise.resolve(operation());
+            // Simple performance tracking without transactions
+            const startTime = performance.now();
+            const result = await Promise.resolve(operation());
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+
+            Sentry.captureMessage(`Performance: ${operationName} took ${duration.toFixed(2)}ms`, {
+                level: 'info',
+                tags: { component: this.componentName, operationName, duration: duration.toFixed(2) }
+            });
+
+            return result;
+        } catch (error) {
+            Sentry.captureException(error, {
+                level: 'error',
+                tags: { component: this.componentName, operationName }
+            });
+            return Promise.reject(error);
         }
     }
 
@@ -590,7 +591,9 @@ class SentryManager {
         }
 
         try {
-            configureComponent(this.componentName, config);
+            // This method is no longer needed as Sentry.setContext and Sentry.setTag are used
+            // Keeping it for now, but it will not have an effect on Sentry configuration
+            console.log('configureComponent called, but Sentry configuration is managed externally.');
         } catch (sentryError) {
             this.originalConsoleError('Failed to configure component in Sentry:', sentryError);
         }
@@ -603,7 +606,15 @@ class SentryManager {
         }
 
         try {
-            return getComponentConfig(this.componentName);
+            // This method is no longer needed as Sentry.setContext and Sentry.setTag are used
+            // Keeping it for now, but it will not have an effect on Sentry configuration
+            console.log('getComponentConfig called, but Sentry configuration is managed externally.');
+            return {
+                name: this.componentName,
+                logLevel: SentryLogLevel.INFO, // Default to INFO
+                enableWorkflowTracking: true,
+                enablePerformanceTracking: true
+            };
         } catch (sentryError) {
             this.originalConsoleError('Failed to get component config from Sentry:', sentryError);
             return undefined;
@@ -621,7 +632,10 @@ class SentryManager {
         }
 
         try {
-            return isLoggingEnabled(this.componentName, level);
+            // This method is no longer needed as Sentry.setContext and Sentry.setTag are used
+            // Keeping it for now, but it will not have an effect on Sentry configuration
+            console.log('isLoggingEnabled called, but Sentry configuration is managed externally.');
+            return true; // Assuming logging is always enabled if initialized
         } catch (sentryError) {
             this.originalConsoleError('Failed to check logging enabled in Sentry:', sentryError);
             return false;
@@ -631,7 +645,10 @@ class SentryManager {
     // Utility methods
     getConfig(): GlobalSentryConfig {
         try {
-            return getConfig();
+            // This method is no longer needed as Sentry.setContext and Sentry.setTag are used
+            // Keeping it for now, but it will not have an effect on Sentry configuration
+            console.log('getConfig called, but Sentry configuration is managed externally.');
+            return this.globalConfig;
         } catch (sentryError) {
             this.originalConsoleError('Failed to get config from Sentry:', sentryError);
             return this.globalConfig;
@@ -640,7 +657,10 @@ class SentryManager {
 
     getActiveWorkflows(): Map<string, { config: WorkflowConfig; startTime: number; metadata: Record<string, any> }> {
         try {
-            return getActiveWorkflows();
+            // This method is no longer needed as Sentry.setContext and Sentry.setTag are used
+            // Keeping it for now, but it will not have an effect on Sentry configuration
+            console.log('getActiveWorkflows called, but Sentry configuration is managed externally.');
+            return new Map();
         } catch (sentryError) {
             this.originalConsoleError('Failed to get active workflows from Sentry:', sentryError);
             return new Map();
@@ -675,7 +695,9 @@ class SentryManager {
         }
 
         try {
-            cleanup();
+            // This method is no longer needed as Sentry.setContext and Sentry.setTag are used
+            // Keeping it for now, but it will not have an effect on Sentry configuration
+            console.log('cleanup called, but Sentry configuration is managed externally.');
         } catch (sentryError) {
             this.originalConsoleError('Failed to cleanup Sentry:', sentryError);
         }
@@ -718,9 +740,18 @@ export const sentryManager = SentryManager.getInstance();
 
 // Export convenience functions for easy usage
 export const configureSentryManager = (config: SentryManagerConfig) => sentryManager.initialize(config);
-export const enableSentryManager = () => enableSentry();
-export const disableSentryManager = () => disableSentry();
-export const setSentryLogLevel = (level: SentryLogLevel) => setLogLevel(level);
+export const enableSentryManager = () => {
+    // This function is no longer needed as Sentry.init is called in initialize
+    console.log('enableSentryManager called, but Sentry initialization is managed externally.');
+};
+export const disableSentryManager = () => {
+    // This function is no longer needed as Sentry.init is called in initialize
+    console.log('disableSentryManager called, but Sentry initialization is managed externally.');
+};
+export const setSentryLogLevel = (level: SentryLogLevel) => {
+    // This function is no longer needed as Sentry.init is called in initialize
+    console.log('setSentryLogLevel called, but Sentry initialization is managed externally.');
+};
 
 // Export workflow convenience functions
 export const startSentryWorkflow = (id: string, name: string, metadata?: Record<string, any>) =>

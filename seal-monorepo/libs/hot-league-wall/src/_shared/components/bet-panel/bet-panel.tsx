@@ -4,7 +4,7 @@ import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSentryHelper } from '../../hooks/useSentryHelper';
-import { SentryLogLevel } from '../../utils/sentry-helper';
+import { SentryLogLevel } from '../../utils/sentry-types';
 import {
     RNGSoccer_GAME_NAMESPACE,
     SABA_GAMES,
