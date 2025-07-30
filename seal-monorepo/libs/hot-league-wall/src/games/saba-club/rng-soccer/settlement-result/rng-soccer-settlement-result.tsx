@@ -41,7 +41,7 @@ export default class RNGSoccerSettlementResult extends ObserverComponent<IPropsO
             error: undefined,
             isFinish: false,
             isFinishShowResult: false,
-            teamData: GameResult.getDefaultTeamData(),
+            teamData: GameResult.getDefaultTeamData('HIDE_HOME_NAME', 'HIDE_AWAY_NAME'),
         };
     }
 

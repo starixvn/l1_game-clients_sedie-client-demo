@@ -102,6 +102,7 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
         return <Loading />;
     }
 
+    const isHideTeamName = teamData.homeTeam.name === 'HIDE_HOME_NAME' || teamData.awayTeam.name === 'HIDE_AWAY_NAME';
     return (
         <div className={styles['wrapper-sport-middle']}>
             <TeamCard logo={teamData.homeTeam.logo} isHomeTeam={true} animation={teamCardAnimation} />
@@ -148,7 +149,7 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
             </div>
             <TeamCard logo={teamData.awayTeam.logo} isHomeTeam={false} animation={teamCardAnimation} />
 
-            <div className={styles['wrapper-team-name']}>
+            <div className={`${styles['wrapper-team-name']} ${isHideTeamName ? styles['hide-team-name'] : ''}`}>
                 <div className={styles['name']}>{teamData.homeTeam.name}</div>
                 <div className={styles['name']}>{teamData.awayTeam.name}</div>
             </div>

@@ -41,28 +41,54 @@ export class TeamUtils {
      * Team mapping with team information
      */
     public static readonly TEAM_INFO: Record<string, TeamInfo> = {
-        "DEFAULT_HOME": { fullName: "Home Team", shortName: "DEFAULT_HOME", logo: homeDefaultLogo, primaryColor: "#FFFFFF", secondaryColor: "#FFFFFF" },
-        "DEFAULT_AWAY": { fullName: "Away Team", shortName: "DEFAULT_AWAY", logo: awayDefaultLogo, primaryColor: "#FFFFFF", secondaryColor: "#FFFFFF" },
-        "LIV": { fullName: "Liverpool FC", shortName: "LIV", logo: LIV_ICON, primaryColor: "#C8102E", secondaryColor: "#00B2A9" },
-        "INT": { fullName: "Inter Milan", shortName: "INT", logo: INT_ICON, primaryColor: "#0066B3", secondaryColor: "#000000" },
-        "BAR": { fullName: "Barcelona", shortName: "BAR", logo: BAR_ICON, primaryColor: "#CD122D", secondaryColor: "#004D98" },
-        "PSG": { fullName: "Paris Saint-Germain", shortName: "PSG", logo: PSG_ICON, primaryColor: "#004170", secondaryColor: "#DA291C" },
-        "ARS": { fullName: "Arsenal", shortName: "ARS", logo: ARS_ICON, primaryColor: "#EF0107", secondaryColor: "#063672" },
-        "BAY": { fullName: "Bayern Munich", shortName: "BAY", logo: BAY_ICON, primaryColor: "#DC052D", secondaryColor: "#0066B2" },
-        "RMA": { fullName: "Real Madrid", shortName: "RMA", logo: RMA_ICON, primaryColor: "#FFFFFF", secondaryColor: "#00529F" },
-        "LEV": { fullName: "Bayer Leverkusen", shortName: "LEV", logo: LEV_ICON, primaryColor: "#E32221", secondaryColor: "#000000" },
-        "ATM": { fullName: "Atlético Madrid", shortName: "ATM", logo: ATM_ICON, primaryColor: "#CB3524", secondaryColor: "#172E62" },
-        "MCI": { fullName: "Manchester City", shortName: "MCI", logo: MCI_ICON, primaryColor: "#6CABDD", secondaryColor: "#1C2C5B" },
-        "ATA": { fullName: "Atalanta", shortName: "ATA", logo: ATA_ICON, primaryColor: "#1E71B8", secondaryColor: "#000000" },
-        "NAP": { fullName: "SSC Napoli", shortName: "NAP", logo: NAP_ICON, primaryColor: "#12A0D7", secondaryColor: "#003C8F" },
-        "ATH": { fullName: "Athletico Bilbao", shortName: "ATH", logo: ATH_ICON, primaryColor: "#EF1420", secondaryColor: "#000000" },
-        "AVL": { fullName: "Aston Villa", shortName: "AVL", logo: AVL_ICON, primaryColor: "#95BFE5", secondaryColor: "#7A003C" },
-        "BEN": { fullName: "Benfica", shortName: "BEN", logo: BEN_ICON, primaryColor: "#E73331", secondaryColor: "#FFFFFF" },
-        "SPO": { fullName: "Sporting", shortName: "SPO", logo: SPO_ICON, primaryColor: "#006335", secondaryColor: "#FFFFFF" },
-        "NFO": { fullName: "Nottingham Forest", shortName: "NFO", logo: NFO_ICON, primaryColor: "#DD0000", secondaryColor: "#FFFFFF" },
-        "BOL": { fullName: "Bologna", shortName: "BOL", logo: BOL_ICON, primaryColor: "#1A2F48", secondaryColor: "#AB1F3A" },
-        "ROM": { fullName: "AS Roma", shortName: "ROM", logo: ROM_ICON, primaryColor: "#A31D21", secondaryColor: "#FFD700" },
-        "JUV": { fullName: "Juventus", shortName: "JUV", logo: JUV_ICON, primaryColor: "#000000", secondaryColor: "#FFFFFF" }
+        DEFAULT_HOME: {
+            fullName: 'Home Team',
+            shortName: 'DEFAULT_HOME',
+            logo: homeDefaultLogo,
+            primaryColor: '#FFFFFF',
+            secondaryColor: '#FFFFFF',
+        },
+        DEFAULT_AWAY: {
+            fullName: 'Away Team',
+            shortName: 'DEFAULT_AWAY',
+            logo: awayDefaultLogo,
+            primaryColor: '#FFFFFF',
+            secondaryColor: '#FFFFFF',
+        },
+        HIDE_HOME_NAME: {
+            fullName: '',
+            shortName: '',
+            logo: homeDefaultLogo,
+            primaryColor: '#FFFFFF',
+            secondaryColor: '#FFFFFF',
+        },
+        HIDE_AWAY_NAME: {
+            fullName: '',
+            shortName: '',
+            logo: awayDefaultLogo,
+            primaryColor: '#FFFFFF',
+            secondaryColor: '#FFFFFF',
+        },
+        LIV: { fullName: 'Liverpool FC', shortName: 'LIV', logo: LIV_ICON, primaryColor: '#C8102E', secondaryColor: '#00B2A9' },
+        INT: { fullName: 'Inter Milan', shortName: 'INT', logo: INT_ICON, primaryColor: '#0066B3', secondaryColor: '#000000' },
+        BAR: { fullName: 'Barcelona', shortName: 'BAR', logo: BAR_ICON, primaryColor: '#CD122D', secondaryColor: '#004D98' },
+        PSG: { fullName: 'Paris Saint-Germain', shortName: 'PSG', logo: PSG_ICON, primaryColor: '#004170', secondaryColor: '#DA291C' },
+        ARS: { fullName: 'Arsenal', shortName: 'ARS', logo: ARS_ICON, primaryColor: '#EF0107', secondaryColor: '#063672' },
+        BAY: { fullName: 'Bayern Munich', shortName: 'BAY', logo: BAY_ICON, primaryColor: '#DC052D', secondaryColor: '#0066B2' },
+        RMA: { fullName: 'Real Madrid', shortName: 'RMA', logo: RMA_ICON, primaryColor: '#FFFFFF', secondaryColor: '#00529F' },
+        LEV: { fullName: 'Bayer Leverkusen', shortName: 'LEV', logo: LEV_ICON, primaryColor: '#E32221', secondaryColor: '#000000' },
+        ATM: { fullName: 'Atlético Madrid', shortName: 'ATM', logo: ATM_ICON, primaryColor: '#CB3524', secondaryColor: '#172E62' },
+        MCI: { fullName: 'Manchester City', shortName: 'MCI', logo: MCI_ICON, primaryColor: '#6CABDD', secondaryColor: '#1C2C5B' },
+        ATA: { fullName: 'Atalanta', shortName: 'ATA', logo: ATA_ICON, primaryColor: '#1E71B8', secondaryColor: '#000000' },
+        NAP: { fullName: 'SSC Napoli', shortName: 'NAP', logo: NAP_ICON, primaryColor: '#12A0D7', secondaryColor: '#003C8F' },
+        ATH: { fullName: 'Athletico Bilbao', shortName: 'ATH', logo: ATH_ICON, primaryColor: '#EF1420', secondaryColor: '#000000' },
+        AVL: { fullName: 'Aston Villa', shortName: 'AVL', logo: AVL_ICON, primaryColor: '#95BFE5', secondaryColor: '#7A003C' },
+        BEN: { fullName: 'Benfica', shortName: 'BEN', logo: BEN_ICON, primaryColor: '#E73331', secondaryColor: '#FFFFFF' },
+        SPO: { fullName: 'Sporting', shortName: 'SPO', logo: SPO_ICON, primaryColor: '#006335', secondaryColor: '#FFFFFF' },
+        NFO: { fullName: 'Nottingham Forest', shortName: 'NFO', logo: NFO_ICON, primaryColor: '#DD0000', secondaryColor: '#FFFFFF' },
+        BOL: { fullName: 'Bologna', shortName: 'BOL', logo: BOL_ICON, primaryColor: '#1A2F48', secondaryColor: '#AB1F3A' },
+        ROM: { fullName: 'AS Roma', shortName: 'ROM', logo: ROM_ICON, primaryColor: '#A31D21', secondaryColor: '#FFD700' },
+        JUV: { fullName: 'Juventus', shortName: 'JUV', logo: JUV_ICON, primaryColor: '#000000', secondaryColor: '#FFFFFF' },
     };
 
     /**
@@ -95,4 +121,4 @@ export class TeamUtils {
     public static getTeamLogo(abbreviation: string): string {
         return TeamUtils.TEAM_INFO[abbreviation]?.logo;
     }
-} 
+}

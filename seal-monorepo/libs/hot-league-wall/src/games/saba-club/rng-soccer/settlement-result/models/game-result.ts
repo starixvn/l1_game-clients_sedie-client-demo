@@ -46,21 +46,18 @@ export class GameResult {
      * @param awayTeamAbbr Away team abbreviation
      * @returns Team data object
      */
-    public static getDefaultTeamData(
-        homeTeamAbbr: string = "DEFAULT_HOME",
-        awayTeamAbbr: string = "DEFAULT_AWAY"
-    ): TeamsData {
+    public static getDefaultTeamData(homeTeamAbbr: string = 'DEFAULT_HOME', awayTeamAbbr: string = 'DEFAULT_AWAY'): TeamsData {
         return {
             homeTeam: {
                 name: TeamUtils.getTeamFullName(homeTeamAbbr),
                 logo: TeamUtils.getTeamLogo(homeTeamAbbr),
-                color: TeamUtils.getTeamDefaultColor()
+                color: TeamUtils.getTeamDefaultColor(),
             },
             awayTeam: {
                 name: TeamUtils.getTeamFullName(awayTeamAbbr),
                 logo: TeamUtils.getTeamLogo(awayTeamAbbr),
-                color: TeamUtils.getTeamDefaultColor()
-            }
+                color: TeamUtils.getTeamDefaultColor(),
+            },
         };
     }
 
@@ -70,10 +67,7 @@ export class GameResult {
      * @param currentTeamData Current team data (optional)
      * @returns Updated team data
      */
-    public static updateTeamData(
-        match: MatchTeams,
-        currentTeamData?: TeamsData
-    ): TeamsData {
+    public static updateTeamData(match: MatchTeams, currentTeamData?: TeamsData): TeamsData {
         if (!match || !match.home || !match.away) {
             return currentTeamData || GameResult.getDefaultTeamData();
         }
@@ -82,13 +76,13 @@ export class GameResult {
             homeTeam: {
                 name: TeamUtils.getTeamFullName(match.home),
                 logo: TeamUtils.getTeamLogo(match.home),
-                color: TeamUtils.getTeamDefaultColor()
+                color: TeamUtils.getTeamDefaultColor(),
             },
             awayTeam: {
                 name: TeamUtils.getTeamFullName(match.away),
                 logo: TeamUtils.getTeamLogo(match.away),
-                color: TeamUtils.getTeamDefaultColor()
-            }
+                color: TeamUtils.getTeamDefaultColor(),
+            },
         };
     }
-} 
+}
