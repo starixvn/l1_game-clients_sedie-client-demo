@@ -1,4 +1,5 @@
 import * as gc from '@sg/sg-game-client';
+import { sentryHelper } from '../utils/sentry-helper';
 
 import SG_LOCAL_CONFIG from '../../../configs/sg/configs.LOCAL_1.json';
 import SG_SIT_CONFIG from '../../../configs/sg/configs.SIT.json';
@@ -25,6 +26,14 @@ export enum APP_ENV {
 }
 
 export const getEnvironmentConfig = ({ appEnv, siteId }) => {
+    const componentName = 'AppSettings';
+
+    sentryHelper.logInfo(componentName, 'Loading environment configuration', {
+        appEnv,
+        siteId,
+        timestamp: Date.now()
+    });
+
     const configMaps = {
         [NOVA88_SITE_ID]: {
             LOCAL: VG_LOCAL_CONFIG,
@@ -51,6 +60,15 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
         ...environmentsConfig,
         gameSettings
     };
+
+    sentryHelper.logInfo(componentName, 'Environment configuration loaded successfully', {
+        appEnv,
+        siteId,
+        configKeys: Object.keys(result),
+        gameSettingsCount: Object.keys(gameSettings).length,
+        timestamp: Date.now()
+    });
+
     return result;
 }
 
@@ -72,9 +90,21 @@ export const appSettingsWithSentry = {
 };
 
 export const getSiteConfig = (gameId: number) => {
+    const componentName = 'AppSettings';
+
+    sentryHelper.logInfo(componentName, 'Getting site configuration', {
+        gameId,
+        timestamp: Date.now()
+    });
+
     const gameSetting = appSettings.gameSettings[gameId];
 
     if (!gameSetting) {
+        sentryHelper.logWarning(componentName, 'No game setting found for gameId', {
+            gameId,
+            availableGameIds: Object.keys(appSettings.gameSettings),
+            timestamp: Date.now()
+        });
         console.warn('[getSiteConfig] No game setting found for gameId:', gameId);
     }
 
@@ -94,21 +124,55 @@ export const getSiteConfig = (gameId: number) => {
         userServicePath: appSettings.userServicePath
     };
 
+    sentryHelper.logInfo(componentName, 'Site configuration retrieved successfully', {
+        gameId,
+        configKeys: Object.keys(config),
+        websocketEnabled: !!gameSetting?.websocket,
+        timestamp: Date.now()
+    });
+
     return config;
 };
 
 export const getGameSetting = (gameId: number) => {
+    const componentName = 'AppSettings';
+
+    sentryHelper.logInfo(componentName, 'Getting game setting', {
+        gameId,
+        timestamp: Date.now()
+    });
+
     const settings = appSettings.gameSettings[gameId];
 
     if (!settings) {
+        sentryHelper.logWarning(componentName, 'No settings found for gameId', {
+            gameId,
+            availableGameIds: Object.keys(appSettings.gameSettings),
+            timestamp: Date.now()
+        });
         console.warn('[getGameSetting] No settings found for gameId:', gameId);
         return null;
     }
+
+    sentryHelper.logInfo(componentName, 'Game setting retrieved successfully', {
+        gameId,
+        gameName: settings.name,
+        isVisible: settings.isVisible,
+        order: settings.order,
+        timestamp: Date.now()
+    });
 
     return settings;
 };
 
 export const getGameSettingIds = (visibleOnly: boolean = true) => {
+    const componentName = 'AppSettings';
+
+    sentryHelper.logInfo(componentName, 'Getting game setting IDs', {
+        visibleOnly,
+        timestamp: Date.now()
+    });
+
     const gameSettings = Object.keys(appSettings.gameSettings).map((value) => {
         return appSettings.gameSettings[value];
     });
@@ -120,10 +184,25 @@ export const getGameSettingIds = (visibleOnly: boolean = true) => {
     const orderedGameSettings = filteredSettings.sort((a, b) => a.order - b.order);
 
     const ids = orderedGameSettings.map((value) => value.id);
+
+    sentryHelper.logInfo(componentName, 'Game setting IDs retrieved successfully', {
+        visibleOnly,
+        totalSettings: gameSettings.length,
+        filteredSettings: filteredSettings.length,
+        returnedIds: ids,
+        timestamp: Date.now()
+    });
+
     return ids;
 };
 
 export const getVisibleGameSettings = () => {
+    const componentName = 'AppSettings';
+
+    sentryHelper.logInfo(componentName, 'Getting visible game settings', {
+        timestamp: Date.now()
+    });
+
     const gameSettings = Object.keys(appSettings.gameSettings).map((value) => {
         return appSettings.gameSettings[value];
     });
@@ -131,6 +210,13 @@ export const getVisibleGameSettings = () => {
     const result = gameSettings
         .filter(setting => setting.isVisible)
         .sort((a, b) => a.order - b.order);
+
+    sentryHelper.logInfo(componentName, 'Visible game settings retrieved successfully', {
+        totalSettings: gameSettings.length,
+        visibleSettings: result.length,
+        gameNames: result.map(setting => setting.name),
+        timestamp: Date.now()
+    });
 
     return result;
 };

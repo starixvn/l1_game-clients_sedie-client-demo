@@ -40,10 +40,29 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     // Auto-configure component on mount
     useEffect(() => {
         if (autoConfigure) {
+            sentryHelper.logInfo(componentName, 'Initializing SentryHelper hook', {
+                componentName,
+                logLevel,
+                enableWorkflowTracking,
+                enablePerformanceTracking,
+                autoConfigure,
+                timestamp: Date.now()
+            });
+
             configureComponent(componentName, {
                 logLevel,
                 enableWorkflowTracking,
                 enablePerformanceTracking
+            });
+
+            sentryHelper.logInfo(componentName, 'SentryHelper hook initialized successfully', {
+                componentName,
+                configuration: {
+                    logLevel,
+                    enableWorkflowTracking,
+                    enablePerformanceTracking
+                },
+                timestamp: Date.now()
             });
         }
     }, [componentName, logLevel, enableWorkflowTracking, enablePerformanceTracking, autoConfigure]);
@@ -51,13 +70,24 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     // Cleanup workflows on unmount
     useEffect(() => {
         return () => {
+            sentryHelper.logInfo(componentName, 'Cleaning up SentryHelper hook', {
+                componentName,
+                activeWorkflowsCount: activeWorkflows.current.size,
+                timestamp: Date.now()
+            });
+
             // Complete any remaining workflows
             activeWorkflows.current.forEach(workflowId => {
                 completeWorkflow(workflowId, false, { reason: 'component_unmounted' });
             });
             activeWorkflows.current.clear();
+
+            sentryHelper.logInfo(componentName, 'SentryHelper hook cleanup completed', {
+                componentName,
+                timestamp: Date.now()
+            });
         };
-    }, []);
+    }, [componentName]);
 
     // Logging methods
     const logError = useCallback((error: Error | string, context?: Record<string, any>) => {
@@ -76,22 +106,71 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     const workflowTracker: WorkflowTracker = {
         start: useCallback((workflowName: string, metadata?: Record<string, any>) => {
             const workflowId = `${componentName}_${workflowName}_${Date.now()}`;
+
+            sentryHelper.logInfo(componentName, 'Starting workflow', {
+                workflowId,
+                workflowName,
+                metadata,
+                timestamp: Date.now()
+            });
+
             startWorkflow(workflowId, workflowName, componentName, metadata);
             activeWorkflows.current.add(workflowId);
+
+            sentryHelper.logInfo(componentName, 'Workflow started successfully', {
+                workflowId,
+                workflowName,
+                activeWorkflowsCount: activeWorkflows.current.size,
+                timestamp: Date.now()
+            });
+
             return workflowId;
         }, [componentName]),
 
         update: useCallback((workflowId: string, state: WorkflowState, metadata?: Record<string, any>) => {
-            updateWorkflow(workflowId, state, metadata);
-        }, []),
+            sentryHelper.logInfo(componentName, 'Updating workflow', {
+                workflowId,
+                state,
+                metadata,
+                timestamp: Date.now()
+            });
 
-        complete: useCallback((workflowId: string, success: boolean = true, metadata?: Record<string, any>) => {
+            updateWorkflow(workflowId, state, metadata);
+        }, [componentName]),
+
+        complete: useCallback((workflowId: string, success = true, metadata?: Record<string, any>) => {
+            sentryHelper.logInfo(componentName, 'Completing workflow', {
+                workflowId,
+                success,
+                metadata,
+                timestamp: Date.now()
+            });
+
             completeWorkflow(workflowId, success, metadata);
             activeWorkflows.current.delete(workflowId);
-        }, []),
+
+            sentryHelper.logInfo(componentName, 'Workflow completed', {
+                workflowId,
+                success,
+                activeWorkflowsCount: activeWorkflows.current.size,
+                timestamp: Date.now()
+            });
+        }, [componentName]),
 
         track: useCallback(async <T>(operationName: string, operation: () => Promise<T> | T): Promise<T> => {
-            return trackPerformance(componentName, operationName, operation);
+            sentryHelper.logInfo(componentName, 'Starting performance tracking', {
+                operationName,
+                timestamp: Date.now()
+            });
+
+            const result = await trackPerformance(componentName, operationName, operation);
+
+            sentryHelper.logInfo(componentName, 'Performance tracking completed', {
+                operationName,
+                timestamp: Date.now()
+            });
+
+            return result;
         }, [componentName])
     };
 
@@ -101,7 +180,14 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     }, [componentName]);
 
     const getConfig = useCallback(() => {
-        return sentryHelper.getComponentConfig(componentName);
+        const config = sentryHelper.getComponentConfig(componentName);
+
+        sentryHelper.logInfo(componentName, 'Retrieved component configuration', {
+            config,
+            timestamp: Date.now()
+        });
+
+        return config;
     }, [componentName]);
 
     return {
@@ -124,6 +210,12 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
 // Convenience hook for simple logging without workflow tracking
 export const useSimpleSentry = (componentName: string, logLevel?: SentryLogLevel) => {
+    sentryHelper.logInfo(componentName, 'Initializing simple Sentry hook', {
+        componentName,
+        logLevel,
+        timestamp: Date.now()
+    });
+
     return useSentryHelper({
         componentName,
         logLevel,
@@ -135,6 +227,12 @@ export const useSimpleSentry = (componentName: string, logLevel?: SentryLogLevel
 
 // Hook for workflow-focused usage
 export const useWorkflowSentry = (componentName: string, options?: Partial<UseSentryHelperOptions>) => {
+    sentryHelper.logInfo(componentName, 'Initializing workflow Sentry hook', {
+        componentName,
+        options,
+        timestamp: Date.now()
+    });
+
     return useSentryHelper({
         componentName,
         enableWorkflowTracking: true,

@@ -6,6 +6,61 @@ import { appSettingsWithSentry } from '../app-settings';
  * This file configures Sentry with Session Replay functionality for the HotLeagueWall project
  */
 
+// LocalStorage keys for logging control
+const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
+const SENTRY_ENABLED_KEY = 'sentry_enabled';
+const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
+
+/**
+ * Get logging configuration from localStorage
+ */
+const getLocalStorageConfig = () => {
+    try {
+        const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'info';
+        const enabled = localStorage.getItem(SENTRY_ENABLED_KEY) !== 'false';
+        const debugMode = localStorage.getItem(SENTRY_DEBUG_MODE_KEY) === 'true';
+
+        return { logLevel, enabled, debugMode };
+    } catch (error) {
+        console.warn('Failed to read localStorage config:', error);
+        return { logLevel: 'info', enabled: true, debugMode: false };
+    }
+};
+
+/**
+ * Set logging configuration in localStorage
+ */
+export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boolean; debugMode?: boolean }) => {
+    try {
+        if (config.logLevel !== undefined) {
+            localStorage.setItem(SENTRY_LOG_LEVEL_KEY, config.logLevel);
+        }
+        if (config.enabled !== undefined) {
+            localStorage.setItem(SENTRY_ENABLED_KEY, config.enabled.toString());
+        }
+        if (config.debugMode !== undefined) {
+            localStorage.setItem(SENTRY_DEBUG_MODE_KEY, config.debugMode.toString());
+        }
+        console.log('Sentry localStorage config updated:', config);
+    } catch (error) {
+        console.error('Failed to update localStorage config:', error);
+    }
+};
+
+/**
+ * Clear localStorage logging configuration
+ */
+export const clearLocalStorageConfig = () => {
+    try {
+        localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
+        localStorage.removeItem(SENTRY_ENABLED_KEY);
+        localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
+        console.log('Sentry localStorage config cleared');
+    } catch (error) {
+        console.error('Failed to clear localStorage config:', error);
+    }
+};
+
 interface SentrySessionReplayConfig {
     dsn: string;
     environment: string;
@@ -26,6 +81,8 @@ interface SentrySessionReplayConfig {
  * This function should be called once at the application startup
  */
 export const initializeSentryWithSessionReplay = (config: SentrySessionReplayConfig): void => {
+    const localStorageConfig = getLocalStorageConfig();
+
     const {
         dsn,
         environment,
@@ -38,12 +95,15 @@ export const initializeSentryWithSessionReplay = (config: SentrySessionReplayCon
         sendDefaultPii = true // Set to false for maximum privacy
     } = config;
 
+    // Override debug mode with localStorage setting
+    const finalDebug = localStorageConfig.debugMode || debug;
+
     try {
         Sentry.init({
             dsn,
             environment,
             release,
-            debug,
+            debug: finalDebug,
 
             // Session Replay Configuration
             integrations: [
@@ -108,7 +168,9 @@ export const initializeSentryWithSessionReplay = (config: SentrySessionReplayCon
                 event.tags = {
                     ...event.tags,
                     component: 'HotLeagueWall',
-                    version: release || 'unknown'
+                    version: release || 'unknown',
+                    localStorageLogLevel: localStorageConfig.logLevel,
+                    localStorageEnabled: localStorageConfig.enabled
                 };
 
                 return event;
@@ -120,7 +182,9 @@ export const initializeSentryWithSessionReplay = (config: SentrySessionReplayCon
                 event.tags = {
                     ...event.tags,
                     component: 'HotLeagueWall',
-                    version: release || 'unknown'
+                    version: release || 'unknown',
+                    localStorageLogLevel: localStorageConfig.logLevel,
+                    localStorageEnabled: localStorageConfig.enabled
                 };
 
                 return event;
@@ -149,7 +213,8 @@ export const initializeSentryWithSessionReplay = (config: SentrySessionReplayCon
             replaysOnErrorSampleRate,
             maskAllText,
             blockAllMedia,
-            sendDefaultPii
+            sendDefaultPii,
+            localStorageConfig
         });
 
     } catch (error) {
@@ -161,6 +226,7 @@ export const initializeSentryWithSessionReplay = (config: SentrySessionReplayCon
  * Configure Session Replay for different environments
  */
 export const configureSessionReplayForEnvironment = (environment: string): SentrySessionReplayConfig => {
+    const localStorageConfig = getLocalStorageConfig();
     const isDevelopment = environment === 'development';
     const isProduction = environment === 'production';
     const isTest = environment === 'test';
@@ -171,7 +237,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
             dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'development',
             release: `hot-league-wall@${process.env.npm_package_version || 'dev'}`,
-            debug: true,
+            debug: localStorageConfig.debugMode || true,
             replaysSessionSampleRate: 1.0, // 100% for development
             replaysOnErrorSampleRate: 1.0, // 100% for error sessions
             maskAllText: false, // Show text for debugging
@@ -179,17 +245,17 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
             sendDefaultPii: true // Send PII for debugging
         };
     } else if (isProduction) {
-        // Production: Conservative recording for privacy
+        // Production: Conservative recording for privacy, but respect localStorage settings
         return {
             dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'production',
             release: `hot-league-wall@${process.env.npm_package_version || 'prod'}`,
-            debug: false,
-            replaysSessionSampleRate: 0.1, // 10% for production
+            debug: localStorageConfig.debugMode || false,
+            replaysSessionSampleRate: localStorageConfig.enabled ? 0.1 : 0.0, // Respect localStorage enabled setting
             replaysOnErrorSampleRate: 1.0, // 100% for error sessions
-            maskAllText: true, // Mask text for privacy
-            blockAllMedia: true, // Block media for privacy
-            sendDefaultPii: false // Don't send PII for privacy
+            maskAllText: !localStorageConfig.debugMode, // Mask text unless debug mode is enabled
+            blockAllMedia: !localStorageConfig.debugMode, // Block media unless debug mode is enabled
+            sendDefaultPii: localStorageConfig.debugMode // Send PII only in debug mode
         };
     } else if (isTest) {
         // Test: Disabled to avoid noise
@@ -210,12 +276,12 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
             dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'unknown',
             release: `hot-league-wall@${process.env.npm_package_version || 'unknown'}`,
-            debug: false,
-            replaysSessionSampleRate: 0.05, // 5% for unknown environment
+            debug: localStorageConfig.debugMode || false,
+            replaysSessionSampleRate: localStorageConfig.enabled ? 0.05 : 0.0, // 5% for unknown environment
             replaysOnErrorSampleRate: 1.0, // 100% for error sessions
-            maskAllText: true,
-            blockAllMedia: true,
-            sendDefaultPii: false
+            maskAllText: !localStorageConfig.debugMode,
+            blockAllMedia: !localStorageConfig.debugMode,
+            sendDefaultPii: localStorageConfig.debugMode
         };
     }
 };

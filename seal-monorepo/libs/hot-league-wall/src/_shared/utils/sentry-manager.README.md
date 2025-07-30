@@ -13,6 +13,7 @@ The `SentryManager` is a comprehensive utility that provides granular control ov
 -   **Console Override**: Optional console method override for automatic logging
 -   **Error Filtering**: Component-specific error filtering
 -   **Legacy Support**: Backward compatibility with existing log levels
+-   **LocalStorage Control**: Enable/disable logging and set log levels via localStorage without code deployment
 
 ## 📋 Quick Start
 
@@ -141,6 +142,80 @@ interface ComponentConfig {
     enableWorkflowTracking?: boolean; // Enable workflow tracking for component
     enablePerformanceTracking?: boolean; // Enable performance tracking for component
 }
+```
+
+## 🎛️ LocalStorage Control
+
+The SentryManager supports localStorage-based configuration to enable/disable logging and set log levels without code deployment. This is particularly useful for production debugging.
+
+### LocalStorage Keys
+
+```typescript
+const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level'; // 'trace', 'debug', 'info', 'warn', 'error', 'fatal'
+const SENTRY_ENABLED_KEY = 'sentry_enabled'; // 'true' or 'false'
+const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode'; // 'true' or 'false'
+```
+
+### Enable Info Level Logging in Production
+
+To enable info level logging in production without code deployment:
+
+1. Open browser developer tools (F12)
+2. Go to Console tab
+3. Run the following commands:
+
+```javascript
+// Enable Sentry logging
+localStorage.setItem('sentry_enabled', 'true');
+
+// Set log level to info
+localStorage.setItem('sentry_log_level', 'info');
+
+// Enable debug mode for more detailed logging
+localStorage.setItem('sentry_debug_mode', 'true');
+
+// Reload the page to apply changes
+location.reload();
+```
+
+### Disable Logging
+
+```javascript
+// Disable Sentry logging
+localStorage.setItem('sentry_enabled', 'false');
+
+// Or clear all settings
+localStorage.removeItem('sentry_log_level');
+localStorage.removeItem('sentry_enabled');
+localStorage.removeItem('sentry_debug_mode');
+
+// Reload the page to apply changes
+location.reload();
+```
+
+### Check Current Settings
+
+```javascript
+// Check current localStorage settings
+console.log('Log Level:', localStorage.getItem('sentry_log_level'));
+console.log('Enabled:', localStorage.getItem('sentry_enabled'));
+console.log('Debug Mode:', localStorage.getItem('sentry_debug_mode'));
+```
+
+### Programmatic Control
+
+```typescript
+import { setLocalStorageConfig, clearLocalStorageConfig } from './sentry-session-replay';
+
+// Set logging configuration
+setLocalStorageConfig({
+    logLevel: 'info',
+    enabled: true,
+    debugMode: true,
+});
+
+// Clear configuration
+clearLocalStorageConfig();
 ```
 
 ## 📊 Log Levels
@@ -589,6 +664,11 @@ sentryManager.logError('Error message', {
 -   `updateSentryWorkflow()`: Update workflow (convenience)
 -   `completeSentryWorkflow()`: Complete workflow (convenience)
 -   `trackSentryPerformance()`: Track performance (convenience)
+
+### LocalStorage Control Functions
+
+-   `setLocalStorageConfig()`: Set logging configuration in localStorage
+-   `clearLocalStorageConfig()`: Clear localStorage logging configuration
 
 ## 🤝 Contributing
 

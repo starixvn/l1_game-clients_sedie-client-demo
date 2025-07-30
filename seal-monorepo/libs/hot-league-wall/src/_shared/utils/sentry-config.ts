@@ -1,15 +1,72 @@
 import { configureSentry, configureComponent, SentryLogLevel } from './sentry-helper';
 
+// LocalStorage keys for logging control
+const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
+const SENTRY_ENABLED_KEY = 'sentry_enabled';
+const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
+
+/**
+ * Get logging configuration from localStorage
+ */
+const getLocalStorageConfig = () => {
+    try {
+        const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'info';
+        const enabled = localStorage.getItem(SENTRY_ENABLED_KEY) !== 'false';
+        const debugMode = localStorage.getItem(SENTRY_DEBUG_MODE_KEY) === 'true';
+
+        return { logLevel, enabled, debugMode };
+    } catch (error) {
+        console.warn('Failed to read localStorage config:', error);
+        return { logLevel: 'info', enabled: true, debugMode: false };
+    }
+};
+
+/**
+ * Set logging configuration in localStorage
+ */
+export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boolean; debugMode?: boolean }) => {
+    try {
+        if (config.logLevel !== undefined) {
+            localStorage.setItem(SENTRY_LOG_LEVEL_KEY, config.logLevel);
+        }
+        if (config.enabled !== undefined) {
+            localStorage.setItem(SENTRY_ENABLED_KEY, config.enabled.toString());
+        }
+        if (config.debugMode !== undefined) {
+            localStorage.setItem(SENTRY_DEBUG_MODE_KEY, config.debugMode.toString());
+        }
+        console.log('Sentry localStorage config updated:', config);
+    } catch (error) {
+        console.error('Failed to update localStorage config:', error);
+    }
+};
+
+/**
+ * Clear localStorage logging configuration
+ */
+export const clearLocalStorageConfig = () => {
+    try {
+        localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
+        localStorage.removeItem(SENTRY_ENABLED_KEY);
+        localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
+        console.log('Sentry localStorage config cleared');
+    } catch (error) {
+        console.error('Failed to clear localStorage config:', error);
+    }
+};
+
 /**
  * Comprehensive SentryHelper configuration for the HotLeagueWall project
  * This file sets up different log levels and tracking options for all components
  */
 
 export const initializeSentryForProject = () => {
+    const localStorageConfig = getLocalStorageConfig();
+
     // Initialize global Sentry configuration
     configureSentry({
-        enabled: true,
-        defaultLogLevel: SentryLogLevel.INFO,
+        enabled: localStorageConfig.enabled,
+        defaultLogLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true,
         enableConsoleOverride: true
@@ -17,51 +74,51 @@ export const initializeSentryForProject = () => {
 
     // Configure main application components
     configureComponent('HotLeagueWall', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('App', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('AppContent', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure lobby and navigation components
     configureComponent('Lobby', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('LobbyComponent', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure game components
     configureComponent('RNGSoccerStaticPrototype', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('RNGSoccerBase', {
-        logLevel: SentryLogLevel.WARN,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
 
     configureComponent('RNGSoccerPage', {
-        logLevel: SentryLogLevel.WARN,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
@@ -131,33 +188,33 @@ export const initializeSentryForProject = () => {
 
     // Configure simulator components
     configureComponent('SSOControlSimulator', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('Preview', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure connection and gateway components
     configureComponent('GatewayConnectionManager', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     configureComponent('ConnectionManager', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
     // Configure authentication components
     configureComponent('TokenRequestManager', {
-        logLevel: SentryLogLevel.INFO,
+        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
@@ -201,13 +258,45 @@ export const initializeSentryForProject = () => {
         enablePerformanceTracking: false
     });
 
-    console.log('SentryHelper configured for HotLeagueWall project');
+    console.log('SentryHelper configured for HotLeagueWall project with localStorage config:', localStorageConfig);
+};
+
+/**
+ * Convert string log level to SentryLogLevel enum
+ */
+const getLogLevelFromString = (logLevel: string): SentryLogLevel => {
+    switch (logLevel.toLowerCase()) {
+        case 'trace':
+            return SentryLogLevel.TRACE;
+        case 'debug':
+            return SentryLogLevel.DEBUG;
+        case 'info':
+            return SentryLogLevel.INFO;
+        case 'warn':
+        case 'warning':
+            return SentryLogLevel.WARN;
+        case 'error':
+            return SentryLogLevel.ERROR;
+        case 'fatal':
+            return SentryLogLevel.FATAL;
+        case 'disabled':
+            return SentryLogLevel.DISABLED;
+        case 'error_only':
+            return SentryLogLevel.ERROR_ONLY;
+        case 'warning_and_error':
+            return SentryLogLevel.WARNING_AND_ERROR;
+        case 'all':
+            return SentryLogLevel.ALL;
+        default:
+            return SentryLogLevel.INFO;
+    }
 };
 
 /**
  * Environment-specific Sentry configuration
  */
 export const configureSentryForEnvironment = (environment: string) => {
+    const localStorageConfig = getLocalStorageConfig();
     const isDevelopment = environment === 'development';
     const isProduction = environment === 'production';
     const isTest = environment === 'test';
@@ -215,23 +304,23 @@ export const configureSentryForEnvironment = (environment: string) => {
     if (isDevelopment) {
         // Development: Info logging for normal operations, error logging for exceptions
         configureSentry({
-            enabled: true,
-            defaultLogLevel: SentryLogLevel.INFO,
+            enabled: localStorageConfig.enabled,
+            defaultLogLevel: getLogLevelFromString(localStorageConfig.logLevel),
             enableWorkflowTracking: true,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
         });
-        console.log('SentryHelper configured for DEVELOPMENT environment');
+        console.log('SentryHelper configured for DEVELOPMENT environment with localStorage config:', localStorageConfig);
     } else if (isProduction) {
         // Production: Info logging for normal operations, error logging for exceptions
         configureSentry({
-            enabled: true,
-            defaultLogLevel: SentryLogLevel.INFO,
+            enabled: localStorageConfig.enabled,
+            defaultLogLevel: getLogLevelFromString(localStorageConfig.logLevel),
             enableWorkflowTracking: false,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
         });
-        console.log('SentryHelper configured for PRODUCTION environment');
+        console.log('SentryHelper configured for PRODUCTION environment with localStorage config:', localStorageConfig);
     } else if (isTest) {
         // Test: Disabled to avoid noise during testing
         configureSentry({
@@ -245,13 +334,13 @@ export const configureSentryForEnvironment = (environment: string) => {
     } else {
         // Default: Conservative logging
         configureSentry({
-            enabled: true,
-            defaultLogLevel: SentryLogLevel.INFO,
+            enabled: localStorageConfig.enabled,
+            defaultLogLevel: getLogLevelFromString(localStorageConfig.logLevel),
             enableWorkflowTracking: false,
             enablePerformanceTracking: true,
             enableConsoleOverride: true
         });
-        console.log('SentryHelper configured for UNKNOWN environment (conservative)');
+        console.log('SentryHelper configured for UNKNOWN environment (conservative) with localStorage config:', localStorageConfig);
     }
 };
 
@@ -317,5 +406,7 @@ export default {
     configureSentryForEnvironment,
     SENTRY_PRESETS,
     configureComponentByType,
-    configureComponentsBatch
+    configureComponentsBatch,
+    setLocalStorageConfig,
+    clearLocalStorageConfig
 }; 

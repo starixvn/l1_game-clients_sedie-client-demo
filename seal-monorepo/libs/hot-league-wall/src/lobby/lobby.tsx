@@ -24,6 +24,13 @@ const LobbyWithSentry = (props: { token: string; onSSORetry?: () => Promise<void
         enablePerformanceTracking: true
     });
 
+    logInfo('LobbyWithSentry component rendering', {
+        hasToken: !!props.token,
+        isReconnecting: props.isReconnecting,
+        language: props.language,
+        timestamp: Date.now()
+    });
+
     return (
         <LobbyComponent
             {...props}
@@ -39,6 +46,17 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     constructor(props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean; sentryHelper?: any }) {
         super(props);
+
+        const { sentryHelper } = props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('LobbyComponent constructor called', {
+                hasToken: !!props.token,
+                isReconnecting: props.isReconnecting,
+                timestamp: Date.now()
+            });
+        }
+
         configSharedContainer();
         this.state = {
             offerGames: [],
@@ -53,7 +71,15 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
         // Initialize connection manager at lobby level
         this.connectionManager = GatewayConnectionManager.getInstance();
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('LobbyComponent initialized successfully', {
+                state: this.state,
+                timestamp: Date.now()
+            });
+        }
     }
+
     clearReRenderGameTimeout = () => {
         if (!this.reRenderGameTimeout) {
             return;
@@ -104,10 +130,9 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                 });
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
             if (sentryHelper) {
-                sentryHelper.logError(`Connection cleanup failed: ${errorMessage}`, {
-                    error,
+                sentryHelper.logError('Connection cleanup failed', {
+                    error: error instanceof Error ? error.message : String(error),
                     timestamp: Date.now()
                 });
             }
@@ -115,40 +140,69 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 
     componentDidMount() {
-        const { token, sentryHelper } = this.props;
-
-        // Set up visibility change listener
-        document.addEventListener('visibilitychange', this.onVisibilityChange);
+        const { sentryHelper } = this.props;
 
         if (sentryHelper) {
             sentryHelper.logInfo('Lobby component mounted', {
-                hasToken: !!token,
-                tokenLength: token?.length,
                 timestamp: Date.now()
             });
         }
 
-        this.sso({ token });
+        // Add visibility change listener
+        document.addEventListener('visibilitychange', this.onVisibilityChange);
+
+        // Connect to live gateway
+        this.connectLiveGateway();
     }
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<ILobbyState>, snapshot?: any): void {
-        if (prevProps.token !== this.props.token) {
-            this.sso({ token: this.props.token });
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Lobby component updated', {
+                prevState: prevState,
+                currentState: this.state,
+                timestamp: Date.now()
+            });
         }
     }
 
     @handle(gc.Auth.AuthHandlers.SSO)
     sso(ssoInfo: gc.Auth.ISSOInfo) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('SSO authentication initiated', {
+                ssoInfo,
+                timestamp: Date.now()
+            });
+        }
         return ssoInfo;
     }
 
     @render(gc.App.AppStore, (store) => store.isSessionTimeout)
     redirectToSessionTimeoutPage(isSessionTimeout: boolean) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Redirecting to session timeout page', {
+                isSessionTimeout,
+                timestamp: Date.now()
+            });
+        }
         this.setState({ isSessionTimeout });
     }
 
     @render(gc.Auth.AuthStore, (store) => store.isAuthenticated)
     handleIsAuthenticated(isAuthenticated: boolean) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Authentication status changed', {
+                isAuthenticated,
+                timestamp: Date.now()
+            });
+        }
         this.setState({ isAuthenticated });
         if (isAuthenticated) {
             this.connectLiveGateway();
@@ -157,10 +211,24 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @handle(gc.GatewayConnection.GatewayConnectionHandlers.ConnectHandler)
     connectLiveGateway() {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Connecting to live gateway', {
+                timestamp: Date.now()
+            });
+        }
+
         // Register the connection when it's established
         const handler = this.getConnectionHandler();
         if (handler && handler.connection) {
             this.registerConnection(handler.connection);
+
+            if (sentryHelper) {
+                sentryHelper.logInfo('Live gateway connection initiated', {
+                    timestamp: Date.now()
+                });
+            }
         }
 
         // The decorator will handle the connection automatically
@@ -175,6 +243,12 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
      */
     private getConnectionHandler(): any {
         const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Getting connection handler', {
+                timestamp: Date.now()
+            });
+        }
 
         try {
             const container = this.connectionManager['getSharedContainer']();
@@ -200,6 +274,15 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
      * Register a connection when it's created
      */
     private registerConnection(connection: any): void {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Registering connection', {
+                connectionType: connection?.constructor?.name,
+                timestamp: Date.now()
+            });
+        }
+
         if (connection) {
             this.connectionManager.registerConnection(connection);
         }
@@ -209,6 +292,15 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
      * Enhanced visibility change handling
      */
     onVisibilityChange = async () => {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Page visibility changed', {
+                isVisible: !document.hidden,
+                timestamp: Date.now()
+            });
+        }
+
         if (document.hidden) {
             await this.connectionManager.disconnect('visibility_change');
         } else {
@@ -217,11 +309,28 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     };
 
     private checkMainPlayerStore() {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Checking main player store', {
+                timestamp: Date.now()
+            });
+        }
         // This method will be called after connection to ensure games are loaded
     }
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Handling offer games', {
+                offerGamesCount: offerGames.length,
+                gameIds: offerGames.map(game => game.gameId),
+                timestamp: Date.now()
+            });
+        }
+
         if (offerGames?.length > 0) {
             const filteredOfferGames = lobbyUtils.getFilteredGames(offerGames);
             const expandedGames = filteredOfferGames.reduce(
@@ -241,6 +350,15 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @render(LobbyStore, (store) => store.tryToConnectCount)
     updateTryToConnectCount(tryToConnectCount: number) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Updating try to connect count', {
+                tryToConnectCount,
+                timestamp: Date.now()
+            });
+        }
+
         const isDisconnect = tryToConnectCount > 0;
         if (isDisconnect) {
             this.setState({ isRenderGame: false });
@@ -252,24 +370,63 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @render(gc.Auth.AuthStore, (store) => store.username)
     private handleUsername(username: string) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Handling username', {
+                username,
+                timestamp: Date.now()
+            });
+        }
+
         username && this.setState({ username });
     }
 
     updateLeagueToogle = (leagueToogle: boolean) => {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Updating league toggle', {
+                leagueToogle,
+                timestamp: Date.now()
+            });
+        }
+
         this.setState({ leagueToogle });
     };
 
     handleTabClick = (gameId: number) => {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Tab clicked', {
+                gameId,
+                timestamp: Date.now()
+            });
+        }
+
         this.setState({ selectedGameId: gameId });
     };
 
     handleSessionReconnect = async () => {
         const { sentryHelper } = this.props;
 
+        if (sentryHelper) {
+            sentryHelper.logInfo('Session reconnect initiated', {
+                timestamp: Date.now()
+            });
+        }
+
         // Call parent's onSSORetry callback if provided
         if (this.props.onSSORetry) {
             try {
                 await this.props.onSSORetry();
+
+                if (sentryHelper) {
+                    sentryHelper.logInfo('Session reconnect completed successfully', {
+                        timestamp: Date.now()
+                    });
+                }
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 if (sentryHelper) {
@@ -283,6 +440,16 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     };
 
     private renderGames(context) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Rendering games', {
+                offerGamesCount: this.state.offerGames.length,
+                selectedGameId: this.state.selectedGameId,
+                timestamp: Date.now()
+            });
+        }
+
         const { offerGames, selectedGameId, isSessionTimeout, isAuthenticated } = this.state;
 
         const renderGameContent = () => {
@@ -325,6 +492,15 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 
     render() {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Lobby component rendering', {
+                state: this.state,
+                timestamp: Date.now()
+            });
+        }
+
         return (
             <div className={styles['lobby']}>
                 <AppContextConsumer>{(context) => this.renderGames(context)}</AppContextConsumer>

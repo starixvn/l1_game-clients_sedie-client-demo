@@ -16,6 +16,8 @@ import {
     trackPerformance
 } from './sentry-helper';
 
+import { setLocalStorageConfig, clearLocalStorageConfig } from './sentry-session-replay';
+
 // Example 1: Global Configuration
 export const configureGlobalSentry = () => {
     // Initialize with custom configuration
@@ -367,4 +369,171 @@ export const userInteractionExample = () => {
         betAmount: -50,
         formId: 'betting_form'
     });
+};
+
+// Example 11: LocalStorage-Based Logging Control
+export const localStorageLoggingControlExample = () => {
+    const componentName = 'LoggingController';
+
+    // Enable info level logging in production
+    const enableInfoLogging = () => {
+        setLocalStorageConfig({
+            logLevel: 'info',
+            enabled: true,
+            debugMode: true
+        });
+
+        sentryHelper.logInfo(componentName, 'Info level logging enabled via localStorage', {
+            action: 'enable_info_logging',
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent
+        });
+
+        // Reload page to apply changes
+        console.log('Reload the page to apply logging changes');
+    };
+
+    // Enable debug level logging
+    const enableDebugLogging = () => {
+        setLocalStorageConfig({
+            logLevel: 'debug',
+            enabled: true,
+            debugMode: true
+        });
+
+        sentryHelper.logInfo(componentName, 'Debug level logging enabled via localStorage', {
+            action: 'enable_debug_logging',
+            timestamp: Date.now()
+        });
+
+        console.log('Reload the page to apply logging changes');
+    };
+
+    // Disable logging
+    const disableLogging = () => {
+        setLocalStorageConfig({
+            enabled: false
+        });
+
+        sentryHelper.logInfo(componentName, 'Logging disabled via localStorage', {
+            action: 'disable_logging',
+            timestamp: Date.now()
+        });
+
+        console.log('Reload the page to apply logging changes');
+    };
+
+    // Clear all logging settings
+    const clearLoggingSettings = () => {
+        clearLocalStorageConfig();
+
+        sentryHelper.logInfo(componentName, 'Logging settings cleared via localStorage', {
+            action: 'clear_logging_settings',
+            timestamp: Date.now()
+        });
+
+        console.log('Reload the page to apply logging changes');
+    };
+
+    // Check current logging status
+    const checkLoggingStatus = () => {
+        try {
+            const logLevel = localStorage.getItem('sentry_log_level') || 'info';
+            const enabled = localStorage.getItem('sentry_enabled') !== 'false';
+            const debugMode = localStorage.getItem('sentry_debug_mode') === 'true';
+
+            sentryHelper.logInfo(componentName, 'Current logging status', {
+                action: 'check_logging_status',
+                logLevel,
+                enabled,
+                debugMode,
+                timestamp: Date.now()
+            });
+
+            console.log('Current logging status:', { logLevel, enabled, debugMode });
+        } catch (error) {
+            console.error('Failed to check logging status:', error);
+        }
+    };
+
+    // Example usage in browser console
+    console.log('Available localStorage logging functions:');
+    console.log('- enableInfoLogging()');
+    console.log('- enableDebugLogging()');
+    console.log('- disableLogging()');
+    console.log('- clearLoggingSettings()');
+    console.log('- checkLoggingStatus()');
+
+    return {
+        enableInfoLogging,
+        enableDebugLogging,
+        disableLogging,
+        clearLoggingSettings,
+        checkLoggingStatus
+    };
+};
+
+// Example 12: Production Debugging with LocalStorage
+export const productionDebuggingExample = () => {
+    const componentName = 'ProductionDebugger';
+
+    // This function can be called from browser console in production
+    const enableProductionDebugging = () => {
+        // Enable comprehensive logging for production debugging
+        setLocalStorageConfig({
+            logLevel: 'info',
+            enabled: true,
+            debugMode: true
+        });
+
+        sentryHelper.logInfo(componentName, 'Production debugging enabled', {
+            action: 'enable_production_debugging',
+            environment: process.env.NODE_ENV,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent,
+            url: window.location.href
+        });
+
+        console.log('Production debugging enabled. Reload the page to apply changes.');
+        console.log('You can now see detailed info logs in Sentry for troubleshooting.');
+    };
+
+    // Enable specific component debugging
+    const enableComponentDebugging = (componentName: string) => {
+        sentryHelper.logInfo('ProductionDebugger', `Component debugging enabled for: ${componentName}`, {
+            action: 'enable_component_debugging',
+            targetComponent: componentName,
+            timestamp: Date.now()
+        });
+
+        console.log(`Component debugging enabled for: ${componentName}`);
+    };
+
+    // Log current application state
+    const logApplicationState = () => {
+        const state = {
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            screenResolution: `${screen.width}x${screen.height}`,
+            timestamp: Date.now(),
+            localStorageConfig: {
+                logLevel: localStorage.getItem('sentry_log_level'),
+                enabled: localStorage.getItem('sentry_enabled'),
+                debugMode: localStorage.getItem('sentry_debug_mode')
+            }
+        };
+
+        sentryHelper.logInfo(componentName, 'Application state logged', {
+            action: 'log_application_state',
+            ...state
+        });
+
+        console.log('Application state logged to Sentry:', state);
+    };
+
+    return {
+        enableProductionDebugging,
+        enableComponentDebugging,
+        logApplicationState
+    };
 }; 

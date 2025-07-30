@@ -31,6 +31,61 @@ import {
 
 import { appSettings } from '../app-settings';
 
+// LocalStorage keys for logging control
+const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
+const SENTRY_ENABLED_KEY = 'sentry_enabled';
+const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
+
+/**
+ * Get logging configuration from localStorage
+ */
+const getLocalStorageConfig = () => {
+    try {
+        const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'info';
+        const enabled = localStorage.getItem(SENTRY_ENABLED_KEY) !== 'false';
+        const debugMode = localStorage.getItem(SENTRY_DEBUG_MODE_KEY) === 'true';
+
+        return { logLevel, enabled, debugMode };
+    } catch (error) {
+        console.warn('Failed to read localStorage config:', error);
+        return { logLevel: 'info', enabled: true, debugMode: false };
+    }
+};
+
+/**
+ * Set logging configuration in localStorage
+ */
+export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boolean; debugMode?: boolean }) => {
+    try {
+        if (config.logLevel !== undefined) {
+            localStorage.setItem(SENTRY_LOG_LEVEL_KEY, config.logLevel);
+        }
+        if (config.enabled !== undefined) {
+            localStorage.setItem(SENTRY_ENABLED_KEY, config.enabled.toString());
+        }
+        if (config.debugMode !== undefined) {
+            localStorage.setItem(SENTRY_DEBUG_MODE_KEY, config.debugMode.toString());
+        }
+        console.log('Sentry localStorage config updated:', config);
+    } catch (error) {
+        console.error('Failed to update localStorage config:', error);
+    }
+};
+
+/**
+ * Clear localStorage logging configuration
+ */
+export const clearLocalStorageConfig = () => {
+    try {
+        localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
+        localStorage.removeItem(SENTRY_ENABLED_KEY);
+        localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
+        console.log('Sentry localStorage config cleared');
+    } catch (error) {
+        console.error('Failed to clear localStorage config:', error);
+    }
+};
+
 // Standard Sentry log levels as per Sentry documentation
 export { SentryLogLevel, WorkflowState };
 
@@ -118,14 +173,15 @@ class SentryManager {
             return;
         }
 
+        const localStorageConfig = getLocalStorageConfig();
         this.componentName = config.componentName;
 
         // Initialize the global Sentry configuration
         try {
-            // Configure global Sentry settings
+            // Configure global Sentry settings with localStorage override
             configureSentry({
-                enabled: config.debug !== false,
-                defaultLogLevel: config.logLevel || SentryLogLevel.INFO,
+                enabled: localStorageConfig.enabled && config.debug !== false,
+                defaultLogLevel: getLogLevelFromString(localStorageConfig.logLevel),
                 enableWorkflowTracking: config.enableWorkflowTracking !== false,
                 enablePerformanceTracking: config.enablePerformanceTracking !== false,
                 enableConsoleOverride: config.enableConsoleOverride !== false
@@ -134,7 +190,7 @@ class SentryManager {
             // Configure component-specific settings
             configureComponent(this.componentName, {
                 name: this.componentName,
-                logLevel: config.logLevel || SentryLogLevel.INFO,
+                logLevel: getLogLevelFromString(localStorageConfig.logLevel),
                 enableWorkflowTracking: config.enableWorkflowTracking !== false,
                 enablePerformanceTracking: config.enablePerformanceTracking !== false
             });
@@ -158,7 +214,7 @@ class SentryManager {
         }
 
         this.isInitialized = true;
-        console.log(`Sentry initialized for component: ${this.componentName}`);
+        console.log(`Sentry initialized for component: ${this.componentName} with localStorage config:`, localStorageConfig);
     }
 
     private startSentry(config: SentryManagerConfig): void {
@@ -349,7 +405,8 @@ class SentryManager {
             return;
         }
 
-        if (!isLoggingEnabled(this.componentName, 'trace')) {
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'trace')) {
             return;
         }
 
@@ -366,7 +423,8 @@ class SentryManager {
             return;
         }
 
-        if (!isLoggingEnabled(this.componentName, 'debug')) {
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'debug')) {
             return;
         }
 
@@ -383,7 +441,8 @@ class SentryManager {
             return;
         }
 
-        if (!isLoggingEnabled(this.componentName, 'info')) {
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'info')) {
             return;
         }
 
@@ -400,7 +459,8 @@ class SentryManager {
             return;
         }
 
-        if (!isLoggingEnabled(this.componentName, 'warn')) {
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'warn')) {
             return;
         }
 
@@ -417,7 +477,8 @@ class SentryManager {
             return;
         }
 
-        if (!isLoggingEnabled(this.componentName, 'error')) {
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'error')) {
             return;
         }
 
@@ -434,7 +495,8 @@ class SentryManager {
             return;
         }
 
-        if (!isLoggingEnabled(this.componentName, 'fatal')) {
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled || !isLoggingEnabled(this.componentName, 'fatal')) {
             return;
         }
 
@@ -452,6 +514,11 @@ class SentryManager {
             return;
         }
 
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled) {
+            return;
+        }
+
         try {
             startWorkflow(workflowId, workflowName, this.componentName, metadata);
         } catch (sentryError) {
@@ -462,6 +529,11 @@ class SentryManager {
     updateWorkflow(workflowId: string, state: WorkflowState, metadata?: Record<string, any>): void {
         if (!this.isInitialized) {
             console.warn('SentryManager not initialized');
+            return;
+        }
+
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled) {
             return;
         }
 
@@ -478,6 +550,11 @@ class SentryManager {
             return;
         }
 
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled) {
+            return;
+        }
+
         try {
             completeWorkflow(workflowId, success, metadata);
         } catch (sentryError) {
@@ -489,6 +566,11 @@ class SentryManager {
     trackPerformance<T>(operationName: string, operation: () => Promise<T> | T): Promise<T> {
         if (!this.isInitialized) {
             console.warn('SentryManager not initialized');
+            return Promise.resolve(operation());
+        }
+
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled) {
             return Promise.resolve(operation());
         }
 
@@ -530,6 +612,11 @@ class SentryManager {
 
     isLoggingEnabled(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'): boolean {
         if (!this.isInitialized) {
+            return false;
+        }
+
+        const localStorageConfig = getLocalStorageConfig();
+        if (!localStorageConfig.enabled) {
             return false;
         }
 
@@ -594,6 +681,37 @@ class SentryManager {
         }
     }
 }
+
+/**
+ * Convert string log level to SentryLogLevel enum
+ */
+const getLogLevelFromString = (logLevel: string): SentryLogLevel => {
+    switch (logLevel.toLowerCase()) {
+        case 'trace':
+            return SentryLogLevel.TRACE;
+        case 'debug':
+            return SentryLogLevel.DEBUG;
+        case 'info':
+            return SentryLogLevel.INFO;
+        case 'warn':
+        case 'warning':
+            return SentryLogLevel.WARN;
+        case 'error':
+            return SentryLogLevel.ERROR;
+        case 'fatal':
+            return SentryLogLevel.FATAL;
+        case 'disabled':
+            return SentryLogLevel.DISABLED;
+        case 'error_only':
+            return SentryLogLevel.ERROR_ONLY;
+        case 'warning_and_error':
+            return SentryLogLevel.WARNING_AND_ERROR;
+        case 'all':
+            return SentryLogLevel.ALL;
+        default:
+            return SentryLogLevel.INFO;
+    }
+};
 
 // Export singleton instance
 export const sentryManager = SentryManager.getInstance();
