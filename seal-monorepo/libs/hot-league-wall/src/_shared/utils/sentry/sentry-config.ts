@@ -6,6 +6,28 @@ const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
 const SENTRY_ENABLED_KEY = 'hot-league-wall-debug-enabled';
 const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
 
+// Component-specific localStorage keys
+const COMPONENT_LOG_LEVEL_PREFIX = 'sentry_component_log_level_';
+const COMPONENT_ENABLED_PREFIX = 'sentry_component_enabled_';
+
+/**
+ * Component logging configuration interface
+ */
+interface ComponentLoggingConfig {
+    logLevel: string;
+    enableWorkflowTracking: boolean;
+    enablePerformanceTracking: boolean;
+}
+
+/**
+ * Component logging configuration from config files
+ */
+interface ComponentLoggingSettings {
+    enabled: boolean;
+    defaultLogLevel: string;
+    components: Record<string, ComponentLoggingConfig>;
+}
+
 /**
  * Get logging configuration from localStorage
  */
@@ -19,6 +41,24 @@ const getLocalStorageConfig = () => {
     } catch (error) {
         console.warn('Failed to read localStorage config:', error);
         return { logLevel: 'info', enabled: true, debugMode: false };
+    }
+};
+
+/**
+ * Get component-specific logging configuration from localStorage
+ */
+const getComponentLocalStorageConfig = (componentName: string) => {
+    try {
+        const logLevelKey = `${COMPONENT_LOG_LEVEL_PREFIX}${componentName}`;
+        const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+
+        const logLevel = localStorage.getItem(logLevelKey);
+        const enabled = localStorage.getItem(enabledKey) !== 'false';
+
+        return { logLevel, enabled };
+    } catch (error) {
+        console.warn(`Failed to read localStorage config for component ${componentName}:`, error);
+        return { logLevel: null, enabled: true };
     }
 };
 
@@ -42,6 +82,27 @@ export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boo
 };
 
 /**
+ * Set component-specific logging configuration in localStorage
+ */
+export const setComponentLocalStorageConfig = (
+    componentName: string,
+    config: { logLevel?: string; enabled?: boolean }
+) => {
+    try {
+        if (config.logLevel !== undefined) {
+            const logLevelKey = `${COMPONENT_LOG_LEVEL_PREFIX}${componentName}`;
+            localStorage.setItem(logLevelKey, config.logLevel);
+        }
+        if (config.enabled !== undefined) {
+            const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+            localStorage.setItem(enabledKey, config.enabled.toString());
+        }
+    } catch (error) {
+        console.warn(`Failed to set localStorage config for component ${componentName}:`, error);
+    }
+};
+
+/**
  * Clear localStorage logging configuration
  */
 export const clearLocalStorageConfig = () => {
@@ -49,18 +110,68 @@ export const clearLocalStorageConfig = () => {
         localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
         localStorage.removeItem(SENTRY_ENABLED_KEY);
         localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
+
+        // Clear all component-specific keys
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith(COMPONENT_LOG_LEVEL_PREFIX) || key.startsWith(COMPONENT_ENABLED_PREFIX))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
     } catch (error) {
         // Silent fail
     }
 };
 
 /**
+ * Clear component-specific localStorage configuration
+ */
+export const clearComponentLocalStorageConfig = (componentName: string) => {
+    try {
+        const logLevelKey = `${COMPONENT_LOG_LEVEL_PREFIX}${componentName}`;
+        const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+
+        localStorage.removeItem(logLevelKey);
+        localStorage.removeItem(enabledKey);
+    } catch (error) {
+        console.warn(`Failed to clear localStorage config for component ${componentName}:`, error);
+    }
+};
+
+/**
+ * Get all component configurations from localStorage
+ */
+export const getAllComponentConfigs = () => {
+    const configs: Record<string, { logLevel: string; enabled: boolean }> = {};
+
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(COMPONENT_LOG_LEVEL_PREFIX)) {
+                const componentName = key.replace(COMPONENT_LOG_LEVEL_PREFIX, '');
+                const logLevel = localStorage.getItem(key) || 'info';
+                const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+                const enabled = localStorage.getItem(enabledKey) !== 'false';
+
+                configs[componentName] = { logLevel, enabled };
+            }
+        }
+    } catch (error) {
+        console.warn('Failed to read component configs from localStorage:', error);
+    }
+
+    return configs;
+};
+
+/**
  * Comprehensive SentryHelper configuration for the HotLeagueWall project
  * This file sets up different log levels and tracking options for all components
  */
-
 export const initializeSentryForProject = () => {
     const localStorageConfig = getLocalStorageConfig();
+    const componentConfigs = getAllComponentConfigs();
 
     // Initialize global Sentry configuration
     configureSentry({
@@ -71,191 +182,135 @@ export const initializeSentryForProject = () => {
         enableConsoleOverride: true
     });
 
-    // Configure main application components
-    configureComponent('HotLeagueWall', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
+    // Get component logging settings from config (this would be loaded from your config files)
+    const componentLoggingSettings: ComponentLoggingSettings = {
+        enabled: true,
+        defaultLogLevel: 'info',
+        components: {
+            // Default component configurations
+            HotLeagueWall: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            App: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            AppContent: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            Lobby: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            LobbyComponent: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            RNGSoccerStaticPrototype: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            RNGSoccerBase: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            RNGSoccerPage: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            Loading: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            GameDisconnectView: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            BetOption: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            BetPanel: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            BettingChips: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            Scoreboard: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            RoundHistory: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            CountDownTimer: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            AnimBalance: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            WinnerDisplay: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            SSOControlSimulator: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            Preview: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            GatewayConnectionManager: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            ConnectionManager: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            TokenRequestManager: { logLevel: 'info', enableWorkflowTracking: true, enablePerformanceTracking: true },
+            SyncMemberSiteBalance: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            LobbyStore: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            GameStore: { logLevel: 'warn', enableWorkflowTracking: false, enablePerformanceTracking: true },
+            StringHelper: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            ComponentUtil: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false },
+            I18n: { logLevel: 'error', enableWorkflowTracking: false, enablePerformanceTracking: false }
+        }
+    };
+
+    // Configure components with isolated logging
+    Object.entries(componentLoggingSettings.components).forEach(([componentName, defaultConfig]) => {
+        const componentLocalStorage = getComponentLocalStorageConfig(componentName);
+        const componentConfig = componentConfigs[componentName];
+
+        // Priority: localStorage component config > localStorage global config > default config
+        const finalLogLevel = componentLocalStorage.logLevel ||
+            componentConfig?.logLevel ||
+            localStorageConfig.logLevel ||
+            defaultConfig.logLevel;
+
+        const finalEnabled = componentLocalStorage.enabled !== null ?
+            componentLocalStorage.enabled :
+            (componentConfig?.enabled ?? localStorageConfig.enabled);
+
+        if (finalEnabled) {
+            configureComponent(componentName, {
+                logLevel: getLogLevelFromString(finalLogLevel),
+                enableWorkflowTracking: defaultConfig.enableWorkflowTracking,
+                enablePerformanceTracking: defaultConfig.enablePerformanceTracking
+            });
+        }
     });
 
-    configureComponent('App', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
+    // Log configuration summary to console
+    logConfigurationSummary(localStorageConfig, componentConfigs, componentLoggingSettings);
+};
 
-    configureComponent('AppContent', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
+/**
+ * Log configuration summary to console
+ */
+const logConfigurationSummary = (
+    localStorageConfig: { logLevel: string; enabled: boolean; debugMode: boolean },
+    componentConfigs: Record<string, { logLevel: string; enabled: boolean }>,
+    componentLoggingSettings: ComponentLoggingSettings
+) => {
+    const summary = {
+        global: {
+            enabled: localStorageConfig.enabled,
+            logLevel: localStorageConfig.logLevel,
+            debugMode: localStorageConfig.debugMode
+        },
+        componentLogging: {
+            enabled: componentLoggingSettings.enabled,
+            defaultLogLevel: componentLoggingSettings.defaultLogLevel,
+            components: Object.keys(componentLoggingSettings.components).map(componentName => {
+                const defaultConfig = componentLoggingSettings.components[componentName];
+                const componentConfig = componentConfigs[componentName];
+                const componentLocalStorage = getComponentLocalStorageConfig(componentName);
 
-    // Configure lobby and navigation components
-    configureComponent('Lobby', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
+                const finalLogLevel = componentLocalStorage.logLevel ||
+                    componentConfig?.logLevel ||
+                    localStorageConfig.logLevel ||
+                    defaultConfig.logLevel;
 
-    configureComponent('LobbyComponent', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
+                const finalEnabled = componentLocalStorage.enabled !== null ?
+                    componentLocalStorage.enabled :
+                    (componentConfig?.enabled ?? localStorageConfig.enabled);
 
-    // Configure game components
-    configureComponent('RNGSoccerStaticPrototype', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
+                return {
+                    name: componentName,
+                    logLevel: finalLogLevel,
+                    enabled: finalEnabled,
+                    workflowTracking: defaultConfig.enableWorkflowTracking,
+                    performanceTracking: defaultConfig.enablePerformanceTracking,
+                    overridden: componentLocalStorage.logLevel !== null || componentConfig !== undefined
+                };
+            })
+        },
+        localStorageKeys: {
+            global: {
+                logLevel: SENTRY_LOG_LEVEL_KEY,
+                enabled: SENTRY_ENABLED_KEY,
+                debugMode: SENTRY_DEBUG_MODE_KEY
+            },
+            component: {
+                logLevelPrefix: COMPONENT_LOG_LEVEL_PREFIX,
+                enabledPrefix: COMPONENT_ENABLED_PREFIX
+            }
+        }
+    };
 
-    configureComponent('RNGSoccerBase', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
+    console.group('🔧 Sentry Configuration Summary');
+    console.log('Global Configuration:', summary.global);
+    console.log('Component Logging:', summary.componentLogging);
+    console.log('LocalStorage Keys:', summary.localStorageKeys);
+    console.log('Component Configurations:', summary.componentLogging.components);
+    console.groupEnd();
 
-    configureComponent('RNGSoccerPage', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
-
-    // Configure shared components with different log levels
-    configureComponent('Loading', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    configureComponent('GameDisconnectView', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    // Configure UI components with minimal logging
-    configureComponent('BetOption', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    configureComponent('BetPanel', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
-
-    configureComponent('BettingChips', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    configureComponent('Scoreboard', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
-
-    configureComponent('RoundHistory', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
-
-    // Configure utility components
-    configureComponent('CountDownTimer', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    configureComponent('AnimBalance', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    configureComponent('WinnerDisplay', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    // Configure simulator components
-    configureComponent('SSOControlSimulator', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
-
-    configureComponent('Preview', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
-
-    // Configure connection and gateway components
-    configureComponent('GatewayConnectionManager', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
-
-    configureComponent('ConnectionManager', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
-
-    // Configure authentication components
-    configureComponent('TokenRequestManager', {
-        logLevel: getLogLevelFromString(localStorageConfig.logLevel),
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true
-    });
-
-    configureComponent('SyncMemberSiteBalance', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
-
-    // Configure state management components
-    configureComponent('LobbyStore', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
-
-    configureComponent('GameStore', {
-        logLevel: SentryLogLevel.WARN,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: true
-    });
-
-    // Configure utility components
-    configureComponent('StringHelper', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    configureComponent('ComponentUtil', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
-
-    // Configure internationalization
-    configureComponent('I18n', {
-        logLevel: SentryLogLevel.ERROR,
-        enableWorkflowTracking: false,
-        enablePerformanceTracking: false
-    });
+    // Make configuration available globally for debugging
+    (window as any).__SENTRY_CONFIG__ = summary;
 };
 
 /**
@@ -394,6 +449,30 @@ export const configureComponentsBatch = (components: Array<{ name: string; type:
     });
 };
 
+/**
+ * Get current configuration object for debugging
+ */
+export const getCurrentConfiguration = () => {
+    const localStorageConfig = getLocalStorageConfig();
+    const componentConfigs = getAllComponentConfigs();
+
+    return {
+        global: localStorageConfig,
+        components: componentConfigs,
+        localStorageKeys: {
+            global: {
+                logLevel: SENTRY_LOG_LEVEL_KEY,
+                enabled: SENTRY_ENABLED_KEY,
+                debugMode: SENTRY_DEBUG_MODE_KEY
+            },
+            component: {
+                logLevelPrefix: COMPONENT_LOG_LEVEL_PREFIX,
+                enabledPrefix: COMPONENT_ENABLED_PREFIX
+            }
+        }
+    };
+};
+
 export default {
     initializeSentryForProject,
     configureSentryForEnvironment,
@@ -401,5 +480,9 @@ export default {
     configureComponentByType,
     configureComponentsBatch,
     setLocalStorageConfig,
-    clearLocalStorageConfig
+    setComponentLocalStorageConfig,
+    clearLocalStorageConfig,
+    clearComponentLocalStorageConfig,
+    getAllComponentConfigs,
+    getCurrentConfiguration
 }; 

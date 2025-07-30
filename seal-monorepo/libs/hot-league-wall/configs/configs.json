@@ -5,7 +5,158 @@
         "logLevel": "info",
         "enableSessionReplay": true,
         "sessionReplaySampleRate": 1.0,
-        "errorSampleRate": 1.0
+        "errorSampleRate": 1.0,
+        "componentLogging": {
+            "enabled": true,
+            "defaultLogLevel": "info",
+            "components": {
+                "HotLeagueWall": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "App": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "AppContent": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "Lobby": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "LobbyComponent": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "RNGSoccerStaticPrototype": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "RNGSoccerBase": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "RNGSoccerPage": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "Loading": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "GameDisconnectView": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "BetOption": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "BetPanel": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "BettingChips": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "Scoreboard": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "RoundHistory": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "CountDownTimer": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "AnimBalance": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "WinnerDisplay": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "SSOControlSimulator": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "Preview": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "GatewayConnectionManager": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "ConnectionManager": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "TokenRequestManager": {
+                    "logLevel": "info",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                },
+                "SyncMemberSiteBalance": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "LobbyStore": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "GameStore": {
+                    "logLevel": "warn",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": true
+                },
+                "StringHelper": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "ComponentUtil": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                },
+                "I18n": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": false,
+                    "enablePerformanceTracking": false
+                }
+            }
+        }
     },
     "systemType": "SG",
     "serverDomain": "lumigame.com",
