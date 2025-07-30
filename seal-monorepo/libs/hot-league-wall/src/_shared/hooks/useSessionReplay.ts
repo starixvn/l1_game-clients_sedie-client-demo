@@ -11,7 +11,7 @@ import {
     unblockElement,
     unignoreElement,
     Sentry
-} from '../utils/sentry-session-replay';
+} from '../utils/sentry/sentry-session-replay';
 
 /**
  * React hook for Session Replay functionality
@@ -271,7 +271,7 @@ export const useUserJourneyTracking = (journeyName: string) => {
         startReplay(`User Journey: ${journeyName}`, context);
     }, [journeyName, startReplay]);
 
-    const endJourney = useCallback((success: boolean = true, context?: Record<string, any>) => {
+    const endJourney = useCallback((success = true, context?: Record<string, any>) => {
         addData({
             type: 'journey_end',
             success,

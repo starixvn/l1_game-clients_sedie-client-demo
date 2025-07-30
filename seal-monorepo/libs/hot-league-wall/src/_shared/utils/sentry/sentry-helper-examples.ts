@@ -220,7 +220,7 @@ export const conditionalLoggingExample = () => {
         sentryHelper.logInfo(componentName, 'Debug information', {
             memoryUsage: process.memoryUsage(),
             userAgent: navigator.userAgent,
-            screenResolution: `${screen.width}x${screen.height}`
+            screenResolution: `${window.screen.width}x${window.screen.height}`
         });
     }
 
@@ -513,7 +513,7 @@ export const productionDebuggingExample = () => {
         const state = {
             url: window.location.href,
             userAgent: navigator.userAgent,
-            screenResolution: `${screen.width}x${screen.height}`,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
             timestamp: Date.now(),
             localStorageConfig: {
                 logLevel: localStorage.getItem('sentry_log_level'),

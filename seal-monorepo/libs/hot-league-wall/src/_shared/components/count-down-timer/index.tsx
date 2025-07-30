@@ -5,7 +5,7 @@ import Styles from './count-down-timer.module.scss';
 import { IPropsObserver, IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import { formatSecondsToTime } from '../../utils/count-down-format';
 import { useSentryHelper } from '../../hooks/useSentryHelper';
-import { SentryLogLevel } from '../../utils/sentry-types';
+import { SentryLogLevel } from '../../utils/sentry/sentry-types';
 
 export interface ICountDownTimerProps extends IPropsObserver {
     onComplete?: () => void;

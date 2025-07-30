@@ -1,5 +1,5 @@
 import SentryManager from './sentry-manager';
-import { appSettings } from '../app-settings';
+import { appSettings } from '../../app-settings';
 import {
     SentryLogLevel,
     WorkflowState,

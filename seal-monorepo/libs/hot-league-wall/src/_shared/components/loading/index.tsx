@@ -1,7 +1,7 @@
 import Styles from './reconnecting.module.scss';
 import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
 import { useSentryHelper } from '../../hooks/useSentryHelper';
-import { SentryLogLevel } from '../../utils/sentry-types';
+import { SentryLogLevel } from '../../utils/sentry/sentry-types';
 
 export const Loading: React.FC = () => {
     const { logInfo } = useSentryHelper({

@@ -6,7 +6,7 @@ import 'reflect-metadata';
 import { getSiteConfig, appSettings } from '../../_shared/app-settings';
 import { Lobby } from '../../_shared/states';
 import { LobbyStore } from '../../_shared/states/lobby';
-import { sentryHelper } from '../../_shared/utils/sentry-helper';
+import { sentryHelper } from '../../_shared/utils/sentry/sentry-helper';
 
 interface Languages {
     [key: string]: any;

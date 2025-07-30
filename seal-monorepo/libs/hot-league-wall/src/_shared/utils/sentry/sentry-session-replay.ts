@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/react';
-import { appSettingsWithSentry } from '../app-settings';
+import { appSettingsWithSentry } from '../../app-settings';
 import { LocalStorageConfig } from './sentry-types';
 
 /**

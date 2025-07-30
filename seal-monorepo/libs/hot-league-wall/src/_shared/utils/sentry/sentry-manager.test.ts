@@ -1,5 +1,4 @@
 import {
-    SentryManager,
     sentryManager,
     SentryLogLevel,
     WorkflowState,
@@ -10,11 +9,12 @@ import {
     startSentryWorkflow,
     updateSentryWorkflow,
     completeSentryWorkflow,
-    trackSentryPerformance,
-    ComponentConfig,
-    WorkflowConfig,
-    GlobalSentryConfig
+    trackSentryPerformance
 } from './sentry-manager';
+import { SentryLogLevel as SentryLogLevelType, WorkflowState as WorkflowStateType, ComponentConfig as ComponentConfigType, WorkflowConfig as WorkflowConfigType, GlobalSentryConfig as GlobalSentryConfigType } from './sentry-types';
+
+// Import mocked modules
+import * as sgGameClient from '@sg/sg-game-client';
 
 // Mock the sg-game-client logger functions
 jest.mock('@sg/sg-game-client', () => ({
@@ -71,6 +71,9 @@ jest.mock('../app-settings', () => ({
     }
 }));
 
+// Type the mocked module
+const mockedSgGameClient = jest.mocked(sgGameClient);
+
 describe('SentryManager', () => {
     let mockConsoleError: jest.SpyInstance;
     let mockConsoleWarn: jest.SpyInstance;
@@ -105,8 +108,8 @@ describe('SentryManager', () => {
     describe('getInstance', () => {
         it('should return the same instance when called multiple times', () => {
             // Arrange
-            const instance1 = SentryManager.getInstance();
-            const instance2 = SentryManager.getInstance();
+            const instance1 = sentryManager;
+            const instance2 = sentryManager;
 
             // Act & Assert
             expect(instance1).toBe(instance2);
@@ -158,8 +161,7 @@ describe('SentryManager', () => {
             };
 
             // Mock configureSentry to throw an error
-            const { configureSentry } = require('@sg/sg-game-client');
-            configureSentry.mockImplementation(() => {
+            mockedSgGameClient.configureSentry.mockImplementation(() => {
                 throw new Error('Configuration failed');
             });
 
@@ -183,33 +185,30 @@ describe('SentryManager', () => {
         describe('logTrace', () => {
             it('should log trace message when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logTrace } = require('@sg/sg-game-client');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
 
                 // Act
                 sentryManager.logTrace('Test trace message', { context: 'test' });
 
                 // Assert
-                expect(logTrace).toHaveBeenCalledWith('TestComponent', 'Test trace message', { context: 'test' });
+                expect(mockedSgGameClient.logTrace).toHaveBeenCalledWith('TestComponent', 'Test trace message', { context: 'test' });
             });
 
             it('should not log when logging is disabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logTrace } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(false);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(false);
 
                 // Act
                 sentryManager.logTrace('Test trace message');
 
                 // Assert
-                expect(logTrace).not.toHaveBeenCalled();
+                expect(mockedSgGameClient.logTrace).not.toHaveBeenCalled();
             });
 
             it('should handle logging errors gracefully', () => {
                 // Arrange
-                const { isLoggingEnabled, logTrace } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
-                logTrace.mockImplementation(() => {
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.logTrace.mockImplementation(() => {
                     throw new Error('Logging failed');
                 });
 
@@ -224,84 +223,78 @@ describe('SentryManager', () => {
         describe('logDebug', () => {
             it('should log debug message when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logDebug } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
 
                 // Act
                 sentryManager.logDebug('Test debug message', { context: 'test' });
 
                 // Assert
-                expect(logDebug).toHaveBeenCalledWith('TestComponent', 'Test debug message', { context: 'test' });
+                expect(mockedSgGameClient.logDebug).toHaveBeenCalledWith('TestComponent', 'Test debug message', { context: 'test' });
             });
         });
 
         describe('logInfo', () => {
             it('should log info message when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logInfo } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
 
                 // Act
                 sentryManager.logInfo('Test info message', { context: 'test' });
 
                 // Assert
-                expect(logInfo).toHaveBeenCalledWith('TestComponent', 'Test info message', { context: 'test' });
+                expect(mockedSgGameClient.logInfo).toHaveBeenCalledWith('TestComponent', 'Test info message', { context: 'test' });
             });
         });
 
         describe('logWarning', () => {
             it('should log warning message when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logWarning } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
 
                 // Act
                 sentryManager.logWarning('Test warning message', { context: 'test' });
 
                 // Assert
-                expect(logWarning).toHaveBeenCalledWith('TestComponent', 'Test warning message', { context: 'test' });
+                expect(mockedSgGameClient.logWarning).toHaveBeenCalledWith('TestComponent', 'Test warning message', { context: 'test' });
             });
         });
 
         describe('logError', () => {
             it('should log error message when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logError } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
                 const error = new Error('Test error');
 
                 // Act
                 sentryManager.logError(error, { context: 'test' });
 
                 // Assert
-                expect(logError).toHaveBeenCalledWith('TestComponent', error, { context: 'test' });
+                expect(mockedSgGameClient.logError).toHaveBeenCalledWith('TestComponent', error, { context: 'test' });
             });
 
             it('should log string error when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logError } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
 
                 // Act
                 sentryManager.logError('Test error string', { context: 'test' });
 
                 // Assert
-                expect(logError).toHaveBeenCalledWith('TestComponent', 'Test error string', { context: 'test' });
+                expect(mockedSgGameClient.logError).toHaveBeenCalledWith('TestComponent', 'Test error string', { context: 'test' });
             });
         });
 
         describe('logFatal', () => {
             it('should log fatal message when logging is enabled', () => {
                 // Arrange
-                const { isLoggingEnabled, logFatal } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
                 const error = new Error('Test fatal error');
 
                 // Act
                 sentryManager.logFatal(error, { context: 'test' });
 
                 // Assert
-                expect(logFatal).toHaveBeenCalledWith('TestComponent', error, { context: 'test' });
+                expect(mockedSgGameClient.logFatal).toHaveBeenCalledWith('TestComponent', error, { context: 'test' });
             });
         });
     });
@@ -319,7 +312,6 @@ describe('SentryManager', () => {
         describe('startWorkflow', () => {
             it('should start workflow successfully', () => {
                 // Arrange
-                const { startWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
                 const workflowId = 'test-workflow-1';
                 const workflowName = 'Test Workflow';
                 const metadata = { test: 'data' };
@@ -328,13 +320,12 @@ describe('SentryManager', () => {
                 sentryManager.startWorkflow(workflowId, workflowName, metadata);
 
                 // Assert
-                expect(startWorkflow).toHaveBeenCalledWith(workflowId, workflowName, 'TestComponent', metadata);
+                expect(mockedSgGameClient.startWorkflow).toHaveBeenCalledWith(workflowId, workflowName, 'TestComponent', metadata);
             });
 
             it('should handle workflow start errors gracefully', () => {
                 // Arrange
-                const { startWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                startWorkflow.mockImplementation(() => {
+                mockedSgGameClient.startWorkflow.mockImplementation(() => {
                     throw new Error('Workflow start failed');
                 });
 
@@ -349,7 +340,6 @@ describe('SentryManager', () => {
         describe('updateWorkflow', () => {
             it('should update workflow successfully', () => {
                 // Arrange
-                const { updateWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
                 const workflowId = 'test-workflow-1';
                 const state = WorkflowState.IN_PROGRESS;
                 const metadata = { progress: 50 };
@@ -358,14 +348,13 @@ describe('SentryManager', () => {
                 sentryManager.updateWorkflow(workflowId, state, metadata);
 
                 // Assert
-                expect(updateWorkflow).toHaveBeenCalledWith(workflowId, state, metadata);
+                expect(mockedSgGameClient.updateWorkflow).toHaveBeenCalledWith(workflowId, state, metadata);
             });
         });
 
         describe('completeWorkflow', () => {
             it('should complete workflow successfully with success', () => {
                 // Arrange
-                const { completeWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
                 const workflowId = 'test-workflow-1';
                 const metadata = { result: 'success' };
 
@@ -373,12 +362,11 @@ describe('SentryManager', () => {
                 sentryManager.completeWorkflow(workflowId, true, metadata);
 
                 // Assert
-                expect(completeWorkflow).toHaveBeenCalledWith(workflowId, true, metadata);
+                expect(mockedSgGameClient.completeWorkflow).toHaveBeenCalledWith(workflowId, true, metadata);
             });
 
             it('should complete workflow with failure', () => {
                 // Arrange
-                const { completeWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
                 const workflowId = 'test-workflow-1';
                 const metadata = { error: 'failure' };
 
@@ -386,7 +374,7 @@ describe('SentryManager', () => {
                 sentryManager.completeWorkflow(workflowId, false, metadata);
 
                 // Assert
-                expect(completeWorkflow).toHaveBeenCalledWith(workflowId, false, metadata);
+                expect(mockedSgGameClient.completeWorkflow).toHaveBeenCalledWith(workflowId, false, metadata);
             });
         });
     });
@@ -403,23 +391,21 @@ describe('SentryManager', () => {
 
         it('should track performance successfully', async () => {
             // Arrange
-            const { trackPerformance } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
             const mockOperation = jest.fn().mockResolvedValue('test result');
-            trackPerformance.mockResolvedValue('test result');
+            mockedSgGameClient.trackPerformance.mockResolvedValue('test result');
 
             // Act
             const result = await sentryManager.trackPerformance('Test Operation', mockOperation);
 
             // Assert
-            expect(trackPerformance).toHaveBeenCalledWith('TestComponent', 'Test Operation', mockOperation);
+            expect(mockedSgGameClient.trackPerformance).toHaveBeenCalledWith('TestComponent', 'Test Operation', mockOperation);
             expect(result).toBe('test result');
         });
 
         it('should handle performance tracking errors gracefully', async () => {
             // Arrange
-            const { trackPerformance } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
             const mockOperation = jest.fn().mockResolvedValue('test result');
-            trackPerformance.mockImplementation(() => {
+            mockedSgGameClient.trackPerformance.mockImplementation(() => {
                 throw new Error('Performance tracking failed');
             });
 
@@ -457,8 +443,7 @@ describe('SentryManager', () => {
         describe('configureComponent', () => {
             it('should configure component successfully', () => {
                 // Arrange
-                const { configureComponent } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                const config: Partial<ComponentConfig> = {
+                const config: Partial<ComponentConfigType> = {
                     logLevel: SentryLogLevel.DEBUG,
                     enableWorkflowTracking: true
                 };
@@ -467,27 +452,26 @@ describe('SentryManager', () => {
                 sentryManager.configureComponent(config);
 
                 // Assert
-                expect(configureComponent).toHaveBeenCalledWith('TestComponent', config);
+                expect(mockedSgGameClient.configureComponent).toHaveBeenCalledWith('TestComponent', config);
             });
         });
 
         describe('getComponentConfig', () => {
             it('should get component configuration successfully', () => {
                 // Arrange
-                const { getComponentConfig } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                const mockConfig: ComponentConfig = {
+                const mockConfig: ComponentConfigType = {
                     name: 'TestComponent',
                     logLevel: SentryLogLevel.INFO,
                     enableWorkflowTracking: true,
                     enablePerformanceTracking: true
                 };
-                getComponentConfig.mockReturnValue(mockConfig);
+                mockedSgGameClient.getComponentConfig.mockReturnValue(mockConfig);
 
                 // Act
                 const result = sentryManager.getComponentConfig();
 
                 // Assert
-                expect(getComponentConfig).toHaveBeenCalledWith('TestComponent');
+                expect(mockedSgGameClient.getComponentConfig).toHaveBeenCalledWith('TestComponent');
                 expect(result).toEqual(mockConfig);
             });
 
@@ -507,14 +491,13 @@ describe('SentryManager', () => {
         describe('isLoggingEnabled', () => {
             it('should check if logging is enabled for a level', () => {
                 // Arrange
-                const { isLoggingEnabled } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                isLoggingEnabled.mockReturnValue(true);
+                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
 
                 // Act
                 const result = sentryManager.isLoggingEnabled('info');
 
                 // Assert
-                expect(isLoggingEnabled).toHaveBeenCalledWith('TestComponent', 'info');
+                expect(mockedSgGameClient.isLoggingEnabled).toHaveBeenCalledWith('TestComponent', 'info');
                 expect(result).toBe(true);
             });
 
@@ -543,8 +526,7 @@ describe('SentryManager', () => {
         describe('getConfig', () => {
             it('should get global configuration successfully', () => {
                 // Arrange
-                const { getConfig } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                const mockConfig: GlobalSentryConfig = {
+                const mockConfig: GlobalSentryConfigType = {
                     enabled: true,
                     defaultLogLevel: SentryLogLevel.INFO,
                     enableWorkflowTracking: true,
@@ -553,13 +535,13 @@ describe('SentryManager', () => {
                     componentConfigs: new Map(),
                     workflowConfigs: new Map()
                 };
-                getConfig.mockReturnValue(mockConfig);
+                mockedSgGameClient.getConfig.mockReturnValue(mockConfig);
 
                 // Act
                 const result = sentryManager.getConfig();
 
                 // Assert
-                expect(getConfig).toHaveBeenCalled();
+                expect(mockedSgGameClient.getConfig).toHaveBeenCalled();
                 expect(result).toEqual(mockConfig);
             });
         });
@@ -567,15 +549,14 @@ describe('SentryManager', () => {
         describe('getActiveWorkflows', () => {
             it('should get active workflows successfully', () => {
                 // Arrange
-                const { getActiveWorkflows } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
                 const mockWorkflows = new Map();
-                getActiveWorkflows.mockReturnValue(mockWorkflows);
+                mockedSgGameClient.getActiveWorkflows.mockReturnValue(mockWorkflows);
 
                 // Act
                 const result = sentryManager.getActiveWorkflows();
 
                 // Assert
-                expect(getActiveWorkflows).toHaveBeenCalled();
+                expect(mockedSgGameClient.getActiveWorkflows).toHaveBeenCalled();
                 expect(result).toEqual(mockWorkflows);
             });
         });
@@ -583,19 +564,17 @@ describe('SentryManager', () => {
         describe('cleanup', () => {
             it('should cleanup workflows successfully', () => {
                 // Arrange
-                const { cleanup } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
 
                 // Act
                 sentryManager.cleanup();
 
                 // Assert
-                expect(cleanup).toHaveBeenCalled();
+                expect(mockedSgGameClient.cleanup).toHaveBeenCalled();
             });
 
             it('should handle cleanup errors gracefully', () => {
                 // Arrange
-                const { cleanup } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
-                cleanup.mockImplementation(() => {
+                mockedSgGameClient.cleanup.mockImplementation(() => {
                     throw new Error('Cleanup failed');
                 });
 
@@ -651,26 +630,24 @@ describe('SentryManager', () => {
 
         it('should override console.error for component-specific errors', () => {
             // Arrange
-            const { logError } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
             const errorMessage = 'HotLeagueWall component error';
 
             // Act
             console.error(errorMessage);
 
             // Assert
-            expect(logError).toHaveBeenCalledWith('TestComponent', '[TestComponent] HotLeagueWall component error');
+            expect(mockedSgGameClient.logError).toHaveBeenCalledWith('TestComponent', '[TestComponent] HotLeagueWall component error');
         });
 
         it('should override console.warn for component-specific warnings', () => {
             // Arrange
-            const { logWarning } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
             const warningMessage = 'HotLeagueWall component warning';
 
             // Act
             console.warn(warningMessage);
 
             // Assert
-            expect(logWarning).toHaveBeenCalledWith('TestComponent', '[TestComponent] HotLeagueWall component warning');
+            expect(mockedSgGameClient.logWarning).toHaveBeenCalledWith('TestComponent', '[TestComponent] HotLeagueWall component warning');
         });
 
         it('should not override console methods when console override is disabled', () => {
@@ -722,81 +699,74 @@ describe('SentryManager', () => {
 
         it('should enable Sentry using convenience function', () => {
             // Arrange
-            const { enableSentry } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
 
             // Act
             enableSentryManager();
 
             // Assert
-            expect(enableSentry).toHaveBeenCalled();
+            expect(mockedSgGameClient.enableSentry).toHaveBeenCalled();
         });
 
         it('should disable Sentry using convenience function', () => {
             // Arrange
-            const { disableSentry } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
 
             // Act
             disableSentryManager();
 
             // Assert
-            expect(disableSentry).toHaveBeenCalled();
+            expect(mockedSgGameClient.disableSentry).toHaveBeenCalled();
         });
 
         it('should set log level using convenience function', () => {
             // Arrange
-            const { setLogLevel } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
 
             // Act
             setSentryLogLevel(SentryLogLevel.DEBUG);
 
             // Assert
-            expect(setLogLevel).toHaveBeenCalledWith(SentryLogLevel.DEBUG);
+            expect(mockedSgGameClient.setLogLevel).toHaveBeenCalledWith(SentryLogLevel.DEBUG);
         });
 
         it('should start workflow using convenience function', () => {
             // Arrange
-            const { startWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
 
             // Act
             startSentryWorkflow('test-workflow', 'Test Workflow', { test: 'data' });
 
             // Assert
-            expect(startWorkflow).toHaveBeenCalledWith('test-workflow', 'Test Workflow', 'TestComponent', { test: 'data' });
+            expect(mockedSgGameClient.startWorkflow).toHaveBeenCalledWith('test-workflow', 'Test Workflow', 'TestComponent', { test: 'data' });
         });
 
         it('should update workflow using convenience function', () => {
             // Arrange
-            const { updateWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
 
             // Act
             updateSentryWorkflow('test-workflow', WorkflowState.IN_PROGRESS, { progress: 50 });
 
             // Assert
-            expect(updateWorkflow).toHaveBeenCalledWith('test-workflow', WorkflowState.IN_PROGRESS, { progress: 50 });
+            expect(mockedSgGameClient.updateWorkflow).toHaveBeenCalledWith('test-workflow', WorkflowState.IN_PROGRESS, { progress: 50 });
         });
 
         it('should complete workflow using convenience function', () => {
             // Arrange
-            const { completeWorkflow } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
 
             // Act
             completeSentryWorkflow('test-workflow', true, { result: 'success' });
 
             // Assert
-            expect(completeWorkflow).toHaveBeenCalledWith('test-workflow', true, { result: 'success' });
+            expect(mockedSgGameClient.completeWorkflow).toHaveBeenCalledWith('test-workflow', true, { result: 'success' });
         });
 
         it('should track performance using convenience function', async () => {
             // Arrange
-            const { trackPerformance } = require('../../../../../../../sg-game-client/src/shared/utils/logger');
             const mockOperation = jest.fn().mockResolvedValue('test result');
-            trackPerformance.mockResolvedValue('test result');
+            mockedSgGameClient.trackPerformance.mockResolvedValue('test result');
 
             // Act
             const result = await trackSentryPerformance('Test Operation', mockOperation);
 
             // Assert
-            expect(trackPerformance).toHaveBeenCalledWith('TestComponent', 'Test Operation', mockOperation);
+            expect(mockedSgGameClient.trackPerformance).toHaveBeenCalledWith('TestComponent', 'Test Operation', mockOperation);
             expect(result).toBe('test result');
         });
     });

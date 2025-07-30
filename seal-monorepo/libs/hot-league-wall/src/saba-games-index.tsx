@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { configureSentryManager, SentryLogLevel } from './_shared/utils/sentry-manager';
+import { configureSentryManager, SentryLogLevel } from './_shared/utils/sentry/sentry-manager';
 import { appSettings } from './_shared/app-settings';
 import { useEffect } from 'react';
 import './style.module.scss';

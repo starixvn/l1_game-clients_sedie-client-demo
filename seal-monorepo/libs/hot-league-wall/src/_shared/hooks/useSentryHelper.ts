@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { sentryHelper } from '../utils/sentry-helper';
+import { sentryHelper } from '../utils/sentry/sentry-helper';
 import {
     SentryLogLevel,
     WorkflowState,
     UseSentryHelperOptions,
     WorkflowTracker
-} from '../utils/sentry-types';
+} from '../utils/sentry/sentry-types';
 
 
 

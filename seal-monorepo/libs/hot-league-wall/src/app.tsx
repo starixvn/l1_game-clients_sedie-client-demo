@@ -8,9 +8,9 @@ import { TokenRequestManager } from './_shared/utils/callback-singleton/token-re
 import React, { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 import { useSentryHelper } from './_shared/hooks/useSentryHelper';
-import { SentryLogLevel } from './_shared/utils/sentry-types';
-import { initializeSentryForProject, configureSentryForEnvironment } from './_shared/utils/sentry-config';
-import { initializeSentryWithSessionReplay, configureSessionReplayForEnvironment } from './_shared/utils/sentry-session-replay';
+import { SentryLogLevel } from './_shared/utils/sentry/sentry-types';
+import { initializeSentryForProject, configureSentryForEnvironment } from './_shared/utils/sentry/sentry-config';
+import { initializeSentryWithSessionReplay, configureSessionReplayForEnvironment } from './_shared/utils/sentry/sentry-session-replay';
 import { useSessionReplay } from './_shared/hooks/useSessionReplay';
 
 interface AppProps {

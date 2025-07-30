@@ -1,4 +1,4 @@
-import { sentryHelper } from './sentry-helper';
+import { sentryHelper } from './sentry/sentry-helper';
 
 interface IActionStorage {
     remove: (name: string) => void;
