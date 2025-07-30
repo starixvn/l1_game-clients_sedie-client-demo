@@ -228,17 +228,6 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                             className={gameBaseStyles['game-name-round']}
                         />
                     </div>
-                    <div className={`${gameBaseStyles['timer']} ${rngSoccerStyles['timer']}`}>
-                        <div className={countDownTimerStyles['count-down']}>
-                            <div className={`${countDownTimerStyles['timer-wrapper']} ${countDownTimerStyles['show-result-state']} `}>
-                                <div className={countDownTimerStyles['counting-text']}>
-                                    <div className={countDownTimerStyles['waiting-container']}>
-                                        <div className={countDownTimerStyles['dot-elastic']}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Content Section */}
