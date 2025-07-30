@@ -39,10 +39,8 @@ export const useSessionReplay = (componentName?: string) => {
                 isRecording: true,
                 startTime: Date.now()
             };
-
-            console.log(`Session replay context set: ${name}`, { componentName, context });
         } catch (error) {
-            console.error('Failed to set session replay context:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -55,10 +53,8 @@ export const useSessionReplay = (componentName?: string) => {
                 isRecording: false,
                 startTime: undefined
             };
-
-            console.log('Session replay context cleared', { componentName });
         } catch (error) {
-            console.error('Failed to clear session replay context:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -71,7 +67,7 @@ export const useSessionReplay = (componentName?: string) => {
                 timestamp: Date.now()
             });
         } catch (error) {
-            console.error('Failed to add session replay data:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -88,7 +84,7 @@ export const useSessionReplay = (componentName?: string) => {
                 componentName: componentName || 'unknown'
             });
         } catch (error) {
-            console.error('Failed to set user context:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -100,7 +96,7 @@ export const useSessionReplay = (componentName?: string) => {
                 ...tags
             });
         } catch (error) {
-            console.error('Failed to set tags:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -112,7 +108,7 @@ export const useSessionReplay = (componentName?: string) => {
                 ...extra
             });
         } catch (error) {
-            console.error('Failed to set extra context:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -120,9 +116,8 @@ export const useSessionReplay = (componentName?: string) => {
     const blockElementFromReplay = useCallback((element: HTMLElement) => {
         try {
             blockElement(element);
-            console.log('Element blocked from session replay', { componentName });
         } catch (error) {
-            console.error('Failed to block element:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -130,9 +125,8 @@ export const useSessionReplay = (componentName?: string) => {
     const ignoreElementFromReplay = useCallback((element: HTMLElement) => {
         try {
             ignoreElement(element);
-            console.log('Element ignored in session replay', { componentName });
         } catch (error) {
-            console.error('Failed to ignore element:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -140,9 +134,8 @@ export const useSessionReplay = (componentName?: string) => {
     const unblockElementFromReplay = useCallback((element: HTMLElement) => {
         try {
             unblockElement(element);
-            console.log('Element unblocked from session replay', { componentName });
         } catch (error) {
-            console.error('Failed to unblock element:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -150,9 +143,8 @@ export const useSessionReplay = (componentName?: string) => {
     const unignoreElementFromReplay = useCallback((element: HTMLElement) => {
         try {
             unignoreElement(element);
-            console.log('Element unignored in session replay', { componentName });
         } catch (error) {
-            console.error('Failed to unignore element:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -167,7 +159,7 @@ export const useSessionReplay = (componentName?: string) => {
                 timestamp: Date.now()
             });
         } catch (error) {
-            console.error('Failed to track interaction:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -182,7 +174,7 @@ export const useSessionReplay = (componentName?: string) => {
                 timestamp: Date.now()
             });
         } catch (error) {
-            console.error('Failed to track lifecycle:', error);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -197,7 +189,7 @@ export const useSessionReplay = (componentName?: string) => {
                 timestamp: Date.now()
             });
         } catch (err) {
-            console.error('Failed to track error:', err);
+            // Silent fail
         }
     }, [componentName]);
 
@@ -213,7 +205,7 @@ export const useSessionReplay = (componentName?: string) => {
                 timestamp: Date.now()
             });
         } catch (error) {
-            console.error('Failed to track performance:', error);
+            // Silent fail
         }
     }, [componentName]);
 

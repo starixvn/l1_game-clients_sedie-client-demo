@@ -7,8 +7,6 @@ import {
     WorkflowTracker
 } from '../utils/sentry/sentry-types';
 
-
-
 export const useSentryHelper = (options: UseSentryHelperOptions) => {
     const {
         componentName,
@@ -49,7 +47,6 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
             } catch (error) {
-                console.error('Failed to initialize SentryHelper hook:', error);
                 // Don't throw error to prevent component from failing
             }
         }
@@ -70,7 +67,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     try {
                         sentryHelper.completeWorkflow(workflowId, false, { reason: 'component_unmounted' });
                     } catch (error) {
-                        console.error('Failed to complete workflow during cleanup:', error);
+                        // Silent fail during cleanup
                     }
                 });
                 activeWorkflows.current.clear();
@@ -80,7 +77,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
             } catch (error) {
-                console.error('Failed to cleanup SentryHelper hook:', error);
+                // Silent fail during cleanup
             }
         };
     }, [componentName]);
@@ -123,7 +120,6 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
                 return workflowId;
             } catch (error) {
-                console.error('Failed to start workflow:', error);
                 return `${componentName}_${workflowName}_error_${Date.now()}`;
             }
         }, [componentName]),
@@ -139,7 +135,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
                 sentryHelper.updateWorkflow(workflowId, state, metadata);
             } catch (error) {
-                console.error('Failed to update workflow:', error);
+                // Silent fail
             }
         }, [componentName]),
 
@@ -162,7 +158,6 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
             } catch (error) {
-                console.error('Failed to complete workflow:', error);
                 activeWorkflows.current.delete(workflowId);
             }
         }, [componentName]),
@@ -216,7 +211,6 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
             return result;
         } catch (error) {
-            console.error('Failed to track performance:', error);
             // Fallback to direct operation execution
             return await operation();
         }
@@ -241,7 +235,6 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                 enablePerformanceTracking
             };
         } catch (error) {
-            console.error('Failed to get component configuration:', error);
             return {
                 componentName,
                 logLevel: SentryLogLevel.ERROR_ONLY,
@@ -288,12 +281,14 @@ export const useSimpleSentry = (componentName: string, logLevel?: SentryLogLevel
 
         return hookResult;
     } catch (error) {
-        console.error('Failed to initialize simple Sentry hook:', error);
         // Return a minimal implementation
         return {
-            logError: (error: Error | string, context?: Record<string, any>) => console.error(error, context),
-            logWarning: (warning: string, context?: Record<string, any>) => console.warn(warning, context),
-            logInfo: (info: string, context?: Record<string, any>) => console.log(info, context),
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            logError: (error: Error | string, context?: Record<string, any>) => { },
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            logWarning: (warning: string, context?: Record<string, any>) => { },
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            logInfo: (info: string, context?: Record<string, any>) => { },
             workflow: {
                 start: () => 'error_workflow',
                 update: () => { /* no-op */ },
@@ -325,12 +320,11 @@ export const useWorkflowSentry = (componentName: string, options?: Partial<UseSe
 
         return hookResult;
     } catch (error) {
-        console.error('Failed to initialize workflow Sentry hook:', error);
         // Return a minimal implementation
         return {
-            logError: (error: Error | string, context?: Record<string, any>) => console.error(error, context),
-            logWarning: (warning: string, context?: Record<string, any>) => console.warn(warning, context),
-            logInfo: (info: string, context?: Record<string, any>) => console.log(info, context),
+            logError: (error: Error | string, context?: Record<string, any>) => { },
+            logWarning: (warning: string, context?: Record<string, any>) => { },
+            logInfo: (info: string, context?: Record<string, any>) => { },
             workflow: {
                 start: () => 'error_workflow',
                 update: () => { /* no-op */ },

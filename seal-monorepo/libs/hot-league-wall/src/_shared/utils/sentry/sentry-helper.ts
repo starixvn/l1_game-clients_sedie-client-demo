@@ -46,9 +46,8 @@ export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boo
         if (config.debugMode !== undefined) {
             localStorage.setItem(SENTRY_DEBUG_MODE_KEY, config.debugMode.toString());
         }
-        console.log('Sentry localStorage config updated:', config);
     } catch (error) {
-        console.error('Failed to update localStorage config:', error);
+        // Silent fail
     }
 };
 
@@ -60,9 +59,8 @@ export const clearLocalStorageConfig = () => {
         localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
         localStorage.removeItem(SENTRY_ENABLED_KEY);
         localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
-        console.log('Sentry localStorage config cleared');
     } catch (error) {
-        console.error('Failed to clear localStorage config:', error);
+        // Silent fail
     }
 };
 
@@ -125,19 +123,16 @@ class SentryHelper {
         }
 
         this.isInitialized = true;
-        console.log('SentryHelper initialized with config:', this.globalConfig, 'localStorage config:', localStorageConfig);
     }
 
     // Global enable/disable
     setGlobalEnabled(enabled: boolean): void {
         this.globalConfig.enabled = enabled;
-        console.log(`SentryHelper global logging ${enabled ? 'enabled' : 'disabled'}`);
     }
 
     // Set default log level for all components
     setDefaultLogLevel(level: SentryLogLevel): void {
         this.globalConfig.defaultLogLevel = level;
-        console.log(`SentryHelper default log level set to: ${level}`);
     }
 
     // Component-specific configuration
@@ -153,7 +148,6 @@ class SentryHelper {
 
         const finalConfig = { ...defaultConfig, ...config };
         this.globalConfig.componentConfigs.set(componentName, finalConfig);
-        console.log(`Component '${componentName}' configured:`, finalConfig);
     }
 
     // Get component configuration
@@ -369,7 +363,6 @@ class SentryHelper {
         this.globalConfig.componentConfigs.clear();
         this.globalConfig.workflowConfigs.clear();
         this.isInitialized = false;
-        console.log('SentryHelper cleaned up');
     }
 }
 

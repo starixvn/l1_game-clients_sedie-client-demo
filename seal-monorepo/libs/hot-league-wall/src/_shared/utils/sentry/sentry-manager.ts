@@ -46,9 +46,8 @@ export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boo
         if (config.debugMode !== undefined) {
             localStorage.setItem(SENTRY_DEBUG_MODE_KEY, config.debugMode.toString());
         }
-        console.log('Sentry localStorage config updated:', config);
     } catch (error) {
-        console.error('Failed to update localStorage config:', error);
+        // Silent fail
     }
 };
 
@@ -60,9 +59,8 @@ export const clearLocalStorageConfig = () => {
         localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
         localStorage.removeItem(SENTRY_ENABLED_KEY);
         localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
-        console.log('Sentry localStorage config cleared');
     } catch (error) {
-        console.error('Failed to clear localStorage config:', error);
+        // Silent fail
     }
 };
 

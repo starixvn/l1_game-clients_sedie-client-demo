@@ -14,71 +14,62 @@ export class SSOControlSimulatorService implements ISSOSimulatorService {
      * Log when controls are toggled
      */
     logControlToggle(showControls: boolean): void {
-        // console.log(`${this.logPrefix} Controls ${showControls ? 'SHOWN' : 'HIDDEN'} at:`, new Date().toISOString());
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log when failure mode is toggled
      */
     logFailureToggle(isFailureMode: boolean): void {
-        // console.log(`${this.logPrefix} Failure mode ${isFailureMode ? 'ENABLED' : 'DISABLED'} at:`, new Date().toISOString());
-
-        if (isFailureMode) {
-            // console.log(`${this.logPrefix} ⚠️  SSO failures will now be simulated!`);
-        } else {
-            // console.log(`${this.logPrefix} ✅ SSO failures simulation disabled`);
-        }
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log when first click invalid token mode is toggled
      */
     logFirstClickInvalidTokenToggle(isEnabled: boolean): void {
-        // console.log(`[SSO Simulator] First Click Invalid Token Mode ${isEnabled ? 'enabled' : 'disabled'}`);
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log when scenario section is toggled
      */
     logScenarioToggle(isVisible: boolean): void {
-        // console.log(`[SSO Simulator] Scenario section ${isVisible ? 'shown' : 'hidden'}`);
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log when a scenario is selected
      */
     logScenarioSelection(scenarioId: string): void {
-        // console.log(`[SSO Simulator] Scenario selected: ${scenarioId}`);
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log when a failure is simulated
      */
     logFailureSimulation(failureNumber: number, errorMessage: string): void {
-        // console.log(`${this.logPrefix} 💥 Simulating SSO failure #${failureNumber}: ${errorMessage}`);
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log successful SSO request
      */
     logSuccessfulSSO(duration: number): void {
-        // console.log(`${this.logPrefix} ✅ SSO request SUCCESS - Duration: ${duration.toFixed(2)}ms`);
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log failed SSO request
      */
     logFailedSSO(duration: number, error: Error): void {
-        // console.log(`${this.logPrefix} 💥 SSO request FAILED - Duration: ${duration.toFixed(2)}ms`);
-        // console.error(`${this.logPrefix} Error details:`, error);
+        // Logging handled by Sentry manager
     }
 
     /**
      * Log invalid token simulation
      */
     logInvalidTokenSimulation(token: string): void {
-        // console.log(`${this.logPrefix} 🔑 Simulating invalid token: ${token.substring(0, 50)}...`);
-        // console.log(`${this.logPrefix} 🔑 Token length: ${token.length} characters`);
-        // console.log(`${this.logPrefix} 🔑 Token will be passed to Lobby for internal testing`);
+        // Logging handled by Sentry manager
     }
 } 

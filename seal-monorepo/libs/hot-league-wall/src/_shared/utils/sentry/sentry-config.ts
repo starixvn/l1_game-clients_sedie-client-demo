@@ -36,9 +36,8 @@ export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boo
         if (config.debugMode !== undefined) {
             localStorage.setItem(SENTRY_DEBUG_MODE_KEY, config.debugMode.toString());
         }
-        console.log('Sentry localStorage config updated:', config);
     } catch (error) {
-        console.error('Failed to update localStorage config:', error);
+        // Silent fail
     }
 };
 
@@ -50,9 +49,8 @@ export const clearLocalStorageConfig = () => {
         localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
         localStorage.removeItem(SENTRY_ENABLED_KEY);
         localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
-        console.log('Sentry localStorage config cleared');
     } catch (error) {
-        console.error('Failed to clear localStorage config:', error);
+        // Silent fail
     }
 };
 
@@ -258,8 +256,6 @@ export const initializeSentryForProject = () => {
         enableWorkflowTracking: false,
         enablePerformanceTracking: false
     });
-
-    console.log('SentryHelper configured for HotLeagueWall project with localStorage config:', localStorageConfig);
 };
 
 /**
@@ -311,7 +307,6 @@ export const configureSentryForEnvironment = (environment: string) => {
             enablePerformanceTracking: true,
             enableConsoleOverride: true
         });
-        console.log('SentryHelper configured for DEVELOPMENT environment with localStorage config:', localStorageConfig);
     } else if (isProduction) {
         // Production: Info logging for normal operations, error logging for exceptions
         configureSentry({
@@ -321,7 +316,6 @@ export const configureSentryForEnvironment = (environment: string) => {
             enablePerformanceTracking: true,
             enableConsoleOverride: true
         });
-        console.log('SentryHelper configured for PRODUCTION environment with localStorage config:', localStorageConfig);
     } else if (isTest) {
         // Test: Disabled to avoid noise during testing
         configureSentry({
@@ -331,7 +325,6 @@ export const configureSentryForEnvironment = (environment: string) => {
             enablePerformanceTracking: false,
             enableConsoleOverride: false
         });
-        console.log('SentryHelper configured for TEST environment (disabled)');
     } else {
         // Default: Conservative logging
         configureSentry({
@@ -341,7 +334,6 @@ export const configureSentryForEnvironment = (environment: string) => {
             enablePerformanceTracking: true,
             enableConsoleOverride: true
         });
-        console.log('SentryHelper configured for UNKNOWN environment (conservative) with localStorage config:', localStorageConfig);
     }
 };
 

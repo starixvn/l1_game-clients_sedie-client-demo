@@ -40,8 +40,6 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToke
         // Initialize Sentry with Session Replay
         const sessionReplayConfig = configureSessionReplayForEnvironment(environment);
         initializeSentryWithSessionReplay(sessionReplayConfig);
-
-        console.log('Sentry with Session Replay initialized for environment:', environment);
     }, []);
 
     return (

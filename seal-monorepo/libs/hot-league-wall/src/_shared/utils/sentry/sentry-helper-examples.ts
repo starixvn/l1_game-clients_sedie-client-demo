@@ -153,7 +153,6 @@ export const performanceTrackingExample = async () => {
         });
     } catch (error: unknown) {
         // Error is automatically logged by trackPerformance
-        console.log('Payment processing failed');
     }
 };
 
@@ -387,9 +386,6 @@ export const localStorageLoggingControlExample = () => {
             timestamp: Date.now(),
             userAgent: navigator.userAgent
         });
-
-        // Reload page to apply changes
-        console.log('Reload the page to apply logging changes');
     };
 
     // Enable debug level logging
@@ -404,8 +400,6 @@ export const localStorageLoggingControlExample = () => {
             action: 'enable_debug_logging',
             timestamp: Date.now()
         });
-
-        console.log('Reload the page to apply logging changes');
     };
 
     // Disable logging
@@ -418,8 +412,6 @@ export const localStorageLoggingControlExample = () => {
             action: 'disable_logging',
             timestamp: Date.now()
         });
-
-        console.log('Reload the page to apply logging changes');
     };
 
     // Clear all logging settings
@@ -430,15 +422,13 @@ export const localStorageLoggingControlExample = () => {
             action: 'clear_logging_settings',
             timestamp: Date.now()
         });
-
-        console.log('Reload the page to apply logging changes');
     };
 
     // Check current logging status
     const checkLoggingStatus = () => {
         try {
             const logLevel = localStorage.getItem('sentry_log_level') || 'info';
-            const enabled = localStorage.getItem('sentry_enabled') !== 'false';
+            const enabled = localStorage.getItem('hot-league-wall-debug-enabled') !== 'false';
             const debugMode = localStorage.getItem('sentry_debug_mode') === 'true';
 
             sentryHelper.logInfo(componentName, 'Current logging status', {
@@ -448,20 +438,10 @@ export const localStorageLoggingControlExample = () => {
                 debugMode,
                 timestamp: Date.now()
             });
-
-            console.log('Current logging status:', { logLevel, enabled, debugMode });
         } catch (error) {
-            console.error('Failed to check logging status:', error);
+            // Silent fail
         }
     };
-
-    // Example usage in browser console
-    console.log('Available localStorage logging functions:');
-    console.log('- enableInfoLogging()');
-    console.log('- enableDebugLogging()');
-    console.log('- disableLogging()');
-    console.log('- clearLoggingSettings()');
-    console.log('- checkLoggingStatus()');
 
     return {
         enableInfoLogging,
@@ -492,9 +472,6 @@ export const productionDebuggingExample = () => {
             userAgent: navigator.userAgent,
             url: window.location.href
         });
-
-        console.log('Production debugging enabled. Reload the page to apply changes.');
-        console.log('You can now see detailed info logs in Sentry for troubleshooting.');
     };
 
     // Enable specific component debugging
@@ -504,8 +481,6 @@ export const productionDebuggingExample = () => {
             targetComponent: componentName,
             timestamp: Date.now()
         });
-
-        console.log(`Component debugging enabled for: ${componentName}`);
     };
 
     // Log current application state
@@ -517,7 +492,7 @@ export const productionDebuggingExample = () => {
             timestamp: Date.now(),
             localStorageConfig: {
                 logLevel: localStorage.getItem('sentry_log_level'),
-                enabled: localStorage.getItem('sentry_enabled'),
+                enabled: localStorage.getItem('hot-league-wall-debug-enabled'),
                 debugMode: localStorage.getItem('sentry_debug_mode')
             }
         };
@@ -526,8 +501,6 @@ export const productionDebuggingExample = () => {
             action: 'log_application_state',
             ...state
         });
-
-        console.log('Application state logged to Sentry:', state);
     };
 
     return {
