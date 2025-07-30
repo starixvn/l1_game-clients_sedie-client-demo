@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import * as gc from '@sg/sg-game-client';
 import { handle, observer, render } from '@sg/sg-observer';
 import { GatewayGameBase } from '../../../games/game-base';
@@ -19,6 +19,7 @@ import { RNGSoccerRoundHistory } from './round-history';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 import { useSentryHelper } from '../../../_shared/hooks/useSentryHelper';
 import { SentryLogLevel } from '../../../_shared/utils/sentry/sentry-types';
+import { useGameCronSentry } from '../../../_shared/hooks/useGameCronSentry';
 
 interface IRNGSoccerPageState extends IGatewayGameBaseState {
     isTimerActive: boolean;
@@ -66,7 +67,9 @@ class RNGSoccerPageComponent extends GatewayGameBase<GameBaseProps, IRNGSoccerPa
 
     // Game lifecycle and event handlers
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
-    override closeConnect() { }
+    override closeConnect() {
+        // Handled by decorator
+    }
 
     override getGameBackgroundImage(): string {
         return bgGame;
@@ -175,6 +178,36 @@ const RNGSoccerPage: React.FC<GameBaseProps> = (props) => {
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
+
+    // Initialize Game Cron Batch Manager for RNG Soccer
+    const {
+        logInfo: gameLogInfo,
+        logWarning: gameLogWarning,
+        logError: gameLogError,
+        startGameCron,
+        completeGameCron
+    } = useGameCronSentry({
+        gameCronId: 'sg-rng-soccer-page',
+        gameName: 'RNG Soccer',
+        systemType: 'SG',
+        environment: 'LOCAL1',
+        onlySendOnIssues: true
+    });
+
+    // Start game cron when component mounts
+    React.useEffect(() => {
+        startGameCron({
+            gameId: '118',
+            component: 'RNGSoccerPage',
+            props: { language: props.language }
+        });
+        gameLogInfo('RNG Soccer page mounted', { component: 'RNGSoccerPage' });
+
+        // Complete game cron when component unmounts
+        return () => {
+            completeGameCron(true, { reason: 'component_unmounted' });
+        };
+    }, [props.language]);
 
     logInfo('RNGSoccerPage rendered', {
         namespace: props.namespace,

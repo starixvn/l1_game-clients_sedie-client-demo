@@ -1,3 +1,4 @@
+import React from 'react';
 import { RNGSoccerChoices } from '../type';
 import styles from '../rng-soccer.module.scss';
 import rngSoccerStyles from './rng-soccer-bet-options.module.scss';
@@ -7,6 +8,7 @@ import OddsComponent from '../../../../_shared/components/bet-option/odd-compone
 import BettingBlock from '../../../../_shared/components/bet-option/betting-block';
 import { useSentryHelper } from '../../../../_shared/hooks/useSentryHelper';
 import { SentryLogLevel } from '../../../../_shared/utils/sentry/sentry-types';
+import { useGameCronSentry } from '../../../../_shared/hooks/useGameCronSentry';
 
 interface RNGSoccerBetOptionsProps {
     gameName: string;
@@ -22,7 +24,7 @@ const betOptionsList = [
 ]
 
 class RNGSoccerBetOptionsComponent extends BetOptions {
-    renderBetOptions(betChoice: string, odd: number, name: string = '', isBoostedChoice: boolean = false) {
+    renderBetOptions(betChoice: string, odd: number, name = '', isBoostedChoice = false) {
         const { settlementResult } = this.state;
 
         return (
@@ -84,6 +86,40 @@ const RNGSoccerBetOptions: React.FC<RNGSoccerBetOptionsProps> = (props) => {
         enableWorkflowTracking: false,
         enablePerformanceTracking: true
     });
+
+    // Initialize Game Cron Batch Manager for RNG Soccer Bet Options
+    const {
+        logInfo: gameLogInfo,
+        logWarning: gameLogWarning,
+        logError: gameLogError,
+        startGameCron,
+        completeGameCron
+    } = useGameCronSentry({
+        gameCronId: 'sg-rng-soccer-bet-options',
+        gameName: 'RNG Soccer Bet Options',
+        systemType: 'SG',
+        environment: 'LOCAL1',
+        onlySendOnIssues: true
+    });
+
+    // Start game cron when component mounts
+    React.useEffect(() => {
+        startGameCron({
+            gameId: '118',
+            component: 'RNGSoccerBetOptions',
+            props: {
+                gameName: props.gameName,
+                namespace: props.namespace,
+                language: props.language
+            }
+        });
+        gameLogInfo('RNG Soccer bet options mounted', { component: 'RNGSoccerBetOptions' });
+
+        // Complete game cron when component unmounts
+        return () => {
+            completeGameCron(true, { reason: 'component_unmounted' });
+        };
+    }, [props.gameName, props.namespace, props.language]);
 
     logInfo('RNGSoccerBetOptions rendered', {
         gameName: props.gameName,

@@ -12,6 +12,7 @@ import { SentryLogLevel } from './_shared/utils/sentry/sentry-types';
 import { initializeSentryForProject, configureSentryForEnvironment } from './_shared/utils/sentry/sentry-config';
 import { initializeSentryWithSessionReplay, configureSessionReplayForEnvironment } from './_shared/utils/sentry/sentry-session-replay';
 import { useSessionReplay } from './_shared/hooks/useSessionReplay';
+import { sentryGameCronBatchManager } from './_shared/utils/sentry/sentry-game-cron-batch-manager';
 import { appSettingsWithSentry } from './_shared/app-settings';
 
 interface AppProps {
@@ -50,6 +51,10 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToke
             const sessionReplayConfig = configureSessionReplayForEnvironment(environment);
             console.log('Session replay config:', sessionReplayConfig);
             initializeSentryWithSessionReplay(sessionReplayConfig);
+
+            // Initialize Game Cron Batch Manager
+            sentryGameCronBatchManager.initialize();
+            console.log('Game Cron Batch Manager initialized');
 
             console.log('Sentry initialization completed successfully');
         } catch (error) {
