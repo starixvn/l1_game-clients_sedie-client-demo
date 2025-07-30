@@ -50,9 +50,9 @@ export const FAKE_RNG_SOCCER_DATA = {
     // Betting odds
     roundOdds: {
         odds: {
-            [RNGSoccerChoices.home]: 1.85,
-            [RNGSoccerChoices.draw]: 3.2,
-            [RNGSoccerChoices.away]: 2.1,
+            [RNGSoccerChoices.home]: 2.0,
+            [RNGSoccerChoices.draw]: 11.0,
+            [RNGSoccerChoices.away]: 2.0,
         },
         boostedChoices: [RNGSoccerChoices.home],
     },

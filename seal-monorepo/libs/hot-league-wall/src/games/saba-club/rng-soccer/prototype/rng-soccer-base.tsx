@@ -328,7 +328,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
                                                     languageId: gc.Translator.getCurrentLanguageId(),
                                                 })}
                                             </span>
-                                            <span className={commonBetOptionStyles['odd']}>{odd}</span>
+                                            <span className={commonBetOptionStyles['odd']}>{odd.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
