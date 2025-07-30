@@ -63,7 +63,58 @@ function getSharedContainer(siteConfigs: gc.Configs.SiteConfigs) {
     return container;
 }
 
-export const sharedContainer = getSharedContainer(getSiteConfig(appSettings.defaultGameId));
+export const sharedContainer = (() => {
+    try {
+        const componentName = 'GameBaseStartup';
+
+        sentryHelper.logInfo(componentName, 'Initializing shared container', {
+            defaultGameId: appSettings.defaultGameId,
+            timestamp: Date.now()
+        });
+
+        if (!appSettings.defaultGameId) {
+            const error = 'defaultGameId is not defined in appSettings';
+            sentryHelper.logError(componentName, error, {
+                appSettingsKeys: Object.keys(appSettings),
+                timestamp: Date.now()
+            });
+            throw new Error(error);
+        }
+
+        const siteConfig = getSiteConfig(appSettings.defaultGameId);
+        const container = getSharedContainer(siteConfig);
+
+        sentryHelper.logInfo(componentName, 'Shared container initialization completed', {
+            defaultGameId: appSettings.defaultGameId,
+            timestamp: Date.now()
+        });
+
+        return container;
+    } catch (error) {
+        sentryHelper.logError('GameBaseStartup', 'Failed to initialize shared container', {
+            error: error instanceof Error ? error.message : String(error),
+            timestamp: Date.now()
+        });
+
+        // Return a minimal container as fallback
+        console.error('Failed to initialize shared container, using fallback:', error);
+        return getSharedContainer({
+            isDev: false,
+            systemType: 'development',
+            serverDomain: 'localhost',
+            ssl: false,
+            subDomain: '',
+            env: 'development',
+            enableMsgpackParserAllGames: false,
+            enableMsgpackParserOnNotification: false,
+            websocket: { proxyPath: '', route: '' },
+            mainObserverNamespace: '',
+            subGuideDomain: '',
+            subDirectory: '',
+            userServicePath: '/user'
+        });
+    }
+})();
 
 // Make the shared container available globally for external access
 if (typeof window !== 'undefined') {

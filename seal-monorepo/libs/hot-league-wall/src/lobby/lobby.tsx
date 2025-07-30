@@ -140,10 +140,12 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     }
 
     componentDidMount() {
-        const { sentryHelper } = this.props;
+        const { token, sentryHelper } = this.props;
 
         if (sentryHelper) {
             sentryHelper.logInfo('Lobby component mounted', {
+                hasToken: !!token,
+                tokenLength: token?.length,
                 timestamp: Date.now()
             });
         }
@@ -151,19 +153,33 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
         // Add visibility change listener
         document.addEventListener('visibilitychange', this.onVisibilityChange);
 
-        // Connect to live gateway
-        this.connectLiveGateway();
+        // Initialize SSO with token
+        this.sso({ token });
     }
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<ILobbyState>, snapshot?: any): void {
-        const { sentryHelper } = this.props;
+        const { token, sentryHelper } = this.props;
 
         if (sentryHelper) {
             sentryHelper.logInfo('Lobby component updated', {
                 prevState: prevState,
                 currentState: this.state,
+                prevToken: prevProps.token,
+                currentToken: token,
                 timestamp: Date.now()
             });
+        }
+
+        // Handle token changes
+        if (prevProps.token !== token) {
+            if (sentryHelper) {
+                sentryHelper.logInfo('Token changed, reinitializing SSO', {
+                    prevToken: prevProps.token,
+                    currentToken: token,
+                    timestamp: Date.now()
+                });
+            }
+            this.sso({ token });
         }
     }
 

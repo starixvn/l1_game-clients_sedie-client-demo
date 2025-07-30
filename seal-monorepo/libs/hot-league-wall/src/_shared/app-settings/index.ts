@@ -28,48 +28,107 @@ export enum APP_ENV {
 export const getEnvironmentConfig = ({ appEnv, siteId }) => {
     const componentName = 'AppSettings';
 
-    sentryHelper.logInfo(componentName, 'Loading environment configuration', {
-        appEnv,
-        siteId,
-        timestamp: Date.now()
-    });
+    try {
+        sentryHelper.logInfo(componentName, 'Loading environment configuration', {
+            appEnv,
+            siteId,
+            timestamp: Date.now()
+        });
 
-    const configMaps = {
-        [NOVA88_SITE_ID]: {
-            LOCAL: VG_LOCAL_CONFIG,
-            SIT: VG_SIT_CONFIG,
-            UAT: VG_UAT_CONFIG,
-            PROD: VG_PROD_CONFIG
-        },
-        [VIVA88_SITE_ID]: {
-            LOCAL: SG_LOCAL_CONFIG,
-            SIT: SG_SIT_CONFIG,
-            UAT: SG_UAT_CONFIG,
-            PROD: SG_PROD_CONFIG
+        const configMaps = {
+            [NOVA88_SITE_ID]: {
+                LOCAL: VG_LOCAL_CONFIG,
+                SIT: VG_SIT_CONFIG,
+                UAT: VG_UAT_CONFIG,
+                PROD: VG_PROD_CONFIG
+            },
+            [VIVA88_SITE_ID]: {
+                LOCAL: SG_LOCAL_CONFIG,
+                SIT: SG_SIT_CONFIG,
+                UAT: SG_UAT_CONFIG,
+                PROD: SG_PROD_CONFIG
+            }
         }
+        const environmentsConfig = configMaps[siteId][appEnv];
+
+        if (!environmentsConfig) {
+            const error = `No environment configuration found for siteId: ${siteId}, appEnv: ${appEnv}`;
+            sentryHelper.logError(componentName, error, {
+                siteId,
+                appEnv,
+                availableSites: Object.keys(configMaps),
+                availableEnvs: Object.keys(configMaps[siteId] || {}),
+                timestamp: Date.now()
+            });
+            throw new Error(error);
+        }
+
+        const gameSettingsMap = {
+            [NOVA88_SITE_ID]: VG_GAME_SETTINGS,
+            [VIVA88_SITE_ID]: SG_GAME_SETTINGS
+        }
+        const gameSettings = gameSettingsMap[siteId];
+
+        if (!gameSettings) {
+            const error = `No game settings found for siteId: ${siteId}`;
+            sentryHelper.logError(componentName, error, {
+                siteId,
+                availableSites: Object.keys(gameSettingsMap),
+                timestamp: Date.now()
+            });
+            throw new Error(error);
+        }
+
+        const result = {
+            ...environmentsConfig,
+            gameSettings
+        };
+
+        sentryHelper.logInfo(componentName, 'Environment configuration loaded successfully', {
+            appEnv,
+            siteId,
+            configKeys: Object.keys(result),
+            gameSettingsCount: Object.keys(gameSettings).length,
+            timestamp: Date.now()
+        });
+
+        return result;
+    } catch (error) {
+        sentryHelper.logError(componentName, 'Failed to load environment configuration', {
+            error: error instanceof Error ? error.message : String(error),
+            appEnv,
+            siteId,
+            timestamp: Date.now()
+        });
+
+        // Return a fallback configuration
+        console.error('Failed to load environment configuration, using fallback:', error);
+        return {
+            serverDomain: 'localhost',
+            socketGatewayPath: '/socket',
+            sentry: { dsn: '', environment: 'development' },
+            gameSettings: {},
+            enableMsgpackParser: false,
+            enableMsgpackParserOnNotification: false,
+            systemType: 'development',
+            gamePath: '/games',
+            gameSettingUrl: '',
+            ssl: false,
+            subDomain: '',
+            env: 'development',
+            enableMsgpackParserAllGames: false,
+            subDirectory: '',
+            simulatorConfigs: {
+                gameLobbySimulatorUrl: '',
+                owApiSimulatorUrl: '',
+                operatorId: '',
+                operatorSecret: '',
+                operatorToken: ''
+            },
+            defaultGameId: 1,
+            userServicePath: '/user'
+        };
     }
-    const environmentsConfig = configMaps[siteId][appEnv];
-
-    const gameSettingsMap = {
-        [NOVA88_SITE_ID]: VG_GAME_SETTINGS,
-        [VIVA88_SITE_ID]: SG_GAME_SETTINGS
-    }
-    const gameSettings = gameSettingsMap[siteId];
-
-    const result = {
-        ...environmentsConfig,
-        gameSettings
-    };
-
-    sentryHelper.logInfo(componentName, 'Environment configuration loaded successfully', {
-        appEnv,
-        siteId,
-        configKeys: Object.keys(result),
-        gameSettingsCount: Object.keys(gameSettings).length,
-        timestamp: Date.now()
-    });
-
-    return result;
 }
 
 // TODO refactor
@@ -165,7 +224,7 @@ export const getGameSetting = (gameId: number) => {
     return settings;
 };
 
-export const getGameSettingIds = (visibleOnly: boolean = true) => {
+export const getGameSettingIds = (visibleOnly = true) => {
     const componentName = 'AppSettings';
 
     sentryHelper.logInfo(componentName, 'Getting game setting IDs', {
