@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import styles from '../rng-soccer.module.scss';
 import gameBaseStyles from '../../../game-base/game-base.module.scss';
 import rngSoccerStyles from '../rng-soccer.module.scss';
-import countDownTimerStyles from '../../../../_shared/components/count-down-timer/count-down-timer.module.scss';
 import betOptionStyles from '../bet-option/rng-soccer-bet-options.module.scss';
 import commonBetOptionStyles from '../../../../_shared/components/bet-option/bet-option.module.scss';
 import flipCardStyles from '../../../../_shared/components/card/flip-card/flip-card.module.scss';
@@ -211,7 +210,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
             {/* Main content with slide animation */}
             <div
                 className={classNames(styles['sport-item'], gameBaseStyles['game-container'], {
-                    [rngSoccerStyles['slide-left']]: isSlidingLeft,
+                    [demoAnimationStyles['slide-left']]: isSlidingLeft,
                 })}
             >
                 {/* Header Section */}
@@ -410,7 +409,7 @@ export const RNGSoccerBase: React.FC<RNGSoccerBaseProps> = ({
 
             {/* Blur background overlay with animation */}
             {showBlurBg && (
-                <div className={rngSoccerStyles['blur-bg-animated']}>
+                <div className={demoAnimationStyles['blur-bg-animated']}>
                     <img src={blurBgGame} alt="Blurred background" />
                 </div>
             )}

@@ -349,49 +349,6 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         );
     }
 
-    renderNewRoundSection(
-        props: P,
-        state: S,
-        setStateCallback: (state: Partial<S>) => void,
-        overrideClasses?: any,
-        customBackgroundImage?: string,
-        customHeaderSection?: JSX.Element | null,
-        customContentSection?: JSX.Element | null,
-        customFooterSection?: JSX.Element | null,
-        customRoundHistorySection?: JSX.Element | null,
-        customHistorySection?: JSX.Element | null,
-    ): JSX.Element {
-        if (state.roundState !== ROUND_STATE.STARTING_ROUND) {
-            return <></>;
-        }
-
-        return (
-            <div
-                className={classNames(
-                    rngSoccerStyles['new-round-section'],
-                    Styles['game-container'],
-                    this.getExtensionClass('gameContainer'),
-                    overrideClasses?.gameContainer,
-                )}
-                style={{
-                    background: `url(${customBackgroundImage}) no-repeat center`,
-                }}
-            >
-                {this.renderGameContainer(
-                    props,
-                    state,
-                    setStateCallback,
-                    overrideClasses,
-                    customHeaderSection,
-                    customContentSection,
-                    customFooterSection,
-                    customRoundHistorySection,
-                    customHistorySection,
-                )}
-            </div>
-        );
-    }
-
     renderGameLayout(
         props: P,
         state: S,
@@ -404,21 +361,16 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         customHistorySection?: JSX.Element | null,
         customRoundHistorySection?: JSX.Element | null,
     ): JSX.Element {
-        const gameContainerWrapperClass = classNames(Styles['game-container-wrapper'], {
-            [Styles['overflow-hidden']]: state.roundState === ROUND_STATE.STARTING_ROUND,
-        });
-
         const containerStyle = this.renderGameBackground(customBackgroundImage);
 
         const containerClass = classNames(
             Styles['game-container'],
             this.getExtensionClass('gameContainer'),
             overrideClasses?.gameContainer,
-            { [rngSoccerStyles['slide-left']]: state.roundState === ROUND_STATE.STARTING_ROUND },
         );
 
         return (
-            <div className={gameContainerWrapperClass}>
+            <div className={Styles['game-container-wrapper']}>
                 <div className={containerClass} style={containerStyle}>
                     {this.renderGameContainer(
                         props,
@@ -432,18 +384,6 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                         customHistorySection,
                     )}
                 </div>
-                {this.renderNewRoundSection(
-                    props,
-                    state,
-                    setStateCallback,
-                    overrideClasses,
-                    customBackgroundImage,
-                    customHeaderSection,
-                    customContentSection,
-                    customFooterSection,
-                    customRoundHistorySection,
-                    customHistorySection,
-                )}
             </div>
         );
     }
