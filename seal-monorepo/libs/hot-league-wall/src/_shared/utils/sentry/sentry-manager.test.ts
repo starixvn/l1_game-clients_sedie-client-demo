@@ -1,773 +1,256 @@
-import {
-    sentryManager,
-    SentryLogLevel,
-    WorkflowState,
-    configureSentryManager,
-    enableSentryManager,
-    disableSentryManager,
-    setSentryLogLevel,
-    startSentryWorkflow,
-    updateSentryWorkflow,
-    completeSentryWorkflow,
-    trackSentryPerformance
-} from './sentry-manager';
-import { SentryLogLevel as SentryLogLevelType, WorkflowState as WorkflowStateType, ComponentConfig as ComponentConfigType, WorkflowConfig as WorkflowConfigType, GlobalSentryConfig as GlobalSentryConfigType } from './sentry-types';
+import { sentryManager } from './sentry-manager';
+import { SentryLogLevel } from './sentry-types';
+import * as Sentry from '@sentry/react';
 
-// Import mocked modules
-import * as sgGameClient from '@sg/sg-game-client';
+// Mock localStorage
+const mockLocalStorage = {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+    clear: jest.fn(),
+    length: 0,
+    key: jest.fn()
+};
 
-// Mock the sg-game-client logger functions
-jest.mock('@sg/sg-game-client', () => ({
-    SentryLogLevel: {
-        TRACE: 'trace',
-        DEBUG: 'debug',
-        INFO: 'info',
-        WARN: 'warn',
-        ERROR: 'error',
-        FATAL: 'fatal',
-        DISABLED: 'disabled',
-        ERROR_ONLY: 'error_only',
-        WARNING_AND_ERROR: 'warning_and_error',
-        ALL: 'all'
-    },
-    WorkflowState: {
-        STARTED: 'started',
-        IN_PROGRESS: 'in_progress',
-        COMPLETED: 'completed',
-        FAILED: 'failed',
-        CANCELLED: 'cancelled'
-    },
-    configureSentry: jest.fn(),
-    enableSentry: jest.fn(),
-    disableSentry: jest.fn(),
-    setLogLevel: jest.fn(),
-    configureComponent: jest.fn(),
-    startWorkflow: jest.fn(),
-    updateWorkflow: jest.fn(),
-    completeWorkflow: jest.fn(),
-    trackPerformance: jest.fn(),
-    logTrace: jest.fn(),
-    logDebug: jest.fn(),
-    logInfo: jest.fn(),
-    logWarning: jest.fn(),
-    logError: jest.fn(),
-    logFatal: jest.fn(),
-    isLoggingEnabled: jest.fn(),
-    getComponentConfig: jest.fn(),
-    getConfig: jest.fn(),
-    getActiveWorkflows: jest.fn(),
-    cleanup: jest.fn(),
-    close: jest.fn(),
-    resetLogger: jest.fn()
+Object.defineProperty(window, 'localStorage', {
+    value: mockLocalStorage
+});
+
+// Mock Sentry
+jest.mock('@sentry/react', () => ({
+    init: jest.fn(),
+    captureMessage: jest.fn(),
+    captureException: jest.fn(),
+    setContext: jest.fn(),
+    setTag: jest.fn(),
+    setUser: jest.fn()
 }));
 
-// Mock appSettings
-jest.mock('../app-settings', () => ({
-    appSettings: {
-        sentry: {
-            dsn: 'test-dsn',
-            environment: 'test'
-        }
-    }
-}));
-
-// Type the mocked module
-const mockedSgGameClient = jest.mocked(sgGameClient);
-
-describe('SentryManager', () => {
-    let mockConsoleError: jest.SpyInstance;
-    let mockConsoleWarn: jest.SpyInstance;
-    let mockConsoleInfo: jest.SpyInstance;
-    let mockConsoleDebug: jest.SpyInstance;
-    let mockConsoleTrace: jest.SpyInstance;
-
+describe('SentryManager Log Level Filtering', () => {
     beforeEach(() => {
-        // Mock console methods
-        mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
-        mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation();
-        mockConsoleInfo = jest.spyOn(console, 'info').mockImplementation();
-        mockConsoleDebug = jest.spyOn(console, 'debug').mockImplementation();
-        mockConsoleTrace = jest.spyOn(console, 'trace').mockImplementation();
-
-        // Reset all mocks
+        // Reset mocks
         jest.clearAllMocks();
+        mockLocalStorage.getItem.mockClear();
+
+        // Initialize with test config
+        sentryManager.initialize({
+            dsn: 'test-dsn',
+            environment: 'test',
+            componentName: 'TestComponent',
+            debug: false
+        });
     });
 
     afterEach(() => {
-        // Restore console methods
-        mockConsoleError.mockRestore();
-        mockConsoleWarn.mockRestore();
-        mockConsoleInfo.mockRestore();
-        mockConsoleDebug.mockRestore();
-        mockConsoleTrace.mockRestore();
-
-        // Clean up SentryManager instance
+        // Clean up
         sentryManager.close();
     });
 
-    describe('getInstance', () => {
-        it('should return the same instance when called multiple times', () => {
-            // Arrange
-            const instance1 = sentryManager;
-            const instance2 = sentryManager;
-
-            // Act & Assert
-            expect(instance1).toBe(instance2);
-        });
-    });
-
-    describe('initialize', () => {
-        it('should initialize SentryManager with valid configuration', () => {
-            // Arrange
-            const config = {
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent',
-                logLevel: SentryLogLevel.INFO,
-                enableWorkflowTracking: true,
-                enablePerformanceTracking: true,
-                enableConsoleOverride: true
-            };
-
-            // Act
-            sentryManager.initialize(config);
-
-            // Assert
-            expect(sentryManager.getComponentName()).toBe('TestComponent');
-        });
-
-        it('should warn when already initialized', () => {
-            // Arrange
-            const config = {
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent'
-            };
-
-            // Act
-            sentryManager.initialize(config);
-            sentryManager.initialize(config); // Second initialization
-
-            // Assert
-            expect(mockConsoleWarn).toHaveBeenCalledWith('SentryManager already initialized');
-        });
-
-        it('should handle initialization errors gracefully', () => {
-            // Arrange
-            const config = {
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent'
-            };
-
-            // Mock configureSentry to throw an error
-            mockedSgGameClient.configureSentry.mockImplementation(() => {
-                throw new Error('Configuration failed');
-            });
-
-            // Act
-            sentryManager.initialize(config);
-
-            // Assert
-            expect(mockConsoleError).toHaveBeenCalledWith('Failed to initialize Sentry:', expect.any(Error));
-        });
-    });
-
-    describe('Logging Methods', () => {
+    describe('when localStorage log level is set to "error"', () => {
         beforeEach(() => {
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent'
+            // Mock localStorage to return 'error' log level
+            mockLocalStorage.getItem.mockImplementation((key: string) => {
+                if (key === 'sentry_log_level') return 'error';
+                if (key === 'hot-league-wall-debug-enabled') return 'true';
+                if (key === 'sentry_debug_mode') return 'false';
+                return null;
             });
         });
 
-        describe('logTrace', () => {
-            it('should log trace message when logging is enabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
+        it('should only allow error and fatal log levels', () => {
+            // Test that info level is blocked
+            expect(sentryManager.isLoggingEnabled('info')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('debug')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('trace')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('warn')).toBe(false);
 
-                // Act
-                sentryManager.logTrace('Test trace message', { context: 'test' });
+            // Test that error and fatal levels are allowed
+            expect(sentryManager.isLoggingEnabled('error')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('fatal')).toBe(true);
+        });
 
-                // Assert
-                expect(mockedSgGameClient.logTrace).toHaveBeenCalledWith('TestComponent', 'Test trace message', { context: 'test' });
-            });
+        it('should not send info messages to Sentry', () => {
+            // Call logInfo - should not send to Sentry
+            sentryManager.logInfo('Test info message');
 
-            it('should not log when logging is disabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(false);
+            expect(Sentry.captureMessage).not.toHaveBeenCalled();
+        });
 
-                // Act
-                sentryManager.logTrace('Test trace message');
+        it('should not send warning messages to Sentry', () => {
+            // Call logWarning - should not send to Sentry
+            sentryManager.logWarning('Test warning message');
 
-                // Assert
-                expect(mockedSgGameClient.logTrace).not.toHaveBeenCalled();
-            });
+            expect(Sentry.captureMessage).not.toHaveBeenCalled();
+        });
 
-            it('should handle logging errors gracefully', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
-                mockedSgGameClient.logTrace.mockImplementation(() => {
-                    throw new Error('Logging failed');
-                });
+        it('should send error messages to Sentry', () => {
+            // Call logError - should send to Sentry
+            sentryManager.logError('Test error message');
 
-                // Act
-                sentryManager.logTrace('Test trace message');
-
-                // Assert
-                expect(mockConsoleError).toHaveBeenCalledWith('Failed to log trace to Sentry:', expect.any(Error));
+            expect(Sentry.captureException).toHaveBeenCalledWith('Test error message', {
+                level: 'error',
+                tags: { component: 'TestComponent' }
             });
         });
 
-        describe('logDebug', () => {
-            it('should log debug message when logging is enabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
+        it('should send fatal messages to Sentry', () => {
+            // Call logFatal - should send to Sentry
+            sentryManager.logFatal('Test fatal message');
 
-                // Act
-                sentryManager.logDebug('Test debug message', { context: 'test' });
-
-                // Assert
-                expect(mockedSgGameClient.logDebug).toHaveBeenCalledWith('TestComponent', 'Test debug message', { context: 'test' });
+            expect(Sentry.captureException).toHaveBeenCalledWith('Test fatal message', {
+                level: 'fatal',
+                tags: { component: 'TestComponent' }
             });
         });
 
-        describe('logInfo', () => {
-            it('should log info message when logging is enabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
+        it('should not send workflow info messages to Sentry', () => {
+            // Call startWorkflow - should not send to Sentry
+            sentryManager.startWorkflow('test-workflow', 'Test Workflow');
 
-                // Act
-                sentryManager.logInfo('Test info message', { context: 'test' });
+            expect(Sentry.captureMessage).not.toHaveBeenCalled();
+        });
 
-                // Assert
-                expect(mockedSgGameClient.logInfo).toHaveBeenCalledWith('TestComponent', 'Test info message', { context: 'test' });
+        it('should not send performance info messages to Sentry', async () => {
+            // Call trackPerformance - should not send to Sentry
+            await sentryManager.trackPerformance('test-operation', () => Promise.resolve('result'));
+
+            expect(Sentry.captureMessage).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('when localStorage log level is set to "warn"', () => {
+        beforeEach(() => {
+            // Mock localStorage to return 'warn' log level
+            mockLocalStorage.getItem.mockImplementation((key: string) => {
+                if (key === 'sentry_log_level') return 'warn';
+                if (key === 'hot-league-wall-debug-enabled') return 'true';
+                if (key === 'sentry_debug_mode') return 'false';
+                return null;
             });
         });
 
-        describe('logWarning', () => {
-            it('should log warning message when logging is enabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
+        it('should allow warn, error, and fatal log levels', () => {
+            // Test that info level is blocked
+            expect(sentryManager.isLoggingEnabled('info')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('debug')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('trace')).toBe(false);
 
-                // Act
-                sentryManager.logWarning('Test warning message', { context: 'test' });
-
-                // Assert
-                expect(mockedSgGameClient.logWarning).toHaveBeenCalledWith('TestComponent', 'Test warning message', { context: 'test' });
-            });
+            // Test that warn, error, and fatal levels are allowed
+            expect(sentryManager.isLoggingEnabled('warn')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('error')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('fatal')).toBe(true);
         });
 
-        describe('logError', () => {
-            it('should log error message when logging is enabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
-                const error = new Error('Test error');
+        it('should send warning messages to Sentry', () => {
+            // Call logWarning - should send to Sentry
+            sentryManager.logWarning('Test warning message');
 
-                // Act
-                sentryManager.logError(error, { context: 'test' });
-
-                // Assert
-                expect(mockedSgGameClient.logError).toHaveBeenCalledWith('TestComponent', error, { context: 'test' });
-            });
-
-            it('should log string error when logging is enabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
-
-                // Act
-                sentryManager.logError('Test error string', { context: 'test' });
-
-                // Assert
-                expect(mockedSgGameClient.logError).toHaveBeenCalledWith('TestComponent', 'Test error string', { context: 'test' });
-            });
-        });
-
-        describe('logFatal', () => {
-            it('should log fatal message when logging is enabled', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
-                const error = new Error('Test fatal error');
-
-                // Act
-                sentryManager.logFatal(error, { context: 'test' });
-
-                // Assert
-                expect(mockedSgGameClient.logFatal).toHaveBeenCalledWith('TestComponent', error, { context: 'test' });
+            expect(Sentry.captureMessage).toHaveBeenCalledWith('Test warning message', {
+                level: 'warning',
+                tags: { component: 'TestComponent' }
             });
         });
     });
 
-    describe('Workflow Tracking', () => {
+    describe('when localStorage log level is set to "info"', () => {
         beforeEach(() => {
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent',
-                enableWorkflowTracking: true
+            // Mock localStorage to return 'info' log level
+            mockLocalStorage.getItem.mockImplementation((key: string) => {
+                if (key === 'sentry_log_level') return 'info';
+                if (key === 'hot-league-wall-debug-enabled') return 'true';
+                if (key === 'sentry_debug_mode') return 'false';
+                return null;
             });
         });
 
-        describe('startWorkflow', () => {
-            it('should start workflow successfully', () => {
-                // Arrange
-                const workflowId = 'test-workflow-1';
-                const workflowName = 'Test Workflow';
-                const metadata = { test: 'data' };
+        it('should allow info, warn, error, and fatal log levels', () => {
+            // Test that debug and trace levels are blocked
+            expect(sentryManager.isLoggingEnabled('debug')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('trace')).toBe(false);
 
-                // Act
-                sentryManager.startWorkflow(workflowId, workflowName, metadata);
+            // Test that info, warn, error, and fatal levels are allowed
+            expect(sentryManager.isLoggingEnabled('info')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('warn')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('error')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('fatal')).toBe(true);
+        });
 
-                // Assert
-                expect(mockedSgGameClient.startWorkflow).toHaveBeenCalledWith(workflowId, workflowName, 'TestComponent', metadata);
-            });
+        it('should send info messages to Sentry', () => {
+            // Call logInfo - should send to Sentry
+            sentryManager.logInfo('Test info message');
 
-            it('should handle workflow start errors gracefully', () => {
-                // Arrange
-                mockedSgGameClient.startWorkflow.mockImplementation(() => {
-                    throw new Error('Workflow start failed');
-                });
-
-                // Act
-                sentryManager.startWorkflow('test-workflow', 'Test Workflow');
-
-                // Assert
-                expect(mockConsoleError).toHaveBeenCalledWith('Failed to start workflow in Sentry:', expect.any(Error));
+            expect(Sentry.captureMessage).toHaveBeenCalledWith('Test info message', {
+                level: 'info',
+                tags: { component: 'TestComponent' }
             });
         });
 
-        describe('updateWorkflow', () => {
-            it('should update workflow successfully', () => {
-                // Arrange
-                const workflowId = 'test-workflow-1';
-                const state = WorkflowState.IN_PROGRESS;
-                const metadata = { progress: 50 };
+        it('should send workflow info messages to Sentry', () => {
+            // Call startWorkflow - should send to Sentry
+            sentryManager.startWorkflow('test-workflow', 'Test Workflow');
 
-                // Act
-                sentryManager.updateWorkflow(workflowId, state, metadata);
-
-                // Assert
-                expect(mockedSgGameClient.updateWorkflow).toHaveBeenCalledWith(workflowId, state, metadata);
-            });
-        });
-
-        describe('completeWorkflow', () => {
-            it('should complete workflow successfully with success', () => {
-                // Arrange
-                const workflowId = 'test-workflow-1';
-                const metadata = { result: 'success' };
-
-                // Act
-                sentryManager.completeWorkflow(workflowId, true, metadata);
-
-                // Assert
-                expect(mockedSgGameClient.completeWorkflow).toHaveBeenCalledWith(workflowId, true, metadata);
-            });
-
-            it('should complete workflow with failure', () => {
-                // Arrange
-                const workflowId = 'test-workflow-1';
-                const metadata = { error: 'failure' };
-
-                // Act
-                sentryManager.completeWorkflow(workflowId, false, metadata);
-
-                // Assert
-                expect(mockedSgGameClient.completeWorkflow).toHaveBeenCalledWith(workflowId, false, metadata);
+            expect(Sentry.captureMessage).toHaveBeenCalledWith('Workflow started: Test Workflow (ID: test-workflow)', {
+                level: 'info',
+                tags: { component: 'TestComponent', workflowId: 'test-workflow', workflowName: 'Test Workflow' }
             });
         });
     });
 
-    describe('Performance Tracking', () => {
+    describe('when Sentry is disabled', () => {
         beforeEach(() => {
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent',
-                enablePerformanceTracking: true
+            // Mock localStorage to disable Sentry
+            mockLocalStorage.getItem.mockImplementation((key: string) => {
+                if (key === 'sentry_log_level') return 'error';
+                if (key === 'hot-league-wall-debug-enabled') return 'false';
+                if (key === 'sentry_debug_mode') return 'false';
+                return null;
             });
         });
 
-        it('should track performance successfully', async () => {
-            // Arrange
-            const mockOperation = jest.fn().mockResolvedValue('test result');
-            mockedSgGameClient.trackPerformance.mockResolvedValue('test result');
-
-            // Act
-            const result = await sentryManager.trackPerformance('Test Operation', mockOperation);
-
-            // Assert
-            expect(mockedSgGameClient.trackPerformance).toHaveBeenCalledWith('TestComponent', 'Test Operation', mockOperation);
-            expect(result).toBe('test result');
+        it('should not allow any log levels', () => {
+            expect(sentryManager.isLoggingEnabled('error')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('fatal')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('warn')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('info')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('debug')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('trace')).toBe(false);
         });
 
-        it('should handle performance tracking errors gracefully', async () => {
-            // Arrange
-            const mockOperation = jest.fn().mockResolvedValue('test result');
-            mockedSgGameClient.trackPerformance.mockImplementation(() => {
-                throw new Error('Performance tracking failed');
-            });
+        it('should not send any messages to Sentry', () => {
+            // Call logError - should not send to Sentry
+            sentryManager.logError('Test error message');
 
-            // Act
-            const result = await sentryManager.trackPerformance('Test Operation', mockOperation);
-
-            // Assert
-            expect(mockConsoleError).toHaveBeenCalledWith('Failed to track performance in Sentry:', expect.any(Error));
-            expect(result).toBe('test result');
-        });
-
-        it('should return operation result when not initialized', async () => {
-            // Arrange
-            sentryManager.close();
-            const mockOperation = jest.fn().mockResolvedValue('test result');
-
-            // Act
-            const result = await sentryManager.trackPerformance('Test Operation', mockOperation);
-
-            // Assert
-            expect(result).toBe('test result');
-            expect(mockConsoleWarn).toHaveBeenCalledWith('SentryManager not initialized');
+            expect(Sentry.captureException).not.toHaveBeenCalled();
         });
     });
 
-    describe('Configuration Methods', () => {
-        beforeEach(() => {
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent'
-            });
-        });
-
-        describe('configureComponent', () => {
-            it('should configure component successfully', () => {
-                // Arrange
-                const config: Partial<ComponentConfigType> = {
-                    logLevel: SentryLogLevel.DEBUG,
-                    enableWorkflowTracking: true
-                };
-
-                // Act
-                sentryManager.configureComponent(config);
-
-                // Assert
-                expect(mockedSgGameClient.configureComponent).toHaveBeenCalledWith('TestComponent', config);
-            });
-        });
-
-        describe('getComponentConfig', () => {
-            it('should get component configuration successfully', () => {
-                // Arrange
-                const mockConfig: ComponentConfigType = {
-                    name: 'TestComponent',
-                    logLevel: SentryLogLevel.INFO,
-                    enableWorkflowTracking: true,
-                    enablePerformanceTracking: true
-                };
-                mockedSgGameClient.getComponentConfig.mockReturnValue(mockConfig);
-
-                // Act
-                const result = sentryManager.getComponentConfig();
-
-                // Assert
-                expect(mockedSgGameClient.getComponentConfig).toHaveBeenCalledWith('TestComponent');
-                expect(result).toEqual(mockConfig);
+    describe('legacy log levels', () => {
+        it('should handle ERROR_ONLY level correctly', () => {
+            mockLocalStorage.getItem.mockImplementation((key: string) => {
+                if (key === 'sentry_log_level') return 'error_only';
+                if (key === 'hot-league-wall-debug-enabled') return 'true';
+                if (key === 'sentry_debug_mode') return 'false';
+                return null;
             });
 
-            it('should return undefined when not initialized', () => {
-                // Arrange
-                sentryManager.close();
-
-                // Act
-                const result = sentryManager.getComponentConfig();
-
-                // Assert
-                expect(result).toBeUndefined();
-                expect(mockConsoleWarn).toHaveBeenCalledWith('SentryManager not initialized');
-            });
+            expect(sentryManager.isLoggingEnabled('info')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('warn')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('error')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('fatal')).toBe(true);
         });
 
-        describe('isLoggingEnabled', () => {
-            it('should check if logging is enabled for a level', () => {
-                // Arrange
-                mockedSgGameClient.isLoggingEnabled.mockReturnValue(true);
-
-                // Act
-                const result = sentryManager.isLoggingEnabled('info');
-
-                // Assert
-                expect(mockedSgGameClient.isLoggingEnabled).toHaveBeenCalledWith('TestComponent', 'info');
-                expect(result).toBe(true);
+        it('should handle WARNING_AND_ERROR level correctly', () => {
+            mockLocalStorage.getItem.mockImplementation((key: string) => {
+                if (key === 'sentry_log_level') return 'warning_and_error';
+                if (key === 'hot-league-wall-debug-enabled') return 'true';
+                if (key === 'sentry_debug_mode') return 'false';
+                return null;
             });
 
-            it('should return false when not initialized', () => {
-                // Arrange
-                sentryManager.close();
-
-                // Act
-                const result = sentryManager.isLoggingEnabled('info');
-
-                // Assert
-                expect(result).toBe(false);
-            });
-        });
-    });
-
-    describe('Utility Methods', () => {
-        beforeEach(() => {
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent'
-            });
-        });
-
-        describe('getConfig', () => {
-            it('should get global configuration successfully', () => {
-                // Arrange
-                const mockConfig: GlobalSentryConfigType = {
-                    enabled: true,
-                    defaultLogLevel: SentryLogLevel.INFO,
-                    enableWorkflowTracking: true,
-                    enablePerformanceTracking: true,
-                    enableConsoleOverride: true,
-                    componentConfigs: new Map(),
-                    workflowConfigs: new Map()
-                };
-                mockedSgGameClient.getConfig.mockReturnValue(mockConfig);
-
-                // Act
-                const result = sentryManager.getConfig();
-
-                // Assert
-                expect(mockedSgGameClient.getConfig).toHaveBeenCalled();
-                expect(result).toEqual(mockConfig);
-            });
-        });
-
-        describe('getActiveWorkflows', () => {
-            it('should get active workflows successfully', () => {
-                // Arrange
-                const mockWorkflows = new Map();
-                mockedSgGameClient.getActiveWorkflows.mockReturnValue(mockWorkflows);
-
-                // Act
-                const result = sentryManager.getActiveWorkflows();
-
-                // Assert
-                expect(mockedSgGameClient.getActiveWorkflows).toHaveBeenCalled();
-                expect(result).toEqual(mockWorkflows);
-            });
-        });
-
-        describe('cleanup', () => {
-            it('should cleanup workflows successfully', () => {
-                // Arrange
-
-                // Act
-                sentryManager.cleanup();
-
-                // Assert
-                expect(mockedSgGameClient.cleanup).toHaveBeenCalled();
-            });
-
-            it('should handle cleanup errors gracefully', () => {
-                // Arrange
-                mockedSgGameClient.cleanup.mockImplementation(() => {
-                    throw new Error('Cleanup failed');
-                });
-
-                // Act
-                sentryManager.cleanup();
-
-                // Assert
-                expect(mockConsoleError).toHaveBeenCalledWith('Failed to cleanup Sentry:', expect.any(Error));
-            });
-        });
-
-        describe('close', () => {
-            it('should close SentryManager and restore console methods', () => {
-                // Arrange
-                const originalError = console.error;
-                const originalWarn = console.warn;
-                const originalInfo = console.info;
-                const originalDebug = console.debug;
-                const originalTrace = console.trace;
-
-                // Act
-                sentryManager.close();
-
-                // Assert
-                expect(console.error).toBe(originalError);
-                expect(console.warn).toBe(originalWarn);
-                expect(console.info).toBe(originalInfo);
-                expect(console.debug).toBe(originalDebug);
-                expect(console.trace).toBe(originalTrace);
-            });
-        });
-
-        describe('getComponentName', () => {
-            it('should return the component name', () => {
-                // Act
-                const result = sentryManager.getComponentName();
-
-                // Assert
-                expect(result).toBe('TestComponent');
-            });
-        });
-    });
-
-    describe('Console Override', () => {
-        beforeEach(() => {
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent',
-                enableConsoleOverride: true
-            });
-        });
-
-        it('should override console.error for component-specific errors', () => {
-            // Arrange
-            const errorMessage = 'HotLeagueWall component error';
-
-            // Act
-            console.error(errorMessage);
-
-            // Assert
-            expect(mockedSgGameClient.logError).toHaveBeenCalledWith('TestComponent', '[TestComponent] HotLeagueWall component error');
-        });
-
-        it('should override console.warn for component-specific warnings', () => {
-            // Arrange
-            const warningMessage = 'HotLeagueWall component warning';
-
-            // Act
-            console.warn(warningMessage);
-
-            // Assert
-            expect(mockedSgGameClient.logWarning).toHaveBeenCalledWith('TestComponent', '[TestComponent] HotLeagueWall component warning');
-        });
-
-        it('should not override console methods when console override is disabled', () => {
-            // Arrange
-            sentryManager.close();
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent',
-                enableConsoleOverride: false
-            });
-
-            const originalError = console.error;
-            const originalWarn = console.warn;
-
-            // Act
-            console.error('Test error');
-            console.warn('Test warning');
-
-            // Assert
-            expect(console.error).toBe(originalError);
-            expect(console.warn).toBe(originalWarn);
-        });
-    });
-
-    describe('Convenience Functions', () => {
-        beforeEach(() => {
-            sentryManager.initialize({
-                dsn: 'test-dsn',
-                environment: 'test',
-                componentName: 'TestComponent'
-            });
-        });
-
-        it('should configure SentryManager using convenience function', () => {
-            // Arrange
-            const config = {
-                dsn: 'test-dsn-2',
-                environment: 'test-2',
-                componentName: 'TestComponent2'
-            };
-
-            // Act
-            configureSentryManager(config);
-
-            // Assert
-            expect(sentryManager.getComponentName()).toBe('TestComponent2');
-        });
-
-        it('should enable Sentry using convenience function', () => {
-            // Arrange
-
-            // Act
-            enableSentryManager();
-
-            // Assert
-            expect(mockedSgGameClient.enableSentry).toHaveBeenCalled();
-        });
-
-        it('should disable Sentry using convenience function', () => {
-            // Arrange
-
-            // Act
-            disableSentryManager();
-
-            // Assert
-            expect(mockedSgGameClient.disableSentry).toHaveBeenCalled();
-        });
-
-        it('should set log level using convenience function', () => {
-            // Arrange
-
-            // Act
-            setSentryLogLevel(SentryLogLevel.DEBUG);
-
-            // Assert
-            expect(mockedSgGameClient.setLogLevel).toHaveBeenCalledWith(SentryLogLevel.DEBUG);
-        });
-
-        it('should start workflow using convenience function', () => {
-            // Arrange
-
-            // Act
-            startSentryWorkflow('test-workflow', 'Test Workflow', { test: 'data' });
-
-            // Assert
-            expect(mockedSgGameClient.startWorkflow).toHaveBeenCalledWith('test-workflow', 'Test Workflow', 'TestComponent', { test: 'data' });
-        });
-
-        it('should update workflow using convenience function', () => {
-            // Arrange
-
-            // Act
-            updateSentryWorkflow('test-workflow', WorkflowState.IN_PROGRESS, { progress: 50 });
-
-            // Assert
-            expect(mockedSgGameClient.updateWorkflow).toHaveBeenCalledWith('test-workflow', WorkflowState.IN_PROGRESS, { progress: 50 });
-        });
-
-        it('should complete workflow using convenience function', () => {
-            // Arrange
-
-            // Act
-            completeSentryWorkflow('test-workflow', true, { result: 'success' });
-
-            // Assert
-            expect(mockedSgGameClient.completeWorkflow).toHaveBeenCalledWith('test-workflow', true, { result: 'success' });
-        });
-
-        it('should track performance using convenience function', async () => {
-            // Arrange
-            const mockOperation = jest.fn().mockResolvedValue('test result');
-            mockedSgGameClient.trackPerformance.mockResolvedValue('test result');
-
-            // Act
-            const result = await trackSentryPerformance('Test Operation', mockOperation);
-
-            // Assert
-            expect(mockedSgGameClient.trackPerformance).toHaveBeenCalledWith('TestComponent', 'Test Operation', mockOperation);
-            expect(result).toBe('test result');
+            expect(sentryManager.isLoggingEnabled('info')).toBe(false);
+            expect(sentryManager.isLoggingEnabled('warn')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('error')).toBe(true);
+            expect(sentryManager.isLoggingEnabled('fatal')).toBe(true);
         });
     });
 }); 

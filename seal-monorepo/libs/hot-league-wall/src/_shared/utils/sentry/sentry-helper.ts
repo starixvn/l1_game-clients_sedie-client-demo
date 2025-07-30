@@ -159,12 +159,7 @@ class SentryHelper {
     isLoggingEnabled(componentName: string, level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'): boolean {
         const localStorageConfig = getLocalStorageConfig();
 
-        // Warning, Error, and Fatal should always be sent regardless of localStorage
-        if (level === 'warn' || level === 'error' || level === 'fatal') {
-            return this.globalConfig.enabled;
-        }
-
-        // For trace, debug, and info levels, check localStorage enabled flag
+        // For trace, debug, and info levels, check localStorage enabled flag first
         if (!this.globalConfig.enabled || !localStorageConfig.enabled) {
             return false;
         }
@@ -182,29 +177,28 @@ class SentryHelper {
             'fatal': 5
         };
 
-        // At this point, level can only be 'trace', 'debug', or 'info'
-        const currentLevel = level as 'trace' | 'debug' | 'info';
+        const currentLevel = levelHierarchy[level];
 
         switch (logLevel) {
             case SentryLogLevel.DISABLED:
                 return false;
             case SentryLogLevel.TRACE:
-                return levelHierarchy[currentLevel] >= levelHierarchy['trace'];
+                return currentLevel >= levelHierarchy['trace'];
             case SentryLogLevel.DEBUG:
-                return levelHierarchy[currentLevel] >= levelHierarchy['debug'];
+                return currentLevel >= levelHierarchy['debug'];
             case SentryLogLevel.INFO:
-                return levelHierarchy[currentLevel] >= levelHierarchy['info'];
+                return currentLevel >= levelHierarchy['info'];
             case SentryLogLevel.WARN:
-                return levelHierarchy[currentLevel] >= levelHierarchy['warn'];
+                return currentLevel >= levelHierarchy['warn'];
             case SentryLogLevel.ERROR:
-                return levelHierarchy[currentLevel] >= levelHierarchy['error'];
+                return currentLevel >= levelHierarchy['error'];
             case SentryLogLevel.FATAL:
-                return levelHierarchy[currentLevel] >= levelHierarchy['fatal'];
+                return currentLevel >= levelHierarchy['fatal'];
             // Legacy levels for backward compatibility
             case SentryLogLevel.ERROR_ONLY:
-                return false; // trace, debug, info are not error levels
+                return currentLevel >= levelHierarchy['error']; // Only error and fatal
             case SentryLogLevel.WARNING_AND_ERROR:
-                return false; // trace, debug, info are not warning or error levels
+                return currentLevel >= levelHierarchy['warn']; // Warning, error, and fatal
             case SentryLogLevel.ALL:
                 return true;
             default:

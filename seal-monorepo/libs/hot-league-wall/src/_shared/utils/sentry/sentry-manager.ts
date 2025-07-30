@@ -235,17 +235,14 @@ class SentryManager {
     }
 
     private overrideConsoleMethods(): void {
-        const localStorageConfig = getLocalStorageConfig();
-
         // Override console.error to filter component-specific errors
         console.error = (...args: any[]) => {
-            // Error and fatal levels should always be logged regardless of localStorage setting
             this.originalConsoleError(...args);
 
             // Check if any of the arguments contain component-specific errors
             const hasComponentError = args.some(arg => this.errorFilter(arg));
 
-            if (hasComponentError) {
+            if (hasComponentError && this.isLoggingEnabled('error')) {
                 // Use the enhanced Sentry logger for component-specific errors
                 try {
                     const errorMessage = args.map(arg =>
@@ -264,13 +261,12 @@ class SentryManager {
 
         // Override console.warn to filter component-specific warnings
         console.warn = (...args: any[]) => {
-            // Warning level should always be logged regardless of localStorage setting
             this.originalConsoleWarn(...args);
 
             // Check if any of the arguments contain component-specific warnings
             const hasComponentWarning = args.some(arg => this.errorFilter(arg));
 
-            if (hasComponentWarning) {
+            if (hasComponentWarning && this.isLoggingEnabled('warn')) {
                 // Use the enhanced Sentry logger for component-specific warnings
                 try {
                     const warningMessage = args.map(arg =>
@@ -289,109 +285,97 @@ class SentryManager {
 
         // Override console.info to filter component-specific info
         console.info = (...args: any[]) => {
-            // Info level should only be logged when localStorage is enabled
-            if (localStorageConfig.enabled) {
-                this.originalConsoleInfo(...args);
+            this.originalConsoleInfo(...args);
 
-                // Check if any of the arguments contain component-specific info
-                const hasComponentInfo = args.some(arg => this.errorFilter(arg));
+            // Check if any of the arguments contain component-specific info
+            const hasComponentInfo = args.some(arg => this.errorFilter(arg));
 
-                if (hasComponentInfo) {
-                    // Use the enhanced Sentry logger for component-specific info
-                    try {
-                        const infoMessage = args.map(arg =>
-                            typeof arg === 'string' ? arg : arg?.message || String(arg)
-                        ).join(' ');
+            if (hasComponentInfo && this.isLoggingEnabled('info')) {
+                // Use the enhanced Sentry logger for component-specific info
+                try {
+                    const infoMessage = args.map(arg =>
+                        typeof arg === 'string' ? arg : arg?.message || String(arg)
+                    ).join(' ');
 
-                        Sentry.captureMessage(infoMessage, {
-                            level: 'info',
-                            tags: { component: this.componentName }
-                        });
-                    } catch (sentryError) {
-                        this.originalConsoleError('Failed to log info to Sentry:', sentryError);
-                    }
+                    Sentry.captureMessage(infoMessage, {
+                        level: 'info',
+                        tags: { component: this.componentName }
+                    });
+                } catch (sentryError) {
+                    this.originalConsoleError('Failed to log info to Sentry:', sentryError);
                 }
             }
         };
 
         // Override console.debug to filter component-specific debug
         console.debug = (...args: any[]) => {
-            // Debug level should only be logged when localStorage is enabled
-            if (localStorageConfig.enabled) {
-                this.originalConsoleDebug(...args);
+            this.originalConsoleDebug(...args);
 
-                // Check if any of the arguments contain component-specific debug
-                const hasComponentDebug = args.some(arg => this.errorFilter(arg));
+            // Check if any of the arguments contain component-specific debug
+            const hasComponentDebug = args.some(arg => this.errorFilter(arg));
 
-                if (hasComponentDebug) {
-                    // Use the enhanced Sentry logger for component-specific debug
-                    try {
-                        const debugMessage = args.map(arg =>
-                            typeof arg === 'string' ? arg : arg?.message || String(arg)
-                        ).join(' ');
+            if (hasComponentDebug && this.isLoggingEnabled('debug')) {
+                // Use the enhanced Sentry logger for component-specific debug
+                try {
+                    const debugMessage = args.map(arg =>
+                        typeof arg === 'string' ? arg : arg?.message || String(arg)
+                    ).join(' ');
 
-                        Sentry.captureMessage(debugMessage, {
-                            level: 'debug',
-                            tags: { component: this.componentName }
-                        });
-                    } catch (sentryError) {
-                        this.originalConsoleError('Failed to log debug to Sentry:', sentryError);
-                    }
+                    Sentry.captureMessage(debugMessage, {
+                        level: 'debug',
+                        tags: { component: this.componentName }
+                    });
+                } catch (sentryError) {
+                    this.originalConsoleError('Failed to log debug to Sentry:', sentryError);
                 }
             }
         };
 
         // Override console.trace to filter component-specific trace
         console.trace = (...args: any[]) => {
-            // Trace level should only be logged when localStorage is enabled
-            if (localStorageConfig.enabled) {
-                this.originalConsoleTrace(...args);
+            this.originalConsoleTrace(...args);
 
-                // Check if any of the arguments contain component-specific trace
-                const hasComponentTrace = args.some(arg => this.errorFilter(arg));
+            // Check if any of the arguments contain component-specific trace
+            const hasComponentTrace = args.some(arg => this.errorFilter(arg));
 
-                if (hasComponentTrace) {
-                    // Use the enhanced Sentry logger for component-specific trace
-                    try {
-                        const traceMessage = args.map(arg =>
-                            typeof arg === 'string' ? arg : arg?.message || String(arg)
-                        ).join(' ');
+            if (hasComponentTrace && this.isLoggingEnabled('trace')) {
+                // Use the enhanced Sentry logger for component-specific trace
+                try {
+                    const traceMessage = args.map(arg =>
+                        typeof arg === 'string' ? arg : arg?.message || String(arg)
+                    ).join(' ');
 
-                        Sentry.captureMessage(traceMessage, {
-                            level: 'debug', // Sentry doesn't have trace level, use debug
-                            tags: { component: this.componentName }
-                        });
-                    } catch (sentryError) {
-                        this.originalConsoleError('Failed to log trace to Sentry:', sentryError);
-                    }
+                    Sentry.captureMessage(traceMessage, {
+                        level: 'debug', // Sentry doesn't have trace level, use debug
+                        tags: { component: this.componentName }
+                    });
+                } catch (sentryError) {
+                    this.originalConsoleError('Failed to log trace to Sentry:', sentryError);
                 }
             }
         };
 
         // Override console.log to filter component-specific logs
         console.log = (...args: any[]) => {
-            // Log level should only be logged when localStorage is enabled
-            if (localStorageConfig.enabled) {
-                // Call the original console.log
-                this.originalConsoleLog.apply(console, args);
+            // Call the original console.log
+            this.originalConsoleLog.apply(console, args);
 
-                // Check if any of the arguments contain component-specific logs
-                const hasComponentLog = args.some(arg => this.errorFilter(arg));
+            // Check if any of the arguments contain component-specific logs
+            const hasComponentLog = args.some(arg => this.errorFilter(arg));
 
-                if (hasComponentLog) {
-                    // Use the enhanced Sentry logger for component-specific logs
-                    try {
-                        const logMessage = args.map(arg =>
-                            typeof arg === 'string' ? arg : arg?.message || String(arg)
-                        ).join(' ');
+            if (hasComponentLog && this.isLoggingEnabled('info')) {
+                // Use the enhanced Sentry logger for component-specific logs
+                try {
+                    const logMessage = args.map(arg =>
+                        typeof arg === 'string' ? arg : arg?.message || String(arg)
+                    ).join(' ');
 
-                        Sentry.captureMessage(logMessage, {
-                            level: 'info',
-                            tags: { component: this.componentName }
-                        });
-                    } catch (sentryError) {
-                        this.originalConsoleError('Failed to log to Sentry:', sentryError);
-                    }
+                    Sentry.captureMessage(logMessage, {
+                        level: 'info',
+                        tags: { component: this.componentName }
+                    });
+                } catch (sentryError) {
+                    this.originalConsoleError('Failed to log to Sentry:', sentryError);
                 }
             }
         };
@@ -404,9 +388,7 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        // Trace level requires localStorage to be enabled
-        if (!localStorageConfig.enabled) {
+        if (!this.isLoggingEnabled('trace')) {
             return;
         }
 
@@ -426,9 +408,7 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        // Debug level requires localStorage to be enabled
-        if (!localStorageConfig.enabled) {
+        if (!this.isLoggingEnabled('debug')) {
             return;
         }
 
@@ -448,9 +428,7 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        // Info level requires localStorage to be enabled
-        if (!localStorageConfig.enabled) {
+        if (!this.isLoggingEnabled('info')) {
             return;
         }
 
@@ -470,8 +448,9 @@ class SentryManager {
             return;
         }
 
-        // Warning level should always be sent regardless of localStorage
-        // No additional checks needed for warning level
+        if (!this.isLoggingEnabled('warn')) {
+            return;
+        }
 
         try {
             Sentry.captureMessage(message, {
@@ -489,8 +468,9 @@ class SentryManager {
             return;
         }
 
-        // Error level should always be sent regardless of localStorage
-        // No additional checks needed for error level
+        if (!this.isLoggingEnabled('error')) {
+            return;
+        }
 
         try {
             Sentry.captureException(error, {
@@ -508,8 +488,9 @@ class SentryManager {
             return;
         }
 
-        // Fatal level should always be sent regardless of localStorage
-        // No additional checks needed for fatal level
+        if (!this.isLoggingEnabled('fatal')) {
+            return;
+        }
 
         try {
             Sentry.captureException(error, {
@@ -528,8 +509,7 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled) {
+        if (!this.isLoggingEnabled('info')) {
             return;
         }
 
@@ -549,8 +529,7 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled) {
+        if (!this.isLoggingEnabled('info')) {
             return;
         }
 
@@ -570,8 +549,8 @@ class SentryManager {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled) {
+        const level = success ? 'info' : 'error';
+        if (!this.isLoggingEnabled(level)) {
             return;
         }
 
@@ -592,8 +571,7 @@ class SentryManager {
             return Promise.resolve(operation());
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-        if (!localStorageConfig.enabled) {
+        if (!this.isLoggingEnabled('info')) {
             return Promise.resolve(operation());
         }
 
@@ -611,10 +589,12 @@ class SentryManager {
 
             return result;
         } catch (error) {
-            Sentry.captureException(error, {
-                level: 'error',
-                tags: { component: this.componentName, operationName }
-            });
+            if (this.isLoggingEnabled('error')) {
+                Sentry.captureException(error, {
+                    level: 'error',
+                    tags: { component: this.componentName, operationName }
+                });
+            }
             return Promise.reject(error);
         }
     }
@@ -660,19 +640,51 @@ class SentryManager {
     isLoggingEnabled(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'): boolean {
         const localStorageConfig = getLocalStorageConfig();
 
-        // Warning, Error, and Fatal should always be sent regardless of localStorage
-        if (level === 'warn' || level === 'error' || level === 'fatal') {
-            return this.globalConfig.enabled;
-        }
-
-        // For trace, debug, and info levels, check localStorage enabled flag
+        // Check if Sentry is enabled globally and in localStorage
         if (!this.globalConfig.enabled || !localStorageConfig.enabled) {
             return false;
         }
 
-        // At this point, level can only be 'trace', 'debug', or 'info'
-        // These levels should be sent when localStorage is enabled
-        return true;
+        // Get the current log level from localStorage
+        const currentLogLevel = getLogLevelFromString(localStorageConfig.logLevel);
+
+        // Define level hierarchy (higher number = more important)
+        const levelHierarchy = {
+            'trace': 0,
+            'debug': 1,
+            'info': 2,
+            'warn': 3,
+            'error': 4,
+            'fatal': 5
+        };
+
+        const currentLevel = levelHierarchy[level];
+
+        switch (currentLogLevel) {
+            case SentryLogLevel.DISABLED:
+                return false;
+            case SentryLogLevel.TRACE:
+                return currentLevel >= levelHierarchy['trace'];
+            case SentryLogLevel.DEBUG:
+                return currentLevel >= levelHierarchy['debug'];
+            case SentryLogLevel.INFO:
+                return currentLevel >= levelHierarchy['info'];
+            case SentryLogLevel.WARN:
+                return currentLevel >= levelHierarchy['warn'];
+            case SentryLogLevel.ERROR:
+                return currentLevel >= levelHierarchy['error'];
+            case SentryLogLevel.FATAL:
+                return currentLevel >= levelHierarchy['fatal'];
+            // Legacy levels for backward compatibility
+            case SentryLogLevel.ERROR_ONLY:
+                return currentLevel >= levelHierarchy['error']; // Only error and fatal
+            case SentryLogLevel.WARNING_AND_ERROR:
+                return currentLevel >= levelHierarchy['warn']; // Warning, error, and fatal
+            case SentryLogLevel.ALL:
+                return true;
+            default:
+                return false;
+        }
     }
 
     // Utility methods
