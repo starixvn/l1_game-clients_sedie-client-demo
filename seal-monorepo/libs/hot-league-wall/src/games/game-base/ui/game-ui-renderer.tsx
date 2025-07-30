@@ -224,8 +224,6 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                         wrapper: timerClass,
                     }}
                 />
-
-                <StartRoundCountDownTimer namespace={props.namespace} language={props.language} />
             </div>
         );
     }
@@ -361,6 +359,10 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         customHistorySection?: JSX.Element | null,
         customRoundHistorySection?: JSX.Element | null,
     ): JSX.Element {
+        const gameContainerWrapperClass = classNames(Styles['game-container-wrapper'], {
+            [Styles['overflow-hidden']]: state.roundState === ROUND_STATE.STARTING_ROUND,
+        });
+
         const containerStyle = this.renderGameBackground(customBackgroundImage);
 
         const containerClass = classNames(
@@ -370,7 +372,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
         );
 
         return (
-            <div className={Styles['game-container-wrapper']}>
+            <div className={gameContainerWrapperClass}>
                 <div className={containerClass} style={containerStyle}>
                     {this.renderGameContainer(
                         props,
@@ -384,6 +386,7 @@ export class GameUIRenderer<P extends GameBaseProps, S extends IGameBaseState> {
                         customHistorySection,
                     )}
                 </div>
+                {state.roundState == ROUND_STATE.STARTING_ROUND && <div className={rngSoccerStyles['shine']}></div>}
             </div>
         );
     }
