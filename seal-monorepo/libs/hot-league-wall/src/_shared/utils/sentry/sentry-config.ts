@@ -473,6 +473,43 @@ export const getCurrentConfiguration = () => {
     };
 };
 
+// Expose functions globally for browser console access
+if (typeof window !== 'undefined') {
+    (window as any).SentryConfig = {
+        setComponentLocalStorageConfig,
+        setLocalStorageConfig,
+        clearComponentLocalStorageConfig,
+        clearLocalStorageConfig,
+        getAllComponentConfigs,
+        getCurrentConfiguration,
+        initializeSentryForProject,
+        configureSentryForEnvironment,
+        SENTRY_PRESETS,
+        configureComponentByType,
+        configureComponentsBatch
+    };
+
+    // Also expose individual functions for easier access
+    (window as any).setComponentLocalStorageConfig = setComponentLocalStorageConfig;
+    (window as any).setLocalStorageConfig = setLocalStorageConfig;
+    (window as any).clearComponentLocalStorageConfig = clearComponentLocalStorageConfig;
+    (window as any).clearLocalStorageConfig = clearLocalStorageConfig;
+    (window as any).getAllComponentConfigs = getAllComponentConfigs;
+    (window as any).getCurrentConfiguration = getCurrentConfiguration;
+    (window as any).initializeSentryForProject = initializeSentryForProject;
+
+    // Log availability to console
+    console.log('🔧 Sentry Component Logging Functions Available:');
+    console.log('- setComponentLocalStorageConfig(componentName, config)');
+    console.log('- setLocalStorageConfig(config)');
+    console.log('- clearComponentLocalStorageConfig(componentName)');
+    console.log('- clearLocalStorageConfig()');
+    console.log('- getAllComponentConfigs()');
+    console.log('- getCurrentConfiguration()');
+    console.log('- initializeSentryForProject()');
+    console.log('- Or use SentryConfig object for all functions');
+}
+
 export default {
     initializeSentryForProject,
     configureSentryForEnvironment,

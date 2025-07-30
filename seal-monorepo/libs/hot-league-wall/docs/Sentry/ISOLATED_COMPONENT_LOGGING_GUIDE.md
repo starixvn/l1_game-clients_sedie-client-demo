@@ -11,6 +11,49 @@ The enhanced Sentry configuration now supports isolated component logging with s
 -   **Configuration hierarchy**: Clear priority system for log level resolution
 -   **Console configuration display**: Real-time configuration summary in browser console
 -   **Runtime configuration updates**: Ability to change component logging settings without page reload
+-   **Browser console integration**: Direct access to functions from browser console
+
+## Browser Console Usage
+
+### Method 1: Automatic Global Exposure
+
+When the Sentry configuration is loaded, functions are automatically exposed globally:
+
+```javascript
+// Set component log level
+setComponentLocalStorageConfig('BetPanel', { logLevel: 'debug' });
+
+// Set global configuration
+setLocalStorageConfig({ logLevel: 'info', enabled: true });
+
+// Get current configuration
+getCurrentConfiguration();
+
+// Show configuration in console
+showConfiguration();
+```
+
+### Method 2: Console Helper Script
+
+Copy and paste the entire contents of `console-helper.js` into your browser console:
+
+```javascript
+// After running the console helper script:
+setComponentLocalStorageConfig('BetPanel', { logLevel: 'debug' });
+setAllComponentsToLevel('warn');
+showConfiguration();
+```
+
+### Method 3: SentryConfig Object
+
+Access all functions through the SentryConfig object:
+
+```javascript
+// Using the SentryConfig object
+SentryConfig.setComponentLocalStorageConfig('BetPanel', { logLevel: 'debug' });
+SentryConfig.setLocalStorageConfig({ logLevel: 'info' });
+SentryConfig.getCurrentConfiguration();
+```
 
 ## LocalStorage Keys
 
@@ -52,6 +95,27 @@ setComponentLocalStorageConfig('RNGSoccerBase', {
     logLevel: 'warn',
     enabled: true,
 });
+```
+
+### Browser Console Examples
+
+```javascript
+// Quick component configuration
+setComponentLocalStorageConfig('BetPanel', { logLevel: 'debug' });
+setComponentLocalStorageConfig('Scoreboard', { logLevel: 'warn' });
+setComponentLocalStorageConfig('Loading', { enabled: false });
+
+// Global configuration
+setLocalStorageConfig({ logLevel: 'info', enabled: true, debugMode: false });
+
+// Bulk operations
+setAllComponentsToLevel('warn');
+enableAllComponents();
+disableAllComponents();
+
+// View configuration
+showConfiguration();
+getCurrentConfiguration();
 ```
 
 ### Reading Component Configuration
@@ -101,6 +165,29 @@ When `initializeSentryForProject()` is called, a comprehensive configuration sum
 ```
 
 The configuration is also available globally as `window.__SENTRY_CONFIG__` for debugging.
+
+## Console Helper Functions
+
+### Individual Functions
+
+-   `setComponentLocalStorageConfig(componentName, config)` - Set component configuration
+-   `setLocalStorageConfig(config)` - Set global configuration
+-   `clearComponentLocalStorageConfig(componentName)` - Clear component configuration
+-   `clearLocalStorageConfig()` - Clear all configurations
+-   `getAllComponentConfigs()` - Get all component configurations
+-   `getCurrentConfiguration()` - Get complete configuration
+-   `showConfiguration()` - Display configuration in console
+
+### Bulk Operations
+
+-   `setAllComponentsToLevel(level)` - Set all components to specified level
+-   `enableAllComponents()` - Enable all components
+-   `disableAllComponents()` - Disable all components
+
+### Object Access
+
+-   `SentryConsole` - Object containing all functions
+-   `SentryConfig` - Alternative object access (when module is loaded)
 
 ## Component Configuration Examples
 
@@ -185,6 +272,13 @@ The component logging configuration is defined in the config files:
 -   Disable debug mode in production
 -   Consider disabling workflow tracking for performance-critical components
 
+### 5. Console Usage
+
+-   Use the console helper script for quick configuration changes
+-   Use `showConfiguration()` to verify settings
+-   Use bulk operations for quick setup
+-   Clear configurations when done debugging
+
 ## Troubleshooting
 
 ### Component Not Logging
@@ -198,6 +292,12 @@ The component logging configuration is defined in the config files:
 1. Ensure `initializeSentryForProject()` is called after configuration changes
 2. Check browser console for configuration summary
 3. Verify localStorage keys are correctly formatted
+
+### Console Functions Not Available
+
+1. Check if the Sentry configuration module is loaded
+2. Run the console helper script if needed
+3. Verify the page has loaded completely
 
 ### Performance Issues
 
@@ -244,6 +344,20 @@ Clears component-specific configuration from localStorage.
 
 Clears all Sentry-related configurations from localStorage.
 
+#### `showConfiguration()`
+
+Displays current configuration in console and returns configuration object.
+
+**Returns:** Configuration object
+
+#### `setAllComponentsToLevel(level)`
+
+Sets all components to the specified log level.
+
+**Parameters:**
+
+-   `level` (string): Log level (trace, debug, info, warn, error, fatal)
+
 ## Migration Guide
 
 ### From Global Logging to Component Logging
@@ -273,3 +387,5 @@ setComponentLocalStorageConfig('Loading', { logLevel: 'error' });
 ## Conclusion
 
 The isolated component logging feature provides granular control over Sentry logging, allowing developers to focus on specific components during debugging while reducing noise from other components. This improves debugging efficiency and application performance.
+
+The browser console integration makes it easy to configure logging on-the-fly during development and debugging sessions.
