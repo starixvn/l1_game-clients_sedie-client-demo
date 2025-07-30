@@ -323,3 +323,68 @@
 .hide-team-name {
     opacity: 0;
 }
+
+// New round section
+.shine {
+    animation: shine 2s infinite;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+}
+
+.shine::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -40px;
+    width: 40px;
+    height: 200%;
+    background-color: rgba(255, 255, 255, 0.54);
+    transform: rotate(40deg);
+}
+
+.shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 20px;
+    width: 10px;
+    height: 200%;
+    background-color: rgba(255, 255, 255, 0.54);
+    transform: rotate(40deg);
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-20%);
+        opacity: 0.75;
+    }
+
+    50% {
+        transform: translateX(140%);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: translateX(140%);
+        opacity: 0.5;
+    }
+}
+
+.hide-result {
+    opacity: 0;
+    animation: hide-result 0.4s ease-in-out forwards;
+}
+
+@keyframes hide-result {
+    0% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}

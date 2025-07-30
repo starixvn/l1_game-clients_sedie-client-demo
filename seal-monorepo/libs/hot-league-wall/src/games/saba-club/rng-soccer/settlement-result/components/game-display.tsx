@@ -84,6 +84,7 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
     const [showHomeScore, setShowHomeScore] = useState(false);
     const [showAwayScore, setShowAwayScore] = useState(false);
     const [showHighLight, setShowHighLight] = useState(false);
+    const [hideResultClass, setHideResultClass] = useState('');
 
     useEffect(() => {
         if (roundState === ROUND_STATE.PLACING_BET) {
@@ -96,6 +97,12 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
         } else {
             setShowHighLight(false);
         }
+
+        if (roundState === ROUND_STATE.STARTING_ROUND) {
+            setHideResultClass(styles['hide-result']);
+        } else {
+            setHideResultClass('');
+        }
     }, [roundState, isFinishShowResult]);
 
     if (isLoading) {
@@ -103,11 +110,12 @@ export const GameDisplay: React.FC<GameDisplayProps> = ({
     }
 
     const isHideTeamName = teamData.homeTeam.name === 'HIDE_HOME_NAME' || teamData.awayTeam.name === 'HIDE_AWAY_NAME';
+
     return (
-        <div className={styles['wrapper-sport-middle']}>
+        <div className={`${styles['wrapper-sport-middle']} ${hideResultClass}`}>
             <TeamCard logo={teamData.homeTeam.logo} isHomeTeam={true} animation={teamCardAnimation} />
 
-            <div className={styles['sport-result']}>
+            <div className={`${styles['sport-result']}`}>
                 <div className={styles['container-result']}>
                     {/* Home card */}
                     <div
