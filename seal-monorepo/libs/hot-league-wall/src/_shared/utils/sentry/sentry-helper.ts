@@ -16,6 +16,10 @@ const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
 const SENTRY_ENABLED_KEY = 'hot-league-wall-debug-enabled';
 const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
 
+// Component-specific localStorage keys
+const COMPONENT_LOG_LEVEL_PREFIX = 'sentry_component_log_level_';
+const COMPONENT_ENABLED_PREFIX = 'sentry_component_enabled_';
+
 /**
  * Get logging configuration from localStorage
  */
@@ -29,6 +33,24 @@ const getLocalStorageConfig = () => {
     } catch (error) {
         console.warn('Failed to read localStorage config:', error);
         return { logLevel: 'info', enabled: true, debugMode: false };
+    }
+};
+
+/**
+ * Get component-specific logging configuration from localStorage
+ */
+const getComponentLocalStorageConfig = (componentName: string) => {
+    try {
+        const logLevelKey = `${COMPONENT_LOG_LEVEL_PREFIX}${componentName}`;
+        const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+
+        const logLevel = localStorage.getItem(logLevelKey);
+        const enabled = localStorage.getItem(enabledKey) !== 'false';
+
+        return { logLevel, enabled };
+    } catch (error) {
+        console.warn(`Failed to read localStorage config for component ${componentName}:`, error);
+        return { logLevel: null, enabled: true };
     }
 };
 
@@ -52,6 +74,27 @@ export const setLocalStorageConfig = (config: { logLevel?: string; enabled?: boo
 };
 
 /**
+ * Set component-specific logging configuration in localStorage
+ */
+export const setComponentLocalStorageConfig = (
+    componentName: string,
+    config: { logLevel?: string; enabled?: boolean }
+) => {
+    try {
+        if (config.logLevel !== undefined) {
+            const logLevelKey = `${COMPONENT_LOG_LEVEL_PREFIX}${componentName}`;
+            localStorage.setItem(logLevelKey, config.logLevel);
+        }
+        if (config.enabled !== undefined) {
+            const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+            localStorage.setItem(enabledKey, config.enabled.toString());
+        }
+    } catch (error) {
+        console.warn(`Failed to set localStorage config for component ${componentName}:`, error);
+    }
+};
+
+/**
  * Clear localStorage logging configuration
  */
 export const clearLocalStorageConfig = () => {
@@ -59,9 +102,59 @@ export const clearLocalStorageConfig = () => {
         localStorage.removeItem(SENTRY_LOG_LEVEL_KEY);
         localStorage.removeItem(SENTRY_ENABLED_KEY);
         localStorage.removeItem(SENTRY_DEBUG_MODE_KEY);
+
+        // Clear all component-specific keys
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith(COMPONENT_LOG_LEVEL_PREFIX) || key.startsWith(COMPONENT_ENABLED_PREFIX))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
     } catch (error) {
         // Silent fail
     }
+};
+
+/**
+ * Clear component-specific localStorage configuration
+ */
+export const clearComponentLocalStorageConfig = (componentName: string) => {
+    try {
+        const logLevelKey = `${COMPONENT_LOG_LEVEL_PREFIX}${componentName}`;
+        const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+
+        localStorage.removeItem(logLevelKey);
+        localStorage.removeItem(enabledKey);
+    } catch (error) {
+        console.warn(`Failed to clear localStorage config for component ${componentName}:`, error);
+    }
+};
+
+/**
+ * Get all component configurations from localStorage
+ */
+export const getAllComponentConfigs = () => {
+    const configs: Record<string, { logLevel: string; enabled: boolean }> = {};
+
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(COMPONENT_LOG_LEVEL_PREFIX)) {
+                const componentName = key.replace(COMPONENT_LOG_LEVEL_PREFIX, '');
+                const logLevel = localStorage.getItem(key) || 'info';
+                const enabledKey = `${COMPONENT_ENABLED_PREFIX}${componentName}`;
+                const enabled = localStorage.getItem(enabledKey) !== 'false';
+
+                configs[componentName] = { logLevel, enabled };
+            }
+        }
+    } catch (error) {
+        console.warn('Failed to read component configs from localStorage:', error);
+    }
+
+    return configs;
 };
 
 class SentryHelper {
@@ -99,45 +192,28 @@ class SentryHelper {
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
-
-        // Merge provided config with defaults and localStorage settings
         if (config) {
             this.globalConfig = { ...this.globalConfig, ...config };
         }
 
-        // Override with localStorage settings
-        this.globalConfig.enabled = localStorageConfig.enabled && this.globalConfig.enabled;
-        this.globalConfig.defaultLogLevel = getLogLevelFromString(localStorageConfig.logLevel);
-
-        // Initialize SentryManager if enabled
-        if (this.globalConfig.enabled) {
-            const sentryManager = SentryManager.getInstance();
-            sentryManager.initialize({
-                dsn: appSettings.sentry.dsn,
-                environment: appSettings.sentry.environment,
-                componentName: 'HotLeagueWall',
-                release: process.env.TAG_VERSION,
-                debug: localStorageConfig.debugMode || process.env.NODE_ENV === 'development'
-            });
-        }
-
         this.isInitialized = true;
+        console.log('SentryHelper initialized with config:', this.globalConfig);
     }
 
-    // Global enable/disable
+    // Set global enabled state
     setGlobalEnabled(enabled: boolean): void {
         this.globalConfig.enabled = enabled;
     }
 
-    // Set default log level for all components
+    // Set default log level
     setDefaultLogLevel(level: SentryLogLevel): void {
         this.globalConfig.defaultLogLevel = level;
     }
 
-    // Component-specific configuration
+    // Configure a specific component
     configureComponent(componentName: string, config: Partial<ComponentConfig>): void {
         const localStorageConfig = getLocalStorageConfig();
+        const componentLocalStorage = getComponentLocalStorageConfig(componentName);
 
         const defaultConfig: ComponentConfig = {
             name: componentName,
@@ -146,8 +222,34 @@ class SentryHelper {
             enablePerformanceTracking: this.globalConfig.enablePerformanceTracking
         };
 
-        const finalConfig = { ...defaultConfig, ...config };
+        // Priority: component localStorage > global localStorage > default config
+        const finalLogLevel = componentLocalStorage.logLevel ||
+            localStorageConfig.logLevel ||
+            defaultConfig.logLevel;
+
+        const finalConfig = {
+            ...defaultConfig,
+            ...config,
+            logLevel: getLogLevelFromString(finalLogLevel)
+        };
+
         this.globalConfig.componentConfigs.set(componentName, finalConfig);
+    }
+
+    // Refresh component configuration from localStorage
+    refreshComponentConfig(componentName: string): void {
+        const componentConfig = this.globalConfig.componentConfigs.get(componentName);
+        if (componentConfig) {
+            this.configureComponent(componentName, componentConfig);
+        }
+    }
+
+    // Refresh all component configurations from localStorage
+    refreshAllComponentConfigs(): void {
+        const componentNames = Array.from(this.globalConfig.componentConfigs.keys());
+        componentNames.forEach(componentName => {
+            this.refreshComponentConfig(componentName);
+        });
     }
 
     // Get component configuration
@@ -158,14 +260,26 @@ class SentryHelper {
     // Check if logging is enabled for a component and level
     isLoggingEnabled(componentName: string, level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'): boolean {
         const localStorageConfig = getLocalStorageConfig();
+        const componentLocalStorage = getComponentLocalStorageConfig(componentName);
 
-        // For trace, debug, and info levels, check localStorage enabled flag first
+        // Check global enabled state
         if (!this.globalConfig.enabled || !localStorageConfig.enabled) {
             return false;
         }
 
+        // Check component-specific enabled state
+        if (componentLocalStorage.enabled === false) {
+            return false;
+        }
+
+        // Get component configuration
         const componentConfig = this.getComponentConfig(componentName);
-        const logLevel = componentConfig?.logLevel || this.globalConfig.defaultLogLevel;
+
+        // Priority: component localStorage > component config > global localStorage > default
+        const logLevel = componentLocalStorage.logLevel ||
+            componentConfig?.logLevel ||
+            getLogLevelFromString(localStorageConfig.logLevel) ||
+            this.globalConfig.defaultLogLevel;
 
         // Define level hierarchy (higher number = more important)
         const levelHierarchy = {
@@ -228,15 +342,31 @@ class SentryHelper {
         sentryManager.logInfo(info, context);
     }
 
+    logDebug(componentName: string, debug: string, context?: Record<string, any>): void {
+        if (!this.isLoggingEnabled(componentName, 'debug')) return;
+
+        const sentryManager = this.getOrCreateComponentLogger(componentName);
+        sentryManager.logDebug(debug, context);
+    }
+
+    logTrace(componentName: string, trace: string, context?: Record<string, any>): void {
+        if (!this.isLoggingEnabled(componentName, 'trace')) return;
+
+        const sentryManager = this.getOrCreateComponentLogger(componentName);
+        sentryManager.logTrace(trace, context);
+    }
+
     // Workflow tracking methods
     startWorkflow(workflowId: string, workflowName: string, componentName: string, metadata?: Record<string, any>): void {
-        if (!this.globalConfig.enableWorkflowTracking) return;
+        if (!this.globalConfig.enableWorkflowTracking) {
+            return;
+        }
 
         const workflowConfig: WorkflowConfig = {
             id: workflowId,
             name: workflowName,
             component: componentName,
-            logLevel: this.getComponentConfig(componentName)?.logLevel || this.globalConfig.defaultLogLevel,
+            logLevel: this.globalConfig.defaultLogLevel,
             enablePerformanceTracking: this.globalConfig.enablePerformanceTracking,
             metadata
         };
@@ -244,63 +374,67 @@ class SentryHelper {
         this.globalConfig.workflowConfigs.set(workflowId, workflowConfig);
         this.activeWorkflows.set(workflowId, {
             config: workflowConfig,
-            startTime: performance.now(),
+            startTime: Date.now(),
             metadata: metadata || {}
         });
 
-        this.logInfo(componentName, `Workflow started: ${workflowName}`, {
-            workflowId,
-            workflowName,
-            state: WorkflowState.STARTED,
-            metadata
-        });
+        // Send workflow start event to Sentry
+        try {
+            const sentryManager = this.getOrCreateComponentLogger(componentName);
+            console.log(`[Sentry] About to call sentryManager.startWorkflow for ${componentName}`);
+            sentryManager.startWorkflow(workflowId, workflowName, metadata);
+            console.log(`[Sentry] Successfully called sentryManager.startWorkflow for ${componentName}`);
+        } catch (error) {
+            console.error(`[Sentry] Failed to send workflow start event to Sentry:`, error);
+        }
+
+        console.log(`[Sentry] Workflow started: ${workflowName} (${workflowId}) in component: ${componentName}`);
     }
 
     updateWorkflow(workflowId: string, state: WorkflowState, metadata?: Record<string, any>): void {
         const workflow = this.activeWorkflows.get(workflowId);
-        if (!workflow) return;
-
-        const { config } = workflow;
-        const componentName = config.component;
-
-        // Update metadata
-        if (metadata) {
-            workflow.metadata = { ...workflow.metadata, ...metadata };
+        if (!workflow) {
+            console.warn(`[Sentry] Workflow not found: ${workflowId}`);
+            return;
         }
 
-        // Log workflow update
-        this.logInfo(componentName, `Workflow updated: ${config.name}`, {
-            workflowId,
-            workflowName: config.name,
-            state,
-            metadata: workflow.metadata
-        });
+        workflow.metadata = { ...workflow.metadata, ...metadata };
+
+        // Send workflow update event to Sentry
+        try {
+            const sentryManager = this.getOrCreateComponentLogger(workflow.config.component);
+            console.log(`[Sentry] About to call sentryManager.updateWorkflow for ${workflow.config.component}`);
+            sentryManager.updateWorkflow(workflowId, state, metadata);
+            console.log(`[Sentry] Successfully called sentryManager.updateWorkflow for ${workflow.config.component}`);
+        } catch (error) {
+            console.error(`[Sentry] Failed to send workflow update event to Sentry:`, error);
+        }
+
+        console.log(`[Sentry] Workflow updated: ${workflow.config.name} (${workflowId}) - State: ${state}`);
     }
 
     completeWorkflow(workflowId: string, success = true, metadata?: Record<string, any>): void {
         const workflow = this.activeWorkflows.get(workflowId);
-        if (!workflow) return;
+        if (!workflow) {
+            console.warn(`[Sentry] Workflow not found: ${workflowId}`);
+            return;
+        }
 
-        const { config, startTime } = workflow;
-        const componentName = config.component;
-        const endTime = performance.now();
-        const duration = endTime - startTime;
+        const duration = Date.now() - workflow.startTime;
+        workflow.metadata = { ...workflow.metadata, ...metadata };
 
-        const state = success ? WorkflowState.COMPLETED : WorkflowState.FAILED;
+        // Send workflow completion event to Sentry
+        try {
+            const sentryManager = this.getOrCreateComponentLogger(workflow.config.component);
+            console.log(`[Sentry] About to call sentryManager.completeWorkflow for ${workflow.config.component}`);
+            sentryManager.completeWorkflow(workflowId, success, { ...metadata, duration });
+            console.log(`[Sentry] Successfully called sentryManager.completeWorkflow for ${workflow.config.component}`);
+        } catch (error) {
+            console.error(`[Sentry] Failed to send workflow completion event to Sentry:`, error);
+        }
 
-        // Log workflow completion
-        const logMethod = success ? 'logInfo' : 'logError';
-        const message = success ? `Workflow completed: ${config.name}` : `Workflow failed: ${config.name}`;
+        console.log(`[Sentry] Workflow completed: ${workflow.config.name} (${workflowId}) - Success: ${success}, Duration: ${duration}ms`);
 
-        this[logMethod](componentName, message, {
-            workflowId,
-            workflowName: config.name,
-            state,
-            duration: `${duration.toFixed(2)}ms`,
-            metadata: { ...workflow.metadata, ...metadata }
-        });
-
-        // Clean up
         this.activeWorkflows.delete(workflowId);
         this.globalConfig.workflowConfigs.delete(workflowId);
     }
@@ -311,19 +445,21 @@ class SentryHelper {
             return Promise.resolve(operation());
         }
 
-        const startTime = performance.now();
-        const workflowId = `perf_${componentName}_${operationName}_${Date.now()}`;
-
-        this.startWorkflow(workflowId, `Performance: ${operationName}`, componentName);
-
+        const startTime = Date.now();
         const executeOperation = async () => {
             try {
                 const result = await operation();
-                this.completeWorkflow(workflowId, true, { result: 'success' });
+                const duration = Date.now() - startTime;
+
+                // Send performance event to Sentry
+                const sentryManager = this.getOrCreateComponentLogger(componentName);
+                await sentryManager.trackPerformance(operationName, () => Promise.resolve(result));
+
+                console.log(`[Sentry] Performance: ${componentName}.${operationName} - ${duration}ms`);
                 return result;
             } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                this.completeWorkflow(workflowId, false, { error: errorMessage });
+                const duration = Date.now() - startTime;
+                console.error(`[Sentry] Performance Error: ${componentName}.${operationName} - ${duration}ms`, error);
                 throw error;
             }
         };
@@ -331,26 +467,48 @@ class SentryHelper {
         return executeOperation();
     }
 
-    // Utility methods
+    // Get or create component logger
     private getOrCreateComponentLogger(componentName: string): SentryManager {
         if (!this.componentLoggers.has(componentName)) {
+            console.log(`[Sentry] Creating new SentryManager for component: ${componentName}`);
+            const componentConfig = this.getComponentConfig(componentName);
             const sentryManager = SentryManager.getInstance();
+
+            // Get the DSN from appSettings
+            const dsn = appSettings.sentry?.dsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056';
+            const environment = appSettings.sentry?.environment || 'LOCAL1';
+
+            console.log(`Initializing SentryManager for component ${componentName} with DSN: ${dsn}, environment: ${environment}`);
+
+            sentryManager.initialize({
+                dsn: dsn,
+                environment: environment,
+                componentName,
+                logLevel: componentConfig?.logLevel || this.globalConfig.defaultLogLevel,
+                debug: true // Enable debug mode to see initialization logs
+            });
             this.componentLoggers.set(componentName, sentryManager);
+            console.log(`[Sentry] SentryManager created and initialized for component: ${componentName}`);
+        } else {
+            console.log(`[Sentry] Using existing SentryManager for component: ${componentName}`);
         }
-        return this.componentLoggers.get(componentName)!;
+
+        const sentryManager = this.componentLoggers.get(componentName);
+        console.log(`[Sentry] Returning SentryManager for component: ${componentName}, initialized: ${sentryManager?.isManagerInitialized()}`);
+        return sentryManager!;
     }
 
     // Get current configuration
     getConfig(): GlobalSentryConfig {
-        return { ...this.globalConfig };
+        return this.globalConfig;
     }
 
     // Get active workflows
     getActiveWorkflows(): Map<string, { config: WorkflowConfig; startTime: number; metadata: Record<string, any> }> {
-        return new Map(this.activeWorkflows);
+        return this.activeWorkflows;
     }
 
-    // Cleanup
+    // Cleanup resources
     cleanup(): void {
         this.activeWorkflows.clear();
         this.componentLoggers.clear();
@@ -360,9 +518,13 @@ class SentryHelper {
     }
 }
 
-/**
- * Convert string log level to SentryLogLevel enum
- */
+// Singleton instance
+const sentryHelper = SentryHelper.getInstance();
+
+// Export the singleton instance
+export { sentryHelper };
+
+// Convert string log level to SentryLogLevel enum
 const getLogLevelFromString = (logLevel: string): SentryLogLevel => {
     switch (logLevel.toLowerCase()) {
         case 'trace':
@@ -391,24 +553,35 @@ const getLogLevelFromString = (logLevel: string): SentryLogLevel => {
     }
 };
 
-// Export singleton instance
-export const sentryHelper = SentryHelper.getInstance();
-
-// Export convenience functions for easy usage
+// Export functions
 export const configureSentry = (config?: Partial<GlobalSentryConfig>) => sentryHelper.initialize(config);
 export const enableSentry = () => sentryHelper.setGlobalEnabled(true);
 export const disableSentry = () => sentryHelper.setGlobalEnabled(false);
 export const setLogLevel = (level: SentryLogLevel) => sentryHelper.setDefaultLogLevel(level);
 export const configureComponent = (name: string, config: Partial<ComponentConfig>) => sentryHelper.configureComponent(name, config);
+export const refreshComponentConfig = (name: string) => sentryHelper.refreshComponentConfig(name);
+export const refreshAllComponentConfigs = () => sentryHelper.refreshAllComponentConfigs();
 
-// Export workflow convenience functions
+// Workflow tracking exports
 export const startWorkflow = (id: string, name: string, component: string, metadata?: Record<string, any>) =>
     sentryHelper.startWorkflow(id, name, component, metadata);
 export const updateWorkflow = (id: string, state: WorkflowState, metadata?: Record<string, any>) =>
     sentryHelper.updateWorkflow(id, state, metadata);
 export const completeWorkflow = (id: string, success?: boolean, metadata?: Record<string, any>) =>
     sentryHelper.completeWorkflow(id, success, metadata);
+
+// Performance tracking export
 export const trackPerformance = (component: string, operation: string, fn: () => Promise<any> | any) =>
     sentryHelper.trackPerformance(component, operation, fn);
 
-export default SentryHelper; 
+// Logging exports
+export const logError = (component: string, error: Error | string, context?: Record<string, any>) =>
+    sentryHelper.logError(component, error, context);
+export const logWarning = (component: string, warning: string, context?: Record<string, any>) =>
+    sentryHelper.logWarning(component, warning, context);
+export const logInfo = (component: string, info: string, context?: Record<string, any>) =>
+    sentryHelper.logInfo(component, info, context);
+export const logDebug = (component: string, debug: string, context?: Record<string, any>) =>
+    sentryHelper.logDebug(component, debug, context);
+export const logTrace = (component: string, trace: string, context?: Record<string, any>) =>
+    sentryHelper.logTrace(component, trace, context); 

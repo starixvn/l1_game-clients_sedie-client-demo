@@ -2,7 +2,6 @@
 // This file demonstrates various usage patterns for the SentryHelper utility
 
 import {
-    sentryHelper,
     configureSentry,
     enableSentry,
     disableSentry,
@@ -11,7 +10,12 @@ import {
     startWorkflow,
     updateWorkflow,
     completeWorkflow,
-    trackPerformance
+    trackPerformance,
+    logInfo,
+    logError,
+    logWarning,
+    logDebug,
+    logTrace
 } from './sentry-helper';
 import { SentryLogLevel, WorkflowState } from './sentry-types';
 
@@ -60,13 +64,13 @@ export const basicLoggingExample = () => {
     const componentName = 'GameLobby';
 
     // Log different types of events
-    sentryHelper.logInfo(componentName, 'User entered game lobby', {
+    logInfo(componentName, 'User entered game lobby', {
         userId: 'user123',
         lobbyId: 'lobby456',
         timestamp: Date.now()
     });
 
-    sentryHelper.logWarning(componentName, 'User balance is low', {
+    logWarning(componentName, 'User balance is low', {
         userId: 'user123',
         balance: 10.50,
         threshold: 20.00
@@ -77,7 +81,7 @@ export const basicLoggingExample = () => {
         throw new Error('Failed to join game room');
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        sentryHelper.logError(componentName, errorMessage, {
+        logError(componentName, errorMessage, {
             userId: 'user123',
             gameRoomId: 'room789',
             action: 'join_game'
@@ -216,7 +220,7 @@ export const conditionalLoggingExample = () => {
 
     // Only log detailed info in development
     if (isDevelopment) {
-        sentryHelper.logInfo(componentName, 'Debug information', {
+        logInfo(componentName, 'Debug information', {
             memoryUsage: process.memoryUsage(),
             userAgent: navigator.userAgent,
             screenResolution: `${window.screen.width}x${window.screen.height}`
@@ -229,7 +233,7 @@ export const conditionalLoggingExample = () => {
         throw new Error('Critical system error');
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        sentryHelper.logError(componentName, errorMessage, {
+        logError(componentName, errorMessage, {
             environment: process.env.NODE_ENV,
             timestamp: Date.now()
         });
@@ -277,7 +281,7 @@ export const batchOperationsExample = async () => {
             });
         } catch (error) {
             batchResults.failed += 100;
-            sentryHelper.logWarning(componentName, `Batch processing failed`, {
+            logWarning(componentName, `Batch processing failed`, {
                 batchId,
                 error: error instanceof Error ? error.message : String(error),
                 retryCount: 0
@@ -309,14 +313,14 @@ export const errorRecoveryExample = async () => {
                 }
             });
 
-            sentryHelper.logInfo(componentName, 'Connection established successfully', {
+            logInfo(componentName, 'Connection established successfully', {
                 attempt,
                 duration: '200ms'
             });
             break;
 
         } catch (error) {
-            sentryHelper.logWarning(componentName, 'Connection attempt failed', {
+            logWarning(componentName, 'Connection attempt failed', {
                 attempt,
                 maxRetries,
                 error: error instanceof Error ? error.message : String(error),
@@ -324,7 +328,7 @@ export const errorRecoveryExample = async () => {
             });
 
             if (attempt === maxRetries) {
-                sentryHelper.logError(componentName, new Error('All connection attempts failed'), {
+                logError(componentName, new Error('All connection attempts failed'), {
                     totalAttempts: maxRetries,
                     finalError: error instanceof Error ? error.message : String(error)
                 });
@@ -338,7 +342,7 @@ export const userInteractionExample = () => {
     const componentName = 'UserInterface';
 
     const trackUserAction = (action: string, details: Record<string, any>) => {
-        sentryHelper.logInfo(componentName, `User action: ${action}`, {
+        logInfo(componentName, `User action: ${action}`, {
             action,
             ...details,
             timestamp: Date.now(),
@@ -347,7 +351,7 @@ export const userInteractionExample = () => {
     };
 
     const trackUserError = (action: string, error: string, details: Record<string, any>) => {
-        sentryHelper.logWarning(componentName, `User error during ${action}`, {
+        logWarning(componentName, `User error during ${action}`, {
             action,
             error,
             ...details,
@@ -381,7 +385,7 @@ export const localStorageLoggingControlExample = () => {
             debugMode: true
         });
 
-        sentryHelper.logInfo(componentName, 'Info level logging enabled via localStorage', {
+        logInfo(componentName, 'Info level logging enabled via localStorage', {
             action: 'enable_info_logging',
             timestamp: Date.now(),
             userAgent: navigator.userAgent
@@ -396,7 +400,7 @@ export const localStorageLoggingControlExample = () => {
             debugMode: true
         });
 
-        sentryHelper.logInfo(componentName, 'Debug level logging enabled via localStorage', {
+        logInfo(componentName, 'Debug level logging enabled via localStorage', {
             action: 'enable_debug_logging',
             timestamp: Date.now()
         });
@@ -408,7 +412,7 @@ export const localStorageLoggingControlExample = () => {
             enabled: false
         });
 
-        sentryHelper.logInfo(componentName, 'Logging disabled via localStorage', {
+        logInfo(componentName, 'Logging disabled via localStorage', {
             action: 'disable_logging',
             timestamp: Date.now()
         });
@@ -418,7 +422,7 @@ export const localStorageLoggingControlExample = () => {
     const clearLoggingSettings = () => {
         clearLocalStorageConfig();
 
-        sentryHelper.logInfo(componentName, 'Logging settings cleared via localStorage', {
+        logInfo(componentName, 'Logging settings cleared via localStorage', {
             action: 'clear_logging_settings',
             timestamp: Date.now()
         });
@@ -431,7 +435,7 @@ export const localStorageLoggingControlExample = () => {
             const enabled = localStorage.getItem('hot-league-wall-debug-enabled') !== 'false';
             const debugMode = localStorage.getItem('sentry_debug_mode') === 'true';
 
-            sentryHelper.logInfo(componentName, 'Current logging status', {
+            logInfo(componentName, 'Current logging status', {
                 action: 'check_logging_status',
                 logLevel,
                 enabled,
@@ -465,7 +469,7 @@ export const productionDebuggingExample = () => {
             debugMode: true
         });
 
-        sentryHelper.logInfo(componentName, 'Production debugging enabled', {
+        logInfo(componentName, 'Production debugging enabled', {
             action: 'enable_production_debugging',
             environment: process.env.NODE_ENV,
             timestamp: Date.now(),
@@ -476,7 +480,7 @@ export const productionDebuggingExample = () => {
 
     // Enable specific component debugging
     const enableComponentDebugging = (componentName: string) => {
-        sentryHelper.logInfo('ProductionDebugger', `Component debugging enabled for: ${componentName}`, {
+        logInfo('ProductionDebugger', `Component debugging enabled for: ${componentName}`, {
             action: 'enable_component_debugging',
             targetComponent: componentName,
             timestamp: Date.now()
@@ -497,7 +501,7 @@ export const productionDebuggingExample = () => {
             }
         };
 
-        sentryHelper.logInfo(componentName, 'Application state logged', {
+        logInfo(componentName, 'Application state logged', {
             action: 'log_application_state',
             ...state
         });

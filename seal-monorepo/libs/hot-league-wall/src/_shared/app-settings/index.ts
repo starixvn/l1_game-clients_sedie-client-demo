@@ -1,5 +1,5 @@
 import * as gc from '@sg/sg-game-client';
-import { sentryHelper } from '../utils/sentry/sentry-helper';
+import { logInfo, logError, logWarning } from '../utils/sentry/sentry-helper';
 
 import SG_LOCAL_CONFIG from '../../../configs/sg/configs.LOCAL_1.json';
 import SG_SIT_CONFIG from '../../../configs/sg/configs.SIT.json';
@@ -29,7 +29,7 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
     const componentName = 'AppSettings';
 
     try {
-        sentryHelper.logInfo(componentName, 'Loading environment configuration', {
+        logInfo(componentName, 'Loading environment configuration', {
             appEnv,
             siteId,
             timestamp: Date.now()
@@ -53,7 +53,7 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
 
         if (!environmentsConfig) {
             const error = `No environment configuration found for siteId: ${siteId}, appEnv: ${appEnv}`;
-            sentryHelper.logError(componentName, error, {
+            logError(componentName, error, {
                 siteId,
                 appEnv,
                 availableSites: Object.keys(configMaps),
@@ -71,7 +71,7 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
 
         if (!gameSettings) {
             const error = `No game settings found for siteId: ${siteId}`;
-            sentryHelper.logError(componentName, error, {
+            logError(componentName, error, {
                 siteId,
                 availableSites: Object.keys(gameSettingsMap),
                 timestamp: Date.now()
@@ -84,7 +84,7 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
             gameSettings
         };
 
-        sentryHelper.logInfo(componentName, 'Environment configuration loaded successfully', {
+        logInfo(componentName, 'Environment configuration loaded successfully', {
             appEnv,
             siteId,
             configKeys: Object.keys(result),
@@ -94,7 +94,7 @@ export const getEnvironmentConfig = ({ appEnv, siteId }) => {
 
         return result;
     } catch (error) {
-        sentryHelper.logError(componentName, 'Failed to load environment configuration', {
+        logError(componentName, 'Failed to load environment configuration', {
             error: error instanceof Error ? error.message : String(error),
             appEnv,
             siteId,
@@ -144,14 +144,14 @@ export const appSettings = getEnvironmentConfig({
 // Add Sentry DSN to appSettings
 export const appSettingsWithSentry = {
     ...appSettings,
-    sentryDsn: appSettings.sentry?.dsn || 'YOUR_DSN_HERE',
-    sentryEnvironment: appSettings.sentry?.environment || 'development'
+    sentryDsn: appSettings.sentry?.dsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056',
+    sentryEnvironment: appSettings.sentry?.environment || 'LOCAL1'
 };
 
 export const getSiteConfig = (gameId: number) => {
     const componentName = 'AppSettings';
 
-    sentryHelper.logInfo(componentName, 'Getting site configuration', {
+    logInfo(componentName, 'Getting site configuration', {
         gameId,
         timestamp: Date.now()
     });
@@ -159,7 +159,7 @@ export const getSiteConfig = (gameId: number) => {
     const gameSetting = appSettings.gameSettings[gameId];
 
     if (!gameSetting) {
-        sentryHelper.logWarning(componentName, 'No game setting found for gameId', {
+        logWarning(componentName, 'No game setting found for gameId', {
             gameId,
             availableGameIds: Object.keys(appSettings.gameSettings),
             timestamp: Date.now()
@@ -183,7 +183,7 @@ export const getSiteConfig = (gameId: number) => {
         userServicePath: appSettings.userServicePath
     };
 
-    sentryHelper.logInfo(componentName, 'Site configuration retrieved successfully', {
+    logInfo(componentName, 'Site configuration retrieved successfully', {
         gameId,
         configKeys: Object.keys(config),
         websocketEnabled: !!gameSetting?.websocket,
@@ -196,7 +196,7 @@ export const getSiteConfig = (gameId: number) => {
 export const getGameSetting = (gameId: number) => {
     const componentName = 'AppSettings';
 
-    sentryHelper.logInfo(componentName, 'Getting game setting', {
+    logInfo(componentName, 'Getting game setting', {
         gameId,
         timestamp: Date.now()
     });
@@ -204,7 +204,7 @@ export const getGameSetting = (gameId: number) => {
     const settings = appSettings.gameSettings[gameId];
 
     if (!settings) {
-        sentryHelper.logWarning(componentName, 'No settings found for gameId', {
+        logWarning(componentName, 'No settings found for gameId', {
             gameId,
             availableGameIds: Object.keys(appSettings.gameSettings),
             timestamp: Date.now()
@@ -213,7 +213,7 @@ export const getGameSetting = (gameId: number) => {
         return null;
     }
 
-    sentryHelper.logInfo(componentName, 'Game setting retrieved successfully', {
+    logInfo(componentName, 'Game setting retrieved successfully', {
         gameId,
         gameName: settings.name,
         isVisible: settings.isVisible,
@@ -227,7 +227,7 @@ export const getGameSetting = (gameId: number) => {
 export const getGameSettingIds = (visibleOnly = true) => {
     const componentName = 'AppSettings';
 
-    sentryHelper.logInfo(componentName, 'Getting game setting IDs', {
+    logInfo(componentName, 'Getting game setting IDs', {
         visibleOnly,
         timestamp: Date.now()
     });
@@ -244,7 +244,7 @@ export const getGameSettingIds = (visibleOnly = true) => {
 
     const ids = orderedGameSettings.map((value) => value.id);
 
-    sentryHelper.logInfo(componentName, 'Game setting IDs retrieved successfully', {
+    logInfo(componentName, 'Game setting IDs retrieved successfully', {
         visibleOnly,
         totalSettings: gameSettings.length,
         filteredSettings: filteredSettings.length,
@@ -258,7 +258,7 @@ export const getGameSettingIds = (visibleOnly = true) => {
 export const getVisibleGameSettings = () => {
     const componentName = 'AppSettings';
 
-    sentryHelper.logInfo(componentName, 'Getting visible game settings', {
+    logInfo(componentName, 'Getting visible game settings', {
         timestamp: Date.now()
     });
 
@@ -270,7 +270,7 @@ export const getVisibleGameSettings = () => {
         .filter(setting => setting.isVisible)
         .sort((a, b) => a.order - b.order);
 
-    sentryHelper.logInfo(componentName, 'Visible game settings retrieved successfully', {
+    logInfo(componentName, 'Visible game settings retrieved successfully', {
         totalSettings: gameSettings.length,
         visibleSettings: result.length,
         gameNames: result.map(setting => setting.name),

@@ -1,4 +1,10 @@
-import { sentryHelper } from './sentry/sentry-helper';
+import {
+    logInfo,
+    logError,
+    logWarning,
+    logDebug,
+    logTrace
+} from './sentry/sentry-helper';
 
 interface IActionStorage {
     remove: (name: string) => void;
@@ -15,7 +21,7 @@ declare global {
 
 export class LocalStorage implements IActionStorage {
     remove(name: string) {
-        sentryHelper.logInfo('LocalStorage', 'Removing item from localStorage', {
+        logInfo('LocalStorage', 'Removing item from localStorage', {
             name,
             timestamp: Date.now()
         });
@@ -24,14 +30,14 @@ export class LocalStorage implements IActionStorage {
     }
 
     get(name: string) {
-        sentryHelper.logInfo('LocalStorage', 'Getting item from localStorage', {
+        logInfo('LocalStorage', 'Getting item from localStorage', {
             name,
             timestamp: Date.now()
         });
 
         const storage = localStorage.getItem(name);
         if (!storage) {
-            sentryHelper.logInfo('LocalStorage', 'Item not found in localStorage', {
+            logInfo('LocalStorage', 'Item not found in localStorage', {
                 name,
                 timestamp: Date.now()
             });
@@ -39,14 +45,14 @@ export class LocalStorage implements IActionStorage {
         }
         try {
             const parsed = JSON.parse(storage);
-            sentryHelper.logInfo('LocalStorage', 'Item retrieved successfully from localStorage', {
+            logInfo('LocalStorage', 'Item retrieved successfully from localStorage', {
                 name,
                 hasValue: !!parsed,
                 timestamp: Date.now()
             });
             return parsed;
         } catch (error) {
-            sentryHelper.logWarning('LocalStorage', 'Failed to parse localStorage item', {
+            logWarning('LocalStorage', 'Failed to parse localStorage item', {
                 name,
                 error: error instanceof Error ? error.message : String(error),
                 timestamp: Date.now()
@@ -57,7 +63,7 @@ export class LocalStorage implements IActionStorage {
     }
 
     set(name: string, value: string | object) {
-        sentryHelper.logInfo('LocalStorage', 'Setting item in localStorage', {
+        logInfo('LocalStorage', 'Setting item in localStorage', {
             name,
             hasValue: !!value,
             timestamp: Date.now()
@@ -72,13 +78,13 @@ export class LocalStorage implements IActionStorage {
             localStorage.setItem(test, test);
             localStorage.removeItem(test);
 
-            sentryHelper.logInfo('LocalStorage', 'localStorage availability check passed', {
+            logInfo('LocalStorage', 'localStorage availability check passed', {
                 timestamp: Date.now()
             });
 
             return true;
         } catch (e) {
-            sentryHelper.logWarning('LocalStorage', 'localStorage availability check failed', {
+            logWarning('LocalStorage', 'localStorage availability check failed', {
                 error: e instanceof Error ? e.message : String(e),
                 timestamp: Date.now()
             });
@@ -90,7 +96,7 @@ export class LocalStorage implements IActionStorage {
 export class Memory implements IActionStorage {
     localMemory: any;
     constructor() {
-        sentryHelper.logInfo('Memory', 'Initializing Memory storage', {
+        logInfo('Memory', 'Initializing Memory storage', {
             timestamp: Date.now()
         });
 
@@ -99,7 +105,7 @@ export class Memory implements IActionStorage {
     }
 
     remove(name: string) {
-        sentryHelper.logInfo('Memory', 'Removing item from memory storage', {
+        logInfo('Memory', 'Removing item from memory storage', {
             name,
             timestamp: Date.now()
         });
@@ -108,14 +114,14 @@ export class Memory implements IActionStorage {
     }
 
     get(name: string) {
-        sentryHelper.logInfo('Memory', 'Getting item from memory storage', {
+        logInfo('Memory', 'Getting item from memory storage', {
             name,
             timestamp: Date.now()
         });
 
         const value = this.localMemory[name] ? this.localMemory[name] : null;
 
-        sentryHelper.logInfo('Memory', 'Item retrieved from memory storage', {
+        logInfo('Memory', 'Item retrieved from memory storage', {
             name,
             hasValue: !!value,
             timestamp: Date.now()
@@ -125,7 +131,7 @@ export class Memory implements IActionStorage {
     }
 
     set(name: string, value: any) {
-        sentryHelper.logInfo('Memory', 'Setting item in memory storage', {
+        logInfo('Memory', 'Setting item in memory storage', {
             name,
             hasValue: !!value,
             timestamp: Date.now()
@@ -135,7 +141,7 @@ export class Memory implements IActionStorage {
     }
 
     isAvailable() {
-        sentryHelper.logInfo('Memory', 'Memory storage availability check', {
+        logInfo('Memory', 'Memory storage availability check', {
             timestamp: Date.now()
         });
         return true;
@@ -148,14 +154,14 @@ export class StorageManager {
 
     private static initialize() {
         if (!StorageManager.supportStorage) {
-            sentryHelper.logInfo('StorageManager', 'Initializing StorageManager', {
+            logInfo('StorageManager', 'Initializing StorageManager', {
                 timestamp: Date.now()
             });
 
             const allStorage = [new LocalStorage(), new Memory()];
             StorageManager.supportStorage = allStorage.filter((storage) => storage.isAvailable())[0];
 
-            sentryHelper.logInfo('StorageManager', 'StorageManager initialized successfully', {
+            logInfo('StorageManager', 'StorageManager initialized successfully', {
                 storageType: StorageManager.supportStorage.constructor.name,
                 timestamp: Date.now()
             });
@@ -170,7 +176,7 @@ export class StorageManager {
     static get(name: string) {
         const fullName = StorageManager.getName(name);
 
-        sentryHelper.logInfo('StorageManager', 'Getting item from storage', {
+        logInfo('StorageManager', 'Getting item from storage', {
             originalName: name,
             fullName,
             timestamp: Date.now()
@@ -178,7 +184,7 @@ export class StorageManager {
 
         const result = StorageManager.getCurrentStorage().get(fullName);
 
-        sentryHelper.logInfo('StorageManager', 'Item retrieved from storage', {
+        logInfo('StorageManager', 'Item retrieved from storage', {
             originalName: name,
             fullName,
             hasValue: !!result,
@@ -191,7 +197,7 @@ export class StorageManager {
     static set(name: string, value: string | object) {
         const fullName = StorageManager.getName(name);
 
-        sentryHelper.logInfo('StorageManager', 'Setting item in storage', {
+        logInfo('StorageManager', 'Setting item in storage', {
             originalName: name,
             fullName,
             hasValue: !!value,
@@ -204,7 +210,7 @@ export class StorageManager {
     static remove(name: string) {
         const fullName = StorageManager.getName(name);
 
-        sentryHelper.logInfo('StorageManager', 'Removing item from storage', {
+        logInfo('StorageManager', 'Removing item from storage', {
             originalName: name,
             fullName,
             timestamp: Date.now()
@@ -214,7 +220,7 @@ export class StorageManager {
     }
 
     static setPrefixKey(prefixKey: string) {
-        sentryHelper.logInfo('StorageManager', 'Setting prefix key', {
+        logInfo('StorageManager', 'Setting prefix key', {
             oldPrefix: StorageManager.prefixKey,
             newPrefix: prefixKey,
             timestamp: Date.now()
@@ -226,7 +232,7 @@ export class StorageManager {
     static getName(name: string) {
         const fullName = StorageManager.prefixKey ? `${StorageManager.prefixKey}_${name}` : name;
 
-        sentryHelper.logInfo('StorageManager', 'Getting full storage name', {
+        logInfo('StorageManager', 'Getting full storage name', {
             originalName: name,
             fullName,
             hasPrefix: !!StorageManager.prefixKey,

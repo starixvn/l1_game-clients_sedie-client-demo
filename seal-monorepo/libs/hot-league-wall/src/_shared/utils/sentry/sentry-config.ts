@@ -1,4 +1,4 @@
-import { configureSentry, configureComponent } from './sentry-helper';
+import { configureSentry, configureComponent, refreshComponentConfig, refreshAllComponentConfigs } from './sentry-helper';
 import { SentryLogLevel } from './sentry-types';
 
 // LocalStorage keys for logging control
@@ -497,6 +497,8 @@ if (typeof window !== 'undefined') {
     (window as any).getAllComponentConfigs = getAllComponentConfigs;
     (window as any).getCurrentConfiguration = getCurrentConfiguration;
     (window as any).initializeSentryForProject = initializeSentryForProject;
+    (window as any).refreshComponentConfig = refreshComponentConfig;
+    (window as any).refreshAllComponentConfigs = refreshAllComponentConfigs;
 
     // Log availability to console
     console.log('🔧 Sentry Component Logging Functions Available:');

@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { sentryHelper } from '../utils/sentry/sentry-helper';
+import {
+    logInfo as sentryLogInfo,
+    logError as sentryLogError,
+    logWarning as sentryLogWarning,
+    logDebug,
+    logTrace,
+    configureComponent,
+    startWorkflow,
+    updateWorkflow,
+    completeWorkflow,
+    trackPerformance as sentryTrackPerformance,
+    sentryHelper
+} from '../utils/sentry/sentry-helper';
 import {
     SentryLogLevel,
     WorkflowState,
@@ -22,7 +34,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     useEffect(() => {
         if (autoConfigure) {
             try {
-                sentryHelper.logInfo(componentName, 'Initializing SentryHelper hook', {
+                sentryLogInfo(componentName, 'Initializing SentryHelper hook', {
                     componentName,
                     logLevel,
                     enableWorkflowTracking,
@@ -31,13 +43,13 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                     timestamp: Date.now()
                 });
 
-                sentryHelper.configureComponent(componentName, {
+                configureComponent(componentName, {
                     logLevel,
                     enableWorkflowTracking,
                     enablePerformanceTracking
                 });
 
-                sentryHelper.logInfo(componentName, 'SentryHelper hook initialized successfully', {
+                sentryLogInfo(componentName, 'SentryHelper hook initialized successfully', {
                     componentName,
                     configuration: {
                         logLevel,
@@ -56,7 +68,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     useEffect(() => {
         return () => {
             try {
-                sentryHelper.logInfo(componentName, 'Cleaning up SentryHelper hook', {
+                sentryLogInfo(componentName, 'Cleaning up SentryHelper hook', {
                     componentName,
                     activeWorkflowsCount: activeWorkflows.current.size,
                     timestamp: Date.now()
@@ -65,14 +77,14 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                 // Complete any remaining workflows
                 activeWorkflows.current.forEach(workflowId => {
                     try {
-                        sentryHelper.completeWorkflow(workflowId, false, { reason: 'component_unmounted' });
+                        completeWorkflow(workflowId, false, { reason: 'component_unmounted' });
                     } catch (error) {
                         // Silent fail during cleanup
                     }
                 });
                 activeWorkflows.current.clear();
 
-                sentryHelper.logInfo(componentName, 'SentryHelper hook cleanup completed', {
+                sentryLogInfo(componentName, 'SentryHelper hook cleanup completed', {
                     componentName,
                     timestamp: Date.now()
                 });
@@ -84,15 +96,15 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
     // Logging methods
     const logError = useCallback((error: Error | string, context?: Record<string, any>) => {
-        sentryHelper.logError(componentName, error, context);
+        sentryLogError(componentName, error, context);
     }, [componentName]);
 
     const logWarning = useCallback((warning: string, context?: Record<string, any>) => {
-        sentryHelper.logWarning(componentName, warning, context);
+        sentryLogWarning(componentName, warning, context);
     }, [componentName]);
 
     const logInfo = useCallback((info: string, context?: Record<string, any>) => {
-        sentryHelper.logInfo(componentName, info, context);
+        sentryLogInfo(componentName, info, context);
     }, [componentName]);
 
     // Workflow tracking
@@ -101,17 +113,17 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
             try {
                 const workflowId = `${componentName}_${workflowName}_${Date.now()}`;
 
-                sentryHelper.logInfo(componentName, 'Starting workflow', {
+                sentryLogInfo(componentName, 'Starting workflow', {
                     workflowId,
                     workflowName,
                     metadata,
                     timestamp: Date.now()
                 });
 
-                sentryHelper.startWorkflow(workflowId, workflowName, componentName, metadata);
+                startWorkflow(workflowId, workflowName, componentName, metadata);
                 activeWorkflows.current.add(workflowId);
 
-                sentryHelper.logInfo(componentName, 'Workflow started successfully', {
+                sentryLogInfo(componentName, 'Workflow started successfully', {
                     workflowId,
                     workflowName,
                     activeWorkflowsCount: activeWorkflows.current.size,
@@ -126,14 +138,14 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
         update: useCallback((workflowId: string, state: WorkflowState, metadata?: Record<string, any>) => {
             try {
-                sentryHelper.logInfo(componentName, 'Updating workflow', {
+                sentryLogInfo(componentName, 'Updating workflow', {
                     workflowId,
                     state,
                     metadata,
                     timestamp: Date.now()
                 });
 
-                sentryHelper.updateWorkflow(workflowId, state, metadata);
+                updateWorkflow(workflowId, state, metadata);
             } catch (error) {
                 // Silent fail
             }
@@ -141,17 +153,17 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
         complete: useCallback((workflowId: string, success = true, metadata?: Record<string, any>) => {
             try {
-                sentryHelper.logInfo(componentName, 'Completing workflow', {
+                sentryLogInfo(componentName, 'Completing workflow', {
                     workflowId,
                     success,
                     metadata,
                     timestamp: Date.now()
                 });
 
-                sentryHelper.completeWorkflow(workflowId, success, metadata);
+                completeWorkflow(workflowId, success, metadata);
                 activeWorkflows.current.delete(workflowId);
 
-                sentryHelper.logInfo(componentName, 'Workflow completed successfully', {
+                sentryLogInfo(componentName, 'Workflow completed successfully', {
                     workflowId,
                     success,
                     activeWorkflowsCount: activeWorkflows.current.size,
@@ -166,7 +178,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
             const workflowId = workflowTracker.start(operationName);
 
             try {
-                sentryHelper.logInfo(componentName, 'Tracking operation', {
+                sentryLogInfo(componentName, 'Tracking operation', {
                     workflowId,
                     operationName,
                     timestamp: Date.now()
@@ -178,7 +190,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
                 return result;
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                sentryHelper.logError(componentName, `Operation failed: ${errorMessage}`, {
+                sentryLogError(componentName, `Operation failed: ${errorMessage}`, {
                     workflowId,
                     operationName,
                     error,
@@ -197,19 +209,19 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
     // Performance tracking
     const trackPerformance = useCallback(async <T>(operationName: string, operation: () => Promise<T> | T): Promise<T> => {
         try {
-            sentryHelper.logInfo(componentName, 'Starting performance tracking', {
+            sentryLogInfo(componentName, 'Starting performance tracking', {
                 operationName,
                 timestamp: Date.now()
             });
 
-            const result = await sentryHelper.trackPerformance(componentName, operationName, operation);
+            const result = await sentryTrackPerformance(componentName, operationName, operation);
 
-            sentryHelper.logInfo(componentName, 'Performance tracking completed', {
+            sentryLogInfo(componentName, 'Performance tracking completed', {
                 operationName,
                 timestamp: Date.now()
             });
 
-            return result;
+            return result as T;
         } catch (error) {
             // Fallback to direct operation execution
             return await operation();
@@ -223,7 +235,7 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
 
     const getConfig = useCallback(() => {
         try {
-            sentryHelper.logInfo(componentName, 'Getting component configuration', {
+            sentryLogInfo(componentName, 'Getting component configuration', {
                 componentName,
                 timestamp: Date.now()
             });
@@ -253,6 +265,9 @@ export const useSentryHelper = (options: UseSentryHelperOptions) => {
         // Workflow tracking
         workflow: workflowTracker,
 
+        // Performance tracking
+        trackPerformance,
+
         // Utility methods
         isLoggingEnabled,
         getConfig,
@@ -273,7 +288,7 @@ export const useSimpleSentry = (componentName: string, logLevel?: SentryLogLevel
     });
 
     try {
-        sentryHelper.logInfo(componentName, 'Initializing simple Sentry hook', {
+        sentryLogInfo(componentName, 'Initializing simple Sentry hook', {
             componentName,
             logLevel,
             timestamp: Date.now()
@@ -283,12 +298,15 @@ export const useSimpleSentry = (componentName: string, logLevel?: SentryLogLevel
     } catch (error) {
         // Return a minimal implementation
         return {
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            logError: (error: Error | string, context?: Record<string, any>) => { },
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            logWarning: (warning: string, context?: Record<string, any>) => { },
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            logInfo: (info: string, context?: Record<string, any>) => { },
+            logError: (error: Error | string, context?: Record<string, any>) => {
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+            },
+            logWarning: (warning: string, context?: Record<string, any>) => {
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+            },
+            logInfo: (info: string, context?: Record<string, any>) => {
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+            },
             workflow: {
                 start: () => 'error_workflow',
                 update: () => { /* no-op */ },
@@ -312,7 +330,7 @@ export const useWorkflowSentry = (componentName: string, options?: Partial<UseSe
     });
 
     try {
-        sentryHelper.logInfo(componentName, 'Initializing workflow Sentry hook', {
+        sentryLogInfo(componentName, 'Initializing workflow Sentry hook', {
             componentName,
             options,
             timestamp: Date.now()
@@ -322,9 +340,15 @@ export const useWorkflowSentry = (componentName: string, options?: Partial<UseSe
     } catch (error) {
         // Return a minimal implementation
         return {
-            logError: (error: Error | string, context?: Record<string, any>) => { },
-            logWarning: (warning: string, context?: Record<string, any>) => { },
-            logInfo: (info: string, context?: Record<string, any>) => { },
+            logError: (error: Error | string, context?: Record<string, any>) => {
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+            },
+            logWarning: (warning: string, context?: Record<string, any>) => {
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+            },
+            logInfo: (info: string, context?: Record<string, any>) => {
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+            },
             workflow: {
                 start: () => 'error_workflow',
                 update: () => { /* no-op */ },

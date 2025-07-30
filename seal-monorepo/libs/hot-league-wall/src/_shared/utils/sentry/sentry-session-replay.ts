@@ -244,7 +244,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     if (isDevelopment) {
         // Development: Session Replay only for error/fatal levels
         return {
-            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056',
             environment: 'development',
             release: `hot-league-wall@${process.env.npm_package_version || 'dev'}`,
             debug: localStorageConfig.debugMode || true,
@@ -257,7 +257,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     } else if (isProduction) {
         // Production: Session Replay only for error/fatal levels
         return {
-            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056',
             environment: 'production',
             release: `hot-league-wall@${process.env.npm_package_version || 'prod'}`,
             debug: localStorageConfig.debugMode || false,
@@ -270,7 +270,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     } else if (isTest) {
         // Test: Session Replay disabled to avoid noise
         return {
-            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056',
             environment: 'test',
             release: `hot-league-wall@${process.env.npm_package_version || 'test'}`,
             debug: false,
@@ -283,7 +283,7 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     } else {
         // Default: Session Replay only for error/fatal levels
         return {
-            dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
+            dsn: appSettingsWithSentry.sentryDsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056',
             environment: 'unknown',
             release: `hot-league-wall@${process.env.npm_package_version || 'unknown'}`,
             debug: localStorageConfig.debugMode || false,

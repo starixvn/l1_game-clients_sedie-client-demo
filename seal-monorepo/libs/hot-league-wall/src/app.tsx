@@ -12,6 +12,7 @@ import { SentryLogLevel } from './_shared/utils/sentry/sentry-types';
 import { initializeSentryForProject, configureSentryForEnvironment } from './_shared/utils/sentry/sentry-config';
 import { initializeSentryWithSessionReplay, configureSessionReplayForEnvironment } from './_shared/utils/sentry/sentry-session-replay';
 import { useSessionReplay } from './_shared/hooks/useSessionReplay';
+import { appSettingsWithSentry } from './_shared/app-settings';
 
 interface AppProps {
     appEnv: string;
@@ -31,15 +32,29 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToke
     React.useEffect(() => {
         const environment = process.env.NODE_ENV || 'development';
 
-        // Configure SentryHelper based on environment
-        configureSentryForEnvironment(environment);
+        try {
+            console.log('Initializing Sentry with environment:', environment);
+            console.log('App settings loaded:', {
+                sentryDsn: appSettingsWithSentry.sentryDsn,
+                sentryEnvironment: appSettingsWithSentry.sentryEnvironment,
+                environment
+            });
 
-        // Initialize project-specific configuration
-        initializeSentryForProject();
+            // Configure SentryHelper based on environment
+            configureSentryForEnvironment(environment);
 
-        // Initialize Sentry with Session Replay
-        const sessionReplayConfig = configureSessionReplayForEnvironment(environment);
-        initializeSentryWithSessionReplay(sessionReplayConfig);
+            // Initialize project-specific configuration
+            initializeSentryForProject();
+
+            // Initialize Sentry with Session Replay
+            const sessionReplayConfig = configureSessionReplayForEnvironment(environment);
+            console.log('Session replay config:', sessionReplayConfig);
+            initializeSentryWithSessionReplay(sessionReplayConfig);
+
+            console.log('Sentry initialization completed successfully');
+        } catch (error) {
+            console.error('Failed to initialize Sentry:', error);
+        }
     }, []);
 
     return (

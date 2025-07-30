@@ -6,7 +6,13 @@ import 'reflect-metadata';
 import { getSiteConfig, appSettings } from '../../_shared/app-settings';
 import { Lobby } from '../../_shared/states';
 import { LobbyStore } from '../../_shared/states/lobby';
-import { sentryHelper } from '../../_shared/utils/sentry/sentry-helper';
+import {
+    logInfo,
+    logError,
+    logWarning,
+    logDebug,
+    logTrace
+} from '../../_shared/utils/sentry/sentry-helper';
 
 interface Languages {
     [key: string]: any;
@@ -21,14 +27,14 @@ declare global {
 function getSharedContainer(siteConfigs: gc.Configs.SiteConfigs) {
     const componentName = 'GameBaseStartup';
 
-    sentryHelper.logInfo(componentName, 'Creating shared container', {
+    logInfo(componentName, 'Creating shared container', {
         siteConfigs: Object.keys(siteConfigs),
         timestamp: Date.now()
     });
 
     const containerOptions: gc.IContainerOptions = {
         onContainerCreated: (container) => {
-            sentryHelper.logInfo(componentName, 'Container created callback executed', {
+            logInfo(componentName, 'Container created callback executed', {
                 timestamp: Date.now()
             });
             container.bind(gc.Configs.SiteConfigs).toConstantValue(siteConfigs);
@@ -48,7 +54,7 @@ function getSharedContainer(siteConfigs: gc.Configs.SiteConfigs) {
         features: [...gc.defaultFeatures, Lobby],
     };
 
-    sentryHelper.logInfo(componentName, 'Shared container options configured', {
+    logInfo(componentName, 'Shared container options configured', {
         enabledFeatures: containerOptions.enabledFeatures,
         featuresCount: containerOptions.features?.length || 0,
         timestamp: Date.now()
@@ -56,7 +62,7 @@ function getSharedContainer(siteConfigs: gc.Configs.SiteConfigs) {
 
     const container = gc.getContainer(containerOptions);
 
-    sentryHelper.logInfo(componentName, 'Shared container created successfully', {
+    logInfo(componentName, 'Shared container created successfully', {
         timestamp: Date.now()
     });
 
@@ -67,14 +73,14 @@ export const sharedContainer = (() => {
     try {
         const componentName = 'GameBaseStartup';
 
-        sentryHelper.logInfo(componentName, 'Initializing shared container', {
+        logInfo(componentName, 'Initializing shared container', {
             defaultGameId: appSettings.defaultGameId,
             timestamp: Date.now()
         });
 
         if (!appSettings.defaultGameId) {
             const error = 'defaultGameId is not defined in appSettings';
-            sentryHelper.logError(componentName, error, {
+            logError(componentName, error, {
                 appSettingsKeys: Object.keys(appSettings),
                 timestamp: Date.now()
             });
@@ -84,14 +90,14 @@ export const sharedContainer = (() => {
         const siteConfig = getSiteConfig(appSettings.defaultGameId);
         const container = getSharedContainer(siteConfig);
 
-        sentryHelper.logInfo(componentName, 'Shared container initialization completed', {
+        logInfo(componentName, 'Shared container initialization completed', {
             defaultGameId: appSettings.defaultGameId,
             timestamp: Date.now()
         });
 
         return container;
     } catch (error) {
-        sentryHelper.logError('GameBaseStartup', 'Failed to initialize shared container', {
+        logError('GameBaseStartup', 'Failed to initialize shared container', {
             error: error instanceof Error ? error.message : String(error),
             timestamp: Date.now()
         });
@@ -118,7 +124,7 @@ export const sharedContainer = (() => {
 
 // Make the shared container available globally for external access
 if (typeof window !== 'undefined') {
-    sentryHelper.logInfo('GameBaseStartup', 'Making shared container available globally', {
+    logInfo('GameBaseStartup', 'Making shared container available globally', {
         timestamp: Date.now()
     });
     (window as any).hot_league_wall_shared_container = sharedContainer;
@@ -127,14 +133,14 @@ if (typeof window !== 'undefined') {
 export function configSharedContainer() {
     const componentName = 'GameBaseStartup';
 
-    sentryHelper.logInfo(componentName, 'Configuring shared container', {
+    logInfo(componentName, 'Configuring shared container', {
         timestamp: Date.now()
     });
 
     Observer.configure({ default: { mobx, container: gc.buildObserverContainer(sharedContainer) } });
     Observer.configure({ default: { mobx, container: gc.buildObserverContainer(sharedContainer) } });
 
-    sentryHelper.logInfo(componentName, 'Shared container configured successfully', {
+    logInfo(componentName, 'Shared container configured successfully', {
         timestamp: Date.now()
     });
 
@@ -144,7 +150,7 @@ export function configSharedContainer() {
 export function configGameContainer(gameName: string, containerOptions: gc.IContainerOptions) {
     const componentName = 'GameBaseStartup';
 
-    sentryHelper.logInfo(componentName, 'Configuring game container', {
+    logInfo(componentName, 'Configuring game container', {
         gameName,
         containerOptions: Object.keys(containerOptions),
         timestamp: Date.now()
@@ -159,7 +165,7 @@ export function configGameContainer(gameName: string, containerOptions: gc.ICont
 
     Observer.configure({ [gameName]: { mobx: { reaction }, container: observerContainer } });
 
-    sentryHelper.logInfo(componentName, 'Game container configured successfully', {
+    logInfo(componentName, 'Game container configured successfully', {
         gameName,
         timestamp: Date.now()
     });

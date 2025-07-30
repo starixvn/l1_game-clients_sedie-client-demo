@@ -64,6 +64,24 @@ export const clearLocalStorageConfig = () => {
     }
 };
 
+/**
+ * Get component-specific logging configuration from localStorage
+ */
+const getComponentLocalStorageConfig = (componentName: string) => {
+    try {
+        const logLevel = localStorage.getItem(`sentry_log_level_${componentName}`) || null;
+        const enabled = localStorage.getItem(`hot-league-wall-debug-enabled_${componentName}`);
+
+        return {
+            logLevel,
+            enabled: enabled === null ? null : enabled === 'true'
+        };
+    } catch (error) {
+        console.warn('Failed to read component localStorage config:', error);
+        return { logLevel: null, enabled: null };
+    }
+};
+
 // Standard Sentry log levels as per Sentry documentation
 export { SentryLogLevel, WorkflowState };
 
@@ -109,13 +127,27 @@ class SentryManager {
     }
 
     initialize(config: SentryManagerConfig): void {
-        if (this.isInitialized) {
-            console.warn('SentryManager already initialized');
+        const localStorageConfig = getLocalStorageConfig();
+
+        // Allow re-initialization if component name is different
+        if (this.isInitialized && this.componentName === config.componentName) {
+            console.log(`SentryManager already initialized for component: ${this.componentName}`);
             return;
         }
 
-        const localStorageConfig = getLocalStorageConfig();
+        // If already initialized with a different component, log the change
+        if (this.isInitialized && this.componentName !== config.componentName) {
+            console.log(`Re-initializing SentryManager from component: ${this.componentName} to: ${config.componentName}`);
+        }
+
         this.componentName = config.componentName;
+
+        console.log(`Initializing SentryManager for component: ${this.componentName}`, {
+            dsn: config.dsn,
+            environment: config.environment,
+            debug: config.debug,
+            localStorageConfig
+        });
 
         // Initialize the global Sentry configuration
         try {
@@ -124,16 +156,27 @@ class SentryManager {
                 dsn: config.dsn,
                 environment: config.environment,
                 release: config.release,
-                debug: config.debug,
+                debug: config.debug || false,
                 tracesSampleRate: 1.0, // Sample rate for performance tracing
                 beforeSend: (event, hint) => {
-                    // Filter out errors that are not component-specific
-                    if (hint && hint.originalException) {
-                        const error = hint.originalException;
-                        if (this.errorFilter(error)) {
-                            return null; // Drop the event
-                        }
-                    }
+                    // Allow all errors through for now - we can add filtering later if needed
+                    // The errorFilter logic was too restrictive and was blocking legitimate errors
+                    console.log('Sentry beforeSend called:', {
+                        eventType: event.type,
+                        eventLevel: event.level,
+                        hasException: !!hint?.originalException,
+                        exceptionMessage: hint?.originalException && typeof hint.originalException === 'object' && 'message' in hint.originalException
+                            ? (hint.originalException as any).message
+                            : 'No message'
+                    });
+
+                    // Add component context to all events
+                    event.tags = {
+                        ...event.tags,
+                        component: this.componentName,
+                        source: 'SentryManager'
+                    };
+
                     return event;
                 }
             });
@@ -143,10 +186,7 @@ class SentryManager {
             Sentry.setTag('component', this.componentName);
             Sentry.setUser({ id: this.componentName }); // Assuming component name is user ID
 
-            // Start Sentry with the provided configuration
-            // Note: We need to call the start method from the sg-game-client logger
-            // This will be handled by the global SentryLogger instance
-            this.startSentry(config);
+            console.log(`Sentry initialized successfully for component: ${this.componentName}`);
 
         } catch (error) {
             console.error('Failed to initialize Sentry:', error);
@@ -162,19 +202,7 @@ class SentryManager {
         }
 
         this.isInitialized = true;
-        console.log(`Sentry initialized for component: ${this.componentName} with localStorage config:`, localStorageConfig);
-    }
-
-    private startSentry(config: SentryManagerConfig): void {
-        // This method will be called by the global SentryLogger
-        // We need to ensure the SentryLogger is properly initialized
-        try {
-            // The SentryLogger.start method should be called from the global instance
-            // This is handled by the sg-game-client logger
-            console.log(`Sentry starting for component: ${this.componentName}`);
-        } catch (error) {
-            console.error('Failed to start Sentry:', error);
-        }
+        console.log(`SentryManager initialized for component: ${this.componentName} with localStorage config:`, localStorageConfig);
     }
 
     private setupErrorFiltering(): void {
@@ -639,14 +667,26 @@ class SentryManager {
 
     isLoggingEnabled(level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'): boolean {
         const localStorageConfig = getLocalStorageConfig();
+        const componentLocalStorage = getComponentLocalStorageConfig(this.componentName);
 
-        // Check if Sentry is enabled globally and in localStorage
+        // Check global enabled state
         if (!this.globalConfig.enabled || !localStorageConfig.enabled) {
             return false;
         }
 
-        // Get the current log level from localStorage
-        const currentLogLevel = getLogLevelFromString(localStorageConfig.logLevel);
+        // Check component-specific enabled state
+        if (componentLocalStorage.enabled === false) {
+            return false;
+        }
+
+        // Get component configuration
+        const componentConfig = this.getComponentConfig();
+
+        // Priority: component localStorage > component config > global localStorage > default
+        const logLevel = componentLocalStorage.logLevel ||
+            componentConfig?.logLevel ||
+            getLogLevelFromString(localStorageConfig.logLevel) ||
+            this.globalConfig.defaultLogLevel;
 
         // Define level hierarchy (higher number = more important)
         const levelHierarchy = {
@@ -660,7 +700,7 @@ class SentryManager {
 
         const currentLevel = levelHierarchy[level];
 
-        switch (currentLogLevel) {
+        switch (logLevel) {
             case SentryLogLevel.DISABLED:
                 return false;
             case SentryLogLevel.TRACE:
@@ -731,6 +771,10 @@ class SentryManager {
     // Get component name for external use
     getComponentName(): string {
         return this.componentName;
+    }
+
+    isManagerInitialized(): boolean {
+        return this.isInitialized;
     }
 
     // Cleanup all workflows
