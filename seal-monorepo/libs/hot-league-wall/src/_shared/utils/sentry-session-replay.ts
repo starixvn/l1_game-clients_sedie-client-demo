@@ -232,54 +232,63 @@ export const configureSessionReplayForEnvironment = (environment: string): Sentr
     const isProduction = environment === 'production';
     const isTest = environment === 'test';
 
+    // Session Replay should only be enabled for error/fatal levels
+    // Check if the current log level allows error/fatal logging
+    const shouldEnableSessionReplay = localStorageConfig.enabled &&
+        (localStorageConfig.logLevel === 'error' ||
+            localStorageConfig.logLevel === 'fatal'
+            // localStorageConfig.logLevel === 'warn' ||
+            //localStorageConfig.logLevel === 'all'
+        );
+
     if (isDevelopment) {
-        // Development: Full recording for debugging
+        // Development: Session Replay only for error/fatal levels
         return {
             dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'development',
             release: `hot-league-wall@${process.env.npm_package_version || 'dev'}`,
             debug: localStorageConfig.debugMode || true,
-            replaysSessionSampleRate: 1.0, // 100% for development
-            replaysOnErrorSampleRate: 1.0, // 100% for error sessions
+            replaysSessionSampleRate: shouldEnableSessionReplay ? 1.0 : 0.0, // Only enable if localStorage allows error/fatal logging
+            replaysOnErrorSampleRate: shouldEnableSessionReplay ? 1.0 : 0.0, // Only enable if localStorage allows error/fatal logging
             maskAllText: false, // Show text for debugging
             blockAllMedia: false, // Show media for debugging
             sendDefaultPii: true // Send PII for debugging
         };
     } else if (isProduction) {
-        // Production: Conservative recording for privacy, but respect localStorage settings
+        // Production: Session Replay only for error/fatal levels
         return {
             dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'production',
             release: `hot-league-wall@${process.env.npm_package_version || 'prod'}`,
             debug: localStorageConfig.debugMode || false,
-            replaysSessionSampleRate: localStorageConfig.enabled ? 0.1 : 0.0, // Respect localStorage enabled setting
-            replaysOnErrorSampleRate: 1.0, // 100% for error sessions
+            replaysSessionSampleRate: shouldEnableSessionReplay ? 0.1 : 0.0, // Only enable if localStorage allows error/fatal logging
+            replaysOnErrorSampleRate: shouldEnableSessionReplay ? 1.0 : 0.0, // Only enable if localStorage allows error/fatal logging
             maskAllText: !localStorageConfig.debugMode, // Mask text unless debug mode is enabled
             blockAllMedia: !localStorageConfig.debugMode, // Block media unless debug mode is enabled
             sendDefaultPii: localStorageConfig.debugMode // Send PII only in debug mode
         };
     } else if (isTest) {
-        // Test: Disabled to avoid noise
+        // Test: Session Replay disabled to avoid noise
         return {
             dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'test',
             release: `hot-league-wall@${process.env.npm_package_version || 'test'}`,
             debug: false,
-            replaysSessionSampleRate: 0.0, // 0% for test
-            replaysOnErrorSampleRate: 0.0, // 0% for test
+            replaysSessionSampleRate: 0.0, // Always 0% for test
+            replaysOnErrorSampleRate: 0.0, // Always 0% for test
             maskAllText: true,
             blockAllMedia: true,
             sendDefaultPii: false
         };
     } else {
-        // Default: Conservative settings
+        // Default: Session Replay only for error/fatal levels
         return {
             dsn: appSettingsWithSentry.sentryDsn || 'YOUR_DSN_HERE',
             environment: 'unknown',
             release: `hot-league-wall@${process.env.npm_package_version || 'unknown'}`,
             debug: localStorageConfig.debugMode || false,
-            replaysSessionSampleRate: localStorageConfig.enabled ? 0.05 : 0.0, // 5% for unknown environment
-            replaysOnErrorSampleRate: 1.0, // 100% for error sessions
+            replaysSessionSampleRate: shouldEnableSessionReplay ? 0.05 : 0.0, // Only enable if localStorage allows error/fatal logging
+            replaysOnErrorSampleRate: shouldEnableSessionReplay ? 1.0 : 0.0, // Only enable if localStorage allows error/fatal logging
             maskAllText: !localStorageConfig.debugMode,
             blockAllMedia: !localStorageConfig.debugMode,
             sendDefaultPii: localStorageConfig.debugMode
