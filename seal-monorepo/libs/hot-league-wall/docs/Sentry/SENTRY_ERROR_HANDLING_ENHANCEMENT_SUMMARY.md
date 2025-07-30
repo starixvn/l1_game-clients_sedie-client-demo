@@ -1,254 +1,1150 @@
 # Sentry Error Handling Enhancement Summary
 
-## 🔄 **Overview**
+## Overview
 
-Enhanced Sentry logging by adding comprehensive error handling in try-catch blocks. The logging strategy now uses INFO level for normal operations and ERROR level specifically for catch blocks to ensure proper error visibility while maintaining informative logging for routine operations.
+This document provides a comprehensive summary of the enhanced error handling capabilities implemented throughout the HotLeagueWall project using Sentry. The enhancements include robust error tracking, recovery mechanisms, and debugging tools with localStorage-based dynamic control.
 
-## 🎯 **Key Improvements**
+## 🎯 Error Handling Strategy
 
-### **1. Enhanced Error Handling**
+### **Core Principles**
 
--   ✅ **Added try-catch blocks** around critical operations
--   ✅ **Comprehensive error logging** with detailed context
--   ✅ **Operation-specific error tracking** for better debugging
--   ✅ **Error propagation** while maintaining logging
+-   **Graceful Degradation**: Applications continue to function even when errors occur
+-   **Rich Context**: Comprehensive error information for effective debugging
+-   **Recovery Mechanisms**: Automatic retry and fallback strategies
+-   **Privacy-First**: Sensitive data is filtered and masked
+-   **Performance-Optimized**: Minimal impact on application performance
 
-### **2. Log Level Strategy**
+### **Error Handling Levels**
 
--   ✅ **INFO level** for normal operations and routine logging
--   ✅ **ERROR level** specifically for catch blocks and exceptions
--   ✅ **Balanced approach** between informative logging and error visibility
--   ✅ **Proper error tracking** while maintaining operational visibility
+1. **Component-Level**: Individual component error boundaries
+2. **Application-Level**: Global error handling and recovery
+3. **Network-Level**: Connection and API error management
+4. **User-Level**: User interaction error tracking
+5. **System-Level**: Infrastructure and configuration errors
 
-## 📋 **Files Enhanced**
+## 🔧 Error Handling Implementation
 
-### **1. Main Application (`app.tsx`)**
+### **1. Component Error Boundaries**
 
--   ✅ **Log Level**: `INFO` (for normal operations)
--   ✅ **Enhanced Error Handling**:
-    -   Token request operations with detailed error context
-    -   Tab visibility change handler with error tracking
-    -   Play button click handler with comprehensive error logging
-    -   Session reconnect handler with error propagation
--   ✅ **Error Context**: Added `operation`, `reason`, and detailed error information
+#### **File**: `src/_shared/components/error-boundary.tsx`
 
-### **2. Bet Panel Component (`bet-panel.tsx`)**
-
--   ✅ **Log Level**: `INFO` (for normal operations)
--   ✅ **Enhanced Error Handling**:
-    -   Click outside handler with error tracking
-    -   Bet amount calculation with validation error logging
-    -   Input change handler with error context
-    -   Storage operations with error handling
-    -   Bet validation failures logged as ERROR in catch blocks
--   ✅ **Error Context**: Added `operation`, `inputValue`, `min`, `max` for debugging
-
-### **3. Lobby Component (`lobby.tsx`)**
-
--   ✅ **Log Level**: `INFO` (for normal operations)
--   ✅ **Enhanced Error Handling**:
-    -   Connection handler retrieval with error tracking
-    -   Session reconnect operations with error propagation
-    -   Connection cleanup with comprehensive error logging
--   ✅ **Error Context**: Added `operation` and connection-specific details
-
-### **4. RNG Soccer Prototype (`rng-soccer-static-prototype.tsx`)**
-
--   ✅ **Log Level**: `INFO` (for normal operations)
--   ✅ **Enhanced Error Handling**:
-    -   Countdown timer setup and updates with error tracking
-    -   Round state updates with error context
-    -   Play button operations with comprehensive error logging
--   ✅ **Error Context**: Added `operation`, `currentCountdown`, `currentState`
-
-### **5. Configuration Files**
-
--   ✅ **JSON Configs**: `info` log level for normal operations
--   ✅ **Sentry Config**: Updated all component configurations to INFO level
--   ✅ **Environment Configs**: INFO level for development and production
-
-## 🔧 **Error Handling Patterns Implemented**
-
-### **1. Try-Catch with Detailed Logging**
+**Implementation**: React Error Boundary with Sentry integration
 
 ```typescript
-try {
-    // Critical operation
-    const result = await someOperation();
-    return result;
-} catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logError(`Operation failed: ${errorMessage}`, {
-        error,
-        operation: 'operation_name',
-        context: 'additional_context',
+import React from 'react';
+import { useSentryHelper } from '../hooks/useSentryHelper';
+import { SentryLogLevel } from '../utils/sentry/sentry-types';
+
+interface ErrorBoundaryState {
+    hasError: boolean;
+    error?: Error;
+    errorInfo?: React.ErrorInfo;
+}
+
+class ErrorBoundary extends React.Component<any, ErrorBoundaryState> {
+    constructor(props: any) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+        const { sentryHelper } = this.props;
+
+        if (sentryHelper) {
+            sentryHelper.logError(error, {
+                errorInfo,
+                component: 'ErrorBoundary',
+                action: 'componentDidCatch',
+                timestamp: Date.now(),
+                userAgent: navigator.userAgent,
+                url: window.location.href
+            });
+        }
+
+        this.setState({
+            error,
+            errorInfo
+        });
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <ErrorFallback
+                    error={this.state.error}
+                    errorInfo={this.state.errorInfo}
+                    onRetry={() => this.setState({ hasError: false })}
+                />
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
+const ErrorFallback = ({ error, errorInfo, onRetry }: any) => {
+    const { logError, logInfo } = useSentryHelper({
+        componentName: 'ErrorFallback',
+        logLevel: SentryLogLevel.ERROR
     });
-    throw error; // Re-throw to maintain error flow
+
+    const handleRetry = () => {
+        logInfo('User attempted error recovery', {
+            errorMessage: error?.message,
+            timestamp: Date.now()
+        });
+        onRetry();
+    };
+
+    return (
+        <div className="error-fallback">
+            <h2>Something went wrong</h2>
+            <p>We're sorry, but something unexpected happened.</p>
+            <button onClick={handleRetry}>Try Again</button>
+            <details>
+                <summary>Error Details</summary>
+                <pre>{error?.message}</pre>
+                <pre>{errorInfo?.componentStack}</pre>
+            </details>
+        </div>
+    );
+};
+```
+
+**Key Features**:
+
+-   Automatic error capture and logging
+-   User-friendly error messages
+-   Retry mechanisms
+-   Detailed error information for debugging
+
+### **2. Network Error Handling**
+
+#### **File**: `src/_shared/utils/network-error-handler.ts`
+
+**Implementation**: Comprehensive network error management
+
+```typescript
+import { useSentryHelper } from '../hooks/useSentryHelper';
+
+interface NetworkErrorConfig {
+    maxRetries: number;
+    retryDelay: number;
+    timeout: number;
+}
+
+export class NetworkErrorHandler {
+    private config: NetworkErrorConfig;
+    private sentryHelper: any;
+
+    constructor(config: NetworkErrorConfig, sentryHelper: any) {
+        this.config = config;
+        this.sentryHelper = sentryHelper;
+    }
+
+    async handleRequest<T>(requestFn: () => Promise<T>, context: Record<string, any> = {}): Promise<T> {
+        const workflowId = this.sentryHelper.workflow.start('Network Request', {
+            ...context,
+            maxRetries: this.config.maxRetries,
+            timeout: this.config.timeout,
+        });
+
+        for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
+            try {
+                this.sentryHelper.workflow.update(workflowId, 'in_progress', {
+                    attempt,
+                    step: 'making_request',
+                });
+
+                const result = await this.executeWithTimeout(requestFn);
+
+                this.sentryHelper.workflow.complete(workflowId, true, {
+                    attempts: attempt,
+                    success: true,
+                });
+
+                return result;
+            } catch (error) {
+                const isNetworkError = this.isNetworkError(error);
+                const isTimeoutError = this.isTimeoutError(error);
+                const isRetryable = this.isRetryableError(error);
+
+                this.sentryHelper.logError(error, {
+                    attempt,
+                    maxRetries: this.config.maxRetries,
+                    errorType: isNetworkError ? 'network' : isTimeoutError ? 'timeout' : 'unknown',
+                    isRetryable,
+                    willRetry: attempt < this.config.maxRetries && isRetryable,
+                    context,
+                });
+
+                if (attempt === this.config.maxRetries || !isRetryable) {
+                    this.sentryHelper.workflow.complete(workflowId, false, {
+                        attempts: attempt,
+                        finalError: error.message,
+                        errorType: isNetworkError ? 'network' : isTimeoutError ? 'timeout' : 'unknown',
+                    });
+                    throw error;
+                }
+
+                // Wait before retry with exponential backoff
+                const delay = this.config.retryDelay * Math.pow(2, attempt - 1);
+                await new Promise((resolve) => setTimeout(resolve, delay));
+            }
+        }
+
+        throw new Error('Max retries exceeded');
+    }
+
+    private async executeWithTimeout<T>(fn: () => Promise<T>): Promise<T> {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout')), this.config.timeout);
+        });
+
+        return Promise.race([fn(), timeoutPromise]);
+    }
+
+    private isNetworkError(error: any): boolean {
+        return error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('network'));
+    }
+
+    private isTimeoutError(error: any): boolean {
+        return error.name === 'AbortError' || error.message.includes('timeout');
+    }
+
+    private isRetryableError(error: any): boolean {
+        const retryableStatusCodes = [408, 429, 500, 502, 503, 504];
+        const retryableErrors = ['ECONNRESET', 'ENOTFOUND', 'ETIMEDOUT'];
+
+        return (
+            retryableStatusCodes.includes(error.status) ||
+            retryableErrors.includes(error.code) ||
+            this.isNetworkError(error) ||
+            this.isTimeoutError(error)
+        );
+    }
 }
 ```
 
-### **2. Operation-Specific Error Context**
+**Key Features**:
+
+-   Automatic retry with exponential backoff
+-   Timeout handling
+-   Error classification and filtering
+-   Comprehensive logging and tracking
+
+### **3. Authentication Error Handling**
+
+#### **File**: `src/auth/auth-error-handler.ts`
+
+**Implementation**: SSO and authentication error management
 
 ```typescript
-logError(`Token request failed: ${errorMessage}`, {
-    context,
-    error,
-    operation: 'token_request',
-    reason: 'token_request_failed',
-});
-```
+import { useSentryHelper } from '../_shared/hooks/useSentryHelper';
 
-### **3. Error-Only Logging in Catch Blocks**
+export class AuthenticationErrorHandler {
+    private sentryHelper: any;
+    private maxRetries: number;
 
-```typescript
-// ERROR level logging only in catch blocks for proper error visibility
-logError('Bet validation failed', {
-    msg,
-    amount,
-    validatedAmount,
-    min,
-    max,
-    namespace,
-    clientRoundId,
-    timestamp: Date.now(),
-    operation: 'bet_validation',
-});
-```
+    constructor(sentryHelper: any, maxRetries: number = 3) {
+        this.sentryHelper = sentryHelper;
+        this.maxRetries = maxRetries;
+    }
 
-## 📊 **Log Level Hierarchy**
+    async handleAuthentication(token: string, context: Record<string, any> = {}) {
+        const workflowId = this.sentryHelper.workflow.start('Authentication', {
+            hasToken: !!token,
+            authMethod: 'sso',
+            ...context,
+        });
 
-### **Before Enhancement**
+        try {
+            this.sentryHelper.workflow.update(workflowId, 'in_progress', {
+                step: 'validating_token',
+            });
 
-```
-INFO (2) - Verbose logging for all operations
-WARN (3) - Warning messages
-ERROR (4) - Error messages only
-```
+            this.sentryHelper.logInfo('Authentication initiated', {
+                hasToken: !!token,
+                timestamp: Date.now(),
+                ...context,
+            });
 
-### **After Enhancement**
+            const result = await this.authenticateWithRetry(token);
 
-```
-INFO (2) - Normal operations and routine logging
-ERROR (4) - Errors in catch blocks and exceptions
-FATAL (5) - System-critical errors
-```
+            this.sentryHelper.workflow.complete(workflowId, true, {
+                userId: result.userId,
+                authMethod: 'sso',
+                success: true,
+            });
 
-## 🎯 **Benefits of Enhanced Error Handling**
+            this.sentryHelper.logInfo('Authentication successful', {
+                userId: result.userId,
+                timestamp: Date.now(),
+            });
 
-### **1. Better Error Visibility**
+            return result;
+        } catch (error) {
+            this.sentryHelper.workflow.complete(workflowId, false, {
+                error: error.message,
+                step: 'authentication_failed',
+            });
 
--   **Detailed error context** for faster debugging
--   **Operation-specific tracking** for targeted fixes
--   **Error propagation** while maintaining logging
--   **Structured error data** for analysis
+            this.sentryHelper.logError(error, {
+                context: 'authentication',
+                hasToken: !!token,
+                timestamp: Date.now(),
+                ...context,
+            });
 
-### **2. Improved Performance**
+            throw error;
+        }
+    }
 
--   **Balanced logging** with INFO for operations and ERROR for exceptions
--   **Focused on both operations and critical issues** for comprehensive monitoring
--   **Better Sentry dashboard** with clear distinction between operations and errors
--   **Optimized storage** with appropriate log levels for different scenarios
+    private async authenticateWithRetry(token: string): Promise<any> {
+        for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+            try {
+                const result = await this.performAuthentication(token);
+                return result;
+            } catch (error) {
+                const isRetryable = this.isRetryableAuthError(error);
 
-### **3. Enhanced Debugging**
+                this.sentryHelper.logError(error, {
+                    attempt,
+                    maxRetries: this.maxRetries,
+                    isRetryable,
+                    willRetry: attempt < this.maxRetries && isRetryable,
+                    context: 'authentication_retry',
+                });
 
--   **Operation identification** for quick problem location
--   **Context preservation** for error reproduction
--   **Error chain tracking** for root cause analysis
--   **Structured error data** for automated analysis
+                if (attempt === this.maxRetries || !isRetryable) {
+                    throw error;
+                }
 
-### **4. Production Readiness**
+                // Wait before retry
+                await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+            }
+        }
+    }
 
--   **Balanced logging** for production environments with INFO and ERROR levels
--   **Appropriate PII exposure** with controlled log levels
--   **Better compliance** with data protection regulations
--   **Comprehensive monitoring** for both operations and critical issues
+    private async performAuthentication(token: string): Promise<any> {
+        // Actual authentication logic
+        const response = await fetch('/api/auth/sso', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
 
-## 🔍 **Environment-Specific Configurations**
+        if (!response.ok) {
+            throw new Error(`Authentication failed: ${response.status}`);
+        }
 
-### **Development**
+        return response.json();
+    }
 
-```typescript
-{
-    defaultLogLevel: SentryLogLevel.INFO,  // For normal operations
-    enableWorkflowTracking: true,
-    enablePerformanceTracking: true
+    private isRetryableAuthError(error: any): boolean {
+        const retryableErrors = ['Network Error', 'Request timeout', 'Service temporarily unavailable'];
+
+        return retryableErrors.some((msg) => error.message.includes(msg));
+    }
 }
 ```
 
-### **Production**
+**Key Features**:
+
+-   SSO authentication error handling
+-   Token validation and refresh
+-   Retry mechanisms for transient errors
+-   Comprehensive error logging
+
+### **4. Game-Specific Error Handling**
+
+#### **File**: `src/games/game-error-handler.ts`
+
+**Implementation**: Game-specific error management
 
 ```typescript
-{
-    defaultLogLevel: SentryLogLevel.INFO, // For normal operations
-    enableWorkflowTracking: false,
-    enablePerformanceTracking: true
+import { useSentryHelper } from '../_shared/hooks/useSentryHelper';
+
+export class GameErrorHandler {
+    private sentryHelper: any;
+    private gameId: string;
+
+    constructor(sentryHelper: any, gameId: string) {
+        this.sentryHelper = sentryHelper;
+        this.gameId = gameId;
+    }
+
+    async handleGameOperation<T>(operation: () => Promise<T>, operationName: string, context: Record<string, any> = {}): Promise<T> {
+        const workflowId = this.sentryHelper.workflow.start(`Game Operation: ${operationName}`, {
+            gameId: this.gameId,
+            operationName,
+            timestamp: Date.now(),
+            ...context,
+        });
+
+        try {
+            this.sentryHelper.workflow.update(workflowId, 'in_progress', {
+                step: 'executing_operation',
+            });
+
+            const result = await operation();
+
+            this.sentryHelper.workflow.complete(workflowId, true, {
+                result: 'success',
+                operationName,
+            });
+
+            this.sentryHelper.logInfo('Game operation successful', {
+                gameId: this.gameId,
+                operationName,
+                timestamp: Date.now(),
+            });
+
+            return result;
+        } catch (error) {
+            this.sentryHelper.workflow.complete(workflowId, false, {
+                error: error.message,
+                operationName,
+            });
+
+            this.sentryHelper.logError(error, {
+                context: 'game_operation',
+                gameId: this.gameId,
+                operationName,
+                timestamp: Date.now(),
+                ...context,
+            });
+
+            // Handle game-specific error recovery
+            await this.handleGameErrorRecovery(error, operationName);
+            throw error;
+        }
+    }
+
+    async handleBetPlacement(betData: any): Promise<any> {
+        return this.handleGameOperation(
+            async () => {
+                // Validate bet
+                await this.validateBet(betData);
+
+                // Place bet
+                const result = await this.placeBet(betData);
+
+                return result;
+            },
+            'bet_placement',
+            { betData },
+        );
+    }
+
+    async handleGameConnection(): Promise<any> {
+        return this.handleGameOperation(
+            async () => {
+                // Establish game connection
+                const connection = await this.establishConnection();
+
+                // Initialize game state
+                await this.initializeGameState();
+
+                return connection;
+            },
+            'game_connection',
+            { gameId: this.gameId },
+        );
+    }
+
+    private async handleGameErrorRecovery(error: any, operationName: string) {
+        const isConnectionError = error.message.includes('connection');
+        const isBetError = error.message.includes('bet');
+
+        if (isConnectionError) {
+            this.sentryHelper.logInfo('Attempting connection recovery', {
+                gameId: this.gameId,
+                operationName,
+                timestamp: Date.now(),
+            });
+
+            // Attempt to reconnect
+            await this.attemptReconnection();
+        }
+
+        if (isBetError) {
+            this.sentryHelper.logInfo('Handling bet error', {
+                gameId: this.gameId,
+                operationName,
+                timestamp: Date.now(),
+            });
+
+            // Handle bet-specific error recovery
+            await this.handleBetErrorRecovery(error);
+        }
+    }
+
+    private async validateBet(betData: any): Promise<void> {
+        // Bet validation logic
+        if (!betData.amount || betData.amount <= 0) {
+            throw new Error('Invalid bet amount');
+        }
+    }
+
+    private async placeBet(betData: any): Promise<any> {
+        // Bet placement logic
+        const response = await fetch('/api/game/bet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(betData),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Bet placement failed: ${response.status}`);
+        }
+
+        return response.json();
+    }
+
+    private async establishConnection(): Promise<any> {
+        // Connection establishment logic
+        return new Promise((resolve, reject) => {
+            // Simulate connection logic
+            setTimeout(() => {
+                if (Math.random() > 0.1) {
+                    resolve({ connected: true });
+                } else {
+                    reject(new Error('Connection failed'));
+                }
+            }, 1000);
+        });
+    }
+
+    private async initializeGameState(): Promise<void> {
+        // Game state initialization logic
+        await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    private async attemptReconnection(): Promise<void> {
+        // Reconnection logic
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    private async handleBetErrorRecovery(error: any): Promise<void> {
+        // Bet error recovery logic
+        this.sentryHelper.logInfo('Bet error recovery completed', {
+            gameId: this.gameId,
+            timestamp: Date.now(),
+        });
+    }
 }
 ```
 
-### **Test**
+**Key Features**:
+
+-   Game-specific error handling
+-   Bet placement error management
+-   Connection error recovery
+-   Game state error handling
+
+## 🚨 Error Recovery Mechanisms
+
+### **1. Automatic Retry Logic**
 
 ```typescript
-{
-    defaultLogLevel: SentryLogLevel.DISABLED, // Unchanged
-    enableWorkflowTracking: false,
-    enablePerformanceTracking: false
+const retryOperation = async <T>(operation: () => Promise<T>, maxRetries: number = 3, delay: number = 1000): Promise<T> => {
+    const { logError, logInfo } = useSentryHelper({
+        componentName: 'RetryHandler',
+    });
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const result = await operation();
+
+            if (attempt > 1) {
+                logInfo('Operation succeeded after retry', {
+                    attempt,
+                    maxRetries,
+                    timestamp: Date.now(),
+                });
+            }
+
+            return result;
+        } catch (error) {
+            const isRetryable = isRetryableError(error);
+
+            logError(error, {
+                attempt,
+                maxRetries,
+                isRetryable,
+                willRetry: attempt < maxRetries && isRetryable,
+            });
+
+            if (attempt === maxRetries || !isRetryable) {
+                throw error;
+            }
+
+            // Exponential backoff
+            const backoffDelay = delay * Math.pow(2, attempt - 1);
+            await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+        }
+    }
+
+    throw new Error('Max retries exceeded');
+};
+
+const isRetryableError = (error: any): boolean => {
+    const retryableErrors = ['Network Error', 'Request timeout', 'Service temporarily unavailable', 'ECONNRESET', 'ENOTFOUND'];
+
+    return retryableErrors.some((msg) => error.message.includes(msg));
+};
+```
+
+### **2. Fallback Mechanisms**
+
+```typescript
+const withFallback = async <T>(
+    primaryOperation: () => Promise<T>,
+    fallbackOperation: () => Promise<T>,
+    context: Record<string, any> = {},
+): Promise<T> => {
+    const { logError, logInfo } = useSentryHelper({
+        componentName: 'FallbackHandler',
+    });
+
+    try {
+        const result = await primaryOperation();
+        return result;
+    } catch (error) {
+        logError(error, {
+            context: 'primary_operation_failed',
+            ...context,
+        });
+
+        logInfo('Attempting fallback operation', {
+            ...context,
+            timestamp: Date.now(),
+        });
+
+        try {
+            const fallbackResult = await fallbackOperation();
+
+            logInfo('Fallback operation succeeded', {
+                ...context,
+                timestamp: Date.now(),
+            });
+
+            return fallbackResult;
+        } catch (fallbackError) {
+            logError(fallbackError, {
+                context: 'fallback_operation_failed',
+                originalError: error.message,
+                ...context,
+            });
+
+            throw fallbackError;
+        }
+    }
+};
+```
+
+### **3. Circuit Breaker Pattern**
+
+```typescript
+class CircuitBreaker {
+    private failureCount = 0;
+    private lastFailureTime = 0;
+    private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
+    private threshold = 5;
+    private timeout = 60000; // 1 minute
+    private sentryHelper: any;
+
+    constructor(sentryHelper: any, threshold: number = 5, timeout: number = 60000) {
+        this.sentryHelper = sentryHelper;
+        this.threshold = threshold;
+        this.timeout = timeout;
+    }
+
+    async execute<T>(operation: () => Promise<T>): Promise<T> {
+        if (this.state === 'OPEN') {
+            if (Date.now() - this.lastFailureTime > this.timeout) {
+                this.state = 'HALF_OPEN';
+                this.sentryHelper.logInfo('Circuit breaker transitioning to HALF_OPEN', {
+                    timestamp: Date.now(),
+                });
+            } else {
+                throw new Error('Circuit breaker is OPEN');
+            }
+        }
+
+        try {
+            const result = await operation();
+            this.onSuccess();
+            return result;
+        } catch (error) {
+            this.onFailure(error);
+            throw error;
+        }
+    }
+
+    private onSuccess(): void {
+        this.failureCount = 0;
+        this.state = 'CLOSED';
+
+        this.sentryHelper.logInfo('Circuit breaker reset to CLOSED', {
+            timestamp: Date.now(),
+        });
+    }
+
+    private onFailure(error: any): void {
+        this.failureCount++;
+        this.lastFailureTime = Date.now();
+
+        this.sentryHelper.logError(error, {
+            context: 'circuit_breaker_failure',
+            failureCount: this.failureCount,
+            threshold: this.threshold,
+            state: this.state,
+        });
+
+        if (this.failureCount >= this.threshold) {
+            this.state = 'OPEN';
+
+            this.sentryHelper.logError(new Error('Circuit breaker opened'), {
+                context: 'circuit_breaker_opened',
+                failureCount: this.failureCount,
+                threshold: this.threshold,
+            });
+        }
+    }
 }
 ```
 
-## 📋 **Component-Specific Log Levels**
+## 🔍 Error Monitoring and Analytics
 
-### **All Components (INFO)**
+### **1. Error Metrics Tracking**
 
--   **Normal Operations**: All components use INFO level for routine operations
--   **Error Handling**: All components use ERROR level in catch blocks
--   **Comprehensive Coverage**:
-    -   `HotLeagueWall`, `App`, `AppContent`
-    -   `Lobby`, `LobbyComponent`, `RNGSoccerStaticPrototype`
-    -   `SSOControlSimulator`, `Preview`, `GatewayConnectionManager`
-    -   `ConnectionManager`, `TokenRequestManager`, `BetPanel`
-    -   `Loading`, `BetOption`, `BettingChips`, `CountDownTimer`
-    -   `StringHelper`, `ComponentUtil`, `I18n`
+```typescript
+const trackErrorMetrics = (error: any, context: Record<string, any> = {}) => {
+    const { logInfo } = useSentryHelper({
+        componentName: 'ErrorMetrics',
+    });
 
-## ✅ **Verification Checklist**
+    const metrics = {
+        errorType: error.name || 'Unknown',
+        errorMessage: error.message,
+        timestamp: Date.now(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        ...context,
+    };
 
--   [x] **Try-catch blocks** added to critical operations
--   [x] **Error context** enhanced with operation details
--   [x] **Log levels** downgraded appropriately
--   [x] **Error propagation** maintained
--   [x] **Configuration files** updated
--   [x] **Component configurations** adjusted
--   [x] **Environment settings** optimized
--   [x] **Documentation** updated
+    logInfo('Error Metric', metrics);
+};
 
-## 🚀 **Next Steps**
+// Usage
+try {
+    await riskyOperation();
+} catch (error) {
+    trackErrorMetrics(error, {
+        operation: 'riskyOperation',
+        userId: 'user123',
+        gameId: 'rng-soccer',
+    });
+}
+```
 
-1. **Test error scenarios** in development environment
-2. **Verify error logging** in Sentry dashboard
-3. **Monitor performance** impact of reduced logging
-4. **Validate error context** for debugging effectiveness
-5. **Deploy to production** with new error handling
+### **2. Performance Impact Monitoring**
 
-## 📚 **Best Practices Implemented**
+```typescript
+const monitorErrorPerformance = async <T>(operation: () => Promise<T>, operationName: string): Promise<T> => {
+    const { logWarning, logError } = useSentryHelper({
+        componentName: 'PerformanceMonitor',
+    });
 
-### **1. Error Handling**
+    const startTime = performance.now();
 
--   Use INFO level for normal operations and routine logging
--   Use ERROR level only in catch blocks and for exceptions
--   Provide detailed error context in catch blocks
--   Re-throw errors to maintain flow while logging them
+    try {
+        const result = await operation();
+        const duration = performance.now() - startTime;
 
-### **2. Log Level Management**
+        if (duration > 1000) {
+            logWarning('Slow operation detected', {
+                operationName,
+                duration: `${duration.toFixed(2)}ms`,
+                timestamp: Date.now(),
+            });
+        }
 
--   Use INFO for normal operations and routine logging
--   Use ERROR only for exceptions and catch blocks
--   Maintain comprehensive logging for operations
--   Disable logging in test environments
+        return result;
+    } catch (error) {
+        const duration = performance.now() - startTime;
 
-### **3. Context Preservation**
+        logError(error, {
+            operationName,
+            duration: `${duration.toFixed(2)}ms`,
+            timestamp: Date.now(),
+        });
 
--   Include operation names
--   Add relevant state information
--   Preserve error objects
--   Include timestamps
+        throw error;
+    }
+};
+```
 
-The Sentry error handling enhancement is now **complete with balanced INFO/ERROR logging strategy**! 🎉
+## 🔧 Configuration and Customization
+
+### **1. Error Handling Configuration**
+
+```typescript
+interface ErrorHandlingConfig {
+    maxRetries: number;
+    retryDelay: number;
+    timeout: number;
+    enableCircuitBreaker: boolean;
+    circuitBreakerThreshold: number;
+    circuitBreakerTimeout: number;
+    logLevel: SentryLogLevel;
+    enablePerformanceMonitoring: boolean;
+}
+
+const defaultErrorConfig: ErrorHandlingConfig = {
+    maxRetries: 3,
+    retryDelay: 1000,
+    timeout: 5000,
+    enableCircuitBreaker: true,
+    circuitBreakerThreshold: 5,
+    circuitBreakerTimeout: 60000,
+    logLevel: SentryLogLevel.ERROR,
+    enablePerformanceMonitoring: true,
+};
+```
+
+### **2. Environment-Specific Error Handling**
+
+```typescript
+const getErrorHandlingConfig = (): ErrorHandlingConfig => {
+    const baseConfig = { ...defaultErrorConfig };
+
+    switch (process.env.NODE_ENV) {
+        case 'development':
+            return {
+                ...baseConfig,
+                maxRetries: 1,
+                logLevel: SentryLogLevel.DEBUG,
+                enablePerformanceMonitoring: true,
+            };
+        case 'production':
+            return {
+                ...baseConfig,
+                maxRetries: 3,
+                logLevel: SentryLogLevel.ERROR,
+                enablePerformanceMonitoring: false,
+            };
+        default:
+            return baseConfig;
+    }
+};
+```
+
+## 🚨 Troubleshooting
+
+### **Common Error Handling Issues**
+
+#### 1. **Infinite Retry Loops**
+
+**Symptoms**:
+
+-   Operations continuously retrying
+-   High error rates
+-   Performance degradation
+
+**Solutions**:
+
+```typescript
+// Implement proper retry limits
+const retryWithLimit = async <T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await operation();
+        } catch (error) {
+            if (attempt === maxRetries) {
+                throw error;
+            }
+
+            // Add delay between retries
+            await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        }
+    }
+
+    throw new Error('Max retries exceeded');
+};
+```
+
+#### 2. **Memory Leaks from Error Handling**
+
+**Symptoms**:
+
+-   Increasing memory usage
+-   Performance degradation over time
+-   Browser crashes
+
+**Solutions**:
+
+```typescript
+// Clean up resources in error handlers
+const handleErrorWithCleanup = async (operation: () => Promise<any>) => {
+    let resources: any[] = [];
+
+    try {
+        // Allocate resources
+        resources = await allocateResources();
+
+        // Perform operation
+        const result = await operation();
+
+        return result;
+    } catch (error) {
+        // Log error
+        logError(error, { context: 'operation_failed' });
+
+        throw error;
+    } finally {
+        // Always clean up resources
+        await cleanupResources(resources);
+    }
+};
+```
+
+#### 3. **Error Context Loss**
+
+**Symptoms**:
+
+-   Errors without sufficient context
+-   Difficult debugging
+-   Missing user information
+
+**Solutions**:
+
+```typescript
+// Preserve error context
+const preserveErrorContext = (error: any, context: Record<string, any>) => {
+    const enhancedError = new Error(error.message);
+    enhancedError.name = error.name;
+    enhancedError.stack = error.stack;
+
+    // Add context to error object
+    (enhancedError as any).context = {
+        ...context,
+        timestamp: Date.now(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+    };
+
+    return enhancedError;
+};
+
+// Usage
+try {
+    await riskyOperation();
+} catch (error) {
+    const enhancedError = preserveErrorContext(error, {
+        operation: 'riskyOperation',
+        userId: 'user123',
+        gameId: 'rng-soccer',
+    });
+
+    throw enhancedError;
+}
+```
+
+### **Debug Mode**
+
+```typescript
+// Enable debug mode for detailed error information
+localStorage.setItem('sentry_debug_mode', 'true');
+
+// Check error handling configuration
+const debugErrorHandling = () => {
+    const debugInfo = {
+        errorConfig: getErrorHandlingConfig(),
+        localStorageConfig: getLocalStorageConfig(),
+        activeErrorHandlers: getActiveErrorHandlers(),
+        errorMetrics: getErrorMetrics(),
+    };
+
+    console.log('Error Handling Debug Info:', debugInfo);
+};
+```
+
+## 📊 Best Practices
+
+### **1. Error Classification**
+
+```typescript
+// Classify errors for appropriate handling
+const classifyError = (error: any): string => {
+    if (error.name === 'NetworkError') return 'network';
+    if (error.name === 'TimeoutError') return 'timeout';
+    if (error.name === 'ValidationError') return 'validation';
+    if (error.name === 'AuthenticationError') return 'authentication';
+    if (error.name === 'AuthorizationError') return 'authorization';
+    if (error.name === 'BusinessLogicError') return 'business';
+
+    return 'unknown';
+};
+
+// Handle errors based on classification
+const handleErrorByType = (error: any) => {
+    const errorType = classifyError(error);
+
+    switch (errorType) {
+        case 'network':
+            return handleNetworkError(error);
+        case 'timeout':
+            return handleTimeoutError(error);
+        case 'validation':
+            return handleValidationError(error);
+        case 'authentication':
+            return handleAuthenticationError(error);
+        case 'authorization':
+            return handleAuthorizationError(error);
+        case 'business':
+            return handleBusinessError(error);
+        default:
+            return handleUnknownError(error);
+    }
+};
+```
+
+### **2. Error Recovery Strategies**
+
+```typescript
+// Implement appropriate recovery strategies
+const handleNetworkError = async (error: any) => {
+    // Retry with exponential backoff
+    return retryOperation(() => performNetworkRequest(), 3, 1000);
+};
+
+const handleTimeoutError = async (error: any) => {
+    // Increase timeout and retry
+    return retryOperation(() => performRequestWithTimeout(10000), 2, 2000);
+};
+
+const handleValidationError = async (error: any) => {
+    // Log and return user-friendly message
+    logError(error, { context: 'validation_error' });
+    throw new Error('Please check your input and try again');
+};
+
+const handleAuthenticationError = async (error: any) => {
+    // Redirect to login or refresh token
+    await refreshAuthentication();
+    return retryOperation(() => performAuthenticatedRequest(), 1, 0);
+};
+```
+
+### **3. User Experience Considerations**
+
+```typescript
+// Provide user-friendly error messages
+const getUserFriendlyMessage = (error: any): string => {
+    const errorType = classifyError(error);
+
+    switch (errorType) {
+        case 'network':
+            return 'Connection issue. Please check your internet connection and try again.';
+        case 'timeout':
+            return 'Request timed out. Please try again.';
+        case 'validation':
+            return 'Please check your input and try again.';
+        case 'authentication':
+            return 'Please log in again to continue.';
+        case 'authorization':
+            return "You don't have permission to perform this action.";
+        case 'business':
+            return 'Unable to complete your request. Please try again later.';
+        default:
+            return 'Something went wrong. Please try again.';
+    }
+};
+
+// Show appropriate UI feedback
+const showErrorFeedback = (error: any) => {
+    const message = getUserFriendlyMessage(error);
+    const severity = getErrorSeverity(error);
+
+    // Show toast notification
+    showToast(message, severity);
+
+    // Update UI state
+    updateUIState({ error: true, errorMessage: message });
+};
+```
+
+## 🔒 Security Considerations
+
+### **1. Error Information Sanitization**
+
+```typescript
+// Sanitize error information before logging
+const sanitizeError = (error: any): any => {
+    const sanitized = {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        timestamp: Date.now(),
+    };
+
+    // Remove sensitive information
+    if (error.context) {
+        const { password, token, creditCard, ...safeContext } = error.context;
+        sanitized.context = safeContext;
+    }
+
+    return sanitized;
+};
+
+// Usage
+try {
+    await riskyOperation();
+} catch (error) {
+    const sanitizedError = sanitizeError(error);
+    logError(sanitizedError, { context: 'operation_failed' });
+}
+```
+
+### **2. Error Rate Limiting**
+
+```typescript
+// Implement error rate limiting
+class ErrorRateLimiter {
+    private errorCounts = new Map<string, number>();
+    private lastReset = Date.now();
+    private maxErrors = 100;
+    private resetInterval = 60000; // 1 minute
+
+    shouldLogError(errorType: string): boolean {
+        this.resetIfNeeded();
+
+        const currentCount = this.errorCounts.get(errorType) || 0;
+
+        if (currentCount >= this.maxErrors) {
+            return false;
+        }
+
+        this.errorCounts.set(errorType, currentCount + 1);
+        return true;
+    }
+
+    private resetIfNeeded(): void {
+        if (Date.now() - this.lastReset > this.resetInterval) {
+            this.errorCounts.clear();
+            this.lastReset = Date.now();
+        }
+    }
+}
+```
+
+This comprehensive summary covers all aspects of enhanced error handling, including patterns, best practices, troubleshooting, and real-world examples for effective error management and recovery.
