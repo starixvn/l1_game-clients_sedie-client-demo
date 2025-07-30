@@ -16,27 +16,20 @@ The system uses three localStorage keys to control logging behavior:
 
 ```javascript
 const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level'; // Log level setting
-const SENTRY_ENABLED_KEY = 'sentry_enabled'; // Enable/disable logging
+const SENTRY_ENABLED_KEY = 'hot-league-wall-debug-enabled'; // Enable/disable logging
 const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode'; // Debug mode toggle
 ```
 
-## 📋 Logging Rules
+## Logging Rules
 
-### **Log Level Control (All Environments)**
+### Log Level Control (All Environments)
 
-The localStorage rules apply consistently across **ALL environments** (local, development, production):
-
--   **Info level and below** (trace, debug, info): Only sent when `sentry_enabled` is `true`
+-   **Info level and below** (trace, debug, info): Only sent when `hot-league-wall-debug-enabled` is `true`
 -   **Warning, Error, Fatal**: Always sent regardless of localStorage setting
--   **Session Replay**: Only enabled when `sentry_enabled` is `true` AND log level allows error/fatal logging
 
-### **Session Replay Rules**
+### Session Replay Rules
 
-Session Replay is now more conservative and privacy-focused:
-
--   **Only enabled for error/fatal levels**: Session Replay is only active when the log level is `error`, `fatal`, `warn`, or `all`
--   **Respects localStorage**: Even in development, Session Replay requires localStorage to be enabled
--   **Privacy-first**: Text and media are masked by default unless debug mode is enabled
+-   **Session Replay**: Only enabled when `hot-league-wall-debug-enabled` is `true` AND log level allows error/fatal logging
 
 ## 🚀 Quick Start
 
@@ -44,7 +37,7 @@ Session Replay is now more conservative and privacy-focused:
 
 ```javascript
 // Enable Sentry logging
-localStorage.setItem('sentry_enabled', 'true');
+localStorage.setItem('hot-league-wall-debug-enabled', 'true');
 
 // Set log level to info
 localStorage.setItem('sentry_log_level', 'info');
@@ -60,7 +53,7 @@ location.reload();
 
 ```javascript
 // Enable Sentry logging
-localStorage.setItem('sentry_enabled', 'true');
+localStorage.setItem('hot-league-wall-debug-enabled', 'true');
 
 // Set log level to error (this will also enable Session Replay)
 localStorage.setItem('sentry_log_level', 'error');
@@ -73,7 +66,7 @@ location.reload();
 
 ```javascript
 // Disable Sentry logging
-localStorage.setItem('sentry_enabled', 'false');
+localStorage.setItem('hot-league-wall-debug-enabled', 'false');
 
 // Reload the page to apply changes
 location.reload();
@@ -231,7 +224,7 @@ const enableConditionalLogging = () => {
     const isDebugMode = window.location.search.includes('debug=true');
 
     if (isProduction && isDebugMode) {
-        localStorage.setItem('sentry_enabled', 'true');
+        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
         localStorage.setItem('sentry_log_level', 'info');
         localStorage.setItem('sentry_debug_mode', 'false');
         location.reload();
@@ -269,34 +262,34 @@ switchLogLevel('info'); // Enable info logging
 // Add utility functions to global scope for easy access
 window.sentryUtils = {
     enableDebug: () => {
-        localStorage.setItem('sentry_enabled', 'true');
+        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
         localStorage.setItem('sentry_log_level', 'debug');
         localStorage.setItem('sentry_debug_mode', 'true');
         location.reload();
     },
 
     enableInfo: () => {
-        localStorage.setItem('sentry_enabled', 'true');
+        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
         localStorage.setItem('sentry_log_level', 'info');
         localStorage.setItem('sentry_debug_mode', 'false');
         location.reload();
     },
 
     enableError: () => {
-        localStorage.setItem('sentry_enabled', 'true');
+        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
         localStorage.setItem('sentry_log_level', 'error');
         localStorage.setItem('sentry_debug_mode', 'true');
         location.reload();
     },
 
     disable: () => {
-        localStorage.setItem('sentry_enabled', 'false');
+        localStorage.setItem('hot-league-wall-debug-enabled', 'false');
         location.reload();
     },
 
     clear: () => {
         localStorage.removeItem('sentry_log_level');
-        localStorage.removeItem('sentry_enabled');
+        localStorage.removeItem('hot-league-wall-debug-enabled');
         localStorage.removeItem('sentry_debug_mode');
         location.reload();
     },
@@ -304,7 +297,7 @@ window.sentryUtils = {
     status: () => {
         const config = {
             logLevel: localStorage.getItem('sentry_log_level') || 'info',
-            enabled: localStorage.getItem('sentry_enabled') !== 'false',
+            enabled: localStorage.getItem('hot-league-wall-debug-enabled') !== 'false',
             debugMode: localStorage.getItem('sentry_debug_mode') === 'true',
         };
         console.log('Current Sentry Configuration:', config);
@@ -335,7 +328,7 @@ window.sentryUtils = {
 ```javascript
 // Check localStorage settings
 console.log('Log Level:', localStorage.getItem('sentry_log_level'));
-console.log('Enabled:', localStorage.getItem('sentry_enabled'));
+console.log('Enabled:', localStorage.getItem('hot-league-wall-debug-enabled'));
 console.log('Debug Mode:', localStorage.getItem('sentry_debug_mode'));
 
 // Verify Sentry configuration
@@ -358,7 +351,7 @@ console.log('Component Config:', componentConfig);
 
 ```javascript
 // Enable Session Replay for error/fatal levels
-localStorage.setItem('sentry_enabled', 'true');
+localStorage.setItem('hot-league-wall-debug-enabled', 'true');
 localStorage.setItem('sentry_log_level', 'error');
 localStorage.setItem('sentry_debug_mode', 'true');
 location.reload();
@@ -637,7 +630,7 @@ const ComponentWithPerformanceMonitoring = () => {
 
 ```javascript
 // 1. Enable comprehensive logging for production debugging
-localStorage.setItem('sentry_enabled', 'true');
+localStorage.setItem('hot-league-wall-debug-enabled', 'true');
 localStorage.setItem('sentry_log_level', 'info');
 localStorage.setItem('sentry_debug_mode', 'true');
 location.reload();
@@ -653,7 +646,7 @@ localStorage.setItem('sentry_log_level', 'debug');
 location.reload();
 
 // 5. When done debugging, disable logging
-localStorage.setItem('sentry_enabled', 'false');
+localStorage.setItem('hot-league-wall-debug-enabled', 'false');
 location.reload();
 ```
 
@@ -684,7 +677,7 @@ enableComponentDebugging('PaymentComponent');
 ```javascript
 // Enable error logging with Session Replay
 const enableErrorInvestigation = () => {
-    localStorage.setItem('sentry_enabled', 'true');
+    localStorage.setItem('hot-league-wall-debug-enabled', 'true');
     localStorage.setItem('sentry_log_level', 'error');
     localStorage.setItem('sentry_debug_mode', 'true');
     location.reload();

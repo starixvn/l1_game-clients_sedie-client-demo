@@ -13,7 +13,7 @@ import {
 
 // LocalStorage keys for logging control
 const SENTRY_LOG_LEVEL_KEY = 'sentry_log_level';
-const SENTRY_ENABLED_KEY = 'sentry_enabled';
+const SENTRY_ENABLED_KEY = 'hot-league-wall-debug-enabled';
 const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
 
 /**
