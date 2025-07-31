@@ -49,7 +49,7 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToke
                 logLevel: SentryLogLevel.INFO,
                 enableWorkflowTracking: true,
                 enablePerformanceTracking: true,
-                enableConsoleOverride: false
+                enableConsoleOverride: true
             });
 
             // Initialize Sentry Helper
@@ -62,6 +62,19 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToke
             });
 
             console.log('Sentry initialization completed successfully');
+
+            // Test error capture
+            setTimeout(() => {
+                try {
+                    sentryManager.captureError(new Error('Test error from Sentry initialization'), {
+                        test: true,
+                        timestamp: Date.now()
+                    });
+                    console.log('Test error sent to Sentry');
+                } catch (testError) {
+                    console.error('Failed to send test error to Sentry:', testError);
+                }
+            }, 2000);
         } catch (error) {
             console.error('Failed to initialize Sentry:', error);
         }

@@ -67,12 +67,22 @@ export class SentryManagerRefactored {
         }
 
         try {
-            // Initialize Sentry
+            // Initialize Sentry with proper error capturing
             Sentry.init({
                 dsn: config.dsn,
                 environment: config.environment,
                 release: config.release,
-                debug: config.debug || false
+                debug: config.debug || false,
+                // Enable beforeSend to filter events
+                beforeSend(event, hint) {
+                    // Log the event for debugging
+                    console.log('Sentry event captured:', event);
+                    return event;
+                },
+                // Enable beforeBreadcrumb to filter breadcrumbs
+                beforeBreadcrumb(breadcrumb, hint) {
+                    return breadcrumb;
+                }
             });
 
             this.componentName = config.componentName;
@@ -92,6 +102,9 @@ export class SentryManagerRefactored {
             if (config.enableConsoleOverride) {
                 this.consoleOverride.override();
             }
+
+            // Set up global error handlers
+            this.setupGlobalErrorHandlers();
 
             this.isInitialized = true;
 
@@ -128,6 +141,18 @@ export class SentryManagerRefactored {
 
     logFatal(error: Error | string, context?: Record<string, any>): void {
         this.logger.logFatal(error, context);
+    }
+
+    // Manual error capture for specific error types
+    captureError(error: Error | string, context?: Record<string, any>): void {
+        console.log('Manually capturing error:', error);
+        Sentry.captureException(error, {
+            tags: {
+                source: 'manual_capture',
+                component: this.componentName
+            },
+            extra: context
+        });
     }
 
     // Workflow methods - delegate to workflow tracker
@@ -204,5 +229,55 @@ export class SentryManagerRefactored {
     close(): void {
         this.cleanup();
         Sentry.close();
+    }
+
+    private setupGlobalErrorHandlers(): void {
+        // Capture uncaught exceptions
+        window.addEventListener('error', (event) => {
+            console.log('Global error handler caught:', event.error);
+            Sentry.captureException(event.error, {
+                tags: {
+                    source: 'global_error_handler',
+                    component: this.componentName
+                },
+                extra: {
+                    errorEvent: event
+                }
+            });
+        });
+
+        // Capture unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.log('Global unhandled rejection handler caught:', event.reason);
+            Sentry.captureException(event.reason, {
+                tags: {
+                    source: 'unhandled_rejection',
+                    component: this.componentName
+                },
+                extra: {
+                    promise: event.promise
+                }
+            });
+        });
+
+        // Override console.error to capture errors
+        const originalConsoleError = console.error;
+        console.error = (...args) => {
+            originalConsoleError.apply(console, args);
+
+            // Check if any of the arguments is an Error object
+            const errorArg = args.find(arg => arg instanceof Error);
+            if (errorArg) {
+                Sentry.captureException(errorArg, {
+                    tags: {
+                        source: 'console_error',
+                        component: this.componentName
+                    },
+                    extra: {
+                        consoleArgs: args
+                    }
+                });
+            }
+        };
     }
 } 

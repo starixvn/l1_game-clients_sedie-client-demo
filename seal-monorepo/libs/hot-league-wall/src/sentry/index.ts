@@ -153,6 +153,7 @@ export const logInfo = (component: string, info: string, context?: any) => sentr
 export const logDebug = (component: string, debug: string, context?: any) => sentryHelper.logDebug(component, debug, context);
 export const logTrace = (component: string, trace: string, context?: any) => sentryHelper.logTrace(component, trace, context);
 export const updateSentryConfiguration = (dsn?: string, environment?: string) => sentryHelper.updateSentryConfiguration(dsn, environment);
+export const captureError = (error: Error | string, context?: any) => sentryManager.captureError(error, context);
 
 // Legacy hook exports for backward compatibility
 export const useSentryHelper = useSentryHelperRefactored;
