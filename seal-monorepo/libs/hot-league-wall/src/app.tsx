@@ -37,16 +37,14 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToke
                 environment
             });
 
-            // Configure SentryHelper based on environment
-            configureSentryForEnvironment(environment);
-
-            // Initialize project-specific configuration
-            initializeSentryForProject();
-
-            // Initialize Sentry with Session Replay
+            // Initialize Sentry with Session Replay (this will handle all Sentry initialization)
             const sessionReplayConfig = configureSessionReplayForEnvironment(environment);
             console.log('Session replay config:', sessionReplayConfig);
             initializeSentryWithSessionReplay(sessionReplayConfig);
+
+            // Configure SentryHelper after initialization
+            configureSentryForEnvironment(environment);
+            initializeSentryForProject();
 
             // Initialize Game Cron Batch Manager
             sentryGameCronBatchManager.initialize();

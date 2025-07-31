@@ -149,6 +149,12 @@ class SentryManager {
             localStorageConfig
         });
 
+        // Check if Sentry is already initialized to prevent multiple initializations
+        if ((window as any).__SENTRY_INITIALIZED__) {
+            console.warn('Sentry is already initialized. Skipping SentryManager initialization to prevent multiple instances.');
+            return;
+        }
+
         // Initialize the global Sentry configuration
         try {
             // Configure global Sentry settings with localStorage override
@@ -205,6 +211,9 @@ class SentryManager {
             Sentry.setUser({ id: this.componentName }); // Assuming component name is user ID
 
             console.log(`Sentry initialized successfully for component: ${this.componentName}`);
+
+            // Set global flag to prevent multiple initializations
+            (window as any).__SENTRY_INITIALIZED__ = true;
 
         } catch (error) {
             console.error('Failed to initialize Sentry:', error);

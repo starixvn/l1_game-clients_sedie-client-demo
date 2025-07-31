@@ -99,6 +99,13 @@ export const initializeSentryWithSessionReplay = (config: SentrySessionReplayCon
     // Override debug mode with localStorage setting
     const finalDebug = localStorageConfig.debugMode || debug;
 
+    // Check if Sentry is already initialized to prevent multiple initializations
+    // Use a global flag to track initialization state
+    if ((window as any).__SENTRY_INITIALIZED__) {
+        console.warn('Sentry is already initialized. Skipping Session Replay initialization to prevent multiple instances.');
+        return;
+    }
+
     try {
         Sentry.init({
             dsn,
@@ -217,6 +224,9 @@ export const initializeSentryWithSessionReplay = (config: SentrySessionReplayCon
             sendDefaultPii,
             localStorageConfig
         });
+
+        // Set global flag to prevent multiple initializations
+        (window as any).__SENTRY_INITIALIZED__ = true;
 
     } catch (error) {
         console.error('Failed to initialize Sentry with Session Replay:', error);
