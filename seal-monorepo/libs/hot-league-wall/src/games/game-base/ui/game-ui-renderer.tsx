@@ -12,7 +12,6 @@ import Styles from '../game-base.module.scss';
 import rngSoccerStyles from '../../saba-club/rng-soccer/rng-soccer.module.scss';
 import { IGameBaseState } from '../interfaces';
 import { GameBaseProps } from '../type';
-import StartRoundCountDownTimer from '../../../_shared/components/start-round-count-down-timer';
 import { getMessage as getGameMessage } from '../game-logic/message-logic';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
 
