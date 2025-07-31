@@ -29,12 +29,19 @@ const BettingChips: React.FC<BettingChipsProps> = ({
         enablePerformanceTracking: false
     });
 
-    logInfo('BettingChips rendered', {
+    // Memoize the log data to prevent infinite re-renders
+    const logData = React.useMemo(() => ({
         min,
         max,
         currentAmount,
         timestamp: Date.now()
-    });
+    }), [min, max, currentAmount]);
+
+    // Log component render in useEffect to prevent infinite re-renders
+    React.useEffect(() => {
+        logInfo('BettingChips rendered', logData);
+    }, [logData]);
+
     const formatNumber = (num: number): string => {
         if (num >= 1000) {
             return (num / 1000).toString() + 'K';

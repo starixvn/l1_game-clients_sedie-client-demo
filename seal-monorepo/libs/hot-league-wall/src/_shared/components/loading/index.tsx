@@ -2,6 +2,7 @@ import Styles from './reconnecting.module.scss';
 import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
 import { useSentryHelper } from '../../hooks/useSentryHelper';
 import { SentryLogLevel } from '../../utils/sentry/sentry-types';
+import React from 'react';
 
 export const Loading: React.FC = () => {
     const { logInfo } = useSentryHelper({
@@ -11,9 +12,12 @@ export const Loading: React.FC = () => {
         enablePerformanceTracking: false
     });
 
-    logInfo('Loading component rendered', {
-        timestamp: Date.now()
-    });
+    // Log component render in useEffect to prevent infinite re-renders
+    React.useEffect(() => {
+        logInfo('Loading component rendered', {
+            timestamp: Date.now()
+        });
+    }, []);
 
     return (
         <div className={Styles['reconnecting-container']}>

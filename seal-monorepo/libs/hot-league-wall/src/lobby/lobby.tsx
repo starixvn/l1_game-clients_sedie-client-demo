@@ -25,12 +25,18 @@ const LobbyWithSentry = (props: { token: string; onSSORetry?: () => Promise<void
         enablePerformanceTracking: true
     });
 
-    logInfo('LobbyWithSentry component rendering', {
+    // Memoize the log data to prevent infinite re-renders
+    const logData = React.useMemo(() => ({
         hasToken: !!props.token,
         isReconnecting: props.isReconnecting,
         language: props.language,
         timestamp: Date.now()
-    });
+    }), [props.token, props.isReconnecting, props.language]);
+
+    // Log component render in useEffect to prevent infinite re-renders
+    React.useEffect(() => {
+        logInfo('LobbyWithSentry component rendering', logData);
+    }, [logData]);
 
     return (
         <LobbyComponent

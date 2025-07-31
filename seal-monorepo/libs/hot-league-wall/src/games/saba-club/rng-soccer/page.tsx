@@ -328,11 +328,17 @@ const RNGSoccerPage: React.FC<GameBaseProps> = (props) => {
         };
     }, [props.language]);
 
-    logInfo('RNGSoccerPage rendered', {
+    // Memoize the log data to prevent infinite re-renders
+    const logData = React.useMemo(() => ({
         namespace: props.namespace,
         language: props.language,
         timestamp: Date.now()
-    });
+    }), [props.namespace, props.language]);
+
+    // Log component render in useEffect to prevent infinite re-renders
+    React.useEffect(() => {
+        logInfo('RNGSoccerPage rendered', logData);
+    }, [logData]);
 
     return (
         <SentryLogProvider
@@ -368,6 +374,22 @@ const RNGSoccerPageWithLogging: React.FC<GameBaseProps> = (props) => {
         isRecording
     } = useSentryLog();
 
+    // Memoize the session replay context to prevent infinite re-renders
+    const sessionReplayContext = React.useMemo(() => ({
+        namespace: props.namespace,
+        language: props.language,
+        gameId: '118',
+        sessionType: 'rng_soccer_game'
+    }), [props.namespace, props.language]);
+
+    // Memoize the lifecycle data to prevent infinite re-renders
+    const lifecycleData = React.useMemo(() => ({
+        component: 'RNGSoccerPage',
+        namespace: props.namespace,
+        language: props.language,
+        gameId: '118'
+    }), [props.namespace, props.language]);
+
     // Log game events and start Session Replay
     React.useEffect(() => {
         logInfo('RNG Soccer game session started', {
@@ -378,34 +400,19 @@ const RNGSoccerPageWithLogging: React.FC<GameBaseProps> = (props) => {
         });
 
         // Start Session Replay for RNG Soccer
-        startSessionReplay('RNG Soccer Game Session', {
-            namespace: props.namespace,
-            language: props.language,
-            gameId: '118',
-            sessionType: 'rng_soccer_game'
-        });
+        startSessionReplay('RNG Soccer Game Session', sessionReplayContext);
 
         // Track component lifecycle
-        trackLifecycle('mount', {
-            component: 'RNGSoccerPage',
-            namespace: props.namespace,
-            language: props.language,
-            gameId: '118'
-        });
+        trackLifecycle('mount', lifecycleData);
 
         // Cleanup on unmount
         return () => {
-            trackLifecycle('unmount', {
-                component: 'RNGSoccerPage',
-                namespace: props.namespace,
-                language: props.language,
-                gameId: '118'
-            });
+            trackLifecycle('unmount', lifecycleData);
             stopSessionReplay();
         };
-    }, [props.namespace, props.language, logInfo, startSessionReplay, stopSessionReplay, trackLifecycle]);
+    }, [props.namespace, props.language, sessionReplayContext, lifecycleData]);
 
-    const handleSendLogsToSentry = async () => {
+    const handleSendLogsToSentry = React.useCallback(async () => {
         try {
             logInfo('Sending RNG Soccer game logs to Sentry', {
                 roundState: 'STOP_GAME_LOOP',
@@ -446,15 +453,15 @@ const RNGSoccerPageWithLogging: React.FC<GameBaseProps> = (props) => {
                 timestamp: Date.now()
             });
         }
-    };
+    }, [logInfo, logError, trackInteraction, sendLogsToSentry, trackError]);
 
-    const handleTrackEvent = (event: string, metadata?: Record<string, any>) => {
+    const handleTrackEvent = React.useCallback((event: string, metadata?: Record<string, any>) => {
         trackInteraction(event, {
             ...metadata,
             gameId: '118',
             timestamp: Date.now()
         });
-    };
+    }, [trackInteraction]);
 
     return <RNGSoccerPageComponent {...props} onSendLogsToSentry={handleSendLogsToSentry} onTrackEvent={handleTrackEvent} />;
 };

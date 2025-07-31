@@ -27,11 +27,18 @@ const ScoreBoard: React.FunctionComponent<Props> = ({
         enablePerformanceTracking: true
     });
 
-    logInfo('ScoreBoard rendered', {
+    // Memoize the log data to prevent infinite re-renders
+    const logData = React.useMemo(() => ({
         gameName,
         rowsCount: rows?.length,
         timestamp: Date.now()
-    });
+    }), [gameName, rows?.length]);
+
+    // Log component render in useEffect to prevent infinite re-renders
+    React.useEffect(() => {
+        logInfo('ScoreBoard rendered', logData);
+    }, [logData]);
+
     const translateCharacter = (option) => Translator.t(`${gameName}.beadboard_${option}`);
     const { positiveItemContent: positiveCharacter, negativeItemContent: negativeCharacter } = scoreboardCharacter;
     const { positiveItemContent: positiveClassName, negativeItemContent: negativeClassName } = scoreboardDotClassName;

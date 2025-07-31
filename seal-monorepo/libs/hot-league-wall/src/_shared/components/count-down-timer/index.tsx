@@ -6,6 +6,7 @@ import { IPropsObserver, IStateObserver, ObserverComponent } from '../observer-c
 import { formatSecondsToTime } from '../../utils/count-down-format';
 import { useSentryHelper } from '../../hooks/useSentryHelper';
 import { SentryLogLevel } from '../../utils/sentry/sentry-types';
+import React from 'react';
 
 export interface ICountDownTimerProps extends IPropsObserver {
     onComplete?: () => void;
@@ -113,11 +114,17 @@ const CountDownTimer: React.FC<ICountDownTimerProps> = (props) => {
         enablePerformanceTracking: false
     });
 
-    logInfo('CountDownTimer rendered', {
+    // Memoize the log data to prevent infinite re-renders
+    const logData = React.useMemo(() => ({
         countdownTimer: props.onCountdownTimerChange ? 'dynamic' : 'static',
         language: props.language,
         timestamp: Date.now()
-    });
+    }), [props.onCountdownTimerChange, props.language]);
+
+    // Log component render in useEffect to prevent infinite re-renders
+    React.useEffect(() => {
+        logInfo('CountDownTimer rendered', logData);
+    }, [logData]);
 
     return <CountDownTimerComponent {...props} />;
 };

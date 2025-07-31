@@ -102,31 +102,40 @@ const RNGSoccerBetOptions: React.FC<RNGSoccerBetOptionsProps> = (props) => {
         onlySendOnIssues: true
     });
 
+    // Memoize the game cron props to prevent infinite re-renders
+    const gameCronProps = React.useMemo(() => ({
+        gameId: '118',
+        component: 'RNGSoccerBetOptions',
+        props: {
+            gameName: props.gameName,
+            namespace: props.namespace,
+            language: props.language
+        }
+    }), [props.gameName, props.namespace, props.language]);
+
+    // Memoize the log data to prevent infinite re-renders
+    const logData = React.useMemo(() => ({
+        gameName: props.gameName,
+        namespace: props.namespace,
+        language: props.language,
+        timestamp: Date.now()
+    }), [props.gameName, props.namespace, props.language]);
+
     // Start game cron when component mounts
     React.useEffect(() => {
-        startGameCron({
-            gameId: '118',
-            component: 'RNGSoccerBetOptions',
-            props: {
-                gameName: props.gameName,
-                namespace: props.namespace,
-                language: props.language
-            }
-        });
+        startGameCron(gameCronProps);
         gameLogInfo('RNG Soccer bet options mounted', { component: 'RNGSoccerBetOptions' });
 
         // Complete game cron when component unmounts
         return () => {
             completeGameCron(true, { reason: 'component_unmounted' });
         };
-    }, [props.gameName, props.namespace, props.language]);
+    }, [gameCronProps]);
 
-    logInfo('RNGSoccerBetOptions rendered', {
-        gameName: props.gameName,
-        namespace: props.namespace,
-        language: props.language,
-        timestamp: Date.now()
-    });
+    // Log component render in useEffect to prevent infinite re-renders
+    React.useEffect(() => {
+        logInfo('RNGSoccerBetOptions rendered', logData);
+    }, [logData]);
 
     return <RNGSoccerBetOptionsComponent {...props} />;
 };
