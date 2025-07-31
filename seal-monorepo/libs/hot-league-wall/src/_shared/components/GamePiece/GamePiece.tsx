@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useGameLogger } from '../../react-contexts/log-context';
+import { useGameSentryLogger } from '../../react-contexts/log-context/sentry-log-context';
 
 interface GamePieceProps {
     pieceId: string;
@@ -20,7 +20,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
     const [health, setHealth] = useState(pieceType === 'player' ? 100 : 50);
     const [isMoving, setIsMoving] = useState(false);
 
-    const logger = useGameLogger(`GamePiece_${pieceId}`);
+    const logger = useGameSentryLogger(`GamePiece_${pieceId}`);
 
     // Log component initialization
     useEffect(() => {
@@ -270,7 +270,7 @@ export const GamePieceControls: React.FC<{ pieceId: string; onMove: (direction: 
     onMove,
     onInteraction
 }) => {
-    const logger = useGameLogger(`GamePieceControls_${pieceId}`);
+    const logger = useGameSentryLogger(`GamePieceControls_${pieceId}`);
 
     const handleMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
         logger.logInfo('Move command issued', {

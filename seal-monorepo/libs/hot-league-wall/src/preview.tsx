@@ -11,6 +11,7 @@ import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-dem
 import { SSOControlSimulator } from './_shared/components/sso-control-simulator';
 import { SSOControlSimulatorWrapper } from './_shared/components/sso-control-simulator/sso-control-simulator-wrapper';
 import LivePageDemo from './_shared/components/live-page-demo';
+import { LoggingDemo } from './_shared/components/LoggingDemo';
 
 // Utility imports
 import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
@@ -30,7 +31,7 @@ import {
 } from './simulator';
 
 // Tab types
-type TabType = 'today' | 'live-page';
+type TabType = 'today' | 'live-page' | 'logging-demo';
 
 // Tab Component
 interface TabProps {
@@ -84,6 +85,23 @@ const TabNavigation: React.FC<TabProps> = ({ activeTab, onTabChange }) => {
                 }}
             >
                 Live Page
+            </button>
+            <button
+                onClick={() => onTabChange('logging-demo')}
+                style={{
+                    background: activeTab === 'logging-demo' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    color: 'white',
+                    border: 'none',
+                    padding: '15px 25px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: activeTab === 'logging-demo' ? 'bold' : 'normal',
+                    borderBottom: activeTab === 'logging-demo' ? '3px solid #007bff' : '3px solid transparent',
+                    transition: 'all 0.3s ease',
+                    minWidth: '120px'
+                }}
+            >
+                Logging Demo
             </button>
         </div>
     );
@@ -189,6 +207,18 @@ const TabContent: React.FC<TabContentProps> = ({
                         language={language}
                         siteId={siteId}
                     />
+                );
+
+            case 'logging-demo':
+                return (
+                    <div style={{
+                        width: '100%',
+                        height: '100%',
+                        overflow: 'auto',
+                        backgroundColor: '#f5f5f5'
+                    }}>
+                        <LoggingDemo />
+                    </div>
                 );
 
             default:

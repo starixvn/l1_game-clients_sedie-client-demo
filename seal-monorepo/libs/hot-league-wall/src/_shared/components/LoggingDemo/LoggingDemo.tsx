@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { LogProvider, useGameLogger } from '../../react-contexts/log-context';
+import { SentryLogProvider, useGameSentryLogger } from '../../react-contexts/log-context/sentry-log-context';
 import { GameBoard } from '../GameBoard';
 import { GamePiece, GamePieceControls } from '../GamePiece';
+import { SentryLogLevel } from '../../utils/sentry/sentry-types';
 
 // Demo game component that uses the logging system
 const DemoGame: React.FC = () => {
@@ -14,7 +15,7 @@ const DemoGame: React.FC = () => {
         { id: 'obstacle1', type: 'obstacle' as const, position: { x: 4, y: 1 } },
     ]);
 
-    const logger = useGameLogger('DemoGame');
+    const logger = useGameSentryLogger('DemoGame');
 
     // Log game initialization
     useEffect(() => {
@@ -254,27 +255,34 @@ const DemoGame: React.FC = () => {
                     <li>Click on a piece to select it</li>
                     <li>Use the controls to move or interact with the selected piece</li>
                     <li>Watch the logs accumulate in the Game Board</li>
-                    <li>Click "End Game" to send all logs to the backend</li>
-                    <li>Use "Send Logs" to manually send logs without ending the game</li>
+                    <li>Click "End Game" to send all logs to Sentry</li>
+                    <li>Use "Send to Sentry" to manually send logs without ending the game</li>
                     <li>Use "Clear Logs" to clear the log buffer</li>
+                    <li>All logs are automatically sent to Sentry in real-time</li>
                 </ul>
             </div>
         </div>
     );
 };
 
-// Main demo component with LogProvider
+// Main demo component with SentryLogProvider
 export const LoggingDemo: React.FC = () => {
     return (
-        <LogProvider
+        <SentryLogProvider
             sessionId="demo-session-123"
             gameId="demo-game-456"
             enabled={true}
             maxLogs={500}
-            autoSendOnUnmount={true}
-            sendEndpoint="/api/demo/send-logs"
+            autoSendOnUnmount={false}
+            sentryConfig={{
+                dsn: "https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056",
+                environment: "LOCAL1",
+                componentName: "LoggingDemo",
+                debug: true,
+                logLevel: SentryLogLevel.INFO
+            }}
         >
             <DemoGame />
-        </LogProvider>
+        </SentryLogProvider>
     );
 }; 

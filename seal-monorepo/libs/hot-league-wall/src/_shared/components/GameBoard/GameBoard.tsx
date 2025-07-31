@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useGameLogger } from '../../react-contexts/log-context';
+import { useGameSentryLogger } from '../../react-contexts/log-context/sentry-log-context';
 
 interface GameBoardProps {
     gameId: string;
@@ -15,7 +15,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const [isEnding, setIsEnding] = useState(false);
     const [endGameMessage, setEndGameMessage] = useState('');
 
-    const logger = useGameLogger('GameBoard');
+    const logger = useGameSentryLogger('GameBoard');
 
     // Log game board initialization
     React.useEffect(() => {
@@ -38,10 +38,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 action: 'end_game_button_clicked'
             });
 
-            // Send logs to backend
-            await logger.sendLogsToBackend();
+            // Send logs to Sentry
+            await logger.sendLogsToSentry();
 
-            setEndGameMessage('Game ended successfully! Logs sent to backend.');
+            setEndGameMessage('Game ended successfully! Logs sent to Sentry.');
 
             logger.logInfo('Game ended successfully', {
                 gameId,
@@ -78,7 +78,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 action: 'manual_log_send'
             });
 
-            await logger.sendLogsToBackend();
+            await logger.sendLogsToSentry();
 
             logger.logInfo('Manual log sending completed', {
                 gameId,
@@ -174,7 +174,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         cursor: 'pointer'
                     }}
                 >
-                    Send Logs
+                    Send to Sentry
                 </button>
 
                 <button
