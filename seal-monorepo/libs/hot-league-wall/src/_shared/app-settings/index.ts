@@ -1,5 +1,5 @@
 import * as gc from '@sg/sg-game-client';
-import { logInfo, logError, logWarning } from '../utils/sentry/sentry-helper';
+import { logInfo, logError, logWarning, updateSentryConfiguration } from '../utils/sentry/sentry-helper';
 
 import SG_LOCAL_CONFIG from '../../../configs/sg/configs.LOCAL_1.json';
 import SG_SIT_CONFIG from '../../../configs/sg/configs.SIT.json';
@@ -147,6 +147,13 @@ export const appSettingsWithSentry = {
     sentryDsn: appSettings.sentry?.dsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056',
     sentryEnvironment: appSettings.sentry?.environment || 'LOCAL1'
 };
+
+// Update Sentry configuration with the loaded appSettings
+try {
+    updateSentryConfiguration(appSettings.sentry?.dsn, appSettings.sentry?.environment);
+} catch (error) {
+    console.warn('Failed to update Sentry configuration:', error);
+}
 
 export const getSiteConfig = (gameId: number) => {
     const componentName = 'AppSettings';

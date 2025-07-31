@@ -158,9 +158,38 @@ class SentryManager {
                 release: config.release,
                 debug: config.debug || false,
                 tracesSampleRate: 1.0, // Sample rate for performance tracing
+
+                // Buffer configuration to prevent overflow
+                maxBreadcrumbs: 50, // Limit breadcrumbs to prevent buffer overflow
+
+                // Rate limiting to prevent spam
+                sampleRate: 0.1, // Only send 10% of events to reduce load
+
                 beforeSend: (event, hint) => {
-                    // Allow all errors through for now - we can add filtering later if needed
-                    // The errorFilter logic was too restrictive and was blocking legitimate errors
+                    // Filter out excessive logging to prevent buffer overflow
+                    if (event.level === 'info' || event.level === 'debug' || event.level === 'log') {
+                        // Only send 5% of info/debug/log events to reduce buffer load
+                        if (Math.random() > 0.05) {
+                            return null; // Drop the event
+                        }
+                    }
+
+                    // For warnings, be more selective
+                    if (event.level === 'warning') {
+                        // Only send 20% of warnings
+                        if (Math.random() > 0.2) {
+                            return null; // Drop the event
+                        }
+                    }
+
+                    // Check if this is a buffer overflow error and handle it
+                    if (hint?.originalException && typeof hint.originalException === 'string' &&
+                        hint.originalException.includes('buffer is full')) {
+                        console.warn('Sentry buffer overflow detected, clearing buffer...');
+                        this.clearBuffer();
+                        return null; // Drop this specific error to prevent infinite loop
+                    }
+
                     console.log('Sentry beforeSend called:', {
                         eventType: event.type,
                         eventLevel: event.level,
@@ -203,6 +232,18 @@ class SentryManager {
 
         this.isInitialized = true;
         console.log(`SentryManager initialized for component: ${this.componentName} with localStorage config:`, localStorageConfig);
+
+        // Set up periodic buffer clearing to prevent overflow
+        this.setupBufferClearing();
+    }
+
+    private setupBufferClearing(): void {
+        // Clear buffer every 30 seconds to prevent overflow
+        setInterval(() => {
+            if (this.isInitialized) {
+                this.clearBuffer();
+            }
+        }, 30000); // 30 seconds
     }
 
     private setupErrorFiltering(): void {
@@ -785,11 +826,29 @@ class SentryManager {
         }
 
         try {
+            // Clear Sentry buffer to prevent overflow
+            if (Sentry && typeof Sentry.flush === 'function') {
+                Sentry.flush(2000); // Wait up to 2 seconds for flush
+            }
+
             // This method is no longer needed as Sentry.setContext and Sentry.setTag are used
             // Keeping it for now, but it will not have an effect on Sentry configuration
             console.log('cleanup called, but Sentry configuration is managed externally.');
         } catch (sentryError) {
             this.originalConsoleError('Failed to cleanup Sentry:', sentryError);
+        }
+    }
+
+    // Method to clear Sentry buffer when it gets full
+    clearBuffer(): void {
+        try {
+            // Force flush any pending events
+            if (Sentry && typeof Sentry.flush === 'function') {
+                Sentry.flush(2000); // Wait up to 2 seconds for flush
+                console.log('Sentry buffer flushed successfully');
+            }
+        } catch (error) {
+            console.warn('Failed to flush Sentry buffer:', error);
         }
     }
 }

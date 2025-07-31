@@ -1,5 +1,4 @@
 import SentryManager from './sentry-manager';
-import { appSettings } from '../../app-settings';
 import {
     SentryLogLevel,
     WorkflowState,
@@ -474,9 +473,9 @@ class SentryHelper {
             const componentConfig = this.getComponentConfig(componentName);
             const sentryManager = SentryManager.getInstance();
 
-            // Get the DSN from appSettings
-            const dsn = appSettings.sentry?.dsn || 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056';
-            const environment = appSettings.sentry?.environment || 'LOCAL1';
+            // Use fallback values to avoid circular dependency with appSettings
+            const dsn = 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056';
+            const environment = 'LOCAL1';
 
             console.log(`Initializing SentryManager for component ${componentName} with DSN: ${dsn}, environment: ${environment}`);
 
@@ -506,6 +505,27 @@ class SentryHelper {
     // Get active workflows
     getActiveWorkflows(): Map<string, { config: WorkflowConfig; startTime: number; metadata: Record<string, any> }> {
         return this.activeWorkflows;
+    }
+
+    // Update Sentry configuration with appSettings (to be called after appSettings is initialized)
+    updateSentryConfiguration(dsn?: string, environment?: string): void {
+        if (dsn && environment) {
+            // Update all existing component loggers with new configuration
+            this.componentLoggers.forEach((sentryManager, componentName) => {
+                try {
+                    console.log(`[Sentry] Updating configuration for component: ${componentName}`);
+                    sentryManager.initialize({
+                        dsn: dsn,
+                        environment: environment,
+                        componentName,
+                        logLevel: this.getComponentConfig(componentName)?.logLevel || this.globalConfig.defaultLogLevel,
+                        debug: true
+                    });
+                } catch (error) {
+                    console.error(`[Sentry] Failed to update configuration for component ${componentName}:`, error);
+                }
+            });
+        }
     }
 
     // Cleanup resources
@@ -553,6 +573,9 @@ const getLogLevelFromString = (logLevel: string): SentryLogLevel => {
     }
 };
 
+// Export the SentryHelper class for testing
+export { SentryHelper };
+
 // Export functions
 export const configureSentry = (config?: Partial<GlobalSentryConfig>) => sentryHelper.initialize(config);
 export const enableSentry = () => sentryHelper.setGlobalEnabled(true);
@@ -561,6 +584,7 @@ export const setLogLevel = (level: SentryLogLevel) => sentryHelper.setDefaultLog
 export const configureComponent = (name: string, config: Partial<ComponentConfig>) => sentryHelper.configureComponent(name, config);
 export const refreshComponentConfig = (name: string) => sentryHelper.refreshComponentConfig(name);
 export const refreshAllComponentConfigs = () => sentryHelper.refreshAllComponentConfigs();
+export const updateSentryConfiguration = (dsn?: string, environment?: string) => sentryHelper.updateSentryConfiguration(dsn, environment);
 
 // Workflow tracking exports
 export const startWorkflow = (id: string, name: string, component: string, metadata?: Record<string, any>) =>
