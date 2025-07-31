@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot League Wall - Error Simulation Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e17055;
+            border-radius: 8px;
+            background-color: #fff5f5;
+        }
+        .demo-section h2 {
+            color: #d63031;
+            margin-top: 0;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .error-type {
+            background-color: #ffe6e6;
+            border-left: 4px solid #e17055;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #e6ffe6;
+            border-left: 4px solid #00b894;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .info {
+            background-color: #e6f3ff;
+            border-left: 4px solid #0984e3;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Hot League Wall - Error Simulation Demo</h1>
+        
+        <div class="demo-section">
+            <h2>🎯 Overview</h2>
+            <p>This demo shows how to use the error simulation functionality to test Sentry session replay in the Hot League Wall component.</p>
+            
+            <div class="success">
+                <strong>✅ Status:</strong> Error simulation system is ready for testing
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Quick Start</h2>
+            <p>To enable error simulation, set the <code>testMode</code> prop to <code>true</code>:</p>
+            
+            <div class="code-block">
+import App from './src/app';
+
+// Initialize with test mode enabled
+&lt;App 
+    appEnv="test"
+    siteId="test-site-123"
+    language="en"
+    testMode={true} // This enables the error testing page
+/&gt;
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🧪 Available Error Types</h2>
+            
+            <div class="error-type">
+                <h3>1. Null Reference Error</h3>
+                <p>Simulates accessing properties of null objects:</p>
+                <div class="code-block">
+const nullObject: any = null;
+const result = nullObject.someProperty.length; // Throws TypeError
+                </div>
+            </div>
+
+            <div class="error-type">
+                <h3>2. Network Error</h3>
+                <p>Simulates failed network requests:</p>
+                <div class="code-block">
+const response = await fetch('https://invalid-url-that-will-fail.com/api/test');
+const data = await response.json(); // Throws network error
+                </div>
+            </div>
+
+            <div class="error-type">
+                <h3>3. State Error</h3>
+                <p>Simulates state mutation errors (like the original MainPlayerStore issue):</p>
+                <div class="code-block">
+const state = { games: null };
+const gameCount = state.games.length; // Throws TypeError
+                </div>
+            </div>
+
+            <div class="error-type">
+                <h3>4. MainPlayerStore Error</h3>
+                <p>Simulates the exact original error from MainPlayerStore.handleOfferGames:</p>
+                <div class="code-block">
+const mainPlayerStore = { offerGames: null };
+const handleOfferGames = (offerGames) => {
+    return offerGames.length; // Throws: "Cannot read properties of null (reading 'length')"
+};
+handleOfferGames(mainPlayerStore.offerGames);
+                </div>
+            </div>
+
+            <div class="error-type">
+                <h3>5. Workflow Error</h3>
+                <p>Simulates workflow step failures:</p>
+                <div class="code-block">
+await workflowTracker.track('Failing Step', async () => {
+    throw new Error('Workflow step intentionally failed for testing');
+});
+                </div>
+            </div>
+
+            <div class="error-type">
+                <h3>6. Performance Error</h3>
+                <p>Simulates slow operations:</p>
+                <div class="code-block">
+await trackPerformance('Slow Operation', async () => {
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    throw new Error('Performance threshold exceeded');
+});
+                </div>
+            </div>
+
+            <div class="error-type">
+                <h3>7. User Interaction Error</h3>
+                <p>Simulates DOM element not found:</p>
+                <div class="code-block">
+const element = document.querySelector('.non-existent-element');
+if (!element) {
+    throw new Error('Element not found for user action');
+}
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📊 Session Replay Breadcrumbs</h2>
+            <p>All error simulations create detailed session replay breadcrumbs:</p>
+            
+            <div class="code-block">
+logError('Session replay: [Error Type] error occurred', {
+    error: errorMessage,
+    errorType: 'specific_error_type',
+    timestamp: Date.now(),
+    operation: 'operation_name',
+    // Additional context specific to each error type
+});
+            </div>
+
+            <div class="info">
+                <strong>📋 Breadcrumb Metadata:</strong>
+                <ul>
+                    <li><strong>error:</strong> The actual error message</li>
+                    <li><strong>errorType:</strong> Type of error being simulated</li>
+                    <li><strong>timestamp:</strong> When the error occurred</li>
+                    <li><strong>operation:</strong> Operation that triggered the error</li>
+                    <li><strong>Additional context:</strong> Error-specific metadata</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎮 Using the Error Simulator</h2>
+            
+            <div class="info">
+                <h3>Quick Error Tests</h3>
+                <p>Use the quick test buttons to simulate immediate errors:</p>
+                <ul>
+                    <li>🚨 <strong>Simulate Error:</strong> Triggers an immediate error</li>
+                    <li>⚠️ <strong>Simulate Warning:</strong> Triggers a warning message</li>
+                    <li>ℹ️ <strong>Simulate Info:</strong> Triggers an info message</li>
+                </ul>
+            </div>
+
+            <div class="info">
+                <h3>Comprehensive Error Simulator</h3>
+                <p>Click "Show Error Simulator" to access the full testing interface:</p>
+                <ul>
+                    <li><strong>Individual Error Buttons:</strong> Test specific error types</li>
+                    <li><strong>Random Error:</strong> Randomly selects an error type</li>
+                    <li><strong>Auto Simulation:</strong> Automatically triggers errors every 10 seconds</li>
+                    <li><strong>Error Count:</strong> Track how many errors have been simulated</li>
+                    <li><strong>Reset Count:</strong> Clear the error counter</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📈 Monitoring and Debugging</h2>
+            
+            <div class="info">
+                <h3>Console Logs</h3>
+                <p>All error simulations log to the console with detailed information:</p>
+                <div class="code-block">
+Session replay: Starting null reference error simulation
+Session replay: Null reference error occurred
+Session replay: Error simulation stopped
+                </div>
+            </div>
+
+            <div class="info">
+                <h3>Sentry Dashboard</h3>
+                <p>Check your Sentry dashboard for:</p>
+                <ul>
+                    <li>Error reports with full context</li>
+                    <li>Session replay recordings</li>
+                    <li>Breadcrumb trails</li>
+                    <li>Performance metrics</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔧 Configuration</h2>
+            
+            <div class="code-block">
+{
+    dsn: appSettingsWithSentry.sentryDsn,
+    environment: appSettingsWithSentry.sentryEnvironment || 'development',
+    componentName: 'TestErrorPage',
+    release: process.env.REACT_APP_VERSION || '1.0.0',
+    debug: process.env.NODE_ENV === 'development',
+    logLevel: SentryLogLevel.ERROR // Ensures session replay is enabled
+}
+            </div>
+
+            <div class="success">
+                <strong>✅ Log Levels:</strong>
+                <ul>
+                    <li><strong>ERROR:</strong> All error simulations use ERROR level to ensure session replay</li>
+                    <li><strong>WARNING:</strong> Warning simulations for testing warning handling</li>
+                    <li><strong>INFO:</strong> Info messages for general testing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎯 Example Usage</h2>
+            
+            <div class="code-block">
+// Initialize app in test mode
+const app = (
+    &lt;App 
+        appEnv="test"
+        siteId="test-site"
+        language="en"
+        testMode={true}
+    /&gt;
+);
+
+// The error testing page will be displayed
+// Use the interface to simulate various errors
+// Check Sentry dashboard for session replay breadcrumbs
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📋 Next Steps</h2>
+            
+            <div class="success">
+                <ol>
+                    <li><strong>Enable Test Mode:</strong> Set <code>testMode={true}</code> in your App component</li>
+                    <li><strong>Load Component:</strong> Load the Hot League Wall component in test mode</li>
+                    <li><strong>Use Error Simulator:</strong> Use the error testing interface to simulate various errors</li>
+                    <li><strong>Check Sentry:</strong> Check your Sentry dashboard for session replay breadcrumbs</li>
+                    <li><strong>Monitor Console:</strong> Watch console logs for debugging information</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📞 Support</h2>
+            
+            <div class="info">
+                <p>For issues with error simulation:</p>
+                <ol>
+                    <li>Check the ERROR_SIMULATION_GUIDE.md file</li>
+                    <li>Review console logs</li>
+                    <li>Check Sentry dashboard</li>
+                    <li>Contact the development team</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>⚠️ Important Notes</h2>
+            
+            <div class="error-type">
+                <ul>
+                    <li><strong>Testing Only:</strong> This error simulation system is for testing purposes only</li>
+                    <li><strong>Production:</strong> Do not use in production environments</li>
+                    <li><strong>Session Replay:</strong> All errors are logged with ERROR level to ensure session replay capture</li>
+                    <li><strong>Breadcrumbs:</strong> Detailed breadcrumbs are created for debugging</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo script to show console output
+        console.log('🧪 Hot League Wall Error Simulation Demo');
+        console.log('==========================================');
+        console.log('✅ Error simulation system is ready for testing');
+        console.log('📋 Check the documentation above for usage instructions');
+        console.log('🎯 Set testMode={true} to enable error simulation');
+        console.log('📊 All errors will create session replay breadcrumbs in Sentry');
+    </script>
+</body>
+</html> 

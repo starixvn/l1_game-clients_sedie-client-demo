@@ -7,6 +7,7 @@ import { SyncMemberSiteBalance } from './_shared/utils/callback-singleton/sync-m
 import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
 import React, { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
+import TestErrorPage from './test-error-page';
 
 import { appSettingsWithSentry } from './_shared/app-settings';
 import { useSentryHelper, SentryLogLevel, createSentryManager, createSentryHelper, SentryLogProvider } from './sentry';
@@ -18,6 +19,7 @@ interface AppProps {
     language: string;
     updateBalanceCallback?: void | null;
     onRequestSSOToken?: () => Promise<string | null>;
+    testMode?: boolean;
 }
 
 interface AppContentProps {
@@ -25,11 +27,16 @@ interface AppContentProps {
     onRequestSSOToken?: () => Promise<string | null>;
 }
 
-const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
+const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken, testMode = true }: AppProps) => {
     // Sentry is now initialized through SentryLogProvider
     React.useEffect(() => {
         console.log('Hot League Wall App initialized with SentryLogProvider');
     }, []);
+
+    // If test mode is enabled, show the error testing page
+    if (testMode) {
+        return <TestErrorPage appEnv={appEnv} siteId={siteId} language={language} />;
+    }
 
     return (
         <HotLeagueWallErrorBoundary componentName="HotLeagueWall">
