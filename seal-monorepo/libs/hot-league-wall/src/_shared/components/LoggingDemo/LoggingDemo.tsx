@@ -258,7 +258,7 @@ const DemoGame: React.FC = () => {
                     <li>Click "End Game" to send all logs to Sentry</li>
                     <li>Use "Send to Sentry" to manually send logs without ending the game</li>
                     <li>Use "Clear Logs" to clear the log buffer</li>
-                    <li>All logs are automatically sent to Sentry in real-time</li>
+                    <li>Logs are collected locally and only sent to Sentry when requested</li>
                 </ul>
             </div>
         </div>
@@ -278,7 +278,7 @@ export const LoggingDemo: React.FC = () => {
                 dsn: "https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056",
                 environment: "LOCAL1",
                 componentName: "LoggingDemo",
-                debug: true,
+                debug: false, // Disable debug to reduce noise
                 logLevel: SentryLogLevel.INFO
             }}
         >

@@ -166,7 +166,7 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
                 const sentryManager = SentryManager.getInstance();
                 dispatch({ type: 'SET_SENTRY_MANAGER', payload: sentryManager });
 
-                // Log initialization
+                // Log initialization (this is the only immediate log sent to Sentry)
                 sentryManager.logInfo('SentryLogProvider initialized', {
                     sessionId: state.sessionId,
                     gameId: state.gameId,
@@ -217,35 +217,8 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
 
         dispatch({ type: 'ADD_LOG', payload: logEntry });
 
-        // Also send to Sentry if manager is available
-        if (state.sentryManager) {
-            const metadata = {
-                sessionId: state.sessionId,
-                gameId: state.gameId,
-                ...options.metadata,
-            };
-
-            switch (logEntry.level) {
-                case 'trace':
-                    state.sentryManager.logTrace(message, metadata);
-                    break;
-                case 'debug':
-                    state.sentryManager.logDebug(message, metadata);
-                    break;
-                case 'info':
-                    state.sentryManager.logInfo(message, metadata);
-                    break;
-                case 'warn':
-                    state.sentryManager.logWarning(message, metadata);
-                    break;
-                case 'error':
-                    state.sentryManager.logError(message, metadata);
-                    break;
-                case 'fatal':
-                    state.sentryManager.logFatal(message, metadata);
-                    break;
-            }
-        }
+        // Note: Logs are only sent to Sentry when sendLogsToSentry() is called
+        // This prevents too many requests to Sentry during gameplay
 
         // Trim logs if they exceed maxLogs
         if (state.logs.length >= maxLogsRef.current) {
@@ -302,18 +275,50 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
         }
 
         try {
-            // Send a summary log to Sentry
+            // Send each log individually to Sentry with proper metadata
+            state.logs.forEach(log => {
+                const metadata = {
+                    sessionId: log.sessionId,
+                    gameId: log.gameId,
+                    componentName: log.componentName,
+                    logId: log.id,
+                    timestamp: log.timestamp,
+                    ...log.metadata,
+                };
+
+                switch (log.level) {
+                    case 'trace':
+                        state.sentryManager!.logTrace(log.message, metadata);
+                        break;
+                    case 'debug':
+                        state.sentryManager!.logDebug(log.message, metadata);
+                        break;
+                    case 'info':
+                        state.sentryManager!.logInfo(log.message, metadata);
+                        break;
+                    case 'warn':
+                        state.sentryManager!.logWarning(log.message, metadata);
+                        break;
+                    case 'error':
+                        state.sentryManager!.logError(log.message, metadata);
+                        break;
+                    case 'fatal':
+                        state.sentryManager!.logFatal(log.message, metadata);
+                        break;
+                }
+            });
+
+            // Send a final summary log
             const mergedLogs = getMergedLogs();
             const logSummary = {
                 totalLogs: state.logs.length,
                 sessionId: state.sessionId,
                 gameId: state.gameId,
-                logs: state.logs,
                 mergedLogs,
                 timestamp: Date.now(),
             };
 
-            state.sentryManager.logInfo('Game session logs summary', logSummary);
+            state.sentryManager.logInfo('Game session completed - all logs sent', logSummary);
 
             console.log(`Successfully sent ${state.logs.length} logs to Sentry`);
             clearLogs();
