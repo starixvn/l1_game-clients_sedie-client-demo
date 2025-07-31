@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useGameSentryLogger, useSentryLog } from '../../../sentry';
+import { useSentryHelper, SentryLogLevel } from '../../../sentry';
 
 interface GameBoardProps {
     gameId: string;
@@ -16,14 +16,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const [endGameMessage, setEndGameMessage] = useState('');
     const initializedRef = useRef(false);
 
-    const { logInfo, logError } = useGameSentryLogger('GameBoard');
-    const { sendLogsToSentry, logs } = useSentryLog();
-
-    // Memoize logs data to prevent unnecessary re-renders
-    const logsData = useMemo(() => ({
-        count: logs.length,
-        recentLogs: logs.slice(-5)
-    }), [logs]);
+    const { logInfo, logError } = useSentryHelper({
+        componentName: 'GameBoard',
+        logLevel: SentryLogLevel.INFO,
+        enableWorkflowTracking: true,
+        enablePerformanceTracking: true
+    });
 
     // Log game board initialization - only once
     React.useEffect(() => {
@@ -49,10 +47,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 action: 'end_game_button_clicked'
             });
 
-            // Send logs to Sentry
-            await sendLogsToSentry();
-
-            setEndGameMessage('Game ended successfully! Logs sent to Sentry.');
+            setEndGameMessage('Game ended successfully!');
 
             logInfo('Game ended successfully', {
                 gameId,
@@ -78,35 +73,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         } finally {
             setIsEnding(false);
         }
-    }, [logInfo, logError, sendLogsToSentry, gameId, sessionId, onGameEnd]);
+    }, [logInfo, logError, gameId, sessionId, onGameEnd]);
 
-    // Handle manual log sending
-    const handleSendLogs = useCallback(async () => {
-        try {
-            logInfo('Manual log sending initiated', {
-                gameId,
-                sessionId,
-                action: 'manual_log_send'
-            });
 
-            await sendLogsToSentry();
-
-            logInfo('Manual log sending completed', {
-                gameId,
-                sessionId,
-                action: 'manual_log_send_success'
-            });
-
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            logError('Manual log sending failed', {
-                gameId,
-                sessionId,
-                error: errorMessage,
-                action: 'manual_log_send_failed'
-            });
-        }
-    }, [logInfo, logError, sendLogsToSentry, gameId, sessionId]);
 
     // Handle clear logs
     const handleClearLogs = useCallback(() => {
@@ -140,9 +109,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             <div style={{ marginBottom: '15px' }}>
                 <strong>Session ID:</strong> {sessionId}
             </div>
-            <div style={{ marginBottom: '15px' }}>
-                <strong>Log Count:</strong> {logsData.count}
-            </div>
+
 
             {endGameMessage && (
                 <div style={{
@@ -174,19 +141,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     {isEnding ? 'Ending Game...' : 'End Game'}
                 </button>
 
-                <button
-                    onClick={handleSendLogs}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#2196f3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Send to Sentry
-                </button>
+
 
                 <button
                     onClick={handleClearLogs}
@@ -203,41 +158,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 </button>
             </div>
 
-            {/* Log Preview */}
-            {logsData.count > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                    <h3>Recent Logs (Last 5)</h3>
-                    <div style={{
-                        maxHeight: '200px',
-                        overflowY: 'auto',
-                        backgroundColor: '#fff',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        padding: '10px',
-                        fontSize: '12px',
-                        fontFamily: 'monospace'
-                    }}>
-                        {logsData.recentLogs.map((log) => (
-                            <div key={log.id} style={{ marginBottom: '5px' }}>
-                                <span style={{ color: '#666' }}>
-                                    {new Date(log.timestamp).toLocaleTimeString()}
-                                </span>
-                                <span style={{
-                                    color: log.level === 'error' ? '#f44336' :
-                                        log.level === 'warn' ? '#ff9800' :
-                                            log.level === 'debug' ? '#9c27b0' : '#2196f3',
-                                    marginLeft: '10px'
-                                }}>
-                                    [{log.level?.toUpperCase()}]
-                                </span>
-                                <span style={{ marginLeft: '10px' }}>
-                                    {log.message}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 }; 

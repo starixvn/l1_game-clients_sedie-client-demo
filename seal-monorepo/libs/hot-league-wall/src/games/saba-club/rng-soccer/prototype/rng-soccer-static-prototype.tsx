@@ -15,7 +15,7 @@ export const RNGSoccerStaticPrototype: React.FC<{
     const ANIMATION_TIME = 10;
 
     // Initialize SentryHelper for RNG Soccer prototype
-    const { logError, logWarning, logInfo, workflow } = useSentryHelper({
+    const { logError, logWarning, logInfo, workflowTracker } = useSentryHelper({
         componentName: 'RNGSoccerStaticPrototype',
         logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
@@ -92,7 +92,7 @@ export const RNGSoccerStaticPrototype: React.FC<{
     }, [countdown, logError]);
 
     const handlePlayClick = async () => {
-        const workflowId = workflow.start('Play Button Click', {
+        const workflowId = workflowTracker.start('Play Button Click', {
             isPlayButtonVisible,
             isLoading,
             timestamp: Date.now()
@@ -108,11 +108,11 @@ export const RNGSoccerStaticPrototype: React.FC<{
 
         if (onPlayButtonClick) {
             try {
-                await workflow.track('SSO Token Request', async () => {
+                await workflowTracker.track('SSO Token Request', async () => {
                     return await onPlayButtonClick();
                 });
 
-                workflow.complete(workflowId, true, {
+                workflowTracker.complete(workflowId, true, {
                     success: true,
                     timestamp: Date.now()
                 });
@@ -121,7 +121,7 @@ export const RNGSoccerStaticPrototype: React.FC<{
                 });
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                workflow.complete(workflowId, false, {
+                workflowTracker.complete(workflowId, false, {
                     error: errorMessage,
                     timestamp: Date.now()
                 });
@@ -133,7 +133,7 @@ export const RNGSoccerStaticPrototype: React.FC<{
                 setIsPlayButtonVisible(true);
             }
         } else {
-            workflow.complete(workflowId, false, {
+            workflowTracker.complete(workflowId, false, {
                 reason: 'no_onPlayButtonClick_provided',
                 timestamp: Date.now()
             });

@@ -136,7 +136,7 @@ const BetPanel: React.FC<{
     handleBet: (amount: number, betChoice: string, clientSeed: string) => void;
 }> = ({ namespace, clientRoundId, currency, minBet, maxBet, maxBetPerChoices, stakeLevel, handleBet, clientSeed }) => {
     // Initialize SentryHelper for BetPanel
-    const { logError, logWarning, logInfo, workflow } = useSentryHelper({
+    const { logError, logWarning, logInfo, workflowTracker } = useSentryHelper({
         componentName: 'BetPanel',
         logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: false,
@@ -304,7 +304,7 @@ const BetPanel: React.FC<{
     };
 
     const handleClickBet = () => {
-        const workflowId = workflow.start('Bet Placement', {
+        const workflowId = workflowTracker.start('Bet Placement', {
             betChoice,
             amount,
             namespace,
@@ -346,7 +346,7 @@ const BetPanel: React.FC<{
                 operation: 'bet_validation'
             });
 
-            workflow.complete(workflowId, false, {
+            workflowTracker.complete(workflowId, false, {
                 reason: 'validation_failed',
                 msg,
                 warning
@@ -368,7 +368,7 @@ const BetPanel: React.FC<{
                 onHide?.();
                 updateLatestBetToStorage(namespace, clientRoundId);
 
-                workflow.complete(workflowId, true, {
+                workflowTracker.complete(workflowId, true, {
                     validatedAmount,
                     betChoice,
                     namespace,
@@ -393,7 +393,7 @@ const BetPanel: React.FC<{
                     clientRoundId,
                     timestamp: Date.now()
                 });
-                workflow.complete(workflowId, false, {
+                workflowTracker.complete(workflowId, false, {
                     error: errorMessage,
                     validatedAmount,
                     betChoice
@@ -406,7 +406,7 @@ const BetPanel: React.FC<{
                 timestamp: Date.now(),
                 operation: 'bet_validation_no_choice'
             });
-            workflow.complete(workflowId, false, {
+            workflowTracker.complete(workflowId, false, {
                 reason: 'no_bet_choice'
             });
         }

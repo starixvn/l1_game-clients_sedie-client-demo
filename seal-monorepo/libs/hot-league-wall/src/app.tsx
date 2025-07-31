@@ -9,7 +9,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 
 import { appSettingsWithSentry } from './_shared/app-settings';
-import { useSentryHelper, SentryLogLevel, initializeSentryForProject, configureSentryForEnvironment, initializeSentryWithSessionReplay, configureSessionReplayForEnvironment, useSessionReplay, sentryGameCronBatchManager } from './sentry';
+import { useSentryHelper, SentryLogLevel, createSentryManager, createSentryHelper } from './sentry';
 
 interface AppProps {
     appEnv: string;
@@ -25,7 +25,7 @@ interface AppContentProps {
 }
 
 const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
-    // Initialize SentryHelper and Session Replay for the entire project
+    // Initialize Sentry for the entire project
     React.useEffect(() => {
         const environment = process.env.NODE_ENV || 'development';
 
@@ -37,18 +37,29 @@ const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToke
                 environment
             });
 
-            // Initialize Sentry with Session Replay (this will handle all Sentry initialization)
-            const sessionReplayConfig = configureSessionReplayForEnvironment(environment);
-            console.log('Session replay config:', sessionReplayConfig);
-            initializeSentryWithSessionReplay(sessionReplayConfig);
+            // Initialize Sentry using the refactored approach
+            const sentryManager = createSentryManager();
+            const sentryHelper = createSentryHelper();
 
-            // Configure SentryHelper after initialization
-            configureSentryForEnvironment(environment);
-            initializeSentryForProject();
+            // Initialize Sentry Manager
+            sentryManager.initialize({
+                dsn: appSettingsWithSentry.sentryDsn,
+                environment: appSettingsWithSentry.sentryEnvironment || environment,
+                componentName: 'HotLeagueWall',
+                logLevel: SentryLogLevel.INFO,
+                enableWorkflowTracking: true,
+                enablePerformanceTracking: true,
+                enableConsoleOverride: false
+            });
 
-            // Initialize Game Cron Batch Manager
-            sentryGameCronBatchManager.initialize();
-            console.log('Game Cron Batch Manager initialized');
+            // Initialize Sentry Helper
+            sentryHelper.initialize({
+                enabled: true,
+                defaultLogLevel: SentryLogLevel.INFO,
+                enableWorkflowTracking: true,
+                enablePerformanceTracking: true,
+                enableConsoleOverride: false
+            });
 
             console.log('Sentry initialization completed successfully');
         } catch (error) {
@@ -74,48 +85,28 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     const [isReconnecting, setIsReconnecting] = useState(false);
 
     // Initialize SentryHelper with workflow tracking
-    const { logError, logWarning, logInfo, workflow } = useSentryHelper({
+    const { logError, logWarning, logInfo, workflowTracker } = useSentryHelper({
         componentName: 'HotLeagueWall',
         logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true
     });
 
-    // Initialize Session Replay for the main application
-    const {
-        startReplay,
-        trackInteraction,
-        trackError,
-        trackPerformance,
-        setUser,
-        setTags
-    } = useSessionReplay('HotLeagueWall');
-
     // Shared token request logic with Sentry tracking
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
-        const workflowId = workflow.start(`Token Request - ${context}`, {
-            context,
-            timestamp: Date.now()
-        });
-
-        // Start Session Replay for token request
-        startReplay(`Token Request Session - ${context}`, {
+        const workflowId = workflowTracker.start(`Token Request - ${context}`, {
             context,
             timestamp: Date.now()
         });
 
         try {
             logInfo(`Starting token request`, { context, timestamp: Date.now() });
-            trackInteraction('token_request_started', { context });
 
             let newToken: string | null = null;
             if (onRequestSSOToken) {
-                newToken = await workflow.track('SSO Token Request', async () => {
+                newToken = await workflowTracker.track('SSO Token Request', async () => {
                     try {
-                        const startTime = performance.now();
                         const result = await onRequestSSOToken();
-                        const duration = performance.now() - startTime;
-                        trackPerformance('sso_token_request', duration, { context });
                         return result;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -128,12 +119,9 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                     }
                 });
             } else {
-                newToken = await workflow.track('Token Manager Request', async () => {
+                newToken = await workflowTracker.track('Token Manager Request', async () => {
                     try {
-                        const startTime = performance.now();
                         const result = await TokenRequestManager.getInstance().executeTokenRequest();
-                        const duration = performance.now() - startTime;
-                        trackPerformance('token_manager_request', duration, { context });
                         return result;
                     } catch (error) {
                         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -149,16 +137,15 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
             if (newToken) {
                 setCurrentToken(newToken);
-                workflow.complete(workflowId, true, {
+                workflowTracker.complete(workflowId, true, {
                     tokenReceived: true,
                     tokenLength: newToken.length,
                     context
                 });
                 logInfo(`Token request successful`, { context, tokenLength: newToken.length });
-                trackInteraction('token_request_success', { context, tokenLength: newToken.length });
                 return { success: true, token: newToken };
             } else {
-                workflow.complete(workflowId, false, {
+                workflowTracker.complete(workflowId, false, {
                     tokenReceived: false,
                     context,
                     reason: 'no_token_returned'
@@ -168,12 +155,11 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                     reason: 'no_token_returned',
                     operation: 'token_request'
                 });
-                trackError('Token request returned null', { context });
                 return { success: false, token: null };
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            workflow.complete(workflowId, false, {
+            workflowTracker.complete(workflowId, false, {
                 error: errorMessage,
                 context,
                 reason: 'token_request_failed'
@@ -184,10 +170,9 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
                 operation: 'token_request',
                 reason: 'token_request_failed'
             });
-            trackError(errorMessage, { context });
             return { success: false, token: null, error };
         }
-    }, [onRequestSSOToken, workflow, logError, logWarning, logInfo, startReplay, trackInteraction, trackError, trackPerformance]);
+    }, [onRequestSSOToken, workflowTracker, logError, logWarning, logInfo]);
 
     // Effect to handle tab visibility changes and reset game state
     useEffect(() => {

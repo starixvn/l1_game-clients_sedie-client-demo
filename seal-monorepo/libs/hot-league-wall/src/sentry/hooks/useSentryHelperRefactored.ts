@@ -167,6 +167,7 @@ export const useSentryHelperRefactored = (options: UseSentryHelperOptions) => {
         completeWorkflow,
         trackPerformance,
         workflowTracker,
+        workflow: workflowTracker, // Backward compatibility
 
         // Configuration methods
         configureComponent,

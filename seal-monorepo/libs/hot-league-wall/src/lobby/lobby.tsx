@@ -16,7 +16,7 @@ import { useSentryHelper, SentryLogLevel, logInfo, logError, logWarning } from '
 
 // Wrapper component to provide SentryHelper to the class component
 const LobbyWithSentry = (props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean; language: string }) => {
-    const { logError, logWarning, logInfo, workflow } = useSentryHelper({
+    const { logError, logWarning, logInfo, workflowTracker } = useSentryHelper({
         componentName: 'Lobby',
         logLevel: SentryLogLevel.INFO,
         enableWorkflowTracking: true,
@@ -39,7 +39,7 @@ const LobbyWithSentry = (props: { token: string; onSSORetry?: () => Promise<void
     return (
         <LobbyComponent
             {...props}
-            sentryHelper={{ logError, logWarning, logInfo, workflow }}
+            sentryHelper={{ logError, logWarning, logInfo, workflow: workflowTracker }}
         />
     );
 };

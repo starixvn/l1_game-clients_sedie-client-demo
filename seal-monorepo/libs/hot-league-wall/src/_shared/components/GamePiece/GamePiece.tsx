@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useGameSentryLogger } from '../../../sentry';
+import { useSentryHelper, SentryLogLevel } from '../../../sentry';
 
 interface GamePieceProps {
     pieceId: string;
@@ -20,7 +20,12 @@ export const GamePiece: React.FC<GamePieceProps> = ({
     const [health, setHealth] = useState(pieceType === 'player' ? 100 : 50);
     const [isMoving, setIsMoving] = useState(false);
 
-    const { logInfo, logDebug } = useGameSentryLogger(`GamePiece_${pieceId}`);
+    const { logInfo, logDebug } = useSentryHelper({
+        componentName: `GamePiece_${pieceId}`,
+        logLevel: SentryLogLevel.INFO,
+        enableWorkflowTracking: true,
+        enablePerformanceTracking: true
+    });
 
     // Log component initialization
     useEffect(() => {
@@ -270,7 +275,12 @@ export const GamePieceControls: React.FC<{ pieceId: string; onMove: (direction: 
     onMove,
     onInteraction
 }) => {
-    const { logInfo } = useGameSentryLogger(`GamePieceControls_${pieceId}`);
+    const { logInfo } = useSentryHelper({
+        componentName: `GamePieceControls_${pieceId}`,
+        logLevel: SentryLogLevel.INFO,
+        enableWorkflowTracking: true,
+        enablePerformanceTracking: true
+    });
 
     const handleMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
         logInfo('Move command issued', {
