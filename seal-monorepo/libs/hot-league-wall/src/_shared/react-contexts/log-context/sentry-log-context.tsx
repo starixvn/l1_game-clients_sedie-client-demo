@@ -166,7 +166,11 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
     const maxLogsRef = useRef(maxLogs);
     const autoSendOnUnmountRef = useRef(autoSendOnUnmount);
 
-    // Initialize Sentry Manager
+    // Use refs to store current state values to avoid dependency issues
+    const stateRef = useRef(state);
+    stateRef.current = state;
+
+    // Initialize Sentry Manager - only run once when sentryConfig changes
     useEffect(() => {
         if (sentryConfig) {
             try {
@@ -184,16 +188,16 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
 
                 // Log initialization (this is the only immediate log sent to Sentry)
                 sentryManager.logInfo('SentryLogProvider initialized', {
-                    sessionId: state.sessionId,
-                    gameId: state.gameId,
-                    enabled: state.isEnabled,
+                    sessionId: stateRef.current.sessionId,
+                    gameId: stateRef.current.gameId,
+                    enabled: stateRef.current.isEnabled,
                     timestamp: Date.now()
                 });
             } catch (error) {
                 console.error('Failed to initialize Sentry Manager:', error);
             }
         }
-    }, [sentryConfig, state.sessionId, state.gameId, state.isEnabled]);
+    }, [sentryConfig]); // Only depend on sentryConfig
 
     // Update maxLogs when prop changes
     useEffect(() => {
@@ -208,25 +212,25 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
     // Auto-send logs on unmount if enabled
     useEffect(() => {
         return () => {
-            if (autoSendOnUnmountRef.current && state.logs.length > 0) {
+            if (autoSendOnUnmountRef.current && stateRef.current.logs.length > 0) {
                 sendLogsToSentry().catch(console.error);
             }
         };
-    }, [state.logs.length]);
+    }, []); // Empty dependency array since we use refs
 
     // Add a log entry
     const addLog = useCallback((
         message: string,
         options: Partial<Omit<SentryLogEntry, 'id' | 'timestamp'>> = {}
     ) => {
-        if (!state.isEnabled) return;
+        if (!stateRef.current.isEnabled) return;
 
         const logEntry: SentryLogEntry = {
             id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             timestamp: Date.now(),
             message,
-            sessionId: state.sessionId,
-            gameId: state.gameId,
+            sessionId: stateRef.current.sessionId,
+            gameId: stateRef.current.gameId,
             level: 'info',
             ...options,
         };
@@ -236,17 +240,17 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
         // Note: Logs are only sent to Sentry when sendLogsToSentry() is called
         // This prevents too many requests to Sentry during gameplay
 
-        // Trim logs if they exceed maxLogs
-        if (state.logs.length >= maxLogsRef.current) {
-            const trimmedLogs = state.logs.slice(-maxLogsRef.current + 1);
+        // Trim logs if they exceed maxLogs - use ref to avoid dependency issues
+        if (stateRef.current.logs.length >= maxLogsRef.current) {
+            const trimmedLogs = stateRef.current.logs.slice(-maxLogsRef.current + 1);
             dispatch({ type: 'CLEAR_LOGS' });
             trimmedLogs.forEach(log => dispatch({ type: 'ADD_LOG', payload: log }));
         }
-    }, [state.isEnabled, state.sessionId, state.gameId, state.logs.length, state.sentryManager]);
+    }, []); // Empty dependency array since we use refs
 
     // Get merged logs as a string
     const getMergedLogs = useCallback(() => {
-        return state.logs
+        return stateRef.current.logs
             .map(log => {
                 const timestamp = new Date(log.timestamp).toISOString();
                 const prefix = `[${timestamp}] [${log.sessionId}]`;
@@ -256,7 +260,7 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
                 return `${prefix}${gamePrefix}${componentPrefix}${levelPrefix}: ${log.message}`;
             })
             .join('\n');
-    }, [state.logs]);
+    }, []); // Empty dependency array since we use refs
 
     // Clear all logs
     const clearLogs = useCallback(() => {
@@ -280,19 +284,19 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
 
     // Send logs to Sentry
     const sendLogsToSentry = useCallback(async () => {
-        if (state.logs.length === 0) {
+        if (stateRef.current.logs.length === 0) {
             console.warn('No logs to send to Sentry');
             return;
         }
 
-        if (!state.sentryManager) {
+        if (!stateRef.current.sentryManager) {
             console.warn('Sentry Manager not initialized');
             return;
         }
 
         try {
             // Send each log individually to Sentry with proper metadata
-            state.logs.forEach(log => {
+            stateRef.current.logs.forEach(log => {
                 const metadata = {
                     sessionId: log.sessionId,
                     gameId: log.gameId,
@@ -304,22 +308,22 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
 
                 switch (log.level) {
                     case 'trace':
-                        state.sentryManager!.logTrace(log.message, metadata);
+                        stateRef.current.sentryManager!.logTrace(log.message, metadata);
                         break;
                     case 'debug':
-                        state.sentryManager!.logDebug(log.message, metadata);
+                        stateRef.current.sentryManager!.logDebug(log.message, metadata);
                         break;
                     case 'info':
-                        state.sentryManager!.logInfo(log.message, metadata);
+                        stateRef.current.sentryManager!.logInfo(log.message, metadata);
                         break;
                     case 'warn':
-                        state.sentryManager!.logWarning(log.message, metadata);
+                        stateRef.current.sentryManager!.logWarning(log.message, metadata);
                         break;
                     case 'error':
-                        state.sentryManager!.logError(log.message, metadata);
+                        stateRef.current.sentryManager!.logError(log.message, metadata);
                         break;
                     case 'fatal':
-                        state.sentryManager!.logFatal(log.message, metadata);
+                        stateRef.current.sentryManager!.logFatal(log.message, metadata);
                         break;
                 }
             });
@@ -327,22 +331,22 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
             // Send a final summary log
             const mergedLogs = getMergedLogs();
             const logSummary = {
-                totalLogs: state.logs.length,
-                sessionId: state.sessionId,
-                gameId: state.gameId,
+                totalLogs: stateRef.current.logs.length,
+                sessionId: stateRef.current.sessionId,
+                gameId: stateRef.current.gameId,
                 mergedLogs,
                 timestamp: Date.now(),
             };
 
-            state.sentryManager.logInfo('Game session completed - all logs sent', logSummary);
+            stateRef.current.sentryManager.logInfo('Game session completed - all logs sent', logSummary);
 
-            console.log(`Successfully sent ${state.logs.length} logs to Sentry`);
+            console.log(`Successfully sent ${stateRef.current.logs.length} logs to Sentry`);
             clearLogs();
         } catch (error) {
             console.error('Failed to send logs to Sentry:', error);
             throw error;
         }
-    }, [state.logs, state.sessionId, state.gameId, state.sentryManager, getMergedLogs, clearLogs]);
+    }, [clearLogs, getMergedLogs]); // Depend on clearLogs and getMergedLogs
 
     // Sentry-specific logging methods
     const logTrace = useCallback((message: string, metadata?: Record<string, any>) => {
@@ -448,18 +452,24 @@ export const useSentryLog = (): SentryLogContextType => {
 // Utility hook for game-specific Sentry logging
 export const useGameSentryLogger = (componentName?: string) => {
     const sentryLogContext = useSentryLog();
+    const addLogRef = useRef(sentryLogContext.addLog);
+    const componentNameRef = useRef(componentName);
+
+    // Update refs when they change
+    addLogRef.current = sentryLogContext.addLog;
+    componentNameRef.current = componentName;
 
     const gameLogger = useCallback((
         message: string,
         level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal' = 'info',
         metadata?: Record<string, any>
     ) => {
-        sentryLogContext.addLog(message, {
+        addLogRef.current(message, {
             level,
-            componentName,
+            componentName: componentNameRef.current,
             metadata,
         });
-    }, [sentryLogContext.addLog, componentName]);
+    }, []); // No dependencies since we use refs
 
     const logTrace = useCallback((message: string, metadata?: Record<string, any>) =>
         gameLogger(message, 'trace', metadata), [gameLogger]);

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useGameSentryLogger, useSentryLog } from '../../react-contexts/log-context/sentry-log-context';
 
 interface GameBoardProps {
@@ -14,6 +14,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 }) => {
     const [isEnding, setIsEnding] = useState(false);
     const [endGameMessage, setEndGameMessage] = useState('');
+    const initializedRef = useRef(false);
 
     const { logInfo, logError } = useGameSentryLogger('GameBoard');
     const { sendLogsToSentry, logs } = useSentryLog();
@@ -24,14 +25,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         recentLogs: logs.slice(-5)
     }), [logs]);
 
-    // Log game board initialization
+    // Log game board initialization - only once
     React.useEffect(() => {
-        logInfo('GameBoard component initialized', {
-            gameId,
-            sessionId,
-            timestamp: Date.now()
-        });
-    }, [gameId, sessionId, logInfo]);
+        if (!initializedRef.current) {
+            logInfo('GameBoard component initialized', {
+                gameId,
+                sessionId,
+                timestamp: Date.now()
+            });
+            initializedRef.current = true;
+        }
+    }, [gameId, sessionId]); // Remove logInfo from dependencies
 
     // Handle end game action
     const handleEndGame = useCallback(async () => {

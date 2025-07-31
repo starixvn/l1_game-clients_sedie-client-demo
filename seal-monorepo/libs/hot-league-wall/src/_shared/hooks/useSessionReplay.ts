@@ -26,11 +26,14 @@ export const useSessionReplay = (componentName?: string) => {
         isRecording: false
     });
 
+    const componentNameRef = useRef(componentName);
+    componentNameRef.current = componentName;
+
     // Start a custom session replay
     const startReplay = useCallback((name: string, context?: Record<string, any>) => {
         try {
             startCustomSessionReplay(name, {
-                componentName,
+                componentName: componentNameRef.current,
                 ...context,
                 timestamp: Date.now()
             });
@@ -42,7 +45,7 @@ export const useSessionReplay = (componentName?: string) => {
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Stop the current session replay
     const stopReplay = useCallback(() => {
@@ -56,20 +59,20 @@ export const useSessionReplay = (componentName?: string) => {
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Add data to the current session replay
     const addData = useCallback((data: Record<string, any>) => {
         try {
             addSessionReplayData({
-                componentName,
+                componentName: componentNameRef.current,
                 ...data,
                 timestamp: Date.now()
             });
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Set user context
     const setUser = useCallback((user: {
@@ -81,36 +84,36 @@ export const useSessionReplay = (componentName?: string) => {
         try {
             setUserContext({
                 ...user,
-                componentName: componentName || 'unknown'
+                componentName: componentNameRef.current || 'unknown'
             });
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Set tags
     const setComponentTags = useCallback((tags: Record<string, string>) => {
         try {
             setTags({
-                componentName: componentName || 'unknown',
+                componentName: componentNameRef.current || 'unknown',
                 ...tags
             });
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Set extra context
     const setExtraContext = useCallback((extra: Record<string, any>) => {
         try {
             setExtra({
-                componentName,
+                componentName: componentNameRef.current,
                 ...extra
             });
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Block an element from being recorded
     const blockElementFromReplay = useCallback((element: HTMLElement) => {
@@ -119,7 +122,7 @@ export const useSessionReplay = (componentName?: string) => {
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Ignore an element from being recorded
     const ignoreElementFromReplay = useCallback((element: HTMLElement) => {
@@ -128,7 +131,7 @@ export const useSessionReplay = (componentName?: string) => {
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Unblock an element
     const unblockElementFromReplay = useCallback((element: HTMLElement) => {
@@ -137,7 +140,7 @@ export const useSessionReplay = (componentName?: string) => {
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Unignore an element
     const unignoreElementFromReplay = useCallback((element: HTMLElement) => {
@@ -146,7 +149,7 @@ export const useSessionReplay = (componentName?: string) => {
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Track user interactions
     const trackInteraction = useCallback((interaction: string, data?: Record<string, any>) => {
@@ -154,14 +157,14 @@ export const useSessionReplay = (componentName?: string) => {
             addSessionReplayData({
                 type: 'user_interaction',
                 interaction,
-                componentName,
+                componentName: componentNameRef.current,
                 ...data,
                 timestamp: Date.now()
             });
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Track component lifecycle
     const trackLifecycle = useCallback((lifecycle: 'mount' | 'unmount' | 'update', data?: Record<string, any>) => {
@@ -169,14 +172,14 @@ export const useSessionReplay = (componentName?: string) => {
             addSessionReplayData({
                 type: 'component_lifecycle',
                 lifecycle,
-                componentName,
+                componentName: componentNameRef.current,
                 ...data,
                 timestamp: Date.now()
             });
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Track errors
     const trackError = useCallback((error: Error | string, context?: Record<string, any>) => {
@@ -184,14 +187,14 @@ export const useSessionReplay = (componentName?: string) => {
             addSessionReplayData({
                 type: 'error',
                 error: error instanceof Error ? error.message : error,
-                componentName,
+                componentName: componentNameRef.current,
                 ...context,
                 timestamp: Date.now()
             });
         } catch (err) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
     // Track performance
     const trackPerformance = useCallback((operation: string, duration: number, data?: Record<string, any>) => {
@@ -200,25 +203,25 @@ export const useSessionReplay = (componentName?: string) => {
                 type: 'performance',
                 operation,
                 duration,
-                componentName,
+                componentName: componentNameRef.current,
                 ...data,
                 timestamp: Date.now()
             });
         } catch (error) {
             // Silent fail
         }
-    }, [componentName]);
+    }, []); // No dependencies since we use refs
 
-    // Auto-track component lifecycle
+    // Auto-track component lifecycle - only run once on mount
     useEffect(() => {
-        if (componentName) {
+        if (componentNameRef.current) {
             trackLifecycle('mount', { autoTracked: true });
 
             return () => {
                 trackLifecycle('unmount', { autoTracked: true });
             };
         }
-    }, [componentName, trackLifecycle]);
+    }, []); // Empty dependency array since we use refs
 
     return {
         // Session replay controls

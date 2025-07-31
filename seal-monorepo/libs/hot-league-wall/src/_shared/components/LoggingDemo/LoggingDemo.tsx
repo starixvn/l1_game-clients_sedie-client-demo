@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { SentryLogProvider, useGameSentryLogger, useSentryLog } from '../../react-contexts/log-context/sentry-log-context';
 import { GameBoard } from '../GameBoard';
 import { GamePiece, GamePieceControls } from '../GamePiece';
@@ -14,6 +14,7 @@ const DemoGame: React.FC = () => {
         { id: 'item1', type: 'item' as const, position: { x: 2, y: 3 } },
         { id: 'obstacle1', type: 'obstacle' as const, position: { x: 4, y: 1 } },
     ]);
+    const initializedRef = useRef(false);
 
     const { logInfo, logWarn, logDebug } = useGameSentryLogger('DemoGame');
 
@@ -26,27 +27,31 @@ const DemoGame: React.FC = () => {
         isRecording
     } = useSentryLog();
 
-    // Log game initialization and start Session Replay
+    // Log game initialization and start Session Replay - only once
     useEffect(() => {
-        logInfo('Demo game initialized', {
-            gameState,
-            piecesCount: pieces.length,
-            timestamp: Date.now()
-        });
+        if (!initializedRef.current) {
+            logInfo('Demo game initialized', {
+                gameState,
+                piecesCount: pieces.length,
+                timestamp: Date.now()
+            });
 
-        // Start Session Replay for the game session
-        startSessionReplay('DemoGame Session', {
-            gameState,
-            piecesCount: pieces.length,
-            sessionType: 'game_session'
-        });
+            // Start Session Replay for the game session
+            startSessionReplay('DemoGame Session', {
+                gameState,
+                piecesCount: pieces.length,
+                sessionType: 'game_session'
+            });
 
-        // Track component lifecycle
-        trackLifecycle('mount', {
-            component: 'DemoGame',
-            gameState,
-            piecesCount: pieces.length
-        });
+            // Track component lifecycle
+            trackLifecycle('mount', {
+                component: 'DemoGame',
+                gameState,
+                piecesCount: pieces.length
+            });
+
+            initializedRef.current = true;
+        }
 
         // Cleanup on unmount
         return () => {
@@ -56,7 +61,7 @@ const DemoGame: React.FC = () => {
             });
             stopSessionReplay();
         };
-    }, [gameState, pieces.length, logInfo, startSessionReplay, stopSessionReplay, trackLifecycle]);
+    }, []); // Empty dependency array since we use refs
 
     // Handle piece movement
     const handlePieceMove = useCallback((pieceId: string, newPosition: { x: number; y: number }) => {
@@ -79,7 +84,7 @@ const DemoGame: React.FC = () => {
             newPosition,
             action: 'piece_movement_completed'
         });
-    }, [logInfo]);
+    }, []); // No dependencies since logging functions are stable
 
     // Handle piece interaction
     const handlePieceInteraction = useCallback((pieceId: string, action: string) => {
@@ -131,7 +136,7 @@ const DemoGame: React.FC = () => {
                     action_type: 'unknown_action'
                 });
         }
-    }, [logInfo, logWarn, trackInteraction, gameState]);
+    }, [gameState]); // Only depend on gameState
 
     // Handle game state changes
     const handleGameStateChange = useCallback((newState: 'playing' | 'paused' | 'ended') => {
@@ -162,7 +167,7 @@ const DemoGame: React.FC = () => {
             oldState: gameState,
             newState
         });
-    }, [gameState, logInfo, trackInteraction, trackLifecycle]);
+    }, [gameState]); // Only depend on gameState
 
     // Handle game end
     const handleGameEnd = useCallback(() => {
@@ -180,7 +185,7 @@ const DemoGame: React.FC = () => {
         });
 
         handleGameStateChange('ended');
-    }, [gameState, pieces.length, handleGameStateChange, logInfo, trackInteraction]);
+    }, [gameState, pieces.length, handleGameStateChange]); // Remove logging functions from dependencies
 
     // Simulate game events
     useEffect(() => {
@@ -209,7 +214,7 @@ const DemoGame: React.FC = () => {
 
             return () => clearInterval(interval);
         }
-    }, [gameState, logDebug, trackInteraction]);
+    }, [gameState]); // Only depend on gameState
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
