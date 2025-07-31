@@ -9,6 +9,7 @@ The HotLeagueWall project now supports localStorage-based logging control that a
 -   Enable debug mode for more detailed logging
 -   Control logging on a per-session basis
 -   **NEW**: Control Session Replay based on log levels (only enabled for error/fatal levels)
+-   **NEW**: Component-specific logging control with unified `@/sentry` import structure
 
 ## 🔧 LocalStorage Keys
 
@@ -98,598 +99,332 @@ The localStorage rules now apply consistently across all environments:
 
 -   **Logging**: Respects localStorage settings
 -   **Session Replay**: Only enabled for error/fatal levels when localStorage allows
--   **Privacy**: Enhanced privacy settings by default
+-   **Debug Mode**: Can be enabled via localStorage
 
-### **Local Environment**
+### **Test Environment**
 
 -   **Logging**: Respects localStorage settings
 -   **Session Replay**: Only enabled for error/fatal levels when localStorage allows
 -   **Debug Mode**: Can be enabled via localStorage
 
-## 📝 What Gets Logged
+## 🎯 Component-Specific Control
 
-When logging is enabled, the system captures:
+### **Component-Level localStorage Keys**
 
-### **Application Lifecycle**
-
--   Component initialization and mounting
--   Configuration loading
--   Container setup and configuration
--   Authentication events
-
-### **User Interactions**
-
--   Tab clicks and navigation
--   Game selections
--   League toggle changes
--   Session reconnection attempts
-
-### **System Operations**
-
--   Connection management
--   Storage operations
--   Workflow tracking
--   Performance monitoring
-
-### **Error Handling**
-
--   Connection failures
--   Authentication errors
--   Configuration errors
--   Component errors
-
-### **Session Replay (Error/Fatal Only)**
-
--   User interactions during error conditions
--   Screen recordings for debugging critical issues
--   Network requests during error states
-
-## 🔧 LocalStorage Control Functions
-
-The system provides utility functions for programmatic control:
+The system now supports component-specific logging control:
 
 ```javascript
-// Set logging configuration
-setLocalStorageConfig({
-    logLevel: 'info',
-    enabled: true,
-    debugMode: true,
-});
+// Component-specific log level
+localStorage.setItem('sentry_log_level_[ComponentName]', 'debug');
 
-// Clear all settings
-clearLocalStorageConfig();
+// Component-specific enable/disable
+localStorage.setItem('hot-league-wall-debug-enabled_[ComponentName]', 'true');
 ```
 
-## 🔒 Security Considerations
-
--   **localStorage is client-side:** Settings are stored in the user's browser
--   **Session-specific:** Settings persist only for the current browser session
--   **No sensitive data:** The logging system is designed to avoid logging sensitive information
--   **Session Replay privacy:** Text and media are masked by default
--   **Debug mode:** When enabled, may log more detailed information - use with caution in production
-
-## 📞 Support
-
-For issues or questions about the logging system, please refer to the Sentry dashboard or contact the development team.
-
-## 🔍 Advanced Usage
-
-### **Programmatic Control**
+### **Component Configuration Examples**
 
 ```javascript
-// Import the utility functions
-import { setLocalStorageConfig, clearLocalStorageConfig } from './_shared/utils/sentry/sentry-session-replay';
+// Enable debug logging for BetPanel component
+localStorage.setItem('sentry_log_level_BetPanel', 'debug');
+localStorage.setItem('hot-league-wall-debug-enabled_BetPanel', 'true');
 
-// Enable comprehensive logging
-const enableComprehensiveLogging = () => {
-    setLocalStorageConfig({
-        logLevel: 'debug',
-        enabled: true,
-        debugMode: true,
-    });
-    location.reload();
-};
+// Disable logging for Loading component
+localStorage.setItem('hot-league-wall-debug-enabled_Loading', 'false');
 
-// Enable error-only logging
-const enableErrorLogging = () => {
-    setLocalStorageConfig({
-        logLevel: 'error',
-        enabled: true,
-        debugMode: false,
-    });
-    location.reload();
-};
-
-// Disable all logging
-const disableLogging = () => {
-    setLocalStorageConfig({
-        enabled: false,
-    });
-    location.reload();
-};
-
-// Clear all settings
-const clearSettings = () => {
-    clearLocalStorageConfig();
-    location.reload();
-};
+// Set different levels for different components
+localStorage.setItem('sentry_log_level_RNGSoccerBase', 'warn');
+localStorage.setItem('sentry_log_level_HotLeagueWall', 'error');
 ```
 
-### **Conditional Logging Based on Environment**
+## 🔧 Programmatic Control
 
-```javascript
-// Enable logging only in specific conditions
-const enableConditionalLogging = () => {
-    const isProduction = window.location.hostname === 'your-production-domain.com';
-    const isDebugMode = window.location.search.includes('debug=true');
+### **Using the New @/sentry Import Structure**
 
-    if (isProduction && isDebugMode) {
-        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
-        localStorage.setItem('sentry_log_level', 'info');
-        localStorage.setItem('sentry_debug_mode', 'false');
-        location.reload();
-    }
-};
+```typescript
+import { setLocalStorageConfig, setComponentLocalStorageConfig, getCurrentConfiguration } from '@/sentry';
+
+// Set global logging level
+setLocalStorageConfig({ logLevel: 'debug' });
+
+// Enable/disable Sentry
+setLocalStorageConfig({ enabled: false });
+
+// Enable debug mode
+setLocalStorageConfig({ debugMode: true });
+
+// Set component-specific log level
+setComponentLocalStorageConfig('BetPanel', { logLevel: 'debug' });
+
+// Get current configuration
+const config = getCurrentConfiguration();
+console.log('Current config:', config);
 ```
 
-### **Dynamic Log Level Switching**
+### **Browser Console Usage**
 
 ```javascript
-// Switch log levels dynamically
-const switchLogLevel = (newLevel) => {
-    const validLevels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'all'];
+// Set global configuration
+setLocalStorageConfig({ logLevel: 'info', enabled: true, debugMode: false });
 
-    if (validLevels.includes(newLevel)) {
-        localStorage.setItem('sentry_log_level', newLevel);
-        console.log(`Log level switched to: ${newLevel}`);
+// Set component-specific configuration
+setComponentLocalStorageConfig('BetPanel', { logLevel: 'debug', enabled: true });
 
-        // Reload to apply changes
-        location.reload();
-    } else {
-        console.error(`Invalid log level: ${newLevel}`);
-    }
-};
+// Get all component configurations
+getAllComponentConfigs();
 
-// Usage examples
-switchLogLevel('debug'); // Enable debug logging
-switchLogLevel('error'); // Enable error logging with Session Replay
-switchLogLevel('info'); // Enable info logging
+// Show current configuration
+showConfiguration();
 ```
 
-### **Browser Console Integration**
+## 🎮 Game-Specific Examples
+
+### **RNG Soccer Game**
 
 ```javascript
-// Add utility functions to global scope for easy access
-window.sentryUtils = {
-    enableDebug: () => {
-        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
-        localStorage.setItem('sentry_log_level', 'debug');
-        localStorage.setItem('sentry_debug_mode', 'true');
-        location.reload();
-    },
+// Enable detailed logging for RNG Soccer
+localStorage.setItem('sentry_log_level_RNGSoccerBase', 'debug');
+localStorage.setItem('hot-league-wall-debug-enabled_RNGSoccerBase', 'true');
 
-    enableInfo: () => {
-        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
-        localStorage.setItem('sentry_log_level', 'info');
-        localStorage.setItem('sentry_debug_mode', 'false');
-        location.reload();
-    },
+// Enable Session Replay for errors
+localStorage.setItem('sentry_log_level_RNGSoccerBase', 'error');
+```
 
-    enableError: () => {
-        localStorage.setItem('hot-league-wall-debug-enabled', 'true');
-        localStorage.setItem('sentry_log_level', 'error');
-        localStorage.setItem('sentry_debug_mode', 'true');
-        location.reload();
-    },
+### **Bet Panel Component**
 
-    disable: () => {
-        localStorage.setItem('hot-league-wall-debug-enabled', 'false');
-        location.reload();
-    },
+```javascript
+// Enable debug logging for Bet Panel
+localStorage.setItem('sentry_log_level_BetPanel', 'debug');
+localStorage.setItem('hot-league-wall-debug-enabled_BetPanel', 'true');
 
-    clear: () => {
-        localStorage.removeItem('sentry_log_level');
-        localStorage.removeItem('hot-league-wall-debug-enabled');
-        localStorage.removeItem('sentry_debug_mode');
-        location.reload();
-    },
+// Disable logging for Bet Panel
+localStorage.setItem('hot-league-wall-debug-enabled_BetPanel', 'false');
+```
 
-    status: () => {
-        const config = {
-            logLevel: localStorage.getItem('sentry_log_level') || 'info',
-            enabled: localStorage.getItem('hot-league-wall-debug-enabled') !== 'false',
-            debugMode: localStorage.getItem('sentry_debug_mode') === 'true',
-        };
-        console.log('Current Sentry Configuration:', config);
-        return config;
-    },
-};
+### **Hot League Wall Main Component**
 
-// Usage in browser console:
-// sentryUtils.enableDebug()  // Enable debug logging
-// sentryUtils.enableError()  // Enable error logging with Session Replay
-// sentryUtils.disable()      // Disable all logging
-// sentryUtils.status()       // Check current configuration
+```javascript
+// Enable error-level logging for main component
+localStorage.setItem('sentry_log_level_HotLeagueWall', 'error');
+localStorage.setItem('hot-league-wall-debug-enabled_HotLeagueWall', 'true');
+```
+
+## 🔄 Configuration Hierarchy
+
+The system uses a priority-based configuration resolution:
+
+1. **Component localStorage config** (highest priority)
+2. **Global localStorage config**
+3. **Default component config** (lowest priority)
+
+### **Configuration Resolution Example**
+
+```javascript
+// Global setting
+localStorage.setItem('sentry_log_level', 'info');
+
+// Component-specific override
+localStorage.setItem('sentry_log_level_BetPanel', 'debug');
+
+// Result: BetPanel will use 'debug' level, other components use 'info'
 ```
 
 ## 🚨 Troubleshooting
 
-### **Common Issues**
-
-#### 1. Logs Not Appearing in Sentry
-
-**Symptoms:**
-
--   No logs visible in Sentry dashboard
--   localStorage settings not taking effect
-
-**Solutions:**
+### **Logs Not Appearing**
 
 ```javascript
 // Check localStorage settings
-console.log('Log Level:', localStorage.getItem('sentry_log_level'));
-console.log('Enabled:', localStorage.getItem('hot-league-wall-debug-enabled'));
+console.log('Global Log Level:', localStorage.getItem('sentry_log_level'));
+console.log('Global Enabled:', localStorage.getItem('hot-league-wall-debug-enabled'));
 console.log('Debug Mode:', localStorage.getItem('sentry_debug_mode'));
 
-// Verify Sentry configuration
-const config = sentryHelper.getConfig();
-console.log('Sentry Config:', config);
-
-// Check if component is configured
-const componentConfig = sentryHelper.getComponentConfig('YourComponent');
-console.log('Component Config:', componentConfig);
+// Check component-specific settings
+console.log('BetPanel Log Level:', localStorage.getItem('sentry_log_level_BetPanel'));
+console.log('BetPanel Enabled:', localStorage.getItem('hot-league-wall-debug-enabled_BetPanel'));
 ```
 
-#### 2. Session Replay Not Working
-
-**Symptoms:**
-
--   Session Replay not capturing sessions
--   Privacy settings too restrictive
-
-**Solutions:**
+### **Session Replay Not Working**
 
 ```javascript
-// Enable Session Replay for error/fatal levels
+// Enable Session Replay
 localStorage.setItem('hot-league-wall-debug-enabled', 'true');
 localStorage.setItem('sentry_log_level', 'error');
 localStorage.setItem('sentry_debug_mode', 'true');
 location.reload();
-
-// Check Session Replay configuration
-const sessionReplayConfig = {
-    replaysSessionSampleRate: 1.0,
-    replaysOnErrorSampleRate: 1.0,
-    maskAllText: false,
-    blockAllMedia: false,
-};
 ```
 
-#### 3. Performance Issues
-
-**Symptoms:**
-
--   Slow component rendering
--   High memory usage
--   Excessive logging
-
-**Solutions:**
-
-```typescript
-// Reduce logging in production
-if (process.env.NODE_ENV === 'production') {
-    configureSentry({
-        defaultLogLevel: SentryLogLevel.WARN,
-        enableConsoleOverride: false,
-    });
-}
-
-// Use conditional logging
-const shouldLog = (level: string) => {
-    const localStorageConfig = getLocalStorageConfig();
-    return localStorageConfig.enabled && localStorageConfig.logLevel === level;
-};
-
-if (shouldLog('info')) {
-    logInfo('Detailed info', { data: largeDataObject });
-}
-```
-
-#### 4. localStorage Not Available
-
-**Symptoms:**
-
--   localStorage errors in console
--   Settings not persisting
-
-**Solutions:**
+### **Component-Specific Issues**
 
 ```javascript
-// Check localStorage availability
-const isLocalStorageAvailable = () => {
-    try {
-        const test = '__localStorage_test__';
-        localStorage.setItem(test, test);
-        localStorage.removeItem(test);
-        return true;
-    } catch (e) {
-        return false;
-    }
-};
+// Check component configuration
+const componentName = 'BetPanel';
+console.log(`${componentName} Log Level:`, localStorage.getItem(`sentry_log_level_${componentName}`));
+console.log(`${componentName} Enabled:`, localStorage.getItem(`hot-league-wall-debug-enabled_${componentName}`));
 
-// Fallback to sessionStorage or memory storage
-if (!isLocalStorageAvailable()) {
-    console.warn('localStorage not available, using fallback storage');
-    // Use sessionStorage or memory storage as fallback
-}
+// Reset component configuration
+localStorage.removeItem(`sentry_log_level_${componentName}`);
+localStorage.removeItem(`hot-league-wall-debug-enabled_${componentName}`);
+location.reload();
 ```
 
-### **Debug Mode**
+## 📊 Monitoring and Debugging
+
+### **Get Current Configuration**
 
 ```typescript
-// Enable debug mode for detailed logging
+import { getCurrentConfiguration } from '@/sentry';
+
+const config = getCurrentConfiguration();
+console.log('Current Sentry config:', config);
+```
+
+### **Get Component Configurations**
+
+```typescript
+import { getAllComponentConfigs } from '@/sentry';
+
+const componentConfigs = getAllComponentConfigs();
+console.log('Component configurations:', componentConfigs);
+```
+
+### **Debug Mode Information**
+
+```javascript
+// Enable debug mode
 localStorage.setItem('sentry_debug_mode', 'true');
 
 // Check debug information
 const debugInfo = {
     localStorageConfig: getLocalStorageConfig(),
-    globalConfig: sentryHelper.getConfig(),
-    activeWorkflows: sentryHelper.getActiveWorkflows(),
-    componentConfigs: Array.from(sentryHelper.getConfig().componentConfigs.entries()),
+    globalConfig: getCurrentConfiguration(),
+    componentConfigs: getAllComponentConfigs(),
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString(),
 };
 
 console.log('Sentry Debug Info:', debugInfo);
 ```
 
-## 📊 Best Practices
+## 🔧 Advanced Usage
 
-### 1. Log Level Strategy
+### **Bulk Configuration**
 
-```typescript
-// Development: Full logging
-if (process.env.NODE_ENV === 'development') {
-    configureSentry({
-        defaultLogLevel: SentryLogLevel.DEBUG,
-        enableConsoleOverride: true,
-    });
-}
+```javascript
+// Set all components to debug level
+setAllComponentsToLevel('debug');
 
-// Production: Conservative logging
-if (process.env.NODE_ENV === 'production') {
-    configureSentry({
-        defaultLogLevel: SentryLogLevel.WARN,
-        enableConsoleOverride: false,
-    });
-}
+// Set all components to error level
+setAllComponentsToLevel('error');
+
+// Disable all components
+setAllComponentsToLevel('disabled');
 ```
 
-### 2. Component-Specific Logging
+### **Configuration Persistence**
 
-```typescript
-// Critical components: Full logging
-configureComponent('PaymentComponent', {
-    logLevel: SentryLogLevel.ALL,
-    enableWorkflowTracking: true,
-    enablePerformanceTracking: true,
+```javascript
+// Save configuration to localStorage
+const config = {
+    global: { logLevel: 'info', enabled: true, debugMode: false },
+    components: {
+        BetPanel: { logLevel: 'debug', enabled: true },
+        RNGSoccerBase: { logLevel: 'warn', enabled: true },
+        HotLeagueWall: { logLevel: 'error', enabled: true },
+    },
+};
+
+// Apply configuration
+Object.entries(config.components).forEach(([component, settings]) => {
+    setComponentLocalStorageConfig(component, settings);
 });
 
-// UI components: Error-only logging
-configureComponent('ButtonComponent', {
-    logLevel: SentryLogLevel.ERROR_ONLY,
-    enableWorkflowTracking: false,
-    enablePerformanceTracking: false,
-});
+setLocalStorageConfig(config.global);
 ```
 
-### 3. Workflow Best Practices
+### **Configuration Validation**
 
-```typescript
-// Always complete workflows
-const handleOperation = async () => {
-    const workflowId = workflow.start('Operation', {});
+```javascript
+// Validate configuration
+const validateConfig = () => {
+    const globalLevel = localStorage.getItem('sentry_log_level');
+    const globalEnabled = localStorage.getItem('hot-league-wall-debug-enabled');
 
-    try {
-        // Operation logic
-        workflow.complete(workflowId, true, { result: 'success' });
-    } catch (error) {
-        workflow.complete(workflowId, false, { error: error.message });
-        throw error;
+    const validLevels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'all'];
+
+    if (globalLevel && !validLevels.includes(globalLevel)) {
+        console.warn(`Invalid log level: ${globalLevel}`);
+        return false;
     }
+
+    if (globalEnabled && !['true', 'false'].includes(globalEnabled)) {
+        console.warn(`Invalid enabled value: ${globalEnabled}`);
+        return false;
+    }
+
+    return true;
 };
 
-// Use meaningful workflow names
-const workflowId = workflow.start('User Authentication Flow', {
-    userId: 'user123',
-    authMethod: 'sso',
-});
+validateConfig();
 ```
 
-### 4. Performance Tracking Best Practices
+## 🔄 Migration from Old Structure
+
+### **Before (Old Import Structure)**
 
 ```typescript
-// Track meaningful operations
-await trackPerformance('DataLoader', 'Load User Profile', async () => {
-    return await fetchUserProfile(userId);
-});
-
-// Avoid tracking trivial operations
-// ❌ Don't do this
-await trackPerformance('Component', 'Simple State Update', () => {
-    setState(newState);
-});
+import { setLocalStorageConfig } from './_shared/utils/sentry/sentry-helper';
+import { setComponentLocalStorageConfig } from './_shared/utils/sentry/sentry-config';
 ```
 
-### 5. Error Context Best Practices
+### **After (New Import Structure)**
 
 ```typescript
-// Provide rich context
-logError(error, {
-    userId: 'user123',
-    action: 'place_bet',
-    gameId: 'rng-soccer',
-    betAmount: 100.0,
-    timestamp: Date.now(),
-    userAgent: navigator.userAgent,
-    url: window.location.href,
-});
-
-// Avoid sensitive information
-// ❌ Don't log sensitive data
-logError(error, {
-    password: userPassword, // Never log passwords
-    creditCard: cardNumber, // Never log credit card numbers
-    ssn: socialSecurityNumber, // Never log SSNs
-});
+import { setLocalStorageConfig, setComponentLocalStorageConfig } from '@/sentry';
 ```
 
-## 🔒 Security Considerations
+## 📚 Best Practices
 
-### Data Privacy
-
-```typescript
-// Sanitize sensitive data before logging
-const sanitizeUserData = (userData: any) => {
-    const { password, creditCard, ssn, ...safeData } = userData;
-    return {
-        ...safeData,
-        hasPassword: !!password,
-        hasCreditCard: !!creditCard,
-        hasSSN: !!ssn,
-    };
-};
-
-logInfo('User data processed', sanitizeUserData(userData));
-```
-
-### Session Replay Privacy
-
-```typescript
-// Configure Session Replay for privacy
-const sessionReplayConfig = {
-    maskAllText: true, // Mask all text content
-    blockAllMedia: true, // Block all media content
-    maskAllInputs: true, // Mask all input fields
-    sendDefaultPii: false, // Don't send PII data
-};
-```
-
-## 📈 Monitoring & Analytics
-
-### Custom Metrics
-
-```typescript
-// Track custom metrics
-const trackCustomMetric = (metricName: string, value: number, tags?: Record<string, string>) => {
-    logInfo('Custom Metric', {
-        metric: metricName,
-        value,
-        tags,
-        timestamp: Date.now(),
-    });
-};
-
-// Usage examples
-trackCustomMetric('user_session_duration', 3600, { userId: 'user123' });
-trackCustomMetric('game_completion_rate', 0.85, { gameId: 'rng-soccer' });
-trackCustomMetric('payment_success_rate', 0.98, { paymentMethod: 'credit_card' });
-```
-
-### Performance Monitoring
-
-```typescript
-// Monitor component performance
-const ComponentWithPerformanceMonitoring = () => {
-    const { workflow } = useSentryHelper({
-        componentName: 'PerformanceComponent',
-        enablePerformanceTracking: true
-    });
-
-    useEffect(() => {
-        const startTime = performance.now();
-
-        return () => {
-            const endTime = performance.now();
-            const duration = endTime - startTime;
-
-            if (duration > 1000) { // Log slow components
-                logWarning('Slow component unmount', {
-                    duration: `${duration.toFixed(2)}ms`,
-                    componentName: 'PerformanceComponent'
-                });
-            }
-        };
-    }, []);
-
-    return <div>Component Content</div>;
-};
-```
-
-## 🎯 Real-World Examples
-
-### **Production Debugging Session**
+### **1. Use Component-Specific Configuration**
 
 ```javascript
-// 1. Enable comprehensive logging for production debugging
+// ✅ Good: Set component-specific levels
+localStorage.setItem('sentry_log_level_BetPanel', 'debug');
+localStorage.setItem('sentry_log_level_RNGSoccerBase', 'warn');
+
+// ❌ Bad: Use global level for everything
+localStorage.setItem('sentry_log_level', 'debug'); // Too verbose for all components
+```
+
+### **2. Use Appropriate Log Levels**
+
+```javascript
+// ✅ Good: Use appropriate levels
+localStorage.setItem('sentry_log_level_BetPanel', 'debug'); // Debug for development
+localStorage.setItem('sentry_log_level_HotLeagueWall', 'error'); // Error for production
+
+// ❌ Bad: Use debug for everything
+localStorage.setItem('sentry_log_level', 'debug'); // Too verbose
+```
+
+### **3. Enable Session Replay Only When Needed**
+
+```javascript
+// ✅ Good: Enable Session Replay for error scenarios
+localStorage.setItem('sentry_log_level', 'error');
 localStorage.setItem('hot-league-wall-debug-enabled', 'true');
-localStorage.setItem('sentry_log_level', 'info');
-localStorage.setItem('sentry_debug_mode', 'true');
-location.reload();
 
-// 2. Reproduce the issue
-// ... perform the actions that cause the problem ...
-
-// 3. Check Sentry for logs
-// Go to your Sentry dashboard to see the logged events
-
-// 4. If you need more detail, increase log level
-localStorage.setItem('sentry_log_level', 'debug');
-location.reload();
-
-// 5. When done debugging, disable logging
-localStorage.setItem('hot-league-wall-debug-enabled', 'false');
-location.reload();
+// ❌ Bad: Always enable Session Replay
+localStorage.setItem('sentry_log_level', 'trace'); // Too much data
 ```
 
-### **Component-Specific Debugging**
+### **4. Use Debug Mode Sparingly**
 
 ```javascript
-// Enable debugging for specific components
-const enableComponentDebugging = (componentName) => {
-    // Configure the specific component
-    configureComponent(componentName, {
-        logLevel: SentryLogLevel.DEBUG,
-        enableWorkflowTracking: true,
-        enablePerformanceTracking: true,
-    });
+// ✅ Good: Use debug mode for troubleshooting
+localStorage.setItem('sentry_debug_mode', 'true'); // Only when needed
 
-    // Enable debug mode
-    localStorage.setItem('sentry_debug_mode', 'true');
-    localStorage.setItem('sentry_log_level', 'debug');
-    location.reload();
-};
-
-// Usage
-enableComponentDebugging('PaymentComponent');
+// ❌ Bad: Always enable debug mode
+localStorage.setItem('sentry_debug_mode', 'true'); // Too verbose
 ```
 
-### **Error Investigation**
-
-```javascript
-// Enable error logging with Session Replay
-const enableErrorInvestigation = () => {
-    localStorage.setItem('hot-league-wall-debug-enabled', 'true');
-    localStorage.setItem('sentry_log_level', 'error');
-    localStorage.setItem('sentry_debug_mode', 'true');
-    location.reload();
-
-    console.log('Error investigation mode enabled');
-    console.log('Session Replay will capture user interactions during errors');
-};
-
-// Trigger the error scenario
-// ... perform actions that trigger the error ...
-
-// Check Sentry for error logs and Session Replay data
-```
-
-This comprehensive guide covers all aspects of localStorage-based logging control, including advanced usage patterns, troubleshooting, and real-world examples for effective debugging in production environments.
+This comprehensive guide covers all aspects of localStorage-based logging control with the new unified import structure and component-specific configuration options.

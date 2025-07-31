@@ -10,13 +10,14 @@ The component-specific Sentry implementation provides:
 -   **Console Override**: Filters console.error and console.warn calls to only log component-specific errors
 -   **Context-Aware Logging**: Adds component context to all error logs
 -   **Performance Monitoring**: Tracks component-specific operations
+-   **Unified Import Structure**: Single `@/sentry` import point for all functionality
 
 ## Basic Usage
 
 ### 1. Initialize in Your Component
 
 ```typescript
-import { configureSentryManager, sentryManager, SentryLogLevel } from './_shared/utils/sentry-manager';
+import { configureSentryManager, sentryManager, SentryLogLevel } from '@/sentry';
 
 const YourComponent = () => {
     useEffect(() => {
@@ -35,14 +36,39 @@ const YourComponent = () => {
 };
 ```
 
-### 2. Log Different Types of Events
+### 2. Use React Hook for Component Integration
+
+```typescript
+import { useSentryHelper, SentryLogLevel } from '@/sentry';
+
+const YourComponent = () => {
+    const { logError, logWarning, logInfo, logDebug, logTrace, workflow } = useSentryHelper({
+        componentName: 'YourComponent',
+        logLevel: SentryLogLevel.INFO,
+        enableWorkflowTracking: true,
+        enablePerformanceTracking: true,
+        autoConfigure: true,
+    });
+
+    useEffect(() => {
+        logInfo('Component mounted', {
+            timestamp: Date.now(),
+            props: props,
+        });
+    }, []);
+
+    // Your component logic here
+};
+```
+
+### 3. Log Different Types of Events
 
 ```typescript
 // Log errors
 try {
     // Your code here
 } catch (error) {
-    sentryManager.logError(error, {
+    logError(error, {
         action: 'user-action',
         component: 'game-button',
         userId: 'user123',
@@ -50,25 +76,25 @@ try {
 }
 
 // Log warnings
-sentryManager.logWarning('User session expiring soon', {
+logWarning('User session expiring soon', {
     timeRemaining: '5 minutes',
     userId: 'user123',
 });
 
 // Log info
-sentryManager.logInfo('User started game', {
+logInfo('User started game', {
     gameId: 'rng-soccer',
     timestamp: Date.now(),
 });
 
 // Log debug
-sentryManager.logDebug('Game state updated', {
+logDebug('Game state updated', {
     gameState: 'loading',
     progress: 75,
 });
 
 // Log trace
-sentryManager.logTrace('Detailed debugging info', {
+logTrace('Detailed debugging info', {
     functionName: 'updateGameState',
     parameters: { gameId: '123', action: 'bet' },
 });
@@ -80,11 +106,11 @@ sentryManager.logTrace('Detailed debugging info', {
 
 ```typescript
 import React from 'react';
-import { sentryManager } from './_shared/utils/sentry-manager';
+import { logError } from '@/sentry';
 
 const GameComponent = () => {
     const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
-        sentryManager.logError(error, {
+        logError('ErrorBoundary', error, {
             errorInfo,
             component: 'GameComponent',
             action: 'render'
@@ -99,141 +125,238 @@ const GameComponent = () => {
 };
 ```
 
-### 2. API Call Error Handling
+### 2. Workflow Tracking
 
 ```typescript
-const fetchGameData = async () => {
-    try {
-        sentryManager.logInfo('Fetching game data', { endpoint: '/api/game-data' });
+import { useSentryHelper, WorkflowState } from '@/sentry';
 
-        const response = await fetch('/api/game-data');
+const GameComponent = () => {
+    const { workflow } = useSentryHelper({
+        componentName: 'GameComponent',
+        enableWorkflowTracking: true,
+    });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    const handleGameAction = async () => {
+        const workflowId = workflow.start('game-action', 'Game Action Process', {
+            action: 'bet',
+            gameId: 'rng-soccer',
+            timestamp: Date.now(),
+        });
+
+        try {
+            workflow.update(workflowId, WorkflowState.IN_PROGRESS, {
+                step: 'processing',
+                progress: 50,
+            });
+
+            // Perform game action
+            await performGameAction();
+
+            workflow.complete(workflowId, true, {
+                result: 'success',
+                duration: Date.now() - startTime,
+            });
+        } catch (error) {
+            workflow.complete(workflowId, false, {
+                error: error.message,
+                step: 'failed',
+            });
+            throw error;
         }
-
-        const data = await response.json();
-        sentryManager.logInfo('Game data fetched successfully', {
-            dataSize: data.length,
-            timestamp: Date.now(),
-        });
-
-        return data;
-    } catch (error) {
-        sentryManager.logError(error, {
-            action: 'fetch-game-data',
-            endpoint: '/api/game-data',
-            timestamp: Date.now(),
-        });
-        throw error;
-    }
+    };
 };
 ```
 
-### 3. Performance Monitoring
+### 3. Performance Tracking
 
 ```typescript
-const measureOperation = async (operationName: string, operation: () => Promise<any>) => {
+import { useSentryHelper } from '@/sentry';
+
+const GameComponent = () => {
+    const { workflow } = useSentryHelper({
+        componentName: 'GameComponent',
+        enablePerformanceTracking: true,
+    });
+
+    const handleExpensiveOperation = async () => {
+        const result = await workflow.track('expensive-operation', async () => {
+            // Your expensive operation here
+            return await performExpensiveOperation();
+        });
+
+        return result;
+    };
+};
+```
+
+### 4. Batched Logging for High-Frequency Operations
+
+```typescript
+import { useSentryHelperBatched } from '@/sentry';
+
+const HighFrequencyComponent = () => {
+    const { logInfoBatched, logErrorBatched, flushBatches } = useSentryHelperBatched({
+        componentName: 'HighFrequencyComponent',
+        batchSize: 10,
+        flushInterval: 5000,
+    });
+
+    const handleHighFrequencyEvent = () => {
+        logInfoBatched('High frequency event', {
+            eventType: 'user-interaction',
+            timestamp: Date.now(),
+        });
+    };
+
+    // Flush batches when needed
+    const handleComponentUnmount = () => {
+        flushBatches();
+    };
+};
+```
+
+## Configuration
+
+### Environment Configuration
+
+```json
+{
+    "sentry": {
+        "dsn": "https://your-dsn@sentry.io/project",
+        "environment": "LOCAL1",
+        "logLevel": "error",
+        "enableSessionReplay": true,
+        "sessionReplaySampleRate": 1.0,
+        "errorSampleRate": 1.0,
+        "componentLogging": {
+            "enabled": true,
+            "defaultLogLevel": "error",
+            "components": {
+                "YourComponent": {
+                    "logLevel": "error",
+                    "enableWorkflowTracking": true,
+                    "enablePerformanceTracking": true
+                }
+            }
+        }
+    }
+}
+```
+
+### LocalStorage Control
+
+```javascript
+// Enable debug logging
+localStorage.setItem('sentry_log_level', 'debug');
+localStorage.setItem('hot-league-wall-debug-enabled', 'true');
+localStorage.setItem('sentry_debug_mode', 'true');
+
+// Disable logging
+localStorage.setItem('hot-league-wall-debug-enabled', 'false');
+
+// Component-specific control
+localStorage.setItem('sentry_log_level_YourComponent', 'debug');
+localStorage.setItem('hot-league-wall-debug-enabled_YourComponent', 'true');
+```
+
+## Best Practices
+
+### 1. Component Integration
+
+```typescript
+// ✅ Good: Use the hook with proper configuration
+const { logError, logInfo } = useSentryHelper({
+    componentName: 'YourComponent',
+    logLevel: SentryLogLevel.ERROR,
+    enableWorkflowTracking: true,
+    enablePerformanceTracking: true,
+});
+
+// ✅ Good: Include rich context
+logError(error, {
+    userId: 'user123',
+    action: 'place_bet',
+    gameId: 'rng-soccer',
+    betAmount: 100.0,
+    timestamp: Date.now(),
+});
+
+// ❌ Bad: Don't log sensitive information
+logError(error, {
+    password: userPassword, // Never log passwords
+    creditCard: cardNumber, // Never log credit card numbers
+});
+```
+
+### 2. Error Handling
+
+```typescript
+// ✅ Good: Always include error handling
+const handleRiskyOperation = async () => {
     try {
-        const result = await sentryManager.trackPerformance(operationName, operation);
+        const result = await performRiskyOperation();
+        logInfo('Operation successful', { result });
         return result;
     } catch (error) {
-        // Error is automatically logged by trackPerformance
+        logError(error, {
+            operation: 'risky-operation',
+            timestamp: Date.now(),
+        });
         throw error;
     }
 };
-
-// Or use the convenience function
-const result = await trackSentryPerformance(operationName, operation);
 ```
 
-## Configuration Options
-
-### SentryManager Configuration
+### 3. Workflow Management
 
 ```typescript
-interface SentryManagerConfig {
-    dsn: string; // Sentry DSN
-    environment: string; // Environment (PROD, SIT, UAT, LOCAL)
-    componentName: string; // Component name for tagging
-    release?: string; // Release version
-    debug?: boolean; // Enable debug mode
-}
+// ✅ Good: Always complete workflows
+const handleOperation = async () => {
+    const workflowId = workflow.start('operation', 'Operation Name', {});
+
+    try {
+        // Operation logic
+        workflow.complete(workflowId, true, { result: 'success' });
+    } catch (error) {
+        workflow.complete(workflowId, false, { error: error.message });
+        throw error;
+    }
+};
 ```
 
-### SentryManager Configuration Options
+## Migration from Old Import Structure
+
+### Before (Old Structure)
 
 ```typescript
-interface SentryManagerConfig {
-    dsn: string; // Sentry DSN
-    environment: string; // Environment (PROD, SIT, UAT, LOCAL)
-    componentName: string; // Component name for tagging
-    release?: string; // Release version
-    debug?: boolean; // Enable debug mode
-    logLevel?: SentryLogLevel; // Default log level
-    enableWorkflowTracking?: boolean; // Enable workflow tracking
-    enablePerformanceTracking?: boolean; // Enable performance monitoring
-    enableConsoleOverride?: boolean; // Override console methods
-}
+import { configureSentryManager } from './_shared/utils/sentry/sentry-manager';
+import { useSentryHelper } from './_shared/hooks/useSentryHelper';
+import { SentryLogLevel } from './_shared/utils/sentry/sentry-types';
 ```
 
-## Error Filtering
+### After (New Structure)
 
-The component-specific Sentry automatically filters errors based on:
-
-1. **Component Identifiers**: Looks for component-specific keywords in error messages
-2. **Stack Trace Analysis**: Checks if error stack trace contains component file paths
-3. **DOM Context**: Filters UI interactions based on component-specific DOM elements
-
-### Component Identifiers
-
-The system looks for these identifiers in error messages and stack traces:
-
--   `HotLeagueWall`
--   `hot-league-wall`
--   `Lobby`
--   `RNGSoccer`
--   `App.tsx`
--   `lobby`
--   `games`
--   `seal-vg-sg-index`
--   `data-react="true"`
-
-## Benefits
-
-1. **Isolation**: Only captures errors from your component, not from other game providers
-2. **Reduced Noise**: Eliminates irrelevant errors from the page
-3. **Better Debugging**: Clear component context in all error logs
-4. **Performance**: Reduced Sentry quota usage
-5. **Maintainability**: Component-specific error tracking
-
-## Migration from Global Sentry
-
-If you're migrating from the global Sentry setup:
-
-1. **Update Global Initialization**: Replace `gc.sentryLogger.start()` with `configureSentryManager()` in `useSentryInit`
-2. **Use SentryManager**: Replace direct `gc.sentryLogger.logError` calls with `sentryManager.logError()`
-3. **Add Enhanced Features**: Use workflow tracking, performance monitoring, and component-specific configuration
-4. **Test**: Verify that all logging features work correctly with the new system
+```typescript
+import { configureSentryManager, useSentryHelper, SentryLogLevel } from '@/sentry';
+```
 
 ## Troubleshooting
 
-### Errors Not Being Logged
+### Common Issues
 
-1. Check that the error message contains component identifiers
-2. Verify that `enableConsoleOverride` is set to `true`
-3. Ensure the component name is correctly set
-4. Check that the log level is appropriate for the message type
-5. Verify that SentryManager is properly initialized
+1. **Logs Not Appearing**: Check localStorage settings and component configuration
+2. **Import Errors**: Ensure you're using `@/sentry` imports
+3. **Performance Issues**: Use batched logging for high-frequency operations
+4. **Memory Leaks**: Always complete workflows and clean up resources
 
-### Too Many Errors Being Logged
+### Debug Mode
 
-1. Review the component identifiers list
-2. Add more specific filtering in the `isComponentError` method
-3. Use more specific error contexts
+```javascript
+// Enable debug mode
+localStorage.setItem('sentry_debug_mode', 'true');
 
-### Performance Issues
+// Check configuration
+console.log('Sentry Config:', getCurrentConfiguration());
+```
 
-1. Disable console override if not needed
-2. Use `logInfo` sparingly for high-frequency events
-3. Consider implementing sampling for frequent operations
+This guide provides comprehensive usage instructions for the component-specific Sentry implementation with the new unified import structure.

@@ -14,10 +14,17 @@
     -   `examples/` - Usage examples
     -   `scripts/` - Utility scripts
 
-### 2. File Movement
+### 2. File Movement and Import Updates
 
 -   ✅ Moved all Sentry-related files from scattered locations to the new structure
 -   ✅ Preserved all original functionality during the move
+-   ✅ Updated all `_shared` files to use `@/sentry` alias:
+    -   `src/_shared/app-settings/index.ts` - Updated with proper Sentry logging
+    -   `src/_shared/components/bet-panel/bet-panel.tsx` - Using `useSentryHelper` hook
+    -   `src/_shared/components/betting-chips/betting-chips.tsx` - Updated imports
+    -   `src/_shared/components/count-down-timer/index.tsx` - Updated imports
+    -   `src/_shared/components/timeout/index.tsx` - Updated imports
+    -   `src/_shared/utils/storage-manager.ts` - Updated imports
 
 ### 3. TypeScript Configuration
 
@@ -33,26 +40,36 @@
 
 -   ✅ Created comprehensive `src/sentry/index.ts` with all necessary exports
 -   ✅ Fixed circular import issues by using relative paths instead of `@/sentry` within the module
+-   ✅ Exported all core functionality: SentryManager, hooks, utilities, and components
 
-### 5. Critical Import Fixes
+### 5. Configuration Integration
 
--   ✅ Fixed malformed import statements in:
-    -   `src/preview.tsx`
-    -   `src/sentry/examples/example-usage.tsx`
-    -   `src/sentry/examples/sentry-helper-examples.ts`
-    -   `src/sentry/utils/sentry-helper-batched.ts`
--   ✅ Updated `src/games/game-base/startup.ts` to use `@/sentry` instead of specific file paths
--   ✅ Fixed test files to use relative imports from `../index`
--   ✅ Updated all `_shared` files to use `@/sentry` alias:
-    -   `src/_shared/app-settings/index.ts`
-    -   `src/_shared/components/bet-panel/bet-panel.tsx`
-    -   `src/_shared/components/betting-chips/betting-chips.tsx`
-    -   `src/_shared/components/count-down-timer/index.tsx`
-    -   `src/_shared/components/timeout/index.tsx`
-    -   `src/_shared/utils/storage-manager.ts`
--   ✅ Fixed circular imports within sentry directory:
-    -   `src/sentry/utils/sentry-helper.ts`
-    -   `src/sentry/utils/sentry-helper-batched.ts`
+-   ✅ Updated configuration files with comprehensive Sentry settings:
+    -   `configs/configs.json` - Main configuration with component-specific logging
+    -   `configs/sg/configs.LOCAL_1.json` - SG environment configuration
+    -   `configs/vg/configs.LOCAL_1.json` - VG environment configuration
+-   ✅ Integrated Sentry configuration in `src/_shared/app-settings/index.ts`
+-   ✅ Added proper error handling and logging throughout configuration loading
+
+### 6. Component Integration
+
+-   ✅ Updated key components to use the new Sentry system:
+    -   `BetPanel` component using `useSentryHelper` hook
+    -   `AppSettings` with comprehensive logging
+    -   All `_shared` components updated with proper imports
+
+### 7. Core Functionality Implementation
+
+-   ✅ `SentryManager` class with full functionality:
+    -   LocalStorage configuration management
+    -   Component-specific logging configuration
+    -   Workflow tracking
+    -   Performance monitoring
+    -   Console method override
+    -   Error filtering and buffer management
+-   ✅ Comprehensive type definitions in `sentry-types.ts`
+-   ✅ Utility functions in `sentry-helper.ts` and `sentry-helper-batched.ts`
+-   ✅ React hooks: `useSentryHelper`, `useSentryHelperBatched`, `useGameCronSentry`
 
 ## ⚠️ Current Issues
 
@@ -62,29 +79,23 @@ Most files have been updated, but some may still need attention:
 
 **Files in other libraries:**
 
--   `libs/saba-games/src/*.tsx` - Import from `./_shared/utils/sentry-manager` (outside hot-league-wall scope)
+-   `libs/saba-games/src/*.tsx` - May need updates to use new `@/sentry` alias
 
-### 2. Circular Import Resolution
+### 2. Test Coverage
 
--   ✅ Fixed circular imports within sentry directory by using relative paths
--   ✅ Updated files in `_shared` directory to use `@/sentry` alias
--   ✅ Fixed test files to use relative imports from `../index`
+-   ⚠️ Some test files may need updates to use the new import structure
+-   ⚠️ Additional test coverage needed for new functionality
 
-### 2. Module Resolution Issues
+### 3. Documentation Updates
 
--   Some files may still be looking for modules in old locations
--   Webpack/Nx build system may need additional configuration
-
-### 3. Export Issues
-
--   Some exports may be missing from the main `index.ts` file
--   Test files may need additional exports for testing purposes
+-   ⚠️ Some documentation files may reference old import paths
+-   ⚠️ Examples may need updates to reflect current implementation
 
 ## 🔧 Recommended Next Steps
 
-### 1. Fix Remaining Import Paths
+### 1. Complete Import Path Updates
 
-Run a comprehensive search and replace for:
+Run a comprehensive search and replace for any remaining old import paths:
 
 ```bash
 # Find all remaining old import paths
@@ -97,6 +108,7 @@ grep -r "from.*@/sentry/hooks/" src/
 
 -   Update all test files to use relative imports from `../index`
 -   Ensure all necessary exports are available for testing
+-   Add tests for new functionality
 
 ### 3. Update Other Libraries
 
@@ -115,15 +127,17 @@ src/sentry/
 ├── index.ts                    # Main entry point with all exports
 ├── README.md                   # Documentation
 ├── core/
-│   ├── sentry-manager.ts       # Core Sentry manager
-│   └── sentry-types.ts         # Type definitions
+│   ├── sentry-manager.ts       # Core Sentry manager (776 lines)
+│   ├── sentry-config.ts        # Configuration management
+│   ├── sentry-session-replay.ts # Session replay functionality
+│   └── sentry-types.ts         # Type definitions (89 lines)
 ├── utils/
 │   ├── sentry-helper.ts        # Main Sentry helper utilities
 │   ├── sentry-helper-batched.ts # Batched logging utilities
 │   ├── sentry-batch-manager.ts # Batch management
 │   └── sentry-game-cron-batch-manager.ts # Game cron batch management
 ├── hooks/
-│   ├── useSentryHelper.ts      # Main Sentry hook
+│   ├── useSentryHelper.ts      # Main Sentry hook (362 lines)
 │   ├── useSentryHelperBatched.ts # Batched Sentry hook
 │   ├── useGameCronSentry.ts    # Game cron Sentry hook
 │   ├── useSessionReplay.ts     # Session replay hook
@@ -133,7 +147,7 @@ src/sentry/
 │   ├── LoggingDemo.tsx        # Logging demo component
 │   └── sentry-log-context.tsx # Sentry log context
 ├── tests/                     # Test files
-├── docs/                      # Documentation
+├── docs/                      # Documentation (25 files)
 ├── examples/                  # Usage examples
 └── scripts/                   # Utility scripts
 ```
@@ -145,6 +159,8 @@ src/sentry/
 3. **Improved Imports**: Single `@/sentry` import point for all Sentry functionality
 4. **Reduced Circular Dependencies**: Better import structure within the module
 5. **Better Testing**: Organized test structure
+6. **Comprehensive Configuration**: Environment-specific configurations with component-level control
+7. **Enhanced Logging**: Component-specific logging with workflow tracking and performance monitoring
 
 ## 🚨 Known Issues
 
@@ -158,3 +174,15 @@ src/sentry/
 -   All original functionality has been preserved
 -   The new structure follows React/TypeScript best practices
 -   Documentation has been updated to reflect the new structure
+-   Configuration files now include comprehensive component-specific logging settings
+-   LocalStorage-based dynamic control is fully implemented
+-   Session replay functionality is properly configured
+-   Error filtering and buffer management are in place
+
+## 🔄 Recent Updates
+
+-   ✅ Updated all configuration files with comprehensive Sentry settings
+-   ✅ Integrated Sentry configuration in app settings
+-   ✅ Updated key components to use new Sentry system
+-   ✅ Implemented comprehensive logging throughout the application
+-   ✅ Added proper error handling and fallback configurations
