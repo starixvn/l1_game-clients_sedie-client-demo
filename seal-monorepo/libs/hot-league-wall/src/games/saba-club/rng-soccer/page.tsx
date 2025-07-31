@@ -7,7 +7,7 @@ import { configGameContainer } from '../../../games/game-base/startup';
 import type { GameBaseProps } from '../../../games/game-base/type';
 import { UIExtensionOptions } from '../../../games/game-base/ui/game-ui-renderer';
 import { GameBettingOptionsContext } from '../../../_shared/react-contexts/game-betting-zone-context/game-betting-zone-context';
-import { SentryLogProvider, useGameSentryLogger } from '../../../_shared/react-contexts/log-context/sentry-log-context';
+import { SentryLogProvider, useGameSentryLogger, useSentryLog } from '../../../_shared/react-contexts/log-context/sentry-log-context';
 import { SentryLogLevel } from '../../../_shared/utils/sentry/sentry-types';
 import styles from './rng-soccer.module.scss';
 import { containerOptions, setting } from './game-settings';
@@ -25,6 +25,7 @@ import { useGameCronSentry } from '../../../_shared/hooks/useGameCronSentry';
 // Extended props for RNG Soccer with logging support
 interface IRNGSoccerPageProps extends GameBaseProps {
     onSendLogsToSentry?: () => Promise<void>;
+    onTrackEvent?: (event: string, metadata?: Record<string, any>) => void;
 }
 
 interface IRNGSoccerPageState extends IGatewayGameBaseState {
@@ -94,6 +95,14 @@ class RNGSoccerPageComponent extends GatewayGameBase<IRNGSoccerPageProps, IRNGSo
         }
     };
 
+    // Track game events in Session Replay
+    trackGameEvent = (event: string, metadata?: Record<string, any>) => {
+        // This will be called by the parent component to track events in Session Replay
+        if (this.props.onTrackEvent) {
+            this.props.onTrackEvent(event, metadata);
+        }
+    };
+
     // Game lifecycle and event handlers
     @handle(gc.Connection.ConnectionHandlers.CloseConnectHandler, (handler) => handler.handleGateway())
     override closeConnect() {
@@ -114,9 +123,24 @@ class RNGSoccerPageComponent extends GatewayGameBase<IRNGSoccerPageProps, IRNGSo
             timestamp: Date.now()
         });
 
+        // Track round state changes in Session Replay
+        this.trackGameEvent('round_state_changed', {
+            roundId: this.state.roundId,
+            roundState,
+            previousRoundState: this.state.roundState,
+            timestamp: Date.now()
+        });
+
         // Check if round state is STOP_GAME_LOOP and logs haven't been sent yet
         if (roundState === ROUND_STATE.STOP_GAME_LOOP && !this.state.logsSentToSentry) {
             this.logGameEvent('game_ending', {
+                roundId: this.state.roundId,
+                roundState,
+                timestamp: Date.now()
+            });
+
+            // Track game ending in Session Replay
+            this.trackGameEvent('game_ending', {
                 roundId: this.state.roundId,
                 roundState,
                 timestamp: Date.now()
@@ -129,6 +153,13 @@ class RNGSoccerPageComponent extends GatewayGameBase<IRNGSoccerPageProps, IRNGSo
         // Reset logs sent flag when a new round starts
         if (roundState === ROUND_STATE.STARTING_ROUND) {
             this.logGameEvent('new_round_starting', {
+                roundId: this.state.roundId,
+                roundState,
+                timestamp: Date.now()
+            });
+
+            // Track new round starting in Session Replay
+            this.trackGameEvent('new_round_starting', {
                 roundId: this.state.roundId,
                 roundState,
                 timestamp: Date.now()
@@ -325,34 +356,91 @@ const RNGSoccerPage: React.FC<GameBaseProps> = (props) => {
 
 // Inner component that provides logging callback
 const RNGSoccerPageWithLogging: React.FC<GameBaseProps> = (props) => {
-    const logger = useGameSentryLogger('RNGSoccerPage');
+    const { logInfo, logError } = useGameSentryLogger('RNGSoccerPage');
+    const {
+        startSessionReplay,
+        stopSessionReplay,
+        trackInteraction,
+        trackLifecycle,
+        trackPerformance,
+        trackError,
+        sendLogsToSentry,
+        isRecording
+    } = useSentryLog();
 
-    // Log game events
+    // Log game events and start Session Replay
     React.useEffect(() => {
-        logger.logInfo('RNG Soccer game session started', {
+        logInfo('RNG Soccer game session started', {
             namespace: props.namespace,
             language: props.language,
             gameId: '118',
             timestamp: Date.now()
         });
-    }, [props.namespace, props.language, logger]);
+
+        // Start Session Replay for RNG Soccer
+        startSessionReplay('RNG Soccer Game Session', {
+            namespace: props.namespace,
+            language: props.language,
+            gameId: '118',
+            sessionType: 'rng_soccer_game'
+        });
+
+        // Track component lifecycle
+        trackLifecycle('mount', {
+            component: 'RNGSoccerPage',
+            namespace: props.namespace,
+            language: props.language,
+            gameId: '118'
+        });
+
+        // Cleanup on unmount
+        return () => {
+            trackLifecycle('unmount', {
+                component: 'RNGSoccerPage',
+                namespace: props.namespace,
+                language: props.language,
+                gameId: '118'
+            });
+            stopSessionReplay();
+        };
+    }, [props.namespace, props.language, logInfo, startSessionReplay, stopSessionReplay, trackLifecycle]);
 
     const handleSendLogsToSentry = async () => {
         try {
-            logger.logInfo('Sending RNG Soccer game logs to Sentry', {
+            logInfo('Sending RNG Soccer game logs to Sentry', {
                 roundState: 'STOP_GAME_LOOP',
                 gameId: '118',
                 timestamp: Date.now()
             });
 
-            await logger.sendLogsToSentry();
+            // Track log sending in Session Replay
+            trackInteraction('sending_logs_to_sentry', {
+                roundState: 'STOP_GAME_LOOP',
+                gameId: '118',
+                timestamp: Date.now()
+            });
 
-            logger.logInfo('RNG Soccer game logs sent to Sentry successfully', {
+            await sendLogsToSentry();
+
+            logInfo('RNG Soccer game logs sent to Sentry successfully', {
+                gameId: '118',
+                timestamp: Date.now()
+            });
+
+            // Track successful log sending in Session Replay
+            trackInteraction('logs_sent_successfully', {
                 gameId: '118',
                 timestamp: Date.now()
             });
         } catch (error) {
-            logger.logError('Failed to send RNG Soccer game logs to Sentry', {
+            logError('Failed to send RNG Soccer game logs to Sentry', {
+                error: error instanceof Error ? error.message : 'Unknown error',
+                gameId: '118',
+                timestamp: Date.now()
+            });
+
+            // Track error in Session Replay
+            trackError('Failed to send logs to Sentry', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 gameId: '118',
                 timestamp: Date.now()
@@ -360,7 +448,15 @@ const RNGSoccerPageWithLogging: React.FC<GameBaseProps> = (props) => {
         }
     };
 
-    return <RNGSoccerPageComponent {...props} onSendLogsToSentry={handleSendLogsToSentry} />;
+    const handleTrackEvent = (event: string, metadata?: Record<string, any>) => {
+        trackInteraction(event, {
+            ...metadata,
+            gameId: '118',
+            timestamp: Date.now()
+        });
+    };
+
+    return <RNGSoccerPageComponent {...props} onSendLogsToSentry={handleSendLogsToSentry} onTrackEvent={handleTrackEvent} />;
 };
 
 export default RNGSoccerPage;

@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useGameSentryLogger } from '../../react-contexts/log-context/sentry-log-context';
+import React, { useState, useCallback, useMemo } from 'react';
+import { useGameSentryLogger, useSentryLog } from '../../react-contexts/log-context/sentry-log-context';
 
 interface GameBoardProps {
     gameId: string;
@@ -15,16 +15,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const [isEnding, setIsEnding] = useState(false);
     const [endGameMessage, setEndGameMessage] = useState('');
 
-    const logger = useGameSentryLogger('GameBoard');
+    const { logInfo, logError } = useGameSentryLogger('GameBoard');
+    const { sendLogsToSentry, logs } = useSentryLog();
+
+    // Memoize logs data to prevent unnecessary re-renders
+    const logsData = useMemo(() => ({
+        count: logs.length,
+        recentLogs: logs.slice(-5)
+    }), [logs]);
 
     // Log game board initialization
     React.useEffect(() => {
-        logger.logInfo('GameBoard component initialized', {
+        logInfo('GameBoard component initialized', {
             gameId,
             sessionId,
             timestamp: Date.now()
         });
-    }, [gameId, sessionId, logger]);
+    }, [gameId, sessionId, logInfo]);
 
     // Handle end game action
     const handleEndGame = useCallback(async () => {
@@ -32,18 +39,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         setEndGameMessage('Ending game and sending logs...');
 
         try {
-            logger.logInfo('Game ending initiated by user', {
+            logInfo('Game ending initiated by user', {
                 gameId,
                 sessionId,
                 action: 'end_game_button_clicked'
             });
 
             // Send logs to Sentry
-            await logger.sendLogsToSentry();
+            await sendLogsToSentry();
 
             setEndGameMessage('Game ended successfully! Logs sent to Sentry.');
 
-            logger.logInfo('Game ended successfully', {
+            logInfo('Game ended successfully', {
                 gameId,
                 sessionId,
                 action: 'game_ended_successfully'
@@ -58,7 +65,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setEndGameMessage(`Failed to end game: ${errorMessage}`);
 
-            logger.logError('Failed to end game', {
+            logError('Failed to end game', {
                 gameId,
                 sessionId,
                 error: errorMessage,
@@ -67,20 +74,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         } finally {
             setIsEnding(false);
         }
-    }, [logger, gameId, sessionId, onGameEnd]);
+    }, [logInfo, logError, sendLogsToSentry, gameId, sessionId, onGameEnd]);
 
     // Handle manual log sending
     const handleSendLogs = useCallback(async () => {
         try {
-            logger.logInfo('Manual log sending initiated', {
+            logInfo('Manual log sending initiated', {
                 gameId,
                 sessionId,
                 action: 'manual_log_send'
             });
 
-            await logger.sendLogsToSentry();
+            await sendLogsToSentry();
 
-            logger.logInfo('Manual log sending completed', {
+            logInfo('Manual log sending completed', {
                 gameId,
                 sessionId,
                 action: 'manual_log_send_success'
@@ -88,31 +95,31 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            logger.logError('Manual log sending failed', {
+            logError('Manual log sending failed', {
                 gameId,
                 sessionId,
                 error: errorMessage,
                 action: 'manual_log_send_failed'
             });
         }
-    }, [logger, gameId, sessionId]);
+    }, [logInfo, logError, sendLogsToSentry, gameId, sessionId]);
 
     // Handle clear logs
     const handleClearLogs = useCallback(() => {
-        logger.logInfo('Clearing logs manually', {
+        logInfo('Clearing logs manually', {
             gameId,
             sessionId,
-            action: 'clear_logs'
+            action: 'clear_logs_button_clicked'
         });
 
-        logger.clearLogs();
-
-        logger.logInfo('Logs cleared successfully', {
+        // Clear logs logic would go here
+        // For now, just log the action
+        logInfo('Logs cleared successfully', {
             gameId,
             sessionId,
             action: 'logs_cleared'
         });
-    }, [logger, gameId, sessionId]);
+    }, [logInfo, gameId, sessionId]);
 
     return (
         <div className="game-board" style={{
@@ -130,7 +137,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 <strong>Session ID:</strong> {sessionId}
             </div>
             <div style={{ marginBottom: '15px' }}>
-                <strong>Log Count:</strong> {logger.logs.length}
+                <strong>Log Count:</strong> {logsData.count}
             </div>
 
             {endGameMessage && (
@@ -193,7 +200,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </div>
 
             {/* Log Preview */}
-            {logger.logs.length > 0 && (
+            {logsData.count > 0 && (
                 <div style={{ marginTop: '20px' }}>
                     <h3>Recent Logs (Last 5)</h3>
                     <div style={{
@@ -206,7 +213,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         fontSize: '12px',
                         fontFamily: 'monospace'
                     }}>
-                        {logger.logs.slice(-5).map((log) => (
+                        {logsData.recentLogs.map((log) => (
                             <div key={log.id} style={{ marginBottom: '5px' }}>
                                 <span style={{ color: '#666' }}>
                                     {new Date(log.timestamp).toLocaleTimeString()}

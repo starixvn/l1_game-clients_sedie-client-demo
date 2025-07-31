@@ -20,40 +20,40 @@ export const GamePiece: React.FC<GamePieceProps> = ({
     const [health, setHealth] = useState(pieceType === 'player' ? 100 : 50);
     const [isMoving, setIsMoving] = useState(false);
 
-    const logger = useGameSentryLogger(`GamePiece_${pieceId}`);
+    const { logInfo, logDebug } = useGameSentryLogger(`GamePiece_${pieceId}`);
 
     // Log component initialization
     useEffect(() => {
-        logger.logInfo('GamePiece component initialized', {
+        logInfo('GamePiece component initialized', {
             pieceId,
             pieceType,
             position,
             health,
             timestamp: Date.now()
         });
-    }, [pieceId, pieceType, position, health, logger]);
+    }, [pieceId, pieceType, position.x, position.y, health, logInfo]);
 
     // Handle piece selection
     const handleSelect = useCallback(() => {
         setIsSelected(true);
-        logger.logInfo('GamePiece selected', {
+        logInfo('GamePiece selected', {
             pieceId,
             pieceType,
             position,
             action: 'piece_selected'
         });
-    }, [pieceId, pieceType, position, logger]);
+    }, [pieceId, pieceType, position, logInfo]);
 
     // Handle piece deselection
     const handleDeselect = useCallback(() => {
         setIsSelected(false);
-        logger.logInfo('GamePiece deselected', {
+        logInfo('GamePiece deselected', {
             pieceId,
             pieceType,
             position,
             action: 'piece_deselected'
         });
-    }, [pieceId, pieceType, position, logger]);
+    }, [pieceId, pieceType, position, logInfo]);
 
     // Handle piece movement
     const handleMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
@@ -77,7 +77,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
                 break;
         }
 
-        logger.logInfo('GamePiece movement initiated', {
+        logInfo('GamePiece movement initiated', {
             pieceId,
             pieceType,
             oldPosition: position,
@@ -92,7 +92,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
                 onMove(newPosition);
             }
 
-            logger.logInfo('GamePiece movement completed', {
+            logInfo('GamePiece movement completed', {
                 pieceId,
                 pieceType,
                 position: newPosition,
@@ -102,11 +102,11 @@ export const GamePiece: React.FC<GamePieceProps> = ({
 
             setIsMoving(false);
         }, 300);
-    }, [pieceId, pieceType, position, isMoving, onMove, logger]);
+    }, [pieceId, pieceType, position, isMoving, onMove, logInfo]);
 
     // Handle piece interaction
     const handleInteraction = useCallback((action: string) => {
-        logger.logInfo('GamePiece interaction initiated', {
+        logInfo('GamePiece interaction initiated', {
             pieceId,
             pieceType,
             position,
@@ -124,7 +124,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
             const newHealth = Math.max(0, health - 10);
             setHealth(newHealth);
 
-            logger.logInfo('GamePiece health changed', {
+            logInfo('GamePiece health changed', {
                 pieceId,
                 pieceType,
                 position,
@@ -136,7 +136,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
             });
 
             if (newHealth <= 0) {
-                logger.logWarn('GamePiece destroyed', {
+                logInfo('GamePiece destroyed', {
                     pieceId,
                     pieceType,
                     position,
@@ -146,7 +146,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
             }
         }
 
-        logger.logInfo('GamePiece interaction completed', {
+        logInfo('GamePiece interaction completed', {
             pieceId,
             pieceType,
             position,
@@ -154,7 +154,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
             health,
             action_type: 'piece_interaction_completed'
         });
-    }, [pieceId, pieceType, position, health, onInteraction, logger]);
+    }, [pieceId, pieceType, position, health, onInteraction, logInfo]);
 
     // Handle health regeneration (for player pieces)
     useEffect(() => {
@@ -163,7 +163,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
                 setHealth(prevHealth => {
                     const newHealth = Math.min(100, prevHealth + 1);
                     if (newHealth !== prevHealth) {
-                        logger.logDebug('Player health regenerated', {
+                        logDebug('Player health regenerated', {
                             pieceId,
                             pieceType,
                             position,
@@ -178,7 +178,7 @@ export const GamePiece: React.FC<GamePieceProps> = ({
 
             return () => clearInterval(interval);
         }
-    }, [pieceType, health, pieceId, position, logger]);
+    }, [pieceType, health, pieceId, position.x, position.y, logDebug]);
 
     // Get piece color based on type and state
     const getPieceColor = () => {
@@ -270,25 +270,25 @@ export const GamePieceControls: React.FC<{ pieceId: string; onMove: (direction: 
     onMove,
     onInteraction
 }) => {
-    const logger = useGameSentryLogger(`GamePieceControls_${pieceId}`);
+    const { logInfo } = useGameSentryLogger(`GamePieceControls_${pieceId}`);
 
     const handleMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
-        logger.logInfo('Move command issued', {
+        logInfo('Move command issued', {
             pieceId,
             direction,
             action: 'move_command'
         });
         onMove(direction);
-    }, [pieceId, onMove, logger]);
+    }, [pieceId, onMove, logInfo]);
 
     const handleInteraction = useCallback((action: string) => {
-        logger.logInfo('Interaction command issued', {
+        logInfo('Interaction command issued', {
             pieceId,
             action,
             action_type: 'interaction_command'
         });
         onInteraction(action);
-    }, [pieceId, onInteraction, logger]);
+    }, [pieceId, onInteraction, logInfo]);
 
     return (
         <div style={{

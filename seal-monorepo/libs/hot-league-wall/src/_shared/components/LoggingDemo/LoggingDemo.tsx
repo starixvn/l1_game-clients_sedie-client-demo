@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { SentryLogProvider, useGameSentryLogger } from '../../react-contexts/log-context/sentry-log-context';
+import { SentryLogProvider, useGameSentryLogger, useSentryLog } from '../../react-contexts/log-context/sentry-log-context';
 import { GameBoard } from '../GameBoard';
 import { GamePiece, GamePieceControls } from '../GamePiece';
 import { SentryLogLevel } from '../../utils/sentry/sentry-types';
@@ -15,20 +15,52 @@ const DemoGame: React.FC = () => {
         { id: 'obstacle1', type: 'obstacle' as const, position: { x: 4, y: 1 } },
     ]);
 
-    const logger = useGameSentryLogger('DemoGame');
+    const { logInfo, logWarn, logDebug } = useGameSentryLogger('DemoGame');
 
-    // Log game initialization
+    // Session Replay functionality
+    const {
+        startSessionReplay,
+        stopSessionReplay,
+        trackInteraction,
+        trackLifecycle,
+        isRecording
+    } = useSentryLog();
+
+    // Log game initialization and start Session Replay
     useEffect(() => {
-        logger.logInfo('Demo game initialized', {
+        logInfo('Demo game initialized', {
             gameState,
             piecesCount: pieces.length,
             timestamp: Date.now()
         });
-    }, [gameState, pieces.length, logger]);
+
+        // Start Session Replay for the game session
+        startSessionReplay('DemoGame Session', {
+            gameState,
+            piecesCount: pieces.length,
+            sessionType: 'game_session'
+        });
+
+        // Track component lifecycle
+        trackLifecycle('mount', {
+            component: 'DemoGame',
+            gameState,
+            piecesCount: pieces.length
+        });
+
+        // Cleanup on unmount
+        return () => {
+            trackLifecycle('unmount', {
+                component: 'DemoGame',
+                finalGameState: gameState
+            });
+            stopSessionReplay();
+        };
+    }, [gameState, pieces.length, logInfo, startSessionReplay, stopSessionReplay, trackLifecycle]);
 
     // Handle piece movement
     const handlePieceMove = useCallback((pieceId: string, newPosition: { x: number; y: number }) => {
-        logger.logInfo('Piece movement request received', {
+        logInfo('Piece movement request received', {
             pieceId,
             newPosition,
             action: 'piece_movement_request'
@@ -42,83 +74,113 @@ const DemoGame: React.FC = () => {
             )
         );
 
-        logger.logInfo('Piece movement completed', {
+        logInfo('Piece movement completed', {
             pieceId,
             newPosition,
             action: 'piece_movement_completed'
         });
-    }, [logger]);
+    }, [logInfo]);
 
     // Handle piece interaction
     const handlePieceInteraction = useCallback((pieceId: string, action: string) => {
-        logger.logInfo('Piece interaction request received', {
+        logInfo('Piece interaction request received', {
             pieceId,
             action,
             action_type: 'piece_interaction_request'
         });
 
+        // Track interaction in Session Replay
+        trackInteraction('piece_interaction', {
+            pieceId,
+            action,
+            gameState,
+            timestamp: Date.now()
+        });
+
         // Simulate different interactions
         switch (action) {
             case 'attack':
-                logger.logInfo('Attack action executed', {
+                logInfo('Attack action executed', {
                     pieceId,
                     action,
-                    damage: 10,
+                    gameState,
                     action_type: 'attack_executed'
                 });
                 break;
             case 'heal':
-                logger.logInfo('Heal action executed', {
+                logInfo('Heal action executed', {
                     pieceId,
                     action,
-                    healing: 20,
+                    gameState,
                     action_type: 'heal_executed'
                 });
                 break;
             case 'collect':
-                logger.logInfo('Collect action executed', {
+                logInfo('Collect action executed', {
                     pieceId,
                     action,
-                    itemType: 'treasure',
+                    gameState,
                     action_type: 'collect_executed'
                 });
                 break;
             default:
-                logger.logWarn('Unknown action executed', {
+                logWarn('Unknown action executed', {
                     pieceId,
                     action,
+                    gameState,
                     action_type: 'unknown_action'
                 });
         }
-    }, [logger]);
+    }, [logInfo, logWarn, trackInteraction, gameState]);
 
     // Handle game state changes
     const handleGameStateChange = useCallback((newState: 'playing' | 'paused' | 'ended') => {
-        logger.logInfo('Game state change requested', {
+        logInfo('Game state change requested', {
             oldState: gameState,
             newState,
             action: 'game_state_change_request'
         });
 
+        // Track game state change in Session Replay
+        trackInteraction('game_state_change', {
+            oldState: gameState,
+            newState,
+            timestamp: Date.now()
+        });
+
         setGameState(newState);
 
-        logger.logInfo('Game state changed', {
+        logInfo('Game state changed', {
             oldState: gameState,
             newState,
             action: 'game_state_changed'
         });
-    }, [gameState, logger]);
+
+        // Track lifecycle update
+        trackLifecycle('update', {
+            component: 'DemoGame',
+            oldState: gameState,
+            newState
+        });
+    }, [gameState, logInfo, trackInteraction, trackLifecycle]);
 
     // Handle game end
     const handleGameEnd = useCallback(() => {
-        logger.logInfo('Game end requested', {
+        logInfo('Game end requested', {
             gameState,
             piecesCount: pieces.length,
             action: 'game_end_request'
         });
 
+        // Track game end in Session Replay
+        trackInteraction('game_end', {
+            gameState,
+            piecesCount: pieces.length,
+            timestamp: Date.now()
+        });
+
         handleGameStateChange('ended');
-    }, [gameState, pieces.length, handleGameStateChange, logger]);
+    }, [gameState, pieces.length, handleGameStateChange, logInfo, trackInteraction]);
 
     // Simulate game events
     useEffect(() => {
@@ -126,9 +188,19 @@ const DemoGame: React.FC = () => {
             const interval = setInterval(() => {
                 // Random game events
                 const events = [
-                    () => logger.logDebug('Game tick', { timestamp: Date.now() }),
-                    () => logger.logInfo('Random game event occurred', { eventType: 'random' }),
-                    () => logger.logWarn('Low performance detected', { fps: Math.random() * 30 + 20 }),
+                    () => {
+                        logDebug('Game tick', { timestamp: Date.now() });
+                        trackInteraction('game_tick', { timestamp: Date.now() });
+                    },
+                    () => {
+                        logInfo('Random game event occurred', { eventType: 'random' });
+                        trackInteraction('random_game_event', { eventType: 'random' });
+                    },
+                    () => {
+                        const fps = Math.random() * 30 + 20;
+                        logWarn('Low performance detected', { fps });
+                        trackInteraction('performance_warning', { fps });
+                    },
                 ];
 
                 const randomEvent = events[Math.floor(Math.random() * events.length)];
@@ -137,7 +209,7 @@ const DemoGame: React.FC = () => {
 
             return () => clearInterval(interval);
         }
-    }, [gameState, logger]);
+    }, [gameState, logDebug, trackInteraction]);
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
@@ -147,21 +219,30 @@ const DemoGame: React.FC = () => {
                 <strong>Game State:</strong> {gameState}
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <button
-                        onClick={() => handleGameStateChange('playing')}
+                        onClick={() => {
+                            trackInteraction('ui_button_click', { button: 'play', currentState: gameState });
+                            handleGameStateChange('playing');
+                        }}
                         disabled={gameState === 'playing'}
                         style={{ padding: '5px 10px' }}
                     >
                         Play
                     </button>
                     <button
-                        onClick={() => handleGameStateChange('paused')}
+                        onClick={() => {
+                            trackInteraction('ui_button_click', { button: 'pause', currentState: gameState });
+                            handleGameStateChange('paused');
+                        }}
                         disabled={gameState === 'paused'}
                         style={{ padding: '5px 10px' }}
                     >
                         Pause
                     </button>
                     <button
-                        onClick={() => handleGameStateChange('ended')}
+                        onClick={() => {
+                            trackInteraction('ui_button_click', { button: 'end', currentState: gameState });
+                            handleGameStateChange('ended');
+                        }}
                         disabled={gameState === 'ended'}
                         style={{ padding: '5px 10px' }}
                     >

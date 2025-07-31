@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useCallback, useRef, useE
 import { sentryManager, configureSentryManager } from '../../utils/sentry/sentry-manager';
 import SentryManager from '../../utils/sentry/sentry-manager';
 import { SentryLogLevel } from '../../utils/sentry/sentry-types';
+import { useSessionReplay } from '../../hooks/useSessionReplay';
 
 // Types for the Sentry-integrated logging system
 export interface SentryLogEntry {
@@ -46,6 +47,19 @@ export interface SentryLogContextType {
     logWarn: (message: string, metadata?: Record<string, any>) => void;
     logError: (message: string, metadata?: Record<string, any>) => void;
     logFatal: (message: string, metadata?: Record<string, any>) => void;
+
+    // Session Replay methods
+    startSessionReplay: (name: string, context?: Record<string, any>) => void;
+    stopSessionReplay: () => void;
+    addSessionReplayData: (data: Record<string, any>) => void;
+    trackInteraction: (interaction: string, data?: Record<string, any>) => void;
+    trackLifecycle: (lifecycle: 'mount' | 'unmount' | 'update', data?: Record<string, any>) => void;
+    trackError: (error: Error | string, context?: Record<string, any>) => void;
+    trackPerformance: (operation: string, duration: number, data?: Record<string, any>) => void;
+
+    // Session Replay state
+    isRecording: boolean;
+    sessionReplayId?: string;
 }
 
 // Action types for the reducer
@@ -140,6 +154,8 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
     autoSendOnUnmount = false,
     sentryConfig
 }) => {
+    // Initialize Session Replay
+    const sessionReplay = useSessionReplay(sentryConfig?.componentName || 'SentryLogProvider');
     const [state, dispatch] = useReducer(sentryLogReducer, {
         ...initialState,
         sessionId: sessionId || initialState.sessionId,
@@ -353,7 +369,7 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
         addLog(message, { level: 'fatal', metadata });
     }, [addLog]);
 
-    const contextValue: SentryLogContextType = {
+    const contextValue: SentryLogContextType = React.useMemo(() => ({
         logs: state.logs,
         sessionId: state.sessionId,
         gameId: state.gameId,
@@ -371,7 +387,47 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
         logWarn,
         logError,
         logFatal,
-    };
+
+        // Session Replay methods
+        startSessionReplay: sessionReplay.startReplay,
+        stopSessionReplay: sessionReplay.stopReplay,
+        addSessionReplayData: sessionReplay.addData,
+        trackInteraction: sessionReplay.trackInteraction,
+        trackLifecycle: sessionReplay.trackLifecycle,
+        trackError: sessionReplay.trackError,
+        trackPerformance: sessionReplay.trackPerformance,
+
+        // Session Replay state
+        isRecording: sessionReplay.isRecording,
+        sessionReplayId: sessionReplay.sessionId,
+    }), [
+        state.logs,
+        state.sessionId,
+        state.gameId,
+        state.isEnabled,
+        addLog,
+        getMergedLogs,
+        clearLogs,
+        setSessionId,
+        setGameId,
+        setEnabled,
+        sendLogsToSentry,
+        logTrace,
+        logDebug,
+        logInfo,
+        logWarn,
+        logError,
+        logFatal,
+        sessionReplay.startReplay,
+        sessionReplay.stopReplay,
+        sessionReplay.addData,
+        sessionReplay.trackInteraction,
+        sessionReplay.trackLifecycle,
+        sessionReplay.trackError,
+        sessionReplay.trackPerformance,
+        sessionReplay.isRecording,
+        sessionReplay.sessionId,
+    ]);
 
     return (
         <SentryLogContext.Provider value={contextValue}>
@@ -403,23 +459,29 @@ export const useGameSentryLogger = (componentName?: string) => {
             componentName,
             metadata,
         });
-    }, [sentryLogContext, componentName]);
+    }, [sentryLogContext.addLog, componentName]);
+
+    const logTrace = useCallback((message: string, metadata?: Record<string, any>) =>
+        gameLogger(message, 'trace', metadata), [gameLogger]);
+    const logDebug = useCallback((message: string, metadata?: Record<string, any>) =>
+        gameLogger(message, 'debug', metadata), [gameLogger]);
+    const logInfo = useCallback((message: string, metadata?: Record<string, any>) =>
+        gameLogger(message, 'info', metadata), [gameLogger]);
+    const logWarn = useCallback((message: string, metadata?: Record<string, any>) =>
+        gameLogger(message, 'warn', metadata), [gameLogger]);
+    const logError = useCallback((message: string, metadata?: Record<string, any>) =>
+        gameLogger(message, 'error', metadata), [gameLogger]);
+    const logFatal = useCallback((message: string, metadata?: Record<string, any>) =>
+        gameLogger(message, 'fatal', metadata), [gameLogger]);
 
     return {
-        ...sentryLogContext,
         log: gameLogger,
-        logTrace: (message: string, metadata?: Record<string, any>) =>
-            gameLogger(message, 'trace', metadata),
-        logDebug: (message: string, metadata?: Record<string, any>) =>
-            gameLogger(message, 'debug', metadata),
-        logInfo: (message: string, metadata?: Record<string, any>) =>
-            gameLogger(message, 'info', metadata),
-        logWarn: (message: string, metadata?: Record<string, any>) =>
-            gameLogger(message, 'warn', metadata),
-        logError: (message: string, metadata?: Record<string, any>) =>
-            gameLogger(message, 'error', metadata),
-        logFatal: (message: string, metadata?: Record<string, any>) =>
-            gameLogger(message, 'fatal', metadata),
+        logTrace,
+        logDebug,
+        logInfo,
+        logWarn,
+        logError,
+        logFatal,
     };
 };
 
