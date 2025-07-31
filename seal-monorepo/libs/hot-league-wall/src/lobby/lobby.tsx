@@ -344,15 +344,38 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     handleOfferGames(offerGames: IOfferGame[]) {
         const { sentryHelper } = this.props;
 
+        // Add session replay breadcrumb for debugging
         if (sentryHelper) {
-            sentryHelper.logInfo('Handling offer games', {
+            sentryHelper.logInfo('Session replay: handleOfferGames called', {
+                offerGames: offerGames,
+                offerGamesType: typeof offerGames,
+                offerGamesIsNull: offerGames === null,
+                offerGamesIsUndefined: offerGames === undefined,
+                offerGamesLength: offerGames?.length,
+                timestamp: Date.now()
+            });
+        }
+
+        // Safe null check before accessing length
+        if (!offerGames) {
+            if (sentryHelper) {
+                sentryHelper.logWarning('Session replay: offerGames is null or undefined', {
+                    offerGames,
+                    timestamp: Date.now()
+                });
+            }
+            return;
+        }
+
+        if (sentryHelper) {
+            sentryHelper.logInfo('Session replay: Processing offer games', {
                 offerGamesCount: offerGames.length,
                 gameIds: offerGames.map(game => game.gameId),
                 timestamp: Date.now()
             });
         }
 
-        if (offerGames?.length > 0) {
+        if (offerGames.length > 0) {
             const filteredOfferGames = lobbyUtils.getFilteredGames(offerGames);
             const expandedGames = filteredOfferGames.reduce(
                 (acc, game) => {
@@ -365,6 +388,20 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
             if (!this.state.selectedGameId) {
                 this.setState({ selectedGameId: filteredOfferGames[0].gameId });
+            }
+
+            if (sentryHelper) {
+                sentryHelper.logInfo('Session replay: Offer games processed successfully', {
+                    filteredCount: filteredOfferGames.length,
+                    selectedGameId: this.state.selectedGameId,
+                    timestamp: Date.now()
+                });
+            }
+        } else {
+            if (sentryHelper) {
+                sentryHelper.logInfo('Session replay: No offer games available', {
+                    timestamp: Date.now()
+                });
             }
         }
     }
@@ -462,16 +499,22 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     private renderGames(context) {
         const { sentryHelper } = this.props;
+        const { offerGames, selectedGameId, isSessionTimeout, isAuthenticated } = this.state;
 
+        // Add session replay breadcrumb for debugging
         if (sentryHelper) {
-            sentryHelper.logInfo('Rendering games', {
-                offerGamesCount: this.state.offerGames.length,
-                selectedGameId: this.state.selectedGameId,
+            sentryHelper.logInfo('Session replay: Rendering games', {
+                offerGames: offerGames,
+                offerGamesType: typeof offerGames,
+                offerGamesIsNull: offerGames === null,
+                offerGamesIsUndefined: offerGames === undefined,
+                offerGamesLength: offerGames?.length,
+                selectedGameId,
+                isSessionTimeout,
+                isAuthenticated,
                 timestamp: Date.now()
             });
         }
-
-        const { offerGames, selectedGameId, isSessionTimeout, isAuthenticated } = this.state;
 
         const renderGameContent = () => {
             if (isSessionTimeout) {
@@ -486,8 +529,17 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                 );
             }
 
-            const hasGames = offerGames.length > 0;
+            // Safe null check before accessing length
+            const hasGames = offerGames && offerGames.length > 0;
             if (!hasGames || !isAuthenticated) {
+                if (sentryHelper) {
+                    sentryHelper.logInfo('Session replay: No games or not authenticated', {
+                        hasGames,
+                        isAuthenticated,
+                        offerGamesLength: offerGames?.length,
+                        timestamp: Date.now()
+                    });
+                }
                 return <Loading />;
             }
 
@@ -495,6 +547,15 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
             const gameMapInfo = gamePageMap[selectedGame.gameId];
             const namespace = gameMapInfo?.namespace;
             const GamePageComponent = gameMapInfo?.component || null;
+
+            if (sentryHelper) {
+                sentryHelper.logInfo('Session replay: Rendering game content', {
+                    selectedGameId: selectedGame.gameId,
+                    namespace,
+                    hasGamePageComponent: !!GamePageComponent,
+                    timestamp: Date.now()
+                });
+            }
 
             return (
                 <>

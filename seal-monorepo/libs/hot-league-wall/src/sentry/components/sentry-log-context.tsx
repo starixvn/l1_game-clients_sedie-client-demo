@@ -84,6 +84,103 @@ function generateSessionId(): string {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// Set up component-scoped error handlers
+function setupComponentScopedErrorHandlers(sentryManager: SentryManager, componentName: string) {
+    // Store original console methods
+    const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+
+    // Override console.error to capture errors from hot-league-wall components
+    console.error = (...args) => {
+        originalConsoleError.apply(console, args);
+
+        // Check if the error is from hot-league-wall components
+        const errorStack = args.find(arg => arg instanceof Error)?.stack || '';
+        const isHotLeagueWallError = errorStack.includes('hot-league-wall') ||
+            errorStack.includes('HotLeagueWall') ||
+            errorStack.includes('GameBoard') ||
+            errorStack.includes('GamePiece') ||
+            errorStack.includes('BetPanel') ||
+            errorStack.includes('Lobby') ||
+            errorStack.includes('RNGSoccer');
+
+        if (isHotLeagueWallError) {
+            const errorArg = args.find(arg => arg instanceof Error);
+            if (errorArg) {
+                sentryManager.captureError(errorArg, {
+                    tags: {
+                        source: 'hot_league_wall_component',
+                        component: componentName
+                    },
+                    extra: {
+                        consoleArgs: args,
+                        errorStack: errorStack
+                    }
+                });
+            }
+        }
+    };
+
+    // Override console.warn to capture warnings from hot-league-wall components
+    console.warn = (...args) => {
+        originalConsoleWarn.apply(console, args);
+
+        // Check if the warning is from hot-league-wall components
+        const warningStack = new Error().stack || '';
+        const isHotLeagueWallWarning = warningStack.includes('hot-league-wall') ||
+            warningStack.includes('HotLeagueWall') ||
+            warningStack.includes('GameBoard') ||
+            warningStack.includes('GamePiece') ||
+            warningStack.includes('BetPanel') ||
+            warningStack.includes('Lobby') ||
+            warningStack.includes('RNGSoccer');
+
+        if (isHotLeagueWallWarning) {
+            sentryManager.logWarning(args.join(' '), {
+                tags: {
+                    source: 'hot_league_wall_component',
+                    component: componentName
+                },
+                extra: {
+                    consoleArgs: args,
+                    warningStack: warningStack
+                }
+            });
+        }
+    };
+
+    // Set up error boundary for React components
+    const handleReactError = (error: Error, errorInfo: React.ErrorInfo) => {
+        const errorStack = error.stack || '';
+        const isHotLeagueWallError = errorStack.includes('hot-league-wall') ||
+            errorStack.includes('HotLeagueWall') ||
+            errorStack.includes('GameBoard') ||
+            errorStack.includes('GamePiece') ||
+            errorStack.includes('BetPanel') ||
+            errorStack.includes('Lobby') ||
+            errorStack.includes('RNGSoccer');
+
+        if (isHotLeagueWallError) {
+            sentryManager.captureError(error, {
+                tags: {
+                    source: 'react_error_boundary',
+                    component: componentName
+                },
+                extra: {
+                    errorInfo: errorInfo,
+                    errorStack: errorStack
+                }
+            });
+        }
+    };
+
+    // Return cleanup function
+    return () => {
+        console.error = originalConsoleError;
+        console.warn = originalConsoleWarn;
+    };
+}
+
 // Reducer function
 function sentryLogReducer(state: SentryLogState, action: SentryLogAction): SentryLogState {
     switch (action.type) {
@@ -192,6 +289,9 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
                     enabled: stateRef.current.isEnabled,
                     timestamp: Date.now()
                 });
+
+                // Set up component-scoped error handlers
+                setupComponentScopedErrorHandlers(sentryManager, sentryConfig.componentName);
             } catch (error) {
                 console.error('Failed to initialize Sentry Manager:', error);
             }
@@ -438,6 +538,67 @@ export const SentryLogProvider: React.FC<SentryLogProviderProps> = ({
         </SentryLogContext.Provider>
     );
 };
+
+// React Error Boundary for hot-league-wall components
+export class HotLeagueWallErrorBoundary extends React.Component<
+    { children: React.ReactNode; componentName: string },
+    { hasError: boolean; error?: Error }
+> {
+    constructor(props: { children: React.ReactNode; componentName: string }) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+        // Check if this is a hot-league-wall component error
+        const errorStack = error.stack || '';
+        const isHotLeagueWallError = errorStack.includes('hot-league-wall') ||
+            errorStack.includes('HotLeagueWall') ||
+            errorStack.includes('GameBoard') ||
+            errorStack.includes('GamePiece') ||
+            errorStack.includes('BetPanel') ||
+            errorStack.includes('Lobby') ||
+            errorStack.includes('RNGSoccer');
+
+        if (isHotLeagueWallError) {
+            // Get the Sentry manager instance and capture the error
+            const sentryManager = SentryManager.getInstance();
+            if (sentryManager) {
+                sentryManager.captureError(error, {
+                    tags: {
+                        source: 'react_error_boundary',
+                        component: this.props.componentName
+                    },
+                    extra: {
+                        errorInfo: errorInfo,
+                        errorStack: errorStack
+                    }
+                });
+            }
+        }
+    }
+
+    render() {
+        if (this.state.hasError) {
+            // You can render any custom fallback UI
+            return (
+                <div style={{ padding: '20px', border: '1px solid #ff0000', margin: '10px' }}>
+                    <h3>Something went wrong in Hot League Wall component.</h3>
+                    <p>Error: {this.state.error?.message}</p>
+                    <button onClick={() => this.setState({ hasError: false })}>
+                        Try again
+                    </button>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}
 
 // Hook to use the Sentry log context
 export const useSentryLog = (): SentryLogContextType => {

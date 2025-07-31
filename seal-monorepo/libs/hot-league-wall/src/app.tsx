@@ -9,7 +9,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
 
 import { appSettingsWithSentry } from './_shared/app-settings';
-import { useSentryHelper, SentryLogLevel, createSentryManager, createSentryHelper } from './sentry';
+import { useSentryHelper, SentryLogLevel, createSentryManager, createSentryHelper, SentryLogProvider } from './sentry';
+import { HotLeagueWallErrorBoundary } from './sentry/components/sentry-log-context';
 
 interface AppProps {
     appEnv: string;
@@ -25,68 +26,35 @@ interface AppContentProps {
 }
 
 const App = ({ appEnv, language, siteId, updateBalanceCallback, onRequestSSOToken }: AppProps) => {
-    // Initialize Sentry for the entire project
+    // Sentry is now initialized through SentryLogProvider
     React.useEffect(() => {
-        const environment = process.env.NODE_ENV || 'development';
-
-        try {
-            console.log('Initializing Sentry with environment:', environment);
-            console.log('App settings loaded:', {
-                sentryDsn: appSettingsWithSentry.sentryDsn,
-                sentryEnvironment: appSettingsWithSentry.sentryEnvironment,
-                environment
-            });
-
-            // Initialize Sentry using the refactored approach
-            const sentryManager = createSentryManager();
-            const sentryHelper = createSentryHelper();
-
-            // Initialize Sentry Manager
-            sentryManager.initialize({
-                dsn: appSettingsWithSentry.sentryDsn,
-                environment: appSettingsWithSentry.sentryEnvironment || environment,
-                componentName: 'HotLeagueWall',
-                logLevel: SentryLogLevel.INFO,
-                enableWorkflowTracking: true,
-                enablePerformanceTracking: true,
-                enableConsoleOverride: true
-            });
-
-            // Initialize Sentry Helper
-            sentryHelper.initialize({
-                enabled: true,
-                defaultLogLevel: SentryLogLevel.INFO,
-                enableWorkflowTracking: true,
-                enablePerformanceTracking: true,
-                enableConsoleOverride: false
-            });
-
-            console.log('Sentry initialization completed successfully');
-
-            // Test error capture
-            setTimeout(() => {
-                try {
-                    sentryManager.captureError(new Error('Test error from Sentry initialization'), {
-                        test: true,
-                        timestamp: Date.now()
-                    });
-                    console.log('Test error sent to Sentry');
-                } catch (testError) {
-                    console.error('Failed to send test error to Sentry:', testError);
-                }
-            }, 2000);
-        } catch (error) {
-            console.error('Failed to initialize Sentry:', error);
-        }
+        console.log('Hot League Wall App initialized with SentryLogProvider');
     }, []);
 
     return (
-        <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
-            <AppContent
-                updateBalanceCallback={updateBalanceCallback}
-                onRequestSSOToken={onRequestSSOToken}
-            />
-        </AppProvider>
+        <HotLeagueWallErrorBoundary componentName="HotLeagueWall">
+            <SentryLogProvider
+                sessionId={`hot-league-wall-${Date.now()}`}
+                gameId="hot-league-wall"
+                enabled={true}
+                autoSendOnUnmount={true}
+                sentryConfig={{
+                    dsn: appSettingsWithSentry.sentryDsn,
+                    environment: appSettingsWithSentry.sentryEnvironment || process.env.NODE_ENV || 'development',
+                    componentName: 'HotLeagueWall',
+                    release: process.env.REACT_APP_VERSION || '1.0.0',
+                    debug: process.env.NODE_ENV === 'development',
+                    logLevel: SentryLogLevel.INFO
+                }}
+            >
+                <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
+                    <AppContent
+                        updateBalanceCallback={updateBalanceCallback}
+                        onRequestSSOToken={onRequestSSOToken}
+                    />
+                </AppProvider>
+            </SentryLogProvider>
+        </HotLeagueWallErrorBoundary>
     );
 };
 

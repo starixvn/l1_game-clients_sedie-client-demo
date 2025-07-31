@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSentryHelper, SentryLogLevel } from '../../../sentry';
+import { HotLeagueWallErrorBoundary } from '../../../sentry/components/sentry-log-context';
 
 interface GamePieceProps {
     pieceId: string;
@@ -221,51 +222,53 @@ export const GamePiece: React.FC<GamePieceProps> = ({
     };
 
     return (
-        <div
-            style={{
-                position: 'absolute',
-                left: `${position.x * 60}px`,
-                top: `${position.y * 60}px`,
-                width: '50px',
-                height: '50px',
-                backgroundColor: getPieceColor(),
-                border: isSelected ? '3px solid #000' : '2px solid #333',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                opacity: health <= 0 ? 0.3 : 1,
-                transform: isMoving ? 'scale(1.1)' : 'scale(1)',
-            }}
-            onClick={isSelected ? handleDeselect : handleSelect}
-            title={`${pieceType} (${pieceId}) - Health: ${health}`}
-        >
-            {getPieceSymbol()}
-
-            {/* Health bar */}
-            {pieceType === 'player' || pieceType === 'enemy' ? (
-                <div style={{
+        <HotLeagueWallErrorBoundary componentName={`GamePiece_${pieceId}`}>
+            <div
+                style={{
                     position: 'absolute',
-                    bottom: '-8px',
-                    left: '0',
-                    width: '100%',
-                    height: '4px',
-                    backgroundColor: '#ddd',
-                    borderRadius: '2px',
-                    overflow: 'hidden'
-                }}>
+                    left: `${position.x * 60}px`,
+                    top: `${position.y * 60}px`,
+                    width: '50px',
+                    height: '50px',
+                    backgroundColor: getPieceColor(),
+                    border: isSelected ? '3px solid #000' : '2px solid #333',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    opacity: health <= 0 ? 0.3 : 1,
+                    transform: isMoving ? 'scale(1.1)' : 'scale(1)',
+                }}
+                onClick={isSelected ? handleDeselect : handleSelect}
+                title={`${pieceType} (${pieceId}) - Health: ${health}`}
+            >
+                {getPieceSymbol()}
+
+                {/* Health bar */}
+                {pieceType === 'player' || pieceType === 'enemy' ? (
                     <div style={{
-                        width: `${health}%`,
-                        height: '100%',
-                        backgroundColor: health > 50 ? '#4caf50' : health > 25 ? '#ff9800' : '#f44336',
-                        transition: 'width 0.3s ease'
-                    }} />
-                </div>
-            ) : null}
-        </div>
+                        position: 'absolute',
+                        bottom: '-8px',
+                        left: '0',
+                        width: '100%',
+                        height: '4px',
+                        backgroundColor: '#ddd',
+                        borderRadius: '2px',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{
+                            width: `${health}%`,
+                            height: '100%',
+                            backgroundColor: health > 50 ? '#4caf50' : health > 25 ? '#ff9800' : '#f44336',
+                            transition: 'width 0.3s ease'
+                        }} />
+                    </div>
+                ) : null}
+            </div>
+        </HotLeagueWallErrorBoundary>
     );
 };
 

@@ -103,9 +103,6 @@ export class SentryManagerRefactored {
                 this.consoleOverride.override();
             }
 
-            // Set up global error handlers
-            this.setupGlobalErrorHandlers();
-
             this.isInitialized = true;
 
             this.logger.logInfo('SentryManager initialized successfully', {
@@ -231,53 +228,5 @@ export class SentryManagerRefactored {
         Sentry.close();
     }
 
-    private setupGlobalErrorHandlers(): void {
-        // Capture uncaught exceptions
-        window.addEventListener('error', (event) => {
-            console.log('Global error handler caught:', event.error);
-            Sentry.captureException(event.error, {
-                tags: {
-                    source: 'global_error_handler',
-                    component: this.componentName
-                },
-                extra: {
-                    errorEvent: event
-                }
-            });
-        });
 
-        // Capture unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
-            console.log('Global unhandled rejection handler caught:', event.reason);
-            Sentry.captureException(event.reason, {
-                tags: {
-                    source: 'unhandled_rejection',
-                    component: this.componentName
-                },
-                extra: {
-                    promise: event.promise
-                }
-            });
-        });
-
-        // Override console.error to capture errors
-        const originalConsoleError = console.error;
-        console.error = (...args) => {
-            originalConsoleError.apply(console, args);
-
-            // Check if any of the arguments is an Error object
-            const errorArg = args.find(arg => arg instanceof Error);
-            if (errorArg) {
-                Sentry.captureException(errorArg, {
-                    tags: {
-                        source: 'console_error',
-                        component: this.componentName
-                    },
-                    extra: {
-                        consoleArgs: args
-                    }
-                });
-            }
-        };
-    }
 } 

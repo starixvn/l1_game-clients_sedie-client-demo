@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useSentryHelper, SentryLogLevel } from '../../../sentry';
+import { HotLeagueWallErrorBoundary } from '../../../sentry/components/sentry-log-context';
 
 interface GameBoardProps {
     gameId: string;
@@ -95,70 +96,72 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }, [logInfo, gameId, sessionId]);
 
     return (
-        <div className="game-board" style={{
-            padding: '20px',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            backgroundColor: '#f9f9f9',
-            margin: '10px'
-        }}>
-            <h2>Game Board</h2>
-            <div style={{ marginBottom: '15px' }}>
-                <strong>Game ID:</strong> {gameId}
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-                <strong>Session ID:</strong> {sessionId}
-            </div>
-
-
-            {endGameMessage && (
-                <div style={{
-                    padding: '10px',
-                    marginBottom: '15px',
-                    backgroundColor: '#e8f5e8',
-                    border: '1px solid #4caf50',
-                    borderRadius: '4px',
-                    color: '#2e7d32'
-                }}>
-                    {endGameMessage}
+        <HotLeagueWallErrorBoundary componentName="GameBoard">
+            <div className="game-board" style={{
+                padding: '20px',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                backgroundColor: '#f9f9f9',
+                margin: '10px'
+            }}>
+                <h2>Game Board</h2>
+                <div style={{ marginBottom: '15px' }}>
+                    <strong>Game ID:</strong> {gameId}
                 </div>
-            )}
+                <div style={{ marginBottom: '15px' }}>
+                    <strong>Session ID:</strong> {sessionId}
+                </div>
 
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button
-                    onClick={handleEndGame}
-                    disabled={isEnding}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#f44336',
-                        color: 'white',
-                        border: 'none',
+
+                {endGameMessage && (
+                    <div style={{
+                        padding: '10px',
+                        marginBottom: '15px',
+                        backgroundColor: '#e8f5e8',
+                        border: '1px solid #4caf50',
                         borderRadius: '4px',
-                        cursor: isEnding ? 'not-allowed' : 'pointer',
-                        opacity: isEnding ? 0.6 : 1
-                    }}
-                >
-                    {isEnding ? 'Ending Game...' : 'End Game'}
-                </button>
+                        color: '#2e7d32'
+                    }}>
+                        {endGameMessage}
+                    </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={handleEndGame}
+                        disabled={isEnding}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#f44336',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: isEnding ? 'not-allowed' : 'pointer',
+                            opacity: isEnding ? 0.6 : 1
+                        }}
+                    >
+                        {isEnding ? 'Ending Game...' : 'End Game'}
+                    </button>
 
 
 
-                <button
-                    onClick={handleClearLogs}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#ff9800',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Clear Logs
-                </button>
+                    <button
+                        onClick={handleClearLogs}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#ff9800',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Clear Logs
+                    </button>
+                </div>
+
+
             </div>
-
-
-        </div>
+        </HotLeagueWallErrorBoundary>
     );
 }; 

@@ -126,7 +126,32 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
     @render(gc.Player.MainPlayerStore, (store) => store.offerGames)
     handleOfferGames(offerGames: IOfferGame[]) {
-        if (offerGames?.length > 0) {
+        // Add session replay breadcrumb for debugging
+        console.log('Session replay: handleOfferGames called', {
+            offerGames: offerGames,
+            offerGamesType: typeof offerGames,
+            offerGamesIsNull: offerGames === null,
+            offerGamesIsUndefined: offerGames === undefined,
+            offerGamesLength: offerGames?.length,
+            timestamp: Date.now()
+        });
+
+        // Safe null check before accessing length
+        if (!offerGames) {
+            console.warn('Session replay: offerGames is null or undefined', {
+                offerGames,
+                timestamp: Date.now()
+            });
+            return;
+        }
+
+        console.log('Session replay: Processing offer games', {
+            offerGamesCount: offerGames.length,
+            gameIds: offerGames.map(game => game.gameId),
+            timestamp: Date.now()
+        });
+
+        if (offerGames.length > 0) {
             const filteredOfferGames = lobbyUtils.getFilteredGames(offerGames);
             const expandedGames = filteredOfferGames.reduce(
                 (acc, game) => {
@@ -140,6 +165,16 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
             if (!this.state.selectedGameId) {
                 this.setState({ selectedGameId: filteredOfferGames[0].gameId });
             }
+
+            console.log('Session replay: Offer games processed successfully', {
+                filteredCount: filteredOfferGames.length,
+                selectedGameId: this.state.selectedGameId,
+                timestamp: Date.now()
+            });
+        } else {
+            console.log('Session replay: No offer games available', {
+                timestamp: Date.now()
+            });
         }
     }
 
@@ -170,6 +205,20 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
     private renderGames(context) {
         const { offerGames, leagueToogle, selectedGameId, isSessionTimeout, isAuthenticated, username } = this.state;
 
+        // Add session replay breadcrumb for debugging
+        console.log('Session replay: Rendering games', {
+            offerGames: offerGames,
+            offerGamesType: typeof offerGames,
+            offerGamesIsNull: offerGames === null,
+            offerGamesIsUndefined: offerGames === undefined,
+            offerGamesLength: offerGames?.length,
+            selectedGameId,
+            isSessionTimeout,
+            isAuthenticated,
+            username,
+            timestamp: Date.now()
+        });
+
         const renderGameContent = () => {
             if (isSessionTimeout) {
                 return (
@@ -182,12 +231,25 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
                 );
             }
 
-            const hasGames = offerGames.length > 0;
+            // Safe null check before accessing length
+            const hasGames = offerGames && offerGames.length > 0;
             if (!hasGames || !isAuthenticated) {
+                console.log('Session replay: No games or not authenticated', {
+                    hasGames,
+                    isAuthenticated,
+                    offerGamesLength: offerGames?.length,
+                    timestamp: Date.now()
+                });
                 return <Loading />;
             }
 
             const selectedGame = offerGames.find((game) => game.gameId === selectedGameId) || offerGames[0];
+
+            console.log('Session replay: Rendering game content', {
+                selectedGameId: selectedGame.gameId,
+                hasGames,
+                timestamp: Date.now()
+            });
 
             return (
                 <>
