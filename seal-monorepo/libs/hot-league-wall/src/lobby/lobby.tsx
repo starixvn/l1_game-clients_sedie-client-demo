@@ -12,9 +12,7 @@ import { gamePageMap } from '../_shared/utils/component-util';
 import { GameDisconnectView } from '../games/game-base/components/game-disconnect-view';
 import blurBgGame from '../assets/rng-soccer/blur-bg-game.png';
 import { GatewayConnectionManager } from '../games/game-base/gateway/gateway-connection-manager';
-import { useSentryHelper } from '../_shared/hooks/useSentryHelper';
-import { SentryLogLevel } from '../_shared/utils/sentry/sentry-types';
-import { logInfo, logError, logWarning } from '../_shared/utils/sentry/sentry-helper';
+import { useSentryHelper, SentryLogLevel, logInfo, logError, logWarning } from '../sentry';
 
 // Wrapper component to provide SentryHelper to the class component
 const LobbyWithSentry = (props: { token: string; onSSORetry?: () => Promise<void>; isReconnecting?: boolean; language: string }) => {

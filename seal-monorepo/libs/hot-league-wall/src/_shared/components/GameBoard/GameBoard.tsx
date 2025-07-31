@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useGameSentryLogger, useSentryLog } from '../../react-contexts/log-context/sentry-log-context';
+import { useGameSentryLogger, useSentryLog } from '../../../sentry';
 
 interface GameBoardProps {
     gameId: string;

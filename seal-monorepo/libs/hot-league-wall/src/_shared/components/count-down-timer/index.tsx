@@ -4,8 +4,7 @@ import classnames from 'classnames';
 import Styles from './count-down-timer.module.scss';
 import { IPropsObserver, IStateObserver, ObserverComponent } from '../observer-component/observer-component';
 import { formatSecondsToTime } from '../../utils/count-down-format';
-import { useSentryHelper } from '../../hooks/useSentryHelper';
-import { SentryLogLevel } from '../../utils/sentry/sentry-types';
+import { useSentryHelper, SentryLogLevel } from '../../../sentry';
 import React from 'react';
 
 export interface ICountDownTimerProps extends IPropsObserver {

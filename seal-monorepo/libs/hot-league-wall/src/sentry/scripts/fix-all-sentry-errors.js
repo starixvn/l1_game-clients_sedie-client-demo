@@ -27,14 +27,14 @@ function fixFile(filePath) {
         content = content.replace(/import\s*{\s*sentryHelper\s*,?\s*([^}]*)\s*}\s*from\s*['"][^'"]*['"]/g, (match, otherImports) => {
             changesMade++;
             const cleanImports = otherImports.replace(/,\s*$/, '').trim();
-            return `import {\n    ${cleanImports ? cleanImports + ',\n    ' : ''}logInfo,\n    logError,\n    logWarning,\n    logDebug,\n    logTrace,\n    configureComponent,\n    startWorkflow,\n    updateWorkflow,\n    completeWorkflow,\n    trackPerformance\n} from '../utils/sentry/sentry-helper'`;
+            return `import {\n    ${cleanImports ? cleanImports + ',\n    ' : ''}logInfo,\n    logError,\n    logWarning,\n    logDebug,\n    logTrace,\n    configureComponent,\n    startWorkflow,\n    updateWorkflow,\n    completeWorkflow,\n    trackPerformance\n} from '@/sentry/utils/sentry/sentry-helper'`;
         });
     }
 
     // Fix wrong import paths
     content = content.replace(/from\s*['"]\.\/sentry-helper['"]/g, (match) => {
         changesMade++;
-        return `from '../utils/sentry/sentry-helper'`;
+        return `from '@/sentry/utils/sentry/sentry-helper'`;
     });
 
     // Replace all sentryHelper.logX calls with direct function calls

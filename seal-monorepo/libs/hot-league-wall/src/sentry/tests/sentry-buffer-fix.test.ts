@@ -1,4 +1,4 @@
-import { sentryManager } from '../src/_shared/utils/sentry/sentry-manager';
+import { sentryManager } from '../index';
 
 // Mock Sentry
 jest.mock('@sentry/react', () => ({

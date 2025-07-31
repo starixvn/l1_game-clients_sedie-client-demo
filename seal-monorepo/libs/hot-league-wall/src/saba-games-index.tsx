@@ -1,10 +1,11 @@
 import 'reflect-metadata';
-import { configureSentryManager, SentryLogLevel } from './_shared/utils/sentry/sentry-manager';
+
 import { appSettings } from './_shared/app-settings';
 import { useEffect } from 'react';
 import './style.module.scss';
 import App from './app';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER } from '../constant/app';
+import { configureSentryManager, SentryLogLevel } from './sentry';
 
 export const useSentryInit = () => {
     useEffect(() => {

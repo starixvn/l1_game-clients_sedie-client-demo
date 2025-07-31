@@ -3,8 +3,7 @@ import { RoundStore } from '@sg/sg-game-client/dist/game/rounds';
 import { handle, render } from '@sg/sg-observer';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useSentryHelper } from '../../hooks/useSentryHelper';
-import { SentryLogLevel } from '../../utils/sentry/sentry-types';
+import { useSentryHelper, SentryLogLevel } from '../../../sentry';
 import {
     RNGSoccer_GAME_NAMESPACE,
     SABA_GAMES,

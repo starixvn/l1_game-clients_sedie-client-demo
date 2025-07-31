@@ -11,7 +11,7 @@ import {
     unblockElement,
     unignoreElement,
     Sentry
-} from '../utils/sentry/sentry-session-replay';
+} from '../core/sentry-session-replay';
 
 /**
  * React hook for Session Replay functionality

@@ -1,5 +1,4 @@
-import { SentryHelper, SentryLogLevel } from '../src/_shared/utils/sentry/sentry-helper';
-import { SentryManager } from '../src/_shared/utils/sentry/sentry-manager';
+import { SentryHelper, SentryLogLevel, SentryManager } from '../index';
 import * as Sentry from '@sentry/react';
 
 // Mock Sentry

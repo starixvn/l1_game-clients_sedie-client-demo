@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { SentryLogProvider, useGameSentryLogger, useSentryLog } from '../../react-contexts/log-context/sentry-log-context';
-import { GameBoard } from '../GameBoard';
-import { GamePiece, GamePieceControls } from '../GamePiece';
-import { SentryLogLevel } from '../../utils/sentry/sentry-types';
+
+import { GameBoard } from '../../_shared/components/GameBoard/GameBoard';
+import { GamePiece, GamePieceControls } from '../../_shared/components/GamePiece/GamePiece';
+import { SentryLogLevel } from '../core/sentry-types';
+import { SentryLogProvider, useGameSentryLogger, useSentryLog } from './sentry-log-context';
 
 // Demo game component that uses the logging system
 const DemoGame: React.FC = () => {

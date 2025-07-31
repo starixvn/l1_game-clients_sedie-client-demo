@@ -7,13 +7,9 @@ import { SyncMemberSiteBalance } from './_shared/utils/callback-singleton/sync-m
 import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
 import React, { useEffect, useState, useCallback } from 'react';
 import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng-soccer-static-prototype';
-import { useSentryHelper } from './_shared/hooks/useSentryHelper';
-import { SentryLogLevel } from './_shared/utils/sentry/sentry-types';
-import { initializeSentryForProject, configureSentryForEnvironment } from './_shared/utils/sentry/sentry-config';
-import { initializeSentryWithSessionReplay, configureSessionReplayForEnvironment } from './_shared/utils/sentry/sentry-session-replay';
-import { useSessionReplay } from './_shared/hooks/useSessionReplay';
-import { sentryGameCronBatchManager } from './_shared/utils/sentry/sentry-game-cron-batch-manager';
+
 import { appSettingsWithSentry } from './_shared/app-settings';
+import { useSentryHelper, SentryLogLevel, initializeSentryForProject, configureSentryForEnvironment, initializeSentryWithSessionReplay, configureSessionReplayForEnvironment, useSessionReplay, sentryGameCronBatchManager } from './sentry';
 
 interface AppProps {
     appEnv: string;

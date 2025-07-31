@@ -11,7 +11,6 @@ import RngSoccerDemo from './games/saba-club/rng-soccer/prototype/rng-soccer-dem
 import { SSOControlSimulator } from './_shared/components/sso-control-simulator';
 import { SSOControlSimulatorWrapper } from './_shared/components/sso-control-simulator/sso-control-simulator-wrapper';
 import LivePageDemo from './_shared/components/live-page-demo';
-import { LoggingDemo } from './_shared/components/LoggingDemo';
 
 // Utility imports
 import { TokenRequestManager } from './_shared/utils/callback-singleton/token-request-manager';
@@ -29,6 +28,9 @@ import {
     DEFAULT_SSO_CONFIG,
     PreviewContextProps
 } from './simulator';
+
+// Sentry imports
+import { LoggingDemo } from './sentry';
 
 // Tab types
 type TabType = 'today' | 'live-page' | 'logging-demo';

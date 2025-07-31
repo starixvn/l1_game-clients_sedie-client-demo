@@ -6,7 +6,7 @@ import SentryBatchManager, {
     flushComponentBatches,
     getBatchStats,
     cleanupBatchManager
-} from './sentry-batch-manager';
+} from '@/sentry/sentry-batch-manager';
 
 // Mock Sentry
 vi.mock('@sentry/react', () => ({

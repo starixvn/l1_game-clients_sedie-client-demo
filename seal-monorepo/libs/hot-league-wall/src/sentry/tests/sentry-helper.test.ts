@@ -21,8 +21,8 @@ import {
     clearLocalStorageConfig,
     clearComponentLocalStorageConfig,
     getAllComponentConfigs
-} from '../src/_shared/utils/sentry/sentry-helper';
-import { SentryLogLevel, WorkflowState } from '../src/_shared/utils/sentry/sentry-types';
+} from '../index';
+import { SentryLogLevel, WorkflowState } from '../index';
 
 // Mock SentryManager
 jest.mock('../src/_shared/utils/sentry/sentry-manager', () => {

@@ -7,7 +7,7 @@ import {
     flushGameCronBatches,
     getGameCronBatchStats,
     type GameCronConfig
-} from '../utils/sentry/sentry-game-cron-batch-manager';
+} from '../utils/sentry-game-cron-batch-manager';
 
 interface UseGameCronSentryOptions {
     gameCronId: string;

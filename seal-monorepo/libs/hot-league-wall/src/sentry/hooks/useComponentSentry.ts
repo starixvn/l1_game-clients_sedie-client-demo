@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
-import SentryManager from '../utils/sentry/sentry-manager';
-import { appSettings } from '../app-settings';
+import SentryManager from '../core/sentry-manager';
+import { appSettings } from '../../_shared/app-settings';
 
 interface UseComponentSentryOptions {
     componentName?: string;

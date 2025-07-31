@@ -1,5 +1,5 @@
 import * as gc from '@sg/sg-game-client';
-import { logInfo, logError, logWarning, updateSentryConfiguration } from '../utils/sentry/sentry-helper';
+import { logInfo, logError, logWarning, updateSentryConfiguration } from '../../sentry';
 
 import SG_LOCAL_CONFIG from '../../../configs/sg/configs.LOCAL_1.json';
 import SG_SIT_CONFIG from '../../../configs/sg/configs.SIT.json';

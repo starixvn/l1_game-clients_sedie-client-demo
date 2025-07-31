@@ -1,26 +1,25 @@
 import { useCallback, useEffect, useRef } from 'react';
 import {
-    logInfoBatched as sentryLogInfo,
-    logErrorBatched as sentryLogError,
-    logWarningBatched as sentryLogWarning,
-    logDebugBatched as logDebug,
-    logTraceBatched as logTrace,
-    configureComponentBatched as configureComponent,
-    startWorkflowBatched as startWorkflow,
-    updateWorkflowBatched as updateWorkflow,
-    completeWorkflowBatched as completeWorkflow,
-    trackPerformanceBatched as sentryTrackPerformance,
-    sentryHelperBatched,
-    flushComponentBatchesBatched as flushComponentBatches
-} from '../utils/sentry/sentry-helper-batched';
+    logInfo as sentryLogInfo,
+    logError as sentryLogError,
+    logWarning as sentryLogWarning,
+    logDebug,
+    logTrace,
+    configureComponent,
+    startWorkflow,
+    updateWorkflow,
+    completeWorkflow,
+    trackPerformance as sentryTrackPerformance,
+    sentryHelper
+} from '../utils/sentry-helper';
 import {
     SentryLogLevel,
     WorkflowState,
     UseSentryHelperOptions,
     WorkflowTracker
-} from '../utils/sentry/sentry-types';
+} from '../core/sentry-types';
 
-export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
+export const useSentryHelper = (options: UseSentryHelperOptions) => {
     const {
         componentName,
         logLevel = SentryLogLevel.ALL,
@@ -35,7 +34,7 @@ export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
     useEffect(() => {
         if (autoConfigure) {
             try {
-                sentryLogInfo(componentName, 'Initializing SentryHelperBatched hook', {
+                sentryLogInfo(componentName, 'Initializing SentryHelper hook', {
                     componentName,
                     logLevel,
                     enableWorkflowTracking,
@@ -50,7 +49,7 @@ export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
                     enablePerformanceTracking
                 });
 
-                sentryLogInfo(componentName, 'SentryHelperBatched hook initialized successfully', {
+                sentryLogInfo(componentName, 'SentryHelper hook initialized successfully', {
                     componentName,
                     configuration: {
                         logLevel,
@@ -69,7 +68,7 @@ export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
     useEffect(() => {
         return () => {
             try {
-                sentryLogInfo(componentName, 'Cleaning up SentryHelperBatched hook', {
+                sentryLogInfo(componentName, 'Cleaning up SentryHelper hook', {
                     componentName,
                     activeWorkflowsCount: activeWorkflows.current.size,
                     timestamp: Date.now()
@@ -85,10 +84,7 @@ export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
                 });
                 activeWorkflows.current.clear();
 
-                // Flush any remaining logs for this component
-                flushComponentBatches(componentName);
-
-                sentryLogInfo(componentName, 'SentryHelperBatched hook cleanup completed', {
+                sentryLogInfo(componentName, 'SentryHelper hook cleanup completed', {
                     componentName,
                     timestamp: Date.now()
                 });
@@ -234,7 +230,7 @@ export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
 
     // Utility methods
     const isLoggingEnabled = useCallback((level: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal') => {
-        return sentryHelperBatched.isLoggingEnabled(componentName, level);
+        return sentryHelper.isLoggingEnabled(componentName, level);
     }, [componentName]);
 
     const getConfig = useCallback(() => {
@@ -260,23 +256,6 @@ export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
         }
     }, [componentName, logLevel, enableWorkflowTracking, enablePerformanceTracking]);
 
-    // Batch management methods
-    const flushBatches = useCallback(async () => {
-        try {
-            await flushComponentBatches(componentName);
-            sentryLogInfo(componentName, 'Component batches flushed', {
-                componentName,
-                timestamp: Date.now()
-            });
-        } catch (error) {
-            console.error('Failed to flush component batches:', error);
-        }
-    }, [componentName]);
-
-    const getBatchStats = useCallback(() => {
-        return sentryHelperBatched.getBatchStats();
-    }, []);
-
     return {
         // Logging methods
         logError,
@@ -293,18 +272,14 @@ export const useSentryHelperBatched = (options: UseSentryHelperOptions) => {
         isLoggingEnabled,
         getConfig,
 
-        // Batch management methods
-        flushBatches,
-        getBatchStats,
-
-        // Direct access to sentryHelperBatched for advanced usage
-        sentryHelper: sentryHelperBatched
+        // Direct access to sentryHelper for advanced usage
+        sentryHelper
     };
 };
 
 // Convenience hook for simple logging without workflow tracking
-export const useSimpleSentryBatched = (componentName: string, logLevel?: SentryLogLevel) => {
-    const hookResult = useSentryHelperBatched({
+export const useSimpleSentry = (componentName: string, logLevel?: SentryLogLevel) => {
+    const hookResult = useSentryHelper({
         componentName,
         logLevel,
         enableWorkflowTracking: false,
@@ -313,7 +288,7 @@ export const useSimpleSentryBatched = (componentName: string, logLevel?: SentryL
     });
 
     try {
-        sentryLogInfo(componentName, 'Initializing simple SentryBatched hook', {
+        sentryLogInfo(componentName, 'Initializing simple Sentry hook', {
             componentName,
             logLevel,
             timestamp: Date.now()
@@ -339,16 +314,14 @@ export const useSimpleSentryBatched = (componentName: string, logLevel?: SentryL
                 track: async <T>(operationName: string, operation: () => Promise<T> | T) => await operation()
             },
             trackPerformance: async <T>(operationName: string, operation: () => Promise<T> | T) => await operation(),
-            getConfig: () => ({ componentName, logLevel: SentryLogLevel.ERROR_ONLY }),
-            flushBatches: async () => { /* no-op */ },
-            getBatchStats: () => ({})
+            getConfig: () => ({ componentName, logLevel: SentryLogLevel.ERROR_ONLY })
         };
     }
 };
 
 // Hook for workflow-focused usage
-export const useWorkflowSentryBatched = (componentName: string, options?: Partial<UseSentryHelperOptions>) => {
-    const hookResult = useSentryHelperBatched({
+export const useWorkflowSentry = (componentName: string, options?: Partial<UseSentryHelperOptions>) => {
+    const hookResult = useSentryHelper({
         componentName,
         enableWorkflowTracking: true,
         enablePerformanceTracking: true,
@@ -357,7 +330,7 @@ export const useWorkflowSentryBatched = (componentName: string, options?: Partia
     });
 
     try {
-        sentryLogInfo(componentName, 'Initializing workflow SentryBatched hook', {
+        sentryLogInfo(componentName, 'Initializing workflow Sentry hook', {
             componentName,
             options,
             timestamp: Date.now()
@@ -383,9 +356,7 @@ export const useWorkflowSentryBatched = (componentName: string, options?: Partia
                 track: async <T>(operationName: string, operation: () => Promise<T> | T) => await operation()
             },
             trackPerformance: async <T>(operationName: string, operation: () => Promise<T> | T) => await operation(),
-            getConfig: () => ({ componentName, logLevel: SentryLogLevel.ERROR_ONLY }),
-            flushBatches: async () => { /* no-op */ },
-            getBatchStats: () => ({})
+            getConfig: () => ({ componentName, logLevel: SentryLogLevel.ERROR_ONLY })
         };
     }
 }; 

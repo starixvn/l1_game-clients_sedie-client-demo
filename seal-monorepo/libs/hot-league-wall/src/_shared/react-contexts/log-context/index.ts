@@ -13,7 +13,4 @@ export {
     useSentryLog,
     useGameSentryLogger,
     SentryLogContext,
-    type SentryLogEntry,
-    type SentryLogState,
-    type SentryLogContextType,
 } from './sentry-log-context'; 

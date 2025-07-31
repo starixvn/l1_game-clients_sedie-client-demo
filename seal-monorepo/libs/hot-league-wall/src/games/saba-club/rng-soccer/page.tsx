@@ -7,8 +7,7 @@ import { configGameContainer } from '../../../games/game-base/startup';
 import type { GameBaseProps } from '../../../games/game-base/type';
 import { UIExtensionOptions } from '../../../games/game-base/ui/game-ui-renderer';
 import { GameBettingOptionsContext } from '../../../_shared/react-contexts/game-betting-zone-context/game-betting-zone-context';
-import { SentryLogProvider, useGameSentryLogger, useSentryLog } from '../../../_shared/react-contexts/log-context/sentry-log-context';
-import { SentryLogLevel } from '../../../_shared/utils/sentry/sentry-types';
+
 import styles from './rng-soccer.module.scss';
 import { containerOptions, setting } from './game-settings';
 import RNGSoccerBetOptions from './bet-option/rng-soccer-bet-options';
@@ -19,8 +18,7 @@ import RNGSoccerSettlementResult from './settlement-result/rng-soccer-settlement
 import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
 import { RNGSoccerRoundHistory } from './round-history';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
-import { useSentryHelper } from '../../../_shared/hooks/useSentryHelper';
-import { useGameCronSentry } from '../../../_shared/hooks/useGameCronSentry';
+import { SentryLogProvider, useGameSentryLogger, useSentryLog, SentryLogLevel, useSentryHelper, useGameCronSentry } from '../../../sentry';
 
 // Extended props for RNG Soccer with logging support
 interface IRNGSoccerPageProps extends GameBaseProps {

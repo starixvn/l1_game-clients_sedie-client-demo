@@ -2,6 +2,15 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
+    "baseUrl": ".",
+    "paths": {
+      "@/sentry": [
+        "src/sentry"
+      ],
+      "@/sentry/*": [
+        "src/sentry/*"
+      ]
+    },
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",

@@ -3,8 +3,7 @@ import { Translator } from '@sg/sg-game-client';
 import Styles from './scoreboard.module.scss';
 import { hasBlink } from './helper';
 import { OddEvenBigRoadConverter, OverUnderBigRoadConverter } from './converters';
-import { useSentryHelper } from '../../hooks/useSentryHelper';
-import { SentryLogLevel } from '../../utils/sentry/sentry-types';
+import { useSentryHelper, SentryLogLevel } from '../../../sentry';
 
 type Props = {
     gameName: string | undefined;

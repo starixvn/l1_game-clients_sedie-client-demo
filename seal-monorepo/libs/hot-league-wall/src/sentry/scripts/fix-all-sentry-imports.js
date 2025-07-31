@@ -29,7 +29,7 @@ function fixFile(filePath) {
         content = content.replace(/import\s*{\s*sentryHelper\s*,?\s*([^}]*)\s*}\s*from\s*['"][^'"]*['"]/g, (match, otherImports) => {
             changesMade++;
             const cleanImports = otherImports.replace(/,\s*$/, '').trim();
-            return `import {\n    ${cleanImports ? cleanImports + ',\n    ' : ''}logInfo,\n    logError,\n    logWarning,\n    logDebug,\n    logTrace\n} from './sentry-helper'`;
+            return `import {\n    ${cleanImports ? cleanImports + ',\n    ' : ''}logInfo,\n    logError,\n    logWarning,\n    logDebug,\n    logTrace\n} from '@/sentry/sentry-helper'`;
         });
     }
 

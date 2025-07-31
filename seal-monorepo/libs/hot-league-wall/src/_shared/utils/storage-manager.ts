@@ -4,7 +4,7 @@ import {
     logWarning,
     logDebug,
     logTrace
-} from './sentry/sentry-helper';
+} from '../../sentry';
 
 interface IActionStorage {
     remove: (name: string) => void;
