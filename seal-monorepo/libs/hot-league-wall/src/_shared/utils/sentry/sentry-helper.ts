@@ -24,14 +24,14 @@ const COMPONENT_ENABLED_PREFIX = 'sentry_component_enabled_';
  */
 const getLocalStorageConfig = () => {
     try {
-        const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'info';
+        const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'error';
         const enabled = localStorage.getItem(SENTRY_ENABLED_KEY) !== 'false';
         const debugMode = localStorage.getItem(SENTRY_DEBUG_MODE_KEY) === 'true';
 
         return { logLevel, enabled, debugMode };
     } catch (error) {
         console.warn('Failed to read localStorage config:', error);
-        return { logLevel: 'info', enabled: true, debugMode: false };
+        return { logLevel: 'error', enabled: true, debugMode: false };
     }
 };
 
@@ -166,7 +166,7 @@ class SentryHelper {
     private constructor() {
         this.globalConfig = {
             enabled: true,
-            defaultLogLevel: SentryLogLevel.INFO,
+            defaultLogLevel: SentryLogLevel.ERROR,
             enableWorkflowTracking: true,
             enablePerformanceTracking: true,
             enableConsoleOverride: true,
@@ -377,7 +377,7 @@ class SentryHelper {
             metadata: metadata || {}
         });
 
-        // Send workflow start event to Sentry
+        // Send workflow start event to Sentry (only console logging now)
         try {
             const sentryManager = this.getOrCreateComponentLogger(componentName);
             console.log(`[Sentry] About to call sentryManager.startWorkflow for ${componentName}`);
@@ -399,7 +399,7 @@ class SentryHelper {
 
         workflow.metadata = { ...workflow.metadata, ...metadata };
 
-        // Send workflow update event to Sentry
+        // Send workflow update event to Sentry (only console logging now)
         try {
             const sentryManager = this.getOrCreateComponentLogger(workflow.config.component);
             console.log(`[Sentry] About to call sentryManager.updateWorkflow for ${workflow.config.component}`);
@@ -422,7 +422,7 @@ class SentryHelper {
         const duration = Date.now() - workflow.startTime;
         workflow.metadata = { ...workflow.metadata, ...metadata };
 
-        // Send workflow completion event to Sentry
+        // Send workflow completion event to Sentry (only console logging now)
         try {
             const sentryManager = this.getOrCreateComponentLogger(workflow.config.component);
             console.log(`[Sentry] About to call sentryManager.completeWorkflow for ${workflow.config.component}`);
@@ -450,7 +450,7 @@ class SentryHelper {
                 const result = await operation();
                 const duration = Date.now() - startTime;
 
-                // Send performance event to Sentry
+                // Send performance event to Sentry (only console logging now)
                 const sentryManager = this.getOrCreateComponentLogger(componentName);
                 await sentryManager.trackPerformance(operationName, () => Promise.resolve(result));
 
@@ -569,7 +569,7 @@ const getLogLevelFromString = (logLevel: string): SentryLogLevel => {
         case 'all':
             return SentryLogLevel.ALL;
         default:
-            return SentryLogLevel.INFO;
+            return SentryLogLevel.ERROR;
     }
 };
 

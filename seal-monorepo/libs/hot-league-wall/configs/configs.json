@@ -2,51 +2,51 @@
     "sentry": {
         "dsn": "https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056",
         "environment": "LOCAL1",
-        "logLevel": "info",
+        "logLevel": "error",
         "enableSessionReplay": true,
         "sessionReplaySampleRate": 1.0,
         "errorSampleRate": 1.0,
         "componentLogging": {
             "enabled": true,
-            "defaultLogLevel": "info",
+            "defaultLogLevel": "error",
             "components": {
                 "HotLeagueWall": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "App": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "AppContent": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "Lobby": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "LobbyComponent": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "RNGSoccerStaticPrototype": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "RNGSoccerBase": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },
                 "RNGSoccerPage": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },
@@ -56,7 +56,7 @@
                     "enablePerformanceTracking": false
                 },
                 "GameDisconnectView": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": false
                 },
@@ -66,7 +66,7 @@
                     "enablePerformanceTracking": false
                 },
                 "BetPanel": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },
@@ -76,12 +76,12 @@
                     "enablePerformanceTracking": false
                 },
                 "Scoreboard": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },
                 "RoundHistory": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },
@@ -96,47 +96,47 @@
                     "enablePerformanceTracking": false
                 },
                 "WinnerDisplay": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": false
                 },
                 "SSOControlSimulator": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "Preview": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "GatewayConnectionManager": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "ConnectionManager": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "TokenRequestManager": {
-                    "logLevel": "info",
+                    "logLevel": "error",
                     "enableWorkflowTracking": true,
                     "enablePerformanceTracking": true
                 },
                 "SyncMemberSiteBalance": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },
                 "LobbyStore": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },
                 "GameStore": {
-                    "logLevel": "warn",
+                    "logLevel": "error",
                     "enableWorkflowTracking": false,
                     "enablePerformanceTracking": true
                 },

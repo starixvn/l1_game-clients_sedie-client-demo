@@ -21,14 +21,14 @@ const SENTRY_DEBUG_MODE_KEY = 'sentry_debug_mode';
  */
 const getLocalStorageConfig = () => {
     try {
-        const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'info';
+        const logLevel = localStorage.getItem(SENTRY_LOG_LEVEL_KEY) || 'error';
         const enabled = localStorage.getItem(SENTRY_ENABLED_KEY) !== 'false';
         const debugMode = localStorage.getItem(SENTRY_DEBUG_MODE_KEY) === 'true';
 
         return { logLevel, enabled, debugMode };
     } catch (error) {
         console.warn('Failed to read localStorage config:', error);
-        return { logLevel: 'info', enabled: true, debugMode: false };
+        return { logLevel: 'error', enabled: true, debugMode: false };
     }
 };
 
@@ -110,7 +110,7 @@ class SentryManager {
 
         this.globalConfig = {
             enabled: true,
-            defaultLogLevel: SentryLogLevel.INFO,
+            defaultLogLevel: SentryLogLevel.ERROR,
             enableWorkflowTracking: true,
             enablePerformanceTracking: true,
             enableConsoleOverride: true,
@@ -166,20 +166,9 @@ class SentryManager {
                 sampleRate: 0.1, // Only send 10% of events to reduce load
 
                 beforeSend: (event, hint) => {
-                    // Filter out excessive logging to prevent buffer overflow
-                    if (event.level === 'info' || event.level === 'debug' || event.level === 'log') {
-                        // Only send 5% of info/debug/log events to reduce buffer load
-                        if (Math.random() > 0.05) {
-                            return null; // Drop the event
-                        }
-                    }
-
-                    // For warnings, be more selective
-                    if (event.level === 'warning') {
-                        // Only send 20% of warnings
-                        if (Math.random() > 0.2) {
-                            return null; // Drop the event
-                        }
+                    // Only send ERROR and FATAL level events to Sentry
+                    if (event.level !== 'error' && event.level !== 'fatal') {
+                        return null; // Drop all non-error events
                     }
 
                     // Check if this is a buffer overflow error and handle it
@@ -190,7 +179,7 @@ class SentryManager {
                         return null; // Drop this specific error to prevent infinite loop
                     }
 
-                    console.log('Sentry beforeSend called:', {
+                    console.log('Sentry beforeSend called for ERROR/FATAL event:', {
                         eventType: event.type,
                         eventLevel: event.level,
                         hasException: !!hint?.originalException,
@@ -328,125 +317,34 @@ class SentryManager {
             }
         };
 
-        // Override console.warn to filter component-specific warnings
+        // Override console.warn to only log to console (not to Sentry)
         console.warn = (...args: any[]) => {
             this.originalConsoleWarn(...args);
-
-            // Check if any of the arguments contain component-specific warnings
-            const hasComponentWarning = args.some(arg => this.errorFilter(arg));
-
-            if (hasComponentWarning && this.isLoggingEnabled('warn')) {
-                // Use the enhanced Sentry logger for component-specific warnings
-                try {
-                    const warningMessage = args.map(arg =>
-                        typeof arg === 'string' ? arg : arg?.message || String(arg)
-                    ).join(' ');
-
-                    Sentry.captureMessage(warningMessage, {
-                        level: 'warning',
-                        tags: { component: this.componentName }
-                    });
-                } catch (sentryError) {
-                    this.originalConsoleError('Failed to log warning to Sentry:', sentryError);
-                }
-            }
+            // No longer sending warnings to Sentry - only errors
         };
 
-        // Override console.info to filter component-specific info
+        // Override console.info to only log to console (not to Sentry)
         console.info = (...args: any[]) => {
             this.originalConsoleInfo(...args);
-
-            // Check if any of the arguments contain component-specific info
-            const hasComponentInfo = args.some(arg => this.errorFilter(arg));
-
-            if (hasComponentInfo && this.isLoggingEnabled('info')) {
-                // Use the enhanced Sentry logger for component-specific info
-                try {
-                    const infoMessage = args.map(arg =>
-                        typeof arg === 'string' ? arg : arg?.message || String(arg)
-                    ).join(' ');
-
-                    Sentry.captureMessage(infoMessage, {
-                        level: 'info',
-                        tags: { component: this.componentName }
-                    });
-                } catch (sentryError) {
-                    this.originalConsoleError('Failed to log info to Sentry:', sentryError);
-                }
-            }
+            // No longer sending info to Sentry - only errors
         };
 
-        // Override console.debug to filter component-specific debug
+        // Override console.debug to only log to console (not to Sentry)
         console.debug = (...args: any[]) => {
             this.originalConsoleDebug(...args);
-
-            // Check if any of the arguments contain component-specific debug
-            const hasComponentDebug = args.some(arg => this.errorFilter(arg));
-
-            if (hasComponentDebug && this.isLoggingEnabled('debug')) {
-                // Use the enhanced Sentry logger for component-specific debug
-                try {
-                    const debugMessage = args.map(arg =>
-                        typeof arg === 'string' ? arg : arg?.message || String(arg)
-                    ).join(' ');
-
-                    Sentry.captureMessage(debugMessage, {
-                        level: 'debug',
-                        tags: { component: this.componentName }
-                    });
-                } catch (sentryError) {
-                    this.originalConsoleError('Failed to log debug to Sentry:', sentryError);
-                }
-            }
+            // No longer sending debug to Sentry - only errors
         };
 
-        // Override console.trace to filter component-specific trace
+        // Override console.trace to only log to console (not to Sentry)
         console.trace = (...args: any[]) => {
             this.originalConsoleTrace(...args);
-
-            // Check if any of the arguments contain component-specific trace
-            const hasComponentTrace = args.some(arg => this.errorFilter(arg));
-
-            if (hasComponentTrace && this.isLoggingEnabled('trace')) {
-                // Use the enhanced Sentry logger for component-specific trace
-                try {
-                    const traceMessage = args.map(arg =>
-                        typeof arg === 'string' ? arg : arg?.message || String(arg)
-                    ).join(' ');
-
-                    Sentry.captureMessage(traceMessage, {
-                        level: 'debug', // Sentry doesn't have trace level, use debug
-                        tags: { component: this.componentName }
-                    });
-                } catch (sentryError) {
-                    this.originalConsoleError('Failed to log trace to Sentry:', sentryError);
-                }
-            }
+            // No longer sending trace to Sentry - only errors
         };
 
-        // Override console.log to filter component-specific logs
+        // Override console.log to only log to console (not to Sentry)
         console.log = (...args: any[]) => {
-            // Call the original console.log
             this.originalConsoleLog.apply(console, args);
-
-            // Check if any of the arguments contain component-specific logs
-            const hasComponentLog = args.some(arg => this.errorFilter(arg));
-
-            if (hasComponentLog && this.isLoggingEnabled('info')) {
-                // Use the enhanced Sentry logger for component-specific logs
-                try {
-                    const logMessage = args.map(arg =>
-                        typeof arg === 'string' ? arg : arg?.message || String(arg)
-                    ).join(' ');
-
-                    Sentry.captureMessage(logMessage, {
-                        level: 'info',
-                        tags: { component: this.componentName }
-                    });
-                } catch (sentryError) {
-                    this.originalConsoleError('Failed to log to Sentry:', sentryError);
-                }
-            }
+            // No longer sending logs to Sentry - only errors
         };
     }
 
@@ -578,18 +476,8 @@ class SentryManager {
             return;
         }
 
-        if (!this.isLoggingEnabled('info')) {
-            return;
-        }
-
-        try {
-            Sentry.captureMessage(`Workflow started: ${workflowName} (ID: ${workflowId})`, {
-                level: 'info',
-                tags: { component: this.componentName, workflowId, workflowName, ...metadata }
-            });
-        } catch (sentryError) {
-            this.originalConsoleError('Failed to start workflow in Sentry:', sentryError);
-        }
+        // Only log workflow start to console, not to Sentry
+        console.log(`[Sentry] Workflow started: ${workflowName} (ID: ${workflowId}) in component: ${this.componentName}`);
     }
 
     updateWorkflow(workflowId: string, state: WorkflowState, metadata?: Record<string, any>): void {
@@ -598,18 +486,8 @@ class SentryManager {
             return;
         }
 
-        if (!this.isLoggingEnabled('info')) {
-            return;
-        }
-
-        try {
-            Sentry.captureMessage(`Workflow updated: ${state} (ID: ${workflowId})`, {
-                level: 'info',
-                tags: { component: this.componentName, workflowId, workflowState: state, ...metadata }
-            });
-        } catch (sentryError) {
-            this.originalConsoleError('Failed to update workflow in Sentry:', sentryError);
-        }
+        // Only log workflow update to console, not to Sentry
+        console.log(`[Sentry] Workflow updated: ${state} (ID: ${workflowId}) in component: ${this.componentName}`);
     }
 
     completeWorkflow(workflowId: string, success = true, metadata?: Record<string, any>): void {
@@ -618,29 +496,14 @@ class SentryManager {
             return;
         }
 
-        const level = success ? 'info' : 'error';
-        if (!this.isLoggingEnabled(level)) {
-            return;
-        }
-
-        try {
-            Sentry.captureMessage(`Workflow completed: ${success ? 'Success' : 'Failure'} (ID: ${workflowId})`, {
-                level: success ? 'info' : 'error',
-                tags: { component: this.componentName, workflowId, workflowSuccess: success, ...metadata }
-            });
-        } catch (sentryError) {
-            this.originalConsoleError('Failed to complete workflow in Sentry:', sentryError);
-        }
+        // Only log workflow completion to console, not to Sentry
+        console.log(`[Sentry] Workflow completed: ${success ? 'Success' : 'Failure'} (ID: ${workflowId}) in component: ${this.componentName}`);
     }
 
     // Performance tracking
     async trackPerformance<T>(operationName: string, operation: () => Promise<T> | T): Promise<T> {
         if (!this.isInitialized) {
             console.warn('SentryManager not initialized');
-            return Promise.resolve(operation());
-        }
-
-        if (!this.isLoggingEnabled('info')) {
             return Promise.resolve(operation());
         }
 
@@ -651,10 +514,8 @@ class SentryManager {
             const endTime = performance.now();
             const duration = endTime - startTime;
 
-            Sentry.captureMessage(`Performance: ${operationName} took ${duration.toFixed(2)}ms`, {
-                level: 'info',
-                tags: { component: this.componentName, operationName, duration: duration.toFixed(2) }
-            });
+            // Only log performance to console, not to Sentry
+            console.log(`[Sentry] Performance: ${operationName} took ${duration.toFixed(2)}ms in component: ${this.componentName}`);
 
             return result;
         } catch (error) {
@@ -696,7 +557,7 @@ class SentryManager {
             console.log('getComponentConfig called, but Sentry configuration is managed externally.');
             return {
                 name: this.componentName,
-                logLevel: SentryLogLevel.INFO, // Default to INFO
+                logLevel: SentryLogLevel.ERROR, // Default to ERROR
                 enableWorkflowTracking: true,
                 enablePerformanceTracking: true
             };
@@ -880,7 +741,7 @@ const getLogLevelFromString = (logLevel: string): SentryLogLevel => {
         case 'all':
             return SentryLogLevel.ALL;
         default:
-            return SentryLogLevel.INFO;
+            return SentryLogLevel.ERROR;
     }
 };
 
