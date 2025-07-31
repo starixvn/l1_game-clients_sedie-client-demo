@@ -1,7 +1,7 @@
 // Comprehensive examples for using SentryHelper
 // This file demonstrates various usage patterns for the SentryHelper utility
 
-import { SentryLogLevel, WorkflowState, setLocalStorageConfig, clearLocalStorageConfig } from '@/sentry';
+import { SentryLogLevel, WorkflowState, setLocalStorageConfig, clearLocalStorageConfig } from '../index';
 import {
     configureSentry,
     enableSentry,
@@ -17,7 +17,7 @@ import {
     logWarning,
     logDebug,
     logTrace
-} from '../utils/sentry-helper';
+} from '../index';
 
 // Example 1: Global Configuration
 export const configureGlobalSentry = () => {

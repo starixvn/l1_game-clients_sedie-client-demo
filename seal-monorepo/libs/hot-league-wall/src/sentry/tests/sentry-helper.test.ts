@@ -25,7 +25,7 @@ import {
 import { SentryLogLevel, WorkflowState } from '../index';
 
 // Mock SentryManager
-jest.mock('../src/_shared/utils/sentry/sentry-manager', () => {
+jest.mock('../core/sentry-manager', () => {
     const mockSentryManager = {
         getInstance: jest.fn(() => mockSentryManager),
         initialize: jest.fn(),
@@ -60,8 +60,8 @@ describe('SentryHelper - Circular Dependency Fix', () => {
         // Arrange: Reset all mocks and clear localStorage
         jest.clearAllMocks();
         localStorageMock.getItem.mockReturnValue(null);
-        localStorageMock.setItem.mockImplementation(() => { });
-        localStorageMock.removeItem.mockImplementation(() => { });
+        localStorageMock.setItem.mockImplementation(() => undefined);
+        localStorageMock.removeItem.mockImplementation(() => undefined);
         localStorageMock.length = 0;
         localStorageMock.key.mockReturnValue(null);
 
@@ -100,7 +100,7 @@ describe('SentryHelper - Circular Dependency Fix', () => {
             logError('TestComponent', new Error('Test error'));
 
             // Assert - Should not throw and should use fallback DSN
-            const mockSentryManager = require('../src/_shared/utils/sentry/sentry-manager');
+            const mockSentryManager = require('../core/sentry-manager');
             expect(mockSentryManager.initialize).toHaveBeenCalledWith(
                 expect.objectContaining({
                     dsn: 'https://25edcde4c336c7086e5ae4f5e565a672@o4509749941305344.ingest.us.sentry.io/4509749948973056',
@@ -123,7 +123,7 @@ describe('SentryHelper - Circular Dependency Fix', () => {
             updateSentryConfiguration(newDsn, newEnvironment);
 
             // Assert
-            const mockSentryManager = require('../src/_shared/utils/sentry/sentry-manager');
+            const mockSentryManager = require('../core/sentry-manager');
             expect(mockSentryManager.initialize).toHaveBeenCalledWith(
                 expect.objectContaining({
                     dsn: newDsn,

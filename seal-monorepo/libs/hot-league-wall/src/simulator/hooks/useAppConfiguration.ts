@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSentryInit } from '../../saba-games-index';
+import { useSentryInit } from '../../index';
 import { usePreviewContext } from '../../previewProvider';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER, VIVA88_SITE_ID } from '../../../constant/app';
 import { shouldShowSSOControls, logSSOControlsConfig } from '../../_shared/utils/sso-controls-config';
@@ -23,7 +23,7 @@ export const useAppConfiguration = (): AppConfiguration => {
         document.documentElement.setAttribute('data-darkmode', isDarkMode.toString());
     }, [theme, isDarkMode]);
 
-    useSentryInit();
+    useSentryInit({ siteId, appEnv });
 
     return {
         theme,

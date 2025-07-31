@@ -1,7 +1,7 @@
 
 
 import * as Sentry from '@sentry/react';
-import { sentryManager, SentryLogLevel } from '@/sentry';
+import { sentryManager, SentryLogLevel } from '../index';
 
 // Mock localStorage
 const mockLocalStorage = {

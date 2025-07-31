@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { GameBoard } from '../src/_shared/components/GameBoard/GameBoard';
-import { SentryLogProvider, useSentryLog } from '../src/_shared/react-contexts/log-context/sentry-log-context';
-import { LoggingDemo } from '../src/_shared/components/LoggingDemo/LoggingDemo';
+import { GameBoard } from '../../_shared/components/GameBoard/GameBoard';
+import { SentryLogProvider, useSentryLog } from '../../_shared/react-contexts/log-context/sentry-log-context';
+import { LoggingDemo } from '../components/LoggingDemo';
 
 // Mock SentryManager
-jest.mock('../src/_shared/utils/sentry/sentry-manager', () => {
+jest.mock('../core/sentry-manager', () => {
     const mockSentryManager = {
         getInstance: jest.fn(() => mockSentryManager),
         initialize: jest.fn(),
@@ -25,7 +25,7 @@ jest.mock('../src/_shared/utils/sentry/sentry-manager', () => {
 });
 
 // Mock useSessionReplay hook
-jest.mock('../src/_shared/hooks/useSessionReplay', () => ({
+jest.mock('../hooks/useSessionReplay', () => ({
     useSessionReplay: jest.fn(() => ({
         startReplay: jest.fn(),
         stopReplay: jest.fn(),
