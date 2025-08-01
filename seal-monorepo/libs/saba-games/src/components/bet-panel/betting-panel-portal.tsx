@@ -8,9 +8,7 @@ interface BettingPanelPortalProps {
     iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
-export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
-    iframeRef
-}) => {
+export const BettingPanelPortal = ({ iframeRef }: BettingPanelPortalProps): JSX.Element => {
     const betPanelData = useBetPanelData();
     const bettingBlockData = useBettingBlockData();
     const [isContainerReady, setIsContainerReady] = useState(false);
@@ -33,7 +31,7 @@ export const BettingPanelPortal: React.FC<BettingPanelPortalProps> = ({
     }, []);
 
     if (!isContainerReady || !portalContainerRef.current || !betPanelData) {
-        return null;
+        return <></>;
     }
 
     return createPortal(

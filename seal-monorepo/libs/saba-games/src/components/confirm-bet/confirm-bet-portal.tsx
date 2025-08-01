@@ -9,9 +9,7 @@ interface ConfirmBetPortalProps {
     iframeRef: React.RefObject<HTMLIFrameElement>;
 }
 
-export const ConfirmBetPortal: React.FC<ConfirmBetPortalProps> = ({
-    iframeRef
-}) => {
+export const ConfirmBetPortal = ({ iframeRef }: ConfirmBetPortalProps): JSX.Element => {
     const { sendMessageToSpecificIframe } = useMessageContext();
     const confirmBetData = useShowConfirmBetData();
     const [isContainerReady, setIsContainerReady] = useState(false);
@@ -58,7 +56,7 @@ export const ConfirmBetPortal: React.FC<ConfirmBetPortalProps> = ({
     }, [confirmBetData]);
 
     if (!isContainerReady || !portalContainerRef.current || !confirmBetData || !isVisible) {
-        return null;
+        return <></>;
     }
 
     return createPortal(
