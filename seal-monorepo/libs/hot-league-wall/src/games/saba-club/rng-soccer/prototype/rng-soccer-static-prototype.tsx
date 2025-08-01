@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FAKE_RNG_SOCCER_DATA } from './fake-data';
 import RNGSoccerBase, { RNGSoccerGameData } from './rng-soccer-base';
-import { useSentryHelper, SentryLogLevel } from '../../../../sentry';
+import { useSentryHelper, SentryLogLevel } from 'sg-sentry-dev';
 
 // Static prototype component for RNG Soccer
 export const RNGSoccerStaticPrototype: React.FC<{

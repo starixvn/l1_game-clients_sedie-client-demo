@@ -2,7 +2,7 @@ import * as gc from '@sg/sg-game-client';
 import React, { useEffect, useState } from 'react';
 import Loading from '../../../_shared/components/loading';
 import Styles from '../game-base.module.scss';
-import { useSentryHelper, SentryLogLevel } from '../../../sentry';
+import { useSentryHelper, SentryLogLevel } from 'sg-sentry-dev';
 
 // Rendering components for different game states
 export const GameLoadingView: React.FC = () => {

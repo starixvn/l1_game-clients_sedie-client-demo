@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useSentryHelper, SentryLogLevel } from './sentry';
-import ErrorSimulator from './sentry/test-error-simulator';
-import { HotLeagueWallErrorBoundary } from './sentry/components/sentry-log-context';
-import { SentryLogProvider } from './sentry';
+import { useSentryHelper, SentryLogLevel } from 'sg-sentry-dev';
+import ErrorSimulator from 'sg-sentry-dev';
+import { HotLeagueWallErrorBoundary } from 'sg-sentry-dev';
+import { SentryLogProvider } from 'sg-sentry-dev';
 import { appSettingsWithSentry } from './_shared/app-settings';
 
 interface TestErrorPageProps {

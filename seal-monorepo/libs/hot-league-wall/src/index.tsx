@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import './style.module.scss';
 import App from './app';
 import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER } from '../constant/app';
-import { configureSentryManager, SentryLogLevel } from './sentry';
+import { configureSentryManager, SentryLogLevel } from 'sg-sentry-dev';
 
 // Component-specific Sentry is now handled by useComponentSentry hook
 // This function is kept for backward compatibility but does nothing

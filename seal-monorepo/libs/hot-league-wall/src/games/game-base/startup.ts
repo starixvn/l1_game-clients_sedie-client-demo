@@ -12,7 +12,7 @@ import {
     logWarning,
     logDebug,
     logTrace
-} from '../../sentry';
+} from 'sg-sentry-dev';
 
 interface Languages {
     [key: string]: any;

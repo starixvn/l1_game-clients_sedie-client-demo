@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { GameBoard } from '../GameBoard';
-import { SentryLogProvider } from '../../../react-contexts/log-context/sentry-log-context';
+import { SentryLogProvider } from 'sg-sentry-dev';
 
 // Mock the Sentry logger to avoid actual logging during tests
 const mockLogInfo = jest.fn();

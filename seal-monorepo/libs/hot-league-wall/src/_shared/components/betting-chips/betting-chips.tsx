@@ -1,7 +1,7 @@
 import React from 'react';
 import Chip from './chip';
 import './betting-chips.scss';
-import { useSentryHelper, SentryLogLevel } from '../../../sentry';
+import { useSentryHelper, SentryLogLevel } from 'sg-sentry-dev';
 
 interface BettingChipsProps {
     min: number;

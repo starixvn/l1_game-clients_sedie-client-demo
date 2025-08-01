@@ -18,7 +18,7 @@ import RNGSoccerSettlementResult from './settlement-result/rng-soccer-settlement
 import RNGSoccerStatistic from './statistic/rng-soccer-statistic';
 import { RNGSoccerRoundHistory } from './round-history';
 import { ROUND_STATE } from '@sg/sg-game-client/dist/game/rounds/round-time-store';
-import { SentryLogProvider, useGameSentryLogger, useSentryLog, SentryLogLevel, useSentryHelper, useGameCronSentry } from '../../../sentry';
+import { SentryLogProvider, useGameSentryLogger, useSentryLog, SentryLogLevel, useSentryHelper, useGameCronSentry } from 'sg-sentry-dev';
 
 // Extended props for RNG Soccer with logging support
 interface IRNGSoccerPageProps extends GameBaseProps {

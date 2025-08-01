@@ -1,4 +1,4 @@
-import { sentryManager } from '../../../sentry';
+import { sentryManager } from 'sg-sentry-dev';
 import { handle, observer } from '@sg/sg-observer';
 import { PureComponent } from 'react';
 import Styles from './timeout.module.scss';

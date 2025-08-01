@@ -10,8 +10,8 @@ import RNGSoccerStaticPrototype from './games/saba-club/rng-soccer/prototype/rng
 import TestErrorPage from './test-error-page';
 
 import { appSettingsWithSentry } from './_shared/app-settings';
-import { useSentryHelper, SentryLogLevel, createSentryManager, createSentryHelper, SentryLogProvider } from './sentry';
-import { HotLeagueWallErrorBoundary } from './sentry/components/sentry-log-context';
+import { useSentryHelper, SentryLogLevel, createSentryManager, createSentryHelper, SentryLogProvider } from 'sg-sentry-dev';
+import { HotLeagueWallErrorBoundary } from 'sg-sentry-dev';
 
 interface AppProps {
     appEnv: string;

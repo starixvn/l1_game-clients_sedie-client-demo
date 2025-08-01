@@ -1,2 +1,2 @@
-// Re-export from the main sentry module
-export { SentryLogContext, SentryLogProvider, useGameSentryLogger, useSentryLog } from '../../../sentry'; 
+// Re-export from the sg-sentry-dev module
+export { SentryLogContext, SentryLogProvider, useGameSentryLogger, useSentryLog } from 'sg-sentry-dev'; 

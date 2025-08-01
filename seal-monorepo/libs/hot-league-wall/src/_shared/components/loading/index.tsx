@@ -1,6 +1,6 @@
 import Styles from './reconnecting.module.scss';
 import blurBgGame from '../../../assets/rng-soccer/blur-bg-game.png';
-import { useSentryHelper, SentryLogLevel } from '../../../sentry';
+import { useSentryHelper, SentryLogLevel } from 'sg-sentry-dev';
 import React from 'react';
 
 export const Loading: React.FC = () => {

@@ -6,7 +6,7 @@ import * as gc from '@sg/sg-game-client';
 import BetOptions, { IBetOptionsState } from '../../../../_shared/components/bet-option';
 import OddsComponent from '../../../../_shared/components/bet-option/odd-component';
 import BettingBlock from '../../../../_shared/components/bet-option/betting-block';
-import { useSentryHelper, SentryLogLevel, useGameCronSentry } from '../../../../sentry';
+import { useSentryHelper, SentryLogLevel, useGameCronSentry } from 'sg-sentry-dev';
 
 interface RNGSoccerBetOptionsProps {
     gameName: string;

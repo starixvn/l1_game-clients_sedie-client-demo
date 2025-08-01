@@ -30,7 +30,7 @@ import {
 } from './simulator';
 
 // Sentry imports
-import { LoggingDemo } from './sentry';
+import { LoggingDemo } from 'sg-sentry-dev';
 
 // Tab types
 type TabType = 'today' | 'live-page' | 'logging-demo';
