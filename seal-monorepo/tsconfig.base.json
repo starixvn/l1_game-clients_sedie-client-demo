@@ -16,8 +16,7 @@
             "@/*": ["apps/seal-components/src/*"],
             "@oneseal/utils": ["libs/utils/src/index.js"],
             "@seal-components/translation": ["libs/translation/src/index.ts"],
-            "components-styles": ["libs/components-styles/*"],
-            "sg-sentry": ["../../sg-sentry-dev/src/index.ts"]
+            "components-styles": ["libs/components-styles/*"]
         },
         "skipLibCheck": true,
         "types": ["node", "react", "react-dom"]

@@ -29,8 +29,6 @@ import {
     PreviewContextProps
 } from './simulator';
 
-// Sentry imports
-import { LoggingDemo } from 'sg-sentry';
 
 // Tab types
 type TabType = 'today' | 'live-page' | 'logging-demo';
@@ -209,18 +207,6 @@ const TabContent: React.FC<TabContentProps> = ({
                         language={language}
                         siteId={siteId}
                     />
-                );
-
-            case 'logging-demo':
-                return (
-                    <div style={{
-                        width: '100%',
-                        height: '100%',
-                        overflow: 'auto',
-                        backgroundColor: '#f5f5f5'
-                    }}>
-                        <LoggingDemo />
-                    </div>
                 );
 
             default:
