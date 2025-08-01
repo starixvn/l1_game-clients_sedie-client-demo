@@ -8,8 +8,5 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "sg-sentry-dev": "file:../../../sg-sentry-dev"
-  }
+  "license": "ISC"
 }

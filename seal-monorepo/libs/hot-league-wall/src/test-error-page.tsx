@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
-import { useSentryHelper, SentryLogLevel } from 'sg-sentry-dev';
-import ErrorSimulator from 'sg-sentry-dev';
-import { HotLeagueWallErrorBoundary } from 'sg-sentry-dev';
-import { SentryLogProvider } from 'sg-sentry-dev';
+import { useSentryHelper, SentryLogLevel } from 'sg-sentry';
+import { HotLeagueWallErrorBoundary } from 'sg-sentry';
+import { SentryLogProvider } from 'sg-sentry';
 import { appSettingsWithSentry } from './_shared/app-settings';
+
+// Simple local ErrorSimulator component
+const ErrorSimulator: React.FC<{ componentName: string; enableAutoErrors?: boolean }> = ({ componentName, enableAutoErrors }) => {
+    return (
+        <div style={{ padding: '10px', border: '1px solid #ddd', margin: '10px 0' }}>
+            <h4>Error Simulator for {componentName}</h4>
+            <p>This is a placeholder for the ErrorSimulator component.</p>
+            <p>Auto errors: {enableAutoErrors ? 'Enabled' : 'Disabled'}</p>
+        </div>
+    );
+};
 
 interface TestErrorPageProps {
     appEnv?: string;

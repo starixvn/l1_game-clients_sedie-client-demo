@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useSentryHelper, SentryLogLevel } from 'sg-sentry-dev';
-import { HotLeagueWallErrorBoundary } from 'sg-sentry-dev';
+import { useSentryHelper, SentryLogLevel } from 'sg-sentry';
+import { HotLeagueWallErrorBoundary } from 'sg-sentry';
 
 interface GameBoardProps {
     gameId: string;

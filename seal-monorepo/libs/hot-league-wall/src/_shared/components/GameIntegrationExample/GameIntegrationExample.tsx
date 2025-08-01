@@ -1,6 +1,6 @@
 import React from 'react';
 import { LogProvider, useGameLogger } from '../../react-contexts/log-context';
-import { LoggingDemo } from 'sg-sentry-dev';
+import { LoggingDemo } from 'sg-sentry';
 
 /**
  * Example showing how to integrate the logging system with existing game components
