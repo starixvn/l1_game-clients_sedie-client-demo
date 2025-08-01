@@ -19,6 +19,12 @@ module.exports = {
     output: {
         path: join(__dirname, '../../dist/libs/hot-league-wall'),
     },
+    resolve: {
+        alias: {
+            react: join(__dirname, '../../node_modules/react'),
+            'react-dom': join(__dirname, '../../node_modules/react-dom'),
+        },
+    },
     devServer: {
         port: 4201,
         historyApiFallback: true,
