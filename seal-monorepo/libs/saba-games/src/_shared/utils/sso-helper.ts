@@ -15,6 +15,69 @@ export const randomIntFromInterval = (min: number, max: number) => {
 
 export const randomPlayerId = randomIntFromInterval(1000000, 9999999);
 
+// New function to get dynamic domain from configuration
+export const getDynamicDomain = () => {
+    const { serverDomain, ssl, subDomain } = appSettings;
+    const protocol = ssl ? 'https' : 'http';
+    return `${protocol}://${subDomain}.${serverDomain}`;
+};
+
+// New function to request SSO and return complete redirect URL
+export const requestSSOWithRedirectUrl = async (gameId = 0) => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const playerId = Number(searchParams.get('playerId')) || randomPlayerId;
+    const currency = searchParams.get('currency');
+
+    const appType = 6;
+    const playerBalance = 10000;
+
+    //temp hard code to get token
+    const currencyDefault = systemType === 'SG' ? '$US' : 'INH';
+    const operatorId = appSettings.simulatorConfigs.operatorId;
+    const operatorSecret = appSettings.simulatorConfigs.operatorSecret;
+    const operatorToken = appSettings.simulatorConfigs.operatorToken;
+
+    const request = {
+        playerId: playerId,
+        playerName: `username_${playerId}`,
+        language: 'vi-VN',
+        currency: currency || currencyDefault,
+        seq: 'd,y,lumi',
+        siteId: '4100300',
+        siteName: 'lumi',
+        ip: '10.5.10.17, 10.233.120.0',
+        browserUserAgent: global?.window?.navigator?.userAgent || '',
+        auth: {
+            operatorId,
+            operatorSecret,
+        },
+        operatorToken,
+        gameId,
+        domain: 'example.com',
+        appType,
+        isCash: true,
+        partner: '1W',
+    };
+
+    const gameLobbySimulatorUrl = appSettings.simulatorConfigs.gameLobbySimulatorUrl;
+    
+    // Use the original SSO endpoint to get the token
+    const ssoResult = (await axios.post(`${gameLobbySimulatorUrl}/signin/sso`, request)).data;
+    await createCustomer(playerId, 'ow', request.siteId);
+    await assignBalance(playerId, playerBalance, request.currency, request.siteId);
+
+    // Construct the complete redirect URL with dynamic domain on the client side
+    const dynamicDomain = getDynamicDomain();
+    const redirectUrl = `${dynamicDomain}/?token=${ssoResult.token}&lang=${request.language}&appType=${appType}&op=sg&cg=GrUSD`;
+
+    return {
+        token: ssoResult.token,
+        redirectUrl: redirectUrl,
+        domain: dynamicDomain
+    };
+};
+
+// Keep the original function for backward compatibility
 export const requestSSO = async (gameId = 0) => {
     const searchParams = new URLSearchParams(window.location.search);
     const playerId = Number(searchParams.get('playerId')) || randomPlayerId;

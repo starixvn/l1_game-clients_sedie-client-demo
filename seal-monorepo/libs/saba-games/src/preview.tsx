@@ -4,7 +4,7 @@ import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER, VIVA88_SITE_ID } from '../
 import App from './app';
 import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
-import { requestSSO } from './_shared/utils/sso-helper';
+import { requestSSOWithRedirectUrl } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { appSettings } from './_shared/app-settings/vgaming-index';
 import { MessageType } from './_shared/types/message-types';
@@ -19,13 +19,15 @@ declare global {
 
 const Preview = () => {
     const [token, setToken] = useState('');
+    const [redirectUrl, setRedirectUrl] = useState('');
 
     const isInitialMount = useRef(true);
 
     const handleGetToken = useCallback(async () => {
-        const result = await requestSSO();
+        const result = await requestSSOWithRedirectUrl();
         if (result?.token) {
             setToken(result.token);
+            setRedirectUrl(result.redirectUrl);
         }
     }, []);
 
@@ -40,16 +42,21 @@ const Preview = () => {
         token && (
             <PreviewProvider>
                 <Router>
-                    <PreviewContext token={token} renewToken={handleGetToken} updateBalanceCallback={() => {
-                        console.log('updateBalanceCallback');
-                    }} />
+                    <PreviewContext
+                        token={token}
+                        redirectUrl={redirectUrl}
+                        renewToken={handleGetToken}
+                        updateBalanceCallback={() => {
+                            console.log('updateBalanceCallback');
+                        }}
+                    />
                 </Router>
             </PreviewProvider>
         )
     );
 };
 
-const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
+const PreviewContext = ({ token, redirectUrl, renewToken, updateBalanceCallback }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
     const [isExpanded, setIsExpanded] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -159,6 +166,7 @@ const PreviewContext = ({ token, renewToken, updateBalanceCallback }) => {
                         <App
                             appEnv={appEnv}
                             token={token}
+                            redirectUrl={redirectUrl}
                             language={language}
                             siteId={siteId}
                             renewToken={renewToken}

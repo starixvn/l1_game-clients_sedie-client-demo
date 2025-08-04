@@ -13,6 +13,7 @@ interface AppProps extends AppContentProps {
     appEnv: string;
     siteId: string;
     language: string;
+    redirectUrl?: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
     encryptionKey: string;
@@ -21,18 +22,20 @@ interface AppProps extends AppContentProps {
 interface AppContentProps {
     token: string;
     language: string;
+    redirectUrl?: string;
     renewToken?: Function;
     updateBalanceCallback?: void | null;
     encryptionKey: string;
 }
 
-const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallback, encryptionKey }: AppProps) => {
+const App = ({ appEnv, token, language, siteId, redirectUrl, renewToken, updateBalanceCallback, encryptionKey }: AppProps) => {
     return (
         <MessageProvider config={createMessageHandlerConfig(appEnv, encryptionKey)} options={{}}>
             <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
                 <AppContent
                     token={token}
                     language={language}
+                    redirectUrl={redirectUrl}
                     renewToken={renewToken}
                     updateBalanceCallback={updateBalanceCallback}
                     encryptionKey={encryptionKey}
@@ -42,8 +45,10 @@ const App = ({ appEnv, token, language, siteId, renewToken, updateBalanceCallbac
     );
 };
 
-const AppContent = ({ token, language, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
-    const iframeSrc = appSettings.standaloneUrl;
+const AppContent = ({ token, language, redirectUrl, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
+    // Use dynamic redirectUrl if provided, otherwise fall back to standaloneUrl
+    const iframeSrc = redirectUrl || appSettings.standaloneUrl;
+
     useEffect(() => {
         if (updateBalanceCallback) {
             SyncMemberSiteBalance.getInstance().setSyncBalanceCallback(updateBalanceCallback);
