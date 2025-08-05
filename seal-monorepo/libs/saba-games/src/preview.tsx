@@ -4,7 +4,7 @@ import { PLATFORM_TYPE_MAPPING, PLATFORM_TYPE_NUMBER, VIVA88_SITE_ID } from '../
 import App from './app';
 import { PreviewProvider, usePreviewContext } from './previewProvider';
 import ProviderSetDropDown from './_shared/components/provider-set-dropdown';
-import { requestSSOWithRedirectUrl } from './_shared/utils/sso-helper';
+import { requestSSO } from './_shared/utils/sso-helper';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { appSettings } from './_shared/app-settings/vgaming-index';
 import { MessageType } from './_shared/types/message-types';
@@ -24,7 +24,7 @@ const Preview = () => {
     const isInitialMount = useRef(true);
 
     const handleGetToken = useCallback(async () => {
-        const result = await requestSSOWithRedirectUrl();
+        const result = await requestSSO();
         if (result?.token) {
             setToken(result.token);
             setRedirectUrl(result.redirectUrl);
@@ -45,7 +45,7 @@ const Preview = () => {
                     <PreviewContext
                         token={token}
                         redirectUrl={redirectUrl}
-                        renewToken={handleGetToken}
+                        // renewToken={handleGetToken}
                         updateBalanceCallback={() => {
                             console.log('updateBalanceCallback');
                         }}
@@ -56,7 +56,7 @@ const Preview = () => {
     );
 };
 
-const PreviewContext = ({ token, redirectUrl, renewToken, updateBalanceCallback }) => {
+const PreviewContext = ({ token, redirectUrl, updateBalanceCallback }) => {
     const { theme, isDarkMode, language } = usePreviewContext();
     const [isExpanded, setIsExpanded] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -169,7 +169,7 @@ const PreviewContext = ({ token, redirectUrl, renewToken, updateBalanceCallback 
                             redirectUrl={redirectUrl}
                             language={language}
                             siteId={siteId}
-                            renewToken={renewToken}
+                            // renewToken={renewToken}
                             updateBalanceCallback={updateBalanceCallback}
                             encryptionKey={encryptionKey}
                         />

@@ -14,7 +14,7 @@ interface AppProps extends AppContentProps {
     siteId: string;
     language: string;
     redirectUrl?: string;
-    renewToken?: Function;
+    // renewToken?: Function;
     updateBalanceCallback?: void | null;
     encryptionKey: string;
 }
@@ -23,12 +23,12 @@ interface AppContentProps {
     token: string;
     language: string;
     redirectUrl?: string;
-    renewToken?: Function;
+    // renewToken?: Function;
     updateBalanceCallback?: void | null;
     encryptionKey: string;
 }
 
-const App = ({ appEnv, token, language, siteId, redirectUrl, renewToken, updateBalanceCallback, encryptionKey }: AppProps) => {
+const App = ({ appEnv, token, language, siteId, redirectUrl, updateBalanceCallback, encryptionKey }: AppProps) => {
     return (
         <MessageProvider config={createMessageHandlerConfig(appEnv, encryptionKey)} options={{}}>
             <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
@@ -36,7 +36,7 @@ const App = ({ appEnv, token, language, siteId, redirectUrl, renewToken, updateB
                     token={token}
                     language={language}
                     redirectUrl={redirectUrl}
-                    renewToken={renewToken}
+                    // renewToken={renewToken}
                     updateBalanceCallback={updateBalanceCallback}
                     encryptionKey={encryptionKey}
                 />
@@ -45,7 +45,7 @@ const App = ({ appEnv, token, language, siteId, redirectUrl, renewToken, updateB
     );
 };
 
-const AppContent = ({ token, language, redirectUrl, renewToken, updateBalanceCallback, encryptionKey }: AppContentProps) => {
+const AppContent = ({ token, language, redirectUrl, updateBalanceCallback, encryptionKey }: AppContentProps) => {
     // Use dynamic redirectUrl if provided, otherwise fall back to standaloneUrl
     const iframeSrc = redirectUrl || appSettings.standaloneUrl;
 
@@ -62,7 +62,7 @@ const AppContent = ({ token, language, redirectUrl, renewToken, updateBalanceCal
                 src={iframeSrc || 'http://localhost:4551/'}
                 token={token}
                 language={language}
-                renewToken={renewToken}
+                // renewToken={renewToken}
                 encryptionKey={encryptionKey}
             />
         </>

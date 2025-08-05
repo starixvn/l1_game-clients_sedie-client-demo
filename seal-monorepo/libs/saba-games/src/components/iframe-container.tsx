@@ -9,7 +9,7 @@ interface IframeContainerProps {
     src: string;
     token: string;
     language: string;
-    renewToken?: Function;
+    // renewToken?: Function;
     encryptionKey: string;
 }
 
@@ -22,21 +22,12 @@ const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, ch
     return <div className={containerClass}>{children}</div>;
 };
 
-// Helper function to check if iframe is from same origin
-const isSameOriginFrame = (iframe: HTMLIFrameElement | null): boolean => {
-    if (!iframe) return false;
-    try {
-        return typeof iframe.contentWindow?.location.href === 'string';
-    } catch (err) {
-        return false;
-    }
-};
 
 const IframeContainer: React.FC<IframeContainerProps> = ({
     src,
     token,
     language,
-    renewToken,
+    // renewToken,
     encryptionKey
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -67,23 +58,6 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         setTimeout(() => requestIframeHeight(iframeRef.current), 300);
     }, [src, token, language, sendEncryptedMessage, requestIframeHeight]);
 
-    // Add effect to check iframe origin on mount and src change
-    useEffect(() => {
-        const checkIframeOrigin = () => {
-            const isSameOrigin = isSameOriginFrame(iframeRef.current);
-            console.log('Iframe origin check:', {
-                src,
-                isSameOrigin,
-                currentOrigin: window.location.origin
-            });
-        };
-
-        // Check immediately and after a short delay to ensure iframe is loaded
-        checkIframeOrigin();
-        const timeoutId = setTimeout(checkIframeOrigin, 1000);
-
-        return () => clearTimeout(timeoutId);
-    }, [src]);
 
     // Request height when scoreboard state changes
     useEffect(() => {
