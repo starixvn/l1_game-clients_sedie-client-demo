@@ -237,7 +237,7 @@ class LobbyComponent extends React.PureComponent<any, ILobbyState> {
 
             return (
                 <>
-                    <div className="c-match c-in-play">
+                    <div>
                         <AppContextConsumer>
                             {({ language }) => GamePageComponent && <GamePageComponent namespace={namespace} language={language} />}
                         </AppContextConsumer>
