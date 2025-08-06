@@ -46,8 +46,10 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
         try {
             let newToken: string | null = null;
             if (onRequestSSOToken) {
+                console.log('saba-games onRequestSSOToken');
                 newToken = await onRequestSSOToken();
             } else {
+                console.log('saba-games TokenRequestManager.getInstance().executeTokenRequest()');
                 newToken = await TokenRequestManager.getInstance().executeTokenRequest();
             }
             const tokenEndTime = performance.now();
