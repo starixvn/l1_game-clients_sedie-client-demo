@@ -180,7 +180,9 @@ abstract class GameBase<P extends GameBaseProps, S extends IGameBaseState> exten
         }
 
         if (!isConnected) {
-            return <GameDisconnectView onReconnect={this.handleReconnect} />;
+            setTimeout(() => {
+                return <GameDisconnectView onReconnect={this.handleReconnect} />;
+            }, 1000);
         }
 
         // Allow games to override the entire layout structure if needed
