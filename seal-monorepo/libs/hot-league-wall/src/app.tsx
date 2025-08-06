@@ -39,6 +39,8 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
     const [isLoading, setIsLoading] = useState(false);
     const [isReconnecting, setIsReconnecting] = useState(false);
 
+    console.log('saba-games AppContent onRequestSSOToken: ', onRequestSSOToken);
+
     // Shared token request logic
     const executeTokenRequest = useCallback(async (context: 'FIRST_SSO' | 'SSO_RETRY') => {
         const tokenStartTime = performance.now();
