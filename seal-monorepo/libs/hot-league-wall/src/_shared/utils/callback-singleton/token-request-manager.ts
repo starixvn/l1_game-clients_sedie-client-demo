@@ -17,6 +17,7 @@ export class TokenRequestManager extends CallbackSingleton<() => Promise<string 
     }
 
     public getTokenRequestCallback(): (() => Promise<string | null>) | null {
+        console.log('saba-games getTokenRequestCallback: ', this.getCallback());
         return this.getCallback();
     }
 

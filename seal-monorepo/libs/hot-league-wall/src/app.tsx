@@ -141,6 +141,7 @@ const AppContent = ({ updateBalanceCallback, onRequestSSOToken }: AppContentProp
 
     useEffect(() => {
         if (onRequestSSOToken) {
+            console.log('saba-games setTokenRequestCallback()');
             TokenRequestManager.getInstance().setTokenRequestCallback(() => onRequestSSOToken());
         }
     }, [onRequestSSOToken]);
