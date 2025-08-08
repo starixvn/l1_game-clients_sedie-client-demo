@@ -85,7 +85,7 @@ const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback 
     return (
         <>
             <IframeContainer
-                src={iframeSrc}
+                src={"http://localhost:4551/"}
                 token={token}
                 language={language}
                 theme={theme}
