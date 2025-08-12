@@ -13,14 +13,14 @@ export enum dataTheme {
 }
 
 const ProviderSetDropDown = () => {
-    const { theme, setTheme, isDarkMode ,setIsDarkMode, language, setLanguage } = usePreviewContext();
+    const { theme, setTheme, isDarkMode, setIsDarkMode, language, setLanguage } = usePreviewContext();
 
     const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedTheme = e.target.value as dataTheme;
         const isDarkMode = selectedTheme === dataTheme.DARK;
-    
+
         setIsDarkMode(isDarkMode);
-    
+
         const themeToSet = isDarkMode ? dataTheme.DEFAULT : selectedTheme;
         setTheme(themeToSet);
     };
@@ -35,7 +35,7 @@ const ProviderSetDropDown = () => {
     return (
         <div>
             <label htmlFor="theme-select">Select Theme: </label>
-            <select 
+            <select
                 id="theme-select"
                 value={displayTheme}
                 onChange={handleThemeChange}
@@ -48,7 +48,7 @@ const ProviderSetDropDown = () => {
             </select>
 
             <label htmlFor="language-select">Select Language: </label>
-            <select 
+            <select
                 id="language-select"
                 value={language}
                 onChange={handleLanguageChange}

@@ -22,9 +22,9 @@ export const DEFAULT_PREVIEW_CONTEXT = {
 // Create the context
 export const PreviewContext = createContext<PreviewContextType>({
     ...DEFAULT_PREVIEW_CONTEXT,
-    setTheme: () => {},
-    setIsDarkMode: () => {},
-    setLanguage: () => {}
+    setTheme: () => { },
+    setIsDarkMode: () => { },
+    setLanguage: () => { }
 });
 
 // Set display name for dev tools
@@ -37,7 +37,7 @@ export const PreviewContextConsumer = PreviewContext.Consumer;
 // Hook for functional components
 export const usePreviewContext = () => useContext(PreviewContext);
 
-export const PreviewProvider: React.FC<PreviewProviderProps> = ({ 
+export const PreviewProvider: React.FC<PreviewProviderProps> = ({
     children
 }: PreviewProviderProps) => {
     const [theme, setTheme] = useState(DEFAULT_PREVIEW_CONTEXT.theme);

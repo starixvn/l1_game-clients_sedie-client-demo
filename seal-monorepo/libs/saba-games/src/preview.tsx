@@ -182,12 +182,12 @@ const Preview = () => {
         token && (
             <PreviewProvider>
                 <Router>
-                    <PreviewContext 
-                        token={token} 
-                        renewToken={handleGetToken} 
+                    <PreviewContext
+                        token={token}
+                        renewToken={handleGetToken}
                         updateBalanceCallback={(totalStake?: number, winBet?: number) => {
                             console.log('updateBalanceCallback', { totalStake, winBet });
-                        }} 
+                        }}
                     />
                 </Router>
             </PreviewProvider>
