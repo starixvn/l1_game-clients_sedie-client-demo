@@ -21,7 +21,7 @@ const SabaGamesGroup = ({
     isDarkMode = false,
     platformType = PLATFORM_TYPE_NUMBER.DESKTOP,
     token = '',
-    renewToken = () => { },
+    renewToken = async () => { },
     appEnv = '',
     siteId = '',
     language = 'en',

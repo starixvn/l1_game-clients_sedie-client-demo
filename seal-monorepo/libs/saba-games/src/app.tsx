@@ -14,8 +14,8 @@ interface AppProps extends AppContentProps {
     appEnv: string;
     siteId: string;
     language: string;
-    renewToken?: Function;
-    updateBalanceCallback?: void | null;
+    renewToken?: () => Promise<void>;
+    updateBalanceCallback?: ((totalStake?: number, winBet?: number) => void) | null;
 }
 
 interface AppContentProps {
@@ -23,7 +23,7 @@ interface AppContentProps {
     language: string;
     theme: string;
     isDarkMode: boolean;
-    updateBalanceCallback?: void | null;
+    updateBalanceCallback?: ((totalStake?: number, winBet?: number) => void) | null;
 }
 
 const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, updateBalanceCallback }: AppProps) => {
@@ -36,13 +36,14 @@ const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, u
                     theme={theme}
                     isDarkMode={isDarkMode}
                     updateBalanceCallback={updateBalanceCallback}
+                    siteId={siteId}
                 />
             </AppProvider>
         </MessageProvider>
     );
 };
 
-const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback }: AppContentProps) => {
+const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback, siteId }: AppContentProps & { siteId: string }) => {
     const { appEnv } = useAppContext();
     const gameSrc = appSettings.standaloneUrl;
     const [iframeSrc, setIframeSrc] = useState<string>('');
@@ -85,11 +86,13 @@ const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback 
     return (
         <>
             <IframeContainer
-                src={"http://localhost:4551/"}
+                src={iframeSrc}
                 token={token}
                 language={language}
                 theme={theme}
                 isDarkMode={isDarkMode}
+                siteId={siteId}
+                appEnv={appEnv}
             />
         </>
     );

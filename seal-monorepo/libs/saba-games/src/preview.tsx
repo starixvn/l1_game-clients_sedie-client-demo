@@ -87,7 +87,7 @@ interface TabContentProps {
     siteId: string;
     token: string;
     renewToken: () => Promise<void>;
-    updateBalanceCallback: void | null;
+    updateBalanceCallback: ((totalStake?: number, winBet?: number) => void) | null;
 }
 
 const TabContent: React.FC<TabContentProps> = ({
@@ -182,9 +182,13 @@ const Preview = () => {
         token && (
             <PreviewProvider>
                 <Router>
-                    <PreviewContext token={token} renewToken={handleGetToken} updateBalanceCallback={() => {
-                        console.log('updateBalanceCallback');
-                    }} />
+                    <PreviewContext 
+                        token={token} 
+                        renewToken={handleGetToken} 
+                        updateBalanceCallback={(totalStake?: number, winBet?: number) => {
+                            console.log('updateBalanceCallback', { totalStake, winBet });
+                        }} 
+                    />
                 </Router>
             </PreviewProvider>
         )

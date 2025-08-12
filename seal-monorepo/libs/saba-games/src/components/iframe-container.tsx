@@ -11,6 +11,8 @@ interface IframeContainerProps {
     language: string;
     theme: string;
     isDarkMode: boolean;
+    siteId?: string;
+    appEnv?: string;
 }
 
 const CustomContainer: React.FC<{ fluid?: boolean | 'xl', className?: string, children: React.ReactNode }> = ({
@@ -37,7 +39,9 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
     token,
     language,
     theme,
-    isDarkMode
+    isDarkMode,
+    siteId,
+    appEnv
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const { sendMessageToSpecificIframe } = useMessageContext();
@@ -62,7 +66,9 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
             console.log('Iframe origin check:', {
                 src,
                 isSameOrigin,
-                currentOrigin: window.location.origin
+                currentOrigin: window.location.origin,
+                siteId,
+                appEnv
             });
         };
 
@@ -71,7 +77,7 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
         const timeoutId = setTimeout(checkIframeOrigin, 1000);
 
         return () => clearTimeout(timeoutId);
-    }, [src]);
+    }, [src, siteId, appEnv]);
 
 
     useEffect(() => {
