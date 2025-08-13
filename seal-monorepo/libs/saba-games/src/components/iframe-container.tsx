@@ -50,12 +50,11 @@ const IframeContainer: React.FC<IframeContainerProps> = ({
 
     useEffect(() => {
         if (token) {
-            sendMessageToSpecificIframe({
+            const message = {
                 type: MessageType.SET_TOKEN,
-                data: {
-                    token
-                }
-            }, iframeRef.current);
+                data: { token }
+            } as const;
+            iframeRef.current?.contentWindow?.postMessage(message, '*');
         }
     }, [token]);
 

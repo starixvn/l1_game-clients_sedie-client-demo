@@ -47,7 +47,7 @@ const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, u
 
 const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback, siteId, useRawToken }: AppContentProps & { siteId: string; useRawToken?: boolean }) => {
     const { appEnv } = useAppContext();
-    const gameSrc = appSettings.standaloneUrl;
+    const gameSrc = 'http://localhost:4551/'; // appSettings.standaloneUrl
     const [iframeSrc, setIframeSrc] = useState<string>('');
 
     useEffect(() => {
@@ -59,8 +59,10 @@ const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback,
     const buildIframeSrc = useCallback(() => {
         if (!token) return gameSrc;
         const url = new URL(gameSrc);
+        const isLocal = appEnv === 'LOCAL' || appEnv === '';
+        const derivedUseRawToken = useRawToken ?? isLocal;
 
-        if (useRawToken) {
+        if (derivedUseRawToken) {
             url.searchParams.set('token', token);
             url.searchParams.set('rawToken', '1');
         } else {
@@ -78,7 +80,7 @@ const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback,
         }
 
         return url.toString();
-    }, [gameSrc, token, useRawToken]);
+    }, [gameSrc, token, useRawToken, appEnv]);
 
     useEffect(() => {
         const src = buildIframeSrc();
@@ -87,6 +89,7 @@ const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback,
 
     loadI18n(language);
     return (
+        // eslint-disable-next-line react/jsx-no-useless-fragment
         <>
             <IframeContainer
                 src={iframeSrc}
