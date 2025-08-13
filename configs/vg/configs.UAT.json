@@ -11,6 +11,13 @@
     "env": "UAT",
     "enableMsgpackParserAllGames": true,
     "enableMsgpackParserOnNotification": true,
+    "simulatorConfigs": {
+        "gameLobbySimulatorUrl": "https://l2uatglbs.kl.sgamesuat.com",
+        "owApiSimulatorUrl": "https://l2uatows.kl.sgamesuat.com/SabaClub",
+        "operatorId": "ONEworksVGCash",
+        "operatorSecret": "VG@SC123",
+        "operatorToken": "ONEworksVGCashToken"
+    },
     "defaultGameId": 2,
     "userServicePath": "livepageuser"
 }
