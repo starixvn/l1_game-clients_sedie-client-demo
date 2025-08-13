@@ -16,6 +16,7 @@ interface AppProps extends AppContentProps {
     language: string;
     renewToken?: () => Promise<void>;
     updateBalanceCallback?: ((totalStake?: number, winBet?: number) => void) | null;
+    useRawToken?: boolean;
 }
 
 interface AppContentProps {
@@ -26,7 +27,7 @@ interface AppContentProps {
     updateBalanceCallback?: ((totalStake?: number, winBet?: number) => void) | null;
 }
 
-const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, updateBalanceCallback }: AppProps) => {
+const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, updateBalanceCallback, useRawToken }: AppProps) => {
     return (
         <MessageProvider config={createMessageHandlerConfig(appEnv)} options={{}} renewToken={renewToken}>
             <AppProvider appEnv={appEnv} language={language} siteId={siteId}>
@@ -37,13 +38,14 @@ const App = ({ appEnv, token, language, theme, isDarkMode, siteId, renewToken, u
                     isDarkMode={isDarkMode}
                     updateBalanceCallback={updateBalanceCallback}
                     siteId={siteId}
+                    useRawToken={useRawToken}
                 />
             </AppProvider>
         </MessageProvider>
     );
 };
 
-const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback, siteId }: AppContentProps & { siteId: string }) => {
+const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback, siteId, useRawToken }: AppContentProps & { siteId: string; useRawToken?: boolean }) => {
     const { appEnv } = useAppContext();
     const gameSrc = appSettings.standaloneUrl;
     const [iframeSrc, setIframeSrc] = useState<string>('');
@@ -58,24 +60,25 @@ const AppContent = ({ token, language, theme, isDarkMode, updateBalanceCallback,
         if (!token) return gameSrc;
         const url = new URL(gameSrc);
 
-        try {
-            const encryptionKey = appSettings.encryptionKey || 'development-key';
-            const messageEncryption = new MessageEncryption(encryptionKey);
-            const encryptedToken = messageEncryption.encrypt({ token });
-
-            url.searchParams.set('token', JSON.stringify(encryptedToken));
-
-            console.log('Encrypted token URL built successfully');
-        } catch (error) {
-            console.error('Failed to encrypt token:', error);
-
-            if (process.env.NODE_ENV === 'development') {
+        if (useRawToken) {
+            url.searchParams.set('token', token);
+            url.searchParams.set('rawToken', '1');
+        } else {
+            try {
+                const encryptionKey = appSettings.encryptionKey || 'development-key';
+                const messageEncryption = new MessageEncryption(encryptionKey);
+                const encryptedToken = messageEncryption.encrypt({ token });
+                url.searchParams.set('token', JSON.stringify(encryptedToken));
+                console.log('Encrypted token URL built successfully');
+            } catch (error) {
+                console.error('Failed to encrypt token:', error);
                 url.searchParams.set('token', token);
+                url.searchParams.set('rawToken', '1');
             }
         }
 
         return url.toString();
-    }, [gameSrc, token]);
+    }, [gameSrc, token, useRawToken]);
 
     useEffect(() => {
         const src = buildIframeSrc();
